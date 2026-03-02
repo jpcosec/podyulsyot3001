@@ -9,16 +9,11 @@ Produce one tailored motivation letter in markdown using the provided context.
 
 INPUT MODEL
 The context can contain:
-- job details and requirements
+- full job description (complete posting text)
+- job metadata (structured fields: deadline, reference, contact)
 - candidate profile and evidence catalog
 - requirement coverage analysis
-- format insights under context.analysis.format_insights
-- a pre-letter scaffold under context.pre_letter.content
-
-When a pre-letter scaffold is present, you must expand it into final prose while preserving its section order and intent.
-When format insights are present, apply them explicitly during expansion:
-- preserve listed strengths
-- correct listed improvement points in the final letter
+- reviewed matching decisions (human-approved requirement-to-evidence mapping)
 
 INSPIRATION FORMAT (from prior successful letter style)
 Follow this high-level format:

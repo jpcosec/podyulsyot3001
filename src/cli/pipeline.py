@@ -10,8 +10,9 @@ import re
 import shutil
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
+from typing import Any
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -20,6 +21,7 @@ MANIFEST_PATH = (
     REPO_ROOT / "data" / "reference_data" / "backup" / "backup_compendium.json"
 )
 COMMENT_PATTERN = re.compile(r"<!--(.*?)-->", flags=re.DOTALL)
+DEADLINE_PATTERN = re.compile(r"(\d{2}\.\d{2}\.\d{4}|\d{4}-\d{2}-\d{2})")
 
 FETCH_SCRIPTS = {
     "filtered": "src/scraper/fetch_all_filtered_jobs.py",
@@ -59,6 +61,29 @@ def run_fetch_url(urls: list[str], source: str, strict_english: bool) -> None:
     if strict_english:
         extra_args.append("--strict-english")
     run_python_script(SINGLE_URL_SCRAPER, extra_args=extra_args)
+
+
+def run_fetch_listing(
+    url: str, source: str, strict_english: bool, delay: float
+) -> None:
+    ensure_repo_import_path()
+    from src.scraper.fetch_listing import crawl_listing
+
+    result = crawl_listing(
+        listing_url=url,
+        source=source,
+        pipeline_root=REPO_ROOT / "data" / "pipelined_data",
+        strict_english=strict_english,
+        delay=delay,
+    )
+    print(
+        "[done] "
+        + f"Scraped: {len(result['scraped'])}, "
+        + f"Skipped: {len(result['skipped'])}, "
+        + f"Failed: {len(result['failed'])}"
+    )
+    if result["failed"]:
+        print(f"[warn] Failed job IDs: {', '.join(result['failed'])}")
 
 
 def run_translate(mode: str) -> None:
@@ -293,17 +318,90 @@ def build_jobs_index(source: str = "all") -> dict[str, list[str]]:
     return index
 
 
-def write_jobs_index_reports(index: dict[str, list[str]]) -> tuple[Path, Path]:
+def _list_numeric_job_dirs(path: Path) -> list[str]:
+    if not path.exists():
+        return []
+    return sorted(
+        [
+            child.name
+            for child in path.iterdir()
+            if child.is_dir() and child.name.isdigit()
+        ]
+    )
+
+
+def build_jobs_inventory(source: str = "all") -> dict[str, dict[str, list[str]]]:
+    root = REPO_ROOT / "data" / "pipelined_data"
+    if not root.exists():
+        return {}
+
+    source_dirs = [path for path in root.iterdir() if path.is_dir()]
+    inventory: dict[str, dict[str, list[str]]] = {}
+    for source_dir in sorted(source_dirs):
+        source_name = source_dir.name
+        if source != "all" and source_name != source:
+            continue
+
+        active_ids = _list_numeric_job_dirs(source_dir)
+        archive_ids = _list_numeric_job_dirs(source_dir / "archive")
+        if not active_ids and not archive_ids:
+            continue
+
+        duplicate_ids = sorted(set(active_ids) & set(archive_ids))
+        unique_known_ids = sorted(set(active_ids) | set(archive_ids))
+        inventory[source_name] = {
+            "active": active_ids,
+            "archive": archive_ids,
+            "duplicates": duplicate_ids,
+            "unique_known": unique_known_ids,
+        }
+    return inventory
+
+
+def write_jobs_index_reports(
+    index: dict[str, list[str]],
+    inventory: dict[str, dict[str, list[str]]] | None = None,
+) -> tuple[Path, Path]:
     root = REPO_ROOT / "data" / "pipelined_data"
     json_path = root / "job_ids_index.json"
     md_path = root / "job_ids_index.md"
 
+    if inventory is None:
+        inventory = {
+            source_name: {
+                "active": sorted(job_ids),
+                "archive": [],
+                "duplicates": [],
+                "unique_known": sorted(job_ids),
+            }
+            for source_name, job_ids in sorted(index.items())
+        }
+
+    source_entries: list[dict[str, object]] = []
+    for source_name in sorted(inventory):
+        active_ids = inventory[source_name]["active"]
+        archive_ids = inventory[source_name]["archive"]
+        duplicate_ids = inventory[source_name]["duplicates"]
+        unique_known_ids = inventory[source_name]["unique_known"]
+        source_entries.append(
+            {
+                "source": source_name,
+                "count": len(active_ids),
+                "job_ids": active_ids,
+                "active_count": len(active_ids),
+                "active_job_ids": active_ids,
+                "archive_count": len(archive_ids),
+                "archive_job_ids": archive_ids,
+                "duplicate_count": len(duplicate_ids),
+                "duplicate_job_ids": duplicate_ids,
+                "unique_known_count": len(unique_known_ids),
+                "unique_known_job_ids": unique_known_ids,
+            }
+        )
+
     payload = {
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
-        "sources": [
-            {"source": source, "count": len(job_ids), "job_ids": job_ids}
-            for source, job_ids in sorted(index.items())
-        ],
+        "sources": source_entries,
     }
     json_path.write_text(
         json.dumps(payload, indent=2, ensure_ascii=True) + "\n",
@@ -319,10 +417,35 @@ def write_jobs_index_reports(index: dict[str, list[str]]) -> tuple[Path, Path]:
     if not index:
         lines.append("No job folders found.")
     else:
-        for source_name, job_ids in sorted(index.items()):
-            lines.append(f"## {source_name} ({len(job_ids)} jobs)")
+        for source_name in sorted(inventory):
+            active_ids = inventory[source_name]["active"]
+            archive_ids = inventory[source_name]["archive"]
+            duplicate_ids = inventory[source_name]["duplicates"]
+            unique_known_ids = inventory[source_name]["unique_known"]
+            lines.append(f"## {source_name}")
             lines.append("")
-            lines.extend([f"- {job_id}" for job_id in job_ids])
+            lines.append(f"- Active jobs: {len(active_ids)}")
+            lines.append(f"- Archived jobs: {len(archive_ids)}")
+            lines.append(f"- Overlapping IDs: {len(duplicate_ids)}")
+            lines.append(f"- Unique known jobs: {len(unique_known_ids)}")
+            if duplicate_ids:
+                lines.append(f"- Overlap list: {', '.join(duplicate_ids)}")
+
+            lines.append("")
+            lines.append("### Active job IDs")
+            lines.append("")
+            if active_ids:
+                lines.extend([f"- {job_id}" for job_id in active_ids])
+            else:
+                lines.append("- None")
+
+            lines.append("")
+            lines.append("### Archived job IDs")
+            lines.append("")
+            if archive_ids:
+                lines.extend([f"- {job_id}" for job_id in archive_ids])
+            else:
+                lines.append("- None")
             lines.append("")
     md_path.write_text("\n".join(lines), encoding="utf-8")
     return json_path, md_path
@@ -330,29 +453,232 @@ def write_jobs_index_reports(index: dict[str, list[str]]) -> tuple[Path, Path]:
 
 def run_jobs_index(source: str) -> int:
     index = build_jobs_index(source=source)
-    json_path, md_path = write_jobs_index_reports(index)
-    total_jobs = sum(len(ids) for ids in index.values())
-    print(f"[done] indexed {total_jobs} jobs across {len(index)} source folder(s)")
+    inventory = build_jobs_inventory(source=source)
+    json_path, md_path = write_jobs_index_reports(index, inventory=inventory)
+
+    total_active = sum(len(data["active"]) for data in inventory.values())
+    total_archive = sum(len(data["archive"]) for data in inventory.values())
+    total_duplicates = sum(len(data["duplicates"]) for data in inventory.values())
+    total_unique_known = sum(len(data["unique_known"]) for data in inventory.values())
+    print(
+        "[done] indexed "
+        + f"{total_active} active + {total_archive} archived jobs "
+        + f"across {len(inventory)} source folder(s)"
+    )
+    print(
+        "[done] unique known jobs: "
+        + f"{total_unique_known} (overlap between active/archive: {total_duplicates})"
+    )
     print(f"[done] wrote {json_path}")
     print(f"[done] wrote {md_path}")
     return 0
 
 
-def run_motivation_pre(job_id: str, source: str, output_name: str) -> Path:
-    warn_if_not_phd_cv_env()
-    ensure_repo_import_path()
-    from src.motivation_letter import MotivationLetterService
+def parse_deadline_date(value: str) -> date | None:
+    candidate = value.strip()
+    if not candidate:
+        return None
 
-    service = MotivationLetterService()
-    result = service.create_pre_letter(
-        job_id=job_id,
-        source=source,
-        output_name=output_name,
+    match = DEADLINE_PATTERN.search(candidate)
+    if not match:
+        return None
+
+    raw = match.group(1)
+    if "." in raw:
+        day, month, year = raw.split(".")
+    else:
+        year, month, day = raw.split("-")
+
+    try:
+        return date(year=int(year), month=int(month), day=int(day))
+    except ValueError:
+        return None
+
+
+def _read_job_deadline_from_extracted(job_dir: Path) -> str:
+    extracted_path = job_dir / "raw" / "extracted.json"
+    if not extracted_path.exists():
+        return ""
+    try:
+        payload = json.loads(extracted_path.read_text(encoding="utf-8"))
+    except Exception:
+        return ""
+    return str(payload.get("deadline", "")).strip()
+
+
+def _read_job_deadline_from_summary(job_dir: Path) -> str:
+    summary_path = job_dir / "summary.json"
+    if not summary_path.exists():
+        return ""
+    try:
+        payload = json.loads(summary_path.read_text(encoding="utf-8"))
+    except Exception:
+        return ""
+    return str(payload.get("Deadline", "")).strip()
+
+
+def _read_job_deadline_from_frontmatter(job_dir: Path) -> str:
+    job_md_path = job_dir / "job.md"
+    if not job_md_path.exists():
+        return ""
+
+    text = job_md_path.read_text(encoding="utf-8")
+    if not text.startswith("---"):
+        return ""
+
+    lines = text.splitlines()
+    for line in lines[1:]:
+        if line.strip() == "---":
+            break
+        if not line.startswith("deadline:"):
+            continue
+        return line.split(":", maxsplit=1)[1].strip()
+    return ""
+
+
+def read_job_deadline(job_dir: Path) -> str:
+    return (
+        _read_job_deadline_from_extracted(job_dir)
+        or _read_job_deadline_from_summary(job_dir)
+        or _read_job_deadline_from_frontmatter(job_dir)
     )
-    print(f"[done] wrote {result.pre_letter_path}")
-    print(f"[done] wrote {result.analysis_path}")
-    print(f"[done] updated {result.evidence_bank_path}")
-    return result.pre_letter_path
+
+
+def _parse_reference_date(value: str | None) -> date:
+    if value is None:
+        return date.today()
+    parsed = parse_deadline_date(value)
+    if parsed is None:
+        raise ValueError(f"Invalid --today value: {value}. Use YYYY-MM-DD.")
+    return parsed
+
+
+def build_archive_passed_plan(
+    source: str,
+    reference_date: date,
+) -> dict[str, Any]:
+    source_root = get_pipeline_root_for_source(source)
+    archive_root = source_root / "archive"
+
+    eligible: list[dict[str, str]] = []
+    missing_deadline: list[str] = []
+    unparsable_deadline: list[dict[str, str]] = []
+    still_open: list[dict[str, str]] = []
+    already_in_archive: list[dict[str, str]] = []
+
+    for job_id in _list_numeric_job_dirs(source_root):
+        job_dir = source_root / job_id
+        deadline_raw = read_job_deadline(job_dir)
+        if not deadline_raw:
+            missing_deadline.append(job_id)
+            continue
+
+        deadline_date = parse_deadline_date(deadline_raw)
+        if deadline_date is None:
+            unparsable_deadline.append({"job_id": job_id, "deadline": deadline_raw})
+            continue
+        if deadline_date >= reference_date:
+            still_open.append({"job_id": job_id, "deadline": deadline_raw})
+            continue
+
+        archive_target = archive_root / job_id
+        if archive_target.exists():
+            already_in_archive.append({"job_id": job_id, "deadline": deadline_raw})
+            continue
+        eligible.append({"job_id": job_id, "deadline": deadline_raw})
+
+    return {
+        "source": source,
+        "reference_date": reference_date.isoformat(),
+        "eligible": sorted(eligible, key=lambda item: item["job_id"]),
+        "missing_deadline": sorted(missing_deadline),
+        "unparsable_deadline": sorted(
+            unparsable_deadline, key=lambda item: item["job_id"]
+        ),
+        "still_open": sorted(still_open, key=lambda item: item["job_id"]),
+        "already_in_archive": sorted(
+            already_in_archive, key=lambda item: item["job_id"]
+        ),
+    }
+
+
+def _write_archive_passed_report(
+    source: str,
+    plan: dict[str, Any],
+    moved_ids: list[str],
+    dry_run: bool,
+) -> Path:
+    report_path = (
+        REPO_ROOT / "data" / "pipelined_data" / f"archive_passed_report_{source}.json"
+    )
+    payload = {
+        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "dry_run": dry_run,
+        "source": source,
+        "reference_date": plan["reference_date"],
+        "eligible": plan["eligible"],
+        "missing_deadline": plan["missing_deadline"],
+        "unparsable_deadline": plan["unparsable_deadline"],
+        "still_open": plan["still_open"],
+        "already_in_archive": plan["already_in_archive"],
+        "moved_job_ids": sorted(moved_ids),
+    }
+    write_json_report(report_path, payload)
+    return report_path
+
+
+def run_archive_passed(source: str, today: str | None, apply: bool) -> int:
+    reference_date = _parse_reference_date(today)
+    source_root = get_pipeline_root_for_source(source)
+    if not source_root.exists():
+        raise FileNotFoundError(f"Source folder not found: {source_root}")
+
+    plan = build_archive_passed_plan(source=source, reference_date=reference_date)
+    eligible = plan["eligible"]
+    missing_deadline = plan["missing_deadline"]
+    unparsable_deadline = plan["unparsable_deadline"]
+    still_open = plan["still_open"]
+    already_in_archive = plan["already_in_archive"]
+
+    print(
+        f"[archive-passed] source={source} reference_date={reference_date.isoformat()}"
+    )
+    print(f"[archive-passed] eligible expired jobs: {len(eligible)}")
+    print(f"[archive-passed] still open jobs: {len(still_open)}")
+    print(f"[archive-passed] missing deadline: {len(missing_deadline)}")
+    print(f"[archive-passed] unparsable deadline: {len(unparsable_deadline)}")
+    print(f"[archive-passed] already in archive: {len(already_in_archive)}")
+
+    moved_ids: list[str] = []
+    if apply:
+        archive_root = source_root / "archive"
+        archive_root.mkdir(parents=True, exist_ok=True)
+        for item in eligible:
+            job_id = str(item["job_id"])
+            source_dir = source_root / job_id
+            target_dir = archive_root / job_id
+            if target_dir.exists():
+                continue
+            shutil.move(str(source_dir), str(target_dir))
+            moved_ids.append(job_id)
+
+        print(f"[archive-passed] moved to archive: {len(moved_ids)}")
+        run_jobs_index(source=source)
+    else:
+        if eligible:
+            eligible_ids = ", ".join(item["job_id"] for item in eligible)
+            print(f"[archive-passed] dry-run eligible IDs: {eligible_ids}")
+        print("[archive-passed] dry-run only. Use --apply to move directories.")
+
+    report_path = _write_archive_passed_report(
+        source=source,
+        plan=plan,
+        moved_ids=moved_ids,
+        dry_run=not apply,
+    )
+    print(f"[archive-passed] wrote report: {report_path}")
+    return 0
+
 
 
 def run_motivation_build(
@@ -367,12 +693,12 @@ def run_motivation_build(
     from src.motivation_letter import MotivationLetterService
 
     service = MotivationLetterService()
-    result = service.generate_for_job(
-        job_id=job_id,
-        source=source,
-        output_name=output_name,
-    )
-    print(f"[done] wrote {result.letter_path}")
+    result = service.generate_for_job(job_id=job_id, source=source)
+    letter_path = result.letter_path
+    if output_name != letter_path.name:
+        custom_path = letter_path.parent / output_name
+        letter_path = copy_into(letter_path, custom_path)
+    print(f"[done] wrote {letter_path}")
     print(f"[done] wrote {result.analysis_path}")
 
     if not skip_pdf:
@@ -412,29 +738,6 @@ def run_app_prepare(job_id: str, source: str, target: str, ats_mode: str) -> int
     instructions = write_prep_instructions(dirs["prep"])
     details = [f"Prep instructions: {instructions}"]
     job_description = job_md.read_text(encoding="utf-8")
-
-    if target in {"motivation", "all"}:
-        service = MotivationLetterService()
-        pre_result = service.create_pre_letter(job_id=job_id, source=source)
-        prep_motivation_dir = dirs["prep"] / "motivation"
-        prep_letter = copy_into(
-            pre_result.pre_letter_path,
-            prep_motivation_dir / "motivation_letter.pre.md",
-        )
-        copy_into(
-            pre_result.analysis_path,
-            prep_motivation_dir / "motivation_letter.pre.analysis.json",
-        )
-        motivation_text = prep_letter.read_text(encoding="utf-8")
-        motivation_ats = run_ats_analysis(
-            cv_text=motivation_text,
-            job_description=job_description,
-            ats_mode=ats_mode,
-        )
-        motivation_ats["stage"] = "prepare"
-        motivation_ats["target"] = "motivation"
-        write_json_report(dirs["reports"] / "motivation_ats_pre.json", motivation_ats)
-        details.append(f"Prepared motivation pre-file: {prep_letter}")
 
     if target in {"cv", "all"}:
         cv_config = CVConfig.from_defaults()
@@ -902,6 +1205,7 @@ def run_cv_template_test(
 
 
 def build_cv_tailoring(job_id: str, source: str = "tu_berlin") -> Path:
+    ensure_repo_import_path()
     from src.cv_generator.pipeline import CVTailoringPipeline
 
     pipeline = CVTailoringPipeline()
@@ -1023,9 +1327,47 @@ def build_parser() -> argparse.ArgumentParser:
         "--source", default="tu_berlin", help="Pipeline source namespace"
     )
     fetch_url_parser.add_argument(
+        "--allow-non-english",
+        dest="strict_english",
+        action="store_false",
+        help="Allow non-English extracted text (not recommended)",
+    )
+    fetch_url_parser.add_argument(
         "--strict-english",
+        dest="strict_english",
         action="store_true",
-        help="Fail if extracted text is not confidently English",
+        help="Enforce English-only extracted text (default)",
+    )
+    fetch_url_parser.set_defaults(strict_english=True)
+
+    fetch_listing_parser = subparsers.add_parser(
+        "fetch-listing",
+        help="Crawl a filtered listing URL, paginate, and scrape new jobs",
+    )
+    fetch_listing_parser.add_argument(
+        "url", help="Full TU Berlin listing URL with filters"
+    )
+    fetch_listing_parser.add_argument(
+        "--source", default="tu_berlin", help="Pipeline source namespace"
+    )
+    fetch_listing_parser.add_argument(
+        "--allow-non-english",
+        dest="strict_english",
+        action="store_false",
+        help="Allow non-English extracted text (not recommended)",
+    )
+    fetch_listing_parser.add_argument(
+        "--strict-english",
+        dest="strict_english",
+        action="store_true",
+        help="Enforce English-only extracted text (default)",
+    )
+    fetch_listing_parser.set_defaults(strict_english=True)
+    fetch_listing_parser.add_argument(
+        "--delay",
+        type=float,
+        default=0.5,
+        help="Delay in seconds between HTTP requests (default: 0.5)",
     )
 
     apply_parser = subparsers.add_parser(
@@ -1078,22 +1420,6 @@ def build_parser() -> argparse.ArgumentParser:
     cv_parser.add_argument(
         "--source", default="tu_berlin", help="Pipeline source namespace"
     )
-    motivation_pre_parser = subparsers.add_parser(
-        "motivation-pre",
-        help="Generate synthetic motivation-letter pre-scaffold",
-    )
-    motivation_pre_parser.add_argument(
-        "job_id", help="Job id under data/pipelined_data/<source>"
-    )
-    motivation_pre_parser.add_argument(
-        "--source", default="tu_berlin", help="Pipeline source namespace"
-    )
-    motivation_pre_parser.add_argument(
-        "--output-name",
-        default="motivation_letter.pre.md",
-        help="Pre-letter output filename under planning/",
-    )
-
     motivation_build_parser = subparsers.add_parser(
         "motivation-build",
         help="Generate final motivation letter from pre-scaffold",
@@ -1277,6 +1603,24 @@ def build_parser() -> argparse.ArgumentParser:
         "--source",
         default="all",
         help="Source folder name or 'all'",
+    )
+
+    archive_passed_parser = subparsers.add_parser(
+        "archive-passed",
+        help="Move expired active jobs to archive based on parsed deadlines",
+    )
+    archive_passed_parser.add_argument(
+        "--source", default="tu_berlin", help="Pipeline source namespace"
+    )
+    archive_passed_parser.add_argument(
+        "--today",
+        default=None,
+        help="Reference date in YYYY-MM-DD (default: today)",
+    )
+    archive_passed_parser.add_argument(
+        "--apply",
+        action="store_true",
+        help="Apply moves. Without this flag, command runs in dry-run mode.",
     )
 
     subparsers.add_parser("status", help="Show pipeline status summary")
@@ -1475,6 +1819,18 @@ def main() -> int:
         except Exception as exc:
             print(f"[error] fetch-url failed: {exc}")
             return 1
+    if args.command == "fetch-listing":
+        try:
+            run_fetch_listing(
+                url=args.url,
+                source=args.source,
+                strict_english=args.strict_english,
+                delay=args.delay,
+            )
+            return 0
+        except Exception as exc:
+            print(f"[error] fetch-listing failed: {exc}")
+            return 1
     if args.command == "apply-to":
         run_apply_to(args)
         return 0
@@ -1491,17 +1847,6 @@ def main() -> int:
         output_path = build_cv_tailoring(args.job_id, source=args.source)
         print(f"[done] wrote {output_path}")
         return 0
-    if args.command == "motivation-pre":
-        try:
-            run_motivation_pre(
-                job_id=args.job_id,
-                source=args.source,
-                output_name=args.output_name,
-            )
-            return 0
-        except Exception as exc:
-            print(f"[error] motivation-pre failed: {exc}")
-            return 1
     if args.command == "motivation-build":
         try:
             run_motivation_build(
@@ -1581,6 +1926,16 @@ def main() -> int:
             return run_jobs_index(source=args.source)
         except Exception as exc:
             print(f"[error] jobs-index failed: {exc}")
+            return 1
+    if args.command == "archive-passed":
+        try:
+            return run_archive_passed(
+                source=args.source,
+                today=args.today,
+                apply=args.apply,
+            )
+        except Exception as exc:
+            print(f"[error] archive-passed failed: {exc}")
             return 1
     if args.command == "status":
         print_pipeline_status()

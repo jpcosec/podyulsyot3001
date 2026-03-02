@@ -79,7 +79,7 @@ This single command:
 2. Calls LLM once with the rich context
 3. Produces `planning/motivation_letter.md`
 
-The `motivation-pre` command becomes deprecated (kept as alias that prints a deprecation notice).
+The `motivation-pre` command has been removed (pre-letter flow deleted).
 
 ### Step 4: Wire motivation to reviewed mapping
 

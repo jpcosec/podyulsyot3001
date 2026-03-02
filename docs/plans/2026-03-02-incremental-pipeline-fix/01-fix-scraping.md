@@ -20,57 +20,67 @@ Any section that doesn't match these aliases is silently dropped. This loses:
 - Freeform text between sections
 - Context about the department, lab, or PI
 
+Additionally, `job.md` currently only contains filtered checklists. The user needs to read the **full** job posting in English to decide whether to apply.
+
 ## The Fix
 
-### Step 1: Preserve `source_text.md` as first-class artifact
+### Step 1: `job.md` becomes the full translated job posting
 
-`source_text.md` already exists in `raw/`. The fix is making downstream steps aware of it.
+`job.md` must contain the **entire job posting text, translated to English**. This is the human-facing document used to decide if a job is worth applying to. It keeps its YAML frontmatter (deadline, reference number, contact, etc.) but the body is the complete posting — not filtered checklists.
 
-Add a `source_text` field to the job tracker frontmatter in `job.md`:
-```yaml
-source_text_path: raw/source_text.md
+New `render_tracker_markdown()` output structure:
+```markdown
+---
+status: Open
+deadline: 20.03.2026
+reference_number: III-51/26
+university: TU Berlin
+contact_person: Prof. Example
+contact_email: example@tu-berlin.de
+url: https://...
+---
+
+# Research Assistant III-51/26, Bioprocess Engineering
+
+[Full job posting text here — every section, translated to English]
 ```
 
-No scraper code changes needed for this — just update `render_tracker_markdown()` to include the path.
+The existing translation step (`translate_markdowns.py` or `deep_translate_jobs.py`) already handles German→English. The change is: translate the **full** `source_text.md` content into `job.md`, not just the filtered sections.
 
-### Step 2: Add `raw/source_text.md` content to the pipeline context
+### Step 2: Keep `extracted.json` as structured metadata only
 
-In `CVTailoringPipeline._build_initial_context()`, add the full source text:
+`extracted.json` still gets produced — it's useful for programmatic access to deadline, reference number, contact email. But it is no longer the primary source for anything. It's metadata.
 
+### Step 3: Pass `job.md` (full text) to LLM steps
+
+Since `job.md` now contains the complete translated posting, LLM steps can just read it directly. No need for a separate `source_text.md` pass — `job.md` IS the full text, in English.
+
+In `CVTailoringPipeline._build_initial_context()`:
 ```python
-# Current: only job.md requirements + profile
-context = {"job": job.model_dump(), "profile": profile, "candidate": {...}}
-
-# New: add full job description
-source_text_path = job_dir / "raw" / "source_text.md"
-if source_text_path.exists():
-    context["full_job_description"] = source_text_path.read_text()
+# job.md already contains the full translated posting
+context["full_job_description"] = job_md_path.read_text()
 ```
 
 Same for motivation letter context assembly.
-
-### Step 3: Keep deterministic extraction as metadata, not as the primary source
-
-`extracted.json` still gets produced — it's useful for structured fields (deadline, reference number, contact email). But the LLM steps receive `source_text.md` as the authoritative job description.
-
-`job.md` remains the human-editable tracker with checklists. It is not the LLM's primary source anymore.
 
 ## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/scraper/scrape_single_url.py` | Add `source_text_path` to tracker frontmatter |
-| `src/cv_generator/pipeline.py` | Load and pass `source_text.md` in context |
-| `src/cli/pipeline.py` | Pass `source_text.md` to motivation letter context |
+| `src/scraper/scrape_single_url.py` | `render_tracker_markdown()` outputs full text body instead of filtered checklists |
+| `src/cv_generator/pipeline.py` | `_build_initial_context()` passes full job.md content |
+| `src/cli/pipeline.py` | Motivation letter context uses full job.md |
 
 ## What NOT to change
 
-- The scraper extraction logic itself — it still produces `extracted.json` for structured fields
-- The `job.md` format — it remains the human-facing tracker
+- `raw/source_text.md` — still produced as the raw (possibly non-English) extraction
+- `raw/extracted.json` — still produced for structured metadata
 - The HTML download or markdown conversion — those work fine
+- Translation scripts — they already work, just need to operate on full text
 
 ## Testing
 
-1. Re-scrape job 201084 and verify `source_text.md` content is complete
-2. Run `cv-tailor` with the new context and verify the LLM receives full job text
-3. Compare matching quality: old (extracted.json only) vs new (full source_text.md)
+1. Re-scrape job 201084, verify `job.md` contains the full posting (not just checklists)
+2. Translate `job.md` and verify complete English text
+3. Run `cv-tailor` and verify the LLM receives the full job description
+4. Read `job.md` and confirm it's useful for deciding whether to apply
