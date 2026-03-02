@@ -31,5 +31,6 @@ Thumbs.db
 .env
 .venv/
 src/ats_tester/.venv/
+data/pipelined_data/
 data/pipelined_data/**/build/
 data/pipelined_data/**/output/
