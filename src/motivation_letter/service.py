@@ -10,7 +10,7 @@ from typing import Callable
 
 from src.utils.config import CVConfig
 from src.utils.loaders.profile_loader import load_base_profile
-from src.cv_generator.pipeline import parse_reviewed_proposal
+from src.utils.pipeline import parse_reviewed_proposal
 from src.models.motivation import EmailDraftOutput, MotivationLetterOutput
 from src.models.pipeline_contract import ReviewedMapping
 from src.prompts import load_prompt_with_context

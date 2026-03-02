@@ -17,7 +17,7 @@ if str(project_root) not in sys.path:
 from dotenv import load_dotenv
 
 from src.ats_tester import DeterministicContentEvaluator
-from src.cv_generator.ats import run_ats_analysis, write_ats_report
+from src.utils.ats import run_ats_analysis, write_ats_report
 from src.utils.config import CVConfig
 from src.utils.loaders.profile_loader import load_base_profile
 from src.utils.model import CVModel

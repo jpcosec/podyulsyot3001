@@ -206,7 +206,7 @@ def tailor_cv(
     """
     cfg = _get_config(config)
     try:
-        from src.cv_generator.pipeline import CVMultiAgentPipeline
+        from src.utils.pipeline import CVMultiAgentPipeline
 
         with TemporaryDirectory(prefix="cv_tailor_") as temp_dir:
             temp_root = Path(temp_dir)
@@ -254,7 +254,7 @@ def render_cv(
     cfg = _get_config(config)
     output_path = cfg.cv_render_dir(source=source, job_id=job_id, via=via) / "cv.pdf"
     try:
-        from src.cv_generator import __main__ as cv_main
+        from src.utils import cv_rendering as cv_main
 
         cv_main.build_cv(
             config=cfg,
@@ -286,8 +286,8 @@ def score_ats(
     """
     cfg = _get_config(config)
     try:
-        from src.cv_generator import __main__ as cv_main
-        from src.cv_generator.ats import run_ats_analysis
+        from src.utils import cv_rendering as cv_main
+        from src.utils.ats import run_ats_analysis
         from src.render.pdf import extract_docx_text, extract_pdf_text
 
         paths = cv_main.resolve_output_paths(

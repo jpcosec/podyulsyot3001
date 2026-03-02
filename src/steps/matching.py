@@ -15,7 +15,7 @@ import json
 import logging
 from pathlib import Path
 
-from src.cv_generator.pipeline import MatchProposalPipeline, parse_reviewed_proposal
+from src.utils.pipeline import MatchProposalPipeline, parse_reviewed_proposal
 from src.steps import StepResult
 from src.utils.comments import extract_comments, append_to_comment_log, format_comments_for_prompt
 from src.utils.state import JobState, PIPELINE_ROOT

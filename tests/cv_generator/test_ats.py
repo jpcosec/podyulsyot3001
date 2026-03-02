@@ -6,7 +6,7 @@ try:
 except ImportError:
     HAS_SPACY = False
 
-from src.cv_generator.ats import run_ats_analysis
+from src.utils.ats import run_ats_analysis
 
 CV_TEXT = """
 PROFESSIONAL SUMMARY

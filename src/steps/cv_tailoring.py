@@ -22,7 +22,7 @@ from pathlib import Path
 from src.utils.config import CVConfig
 from src.utils.loaders.profile_loader import load_base_profile
 from src.utils.model import CVModel
-from src.cv_generator.pipeline import CVTailoringPipeline
+from src.utils.pipeline import CVTailoringPipeline
 from src.steps import StepResult
 from src.utils.comments import extract_comments, append_to_comment_log
 from src.utils.state import JobState
@@ -94,7 +94,7 @@ def run(state: JobState, *, force: bool = False, language: str = "english") -> S
             model = CVModel.from_profile(profile)
 
             # Import the build function (avoid circular import by importing here)
-            from src.cv_generator.__main__ import build_to_render_markdown
+            from src.utils.cv_rendering import build_to_render_markdown
 
             to_render_content = build_to_render_markdown(model)
             to_render_md.parent.mkdir(parents=True, exist_ok=True)

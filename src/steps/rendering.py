@@ -173,8 +173,8 @@ def validate_ats(
         FileNotFoundError: If rendered file doesn't exist
         ValueError: If job description not found
     """
-    from src.cv_generator.ats import run_ats_analysis, write_ats_report
-    from src.cv_generator.__main__ import (
+    from src.utils.ats import run_ats_analysis, write_ats_report
+    from src.utils.cv_rendering import (
         load_job_description,
         resolve_output_paths,
     )
@@ -238,7 +238,7 @@ def template_test(
     Raises:
         RuntimeError: If require_perfect=True and score < 100%
     """
-    from src.cv_generator.__main__ import (
+    from src.utils.cv_rendering import (
         _template_score,
         _validate_render_parity,
         resolve_output_paths,
@@ -334,7 +334,7 @@ def _render_cv(
     Raises:
         RuntimeError: If rendering fails
     """
-    from src.cv_generator.__main__ import (
+    from src.utils.cv_rendering import (
         build_cv,
         render_cv,
         render_docx,
@@ -346,13 +346,13 @@ def _render_cv(
     to_render_text = to_render_path.read_text(encoding="utf-8")
 
     # Resolve output paths
-    from src.cv_generator.__main__ import resolve_output_paths
+    from src.utils.cv_rendering import resolve_output_paths
 
     paths = resolve_output_paths(config, state.source, state.job_id, "cv", via)
 
     if via == "docx":
         # Use build_cv for full DOCX + PDF pipeline
-        from src.cv_generator.__main__ import build_cv
+        from src.utils.cv_rendering import build_cv
 
         build_cv(
             config=config,
@@ -369,7 +369,7 @@ def _render_cv(
         )
     elif via == "latex":
         # Use LaTeX rendering pipeline
-        from src.cv_generator.__main__ import build_cv
+        from src.utils.cv_rendering import build_cv
 
         build_cv(
             config=config,
