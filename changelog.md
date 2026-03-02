@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-03-02 — Incremental Pipeline Fix: Code Review Fixes
+
+- **Motivation guard:** `motivation-build` now requires approved mapping (`match-approve`) before generating letters; raises ValueError if mapping exists but isn't approved
+- **Removed `motivation-pre`:** Deleted pre-letter scaffold command, `create_pre_letter()` method, and `MotivationPreResult` dataclass per Fix 3 plan
+- **Scraper full-text output:** `render_tracker_markdown()` now uses full posting body as primary output, with raw markdown fallback; filtered checklists only as last resort
+- **Cleaned up `_format_insights`:** Removed hardcoded reference to dev artifact file "motivation_letter copy.md"
+- **ATS default mode:** Changed default `ats_mode` from "fallback" to "combined"
+- **`match-approve` regex parser:** Now accepts both `req_N` and `RN` heading formats for flexibility
+- **Command/mutation audit doc:** Added `docs/pipeline/command_surface_and_mutation_audit.md` with full command inventory, mutation boundaries, runfile audit, and architecture constraints for single-job-first + explicit batch orchestration.
+
+## 2026-03-02 — Incremental Pipeline Plan Implementation (Phase 1)
+
+- Updated CV rendering inputs to honor reviewer intent for equivalency and Walmart scope: `data/reference_data/profile/base_profile/profile_base_data.json` now includes Walmart achievements, `src/cv_generator/__main__.py` now emits education equivalency notes into `cv/to_render.md`, and `src/render/docx.py` now renders education equivalency notes in DOCX output.
+- Implemented full-posting tracker output in `src/scraper/scrape_single_url.py`: `job.md` now keeps YAML frontmatter but uses the full extracted posting body (with structured-checklist fallback only when full body is unavailable).
+- Replaced legacy fetch/translation script wiring in `src/cli/pipeline.py` with the unified deterministic flow (`fetch_listing.py` + `scrape_single_url.py`), keeping translation command as explicit no-op compatibility.
+- Removed legacy scraper scripts: `src/scraper/fetch_all_filtered_jobs.py`, `src/scraper/fetch_and_parse_all.py`, `src/scraper/generate_tracker.py`, `src/scraper/deterministic_extraction.py`, `src/scraper/translate_markdowns.py`, and `src/scraper/deep_translate_jobs.py`.
+- Added reviewed-mapping contracts in `src/models/pipeline_contract.py` (`ReviewedClaim`, `ReviewedMapping`) and a new proposal workflow in `src/cv_generator/pipeline.py` (`MatchProposalPipeline`, `parse_reviewed_proposal`).
+- Extended CLI with `match-propose` and `match-approve` in `src/cli/pipeline.py` to support human-in-the-loop claim review and locking.
+- Rebuilt the motivation service module (`src/motivation_letter/service.py`) and restored package exports via `src/motivation_letter/__init__.py`, including letter generation, PDF build, email draft generation, and compatibility helpers.
+
+## 2026-03-02 — Unified Pipeline Rebuild Planning Pack
+
+- Replaced all previous planning documents under `docs/plans/` with a single hard-break rebuild plan pack at `docs/plans/2026-03-02-unified-pipeline-rebuild/`.
+- Added plan files covering: master rebuild plan, in-depth analysis of kept codepieces (Gemini caller, prompts, Pydantic contracts, deterministic rendering, deterministic translation/extraction), target LangGraph architecture, unified phase graph, and deletion matrix.
+- Removed legacy plan documents that described superseded partial migrations and wrapper-based incremental approaches.
+
 ## 2026-03-02 — De-hardcode Pipeline & Agent Architecture
 
 ### Added
@@ -23,6 +49,17 @@
 - `_build_section_plan()`, `_render_pre_letter()` and helper methods from `MotivationLetterService` — replaced by pre-letter agent
 - Hardcoded email draft template from `generate_email_draft()` — replaced by email agent
 - `data/reference_data/prompts/AST.md` — duplicate of ATS prompt
+
+## 2026-03-02 — Deterministic Listing Crawler
+
+- Added `src/scraper/fetch_listing.py` with deterministic pagination over filtered TU Berlin listing URLs, helper utilities for listing-page parsing, and deduplication against both active and archived job folders before delegating scraping to `scrape_single_url.run_for_url()`.
+- Added `tests/scraper/test_fetch_listing.py` covering listing extraction, known-id collection, page URL building, and `crawl_listing()` behavior with monkeypatched network/scrape calls.
+- Extended `src/cli/pipeline.py` with `fetch-listing` command (`url`, `--source`, `--strict-english`, `--delay`) and dispatch wiring, plus parser coverage in `tests/cli/test_pipeline.py`.
+- Expanded `jobs-index` inventory reporting to track active vs archived counts, overlap IDs (same job ID present in both), and unique known totals; updated `tests/cli/test_pipeline_review.py` with inventory coverage.
+- Enforced English-first scraping defaults for `fetch-url` and `fetch-listing` (strict English enabled by default, optional `--allow-non-english` override).
+- Added `archive-passed` CLI command with dry-run by default and `--apply` mode to move expired active jobs into `archive/`, including JSON report output at `data/pipelined_data/archive_passed_report_<source>.json`.
+- Hardened motivation generation parsing in `src/motivation_letter/service.py` to tolerate JSON wrapped in extra text/fences for pre-letter, final letter, and email-draft outputs.
+- Updated CV pipeline schema and orchestration: `language` is now accepted as an evidence item type in `src/models/pipeline_contract.py`, and seller/checker steps in `src/cv_generator/pipeline.py` can recover missing top-level state fields from prior validated step output.
 
 ## 2026-03-02
 

@@ -23,6 +23,7 @@ class GeminiClient:
     """Shared Gemini client. Reads GOOGLE_API_KEY and GEMINI_MODEL from env."""
 
     def __init__(self) -> None:
+        self._load_env_defaults()
         api_key = os.getenv("GOOGLE_API_KEY")
         if not api_key:
             raise ValueError(

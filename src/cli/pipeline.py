@@ -23,17 +23,28 @@ MANIFEST_PATH = (
 COMMENT_PATTERN = re.compile(r"<!--(.*?)-->", flags=re.DOTALL)
 DEADLINE_PATTERN = re.compile(r"(\d{2}\.\d{2}\.\d{4}|\d{4}-\d{2}-\d{2})")
 
-FETCH_SCRIPTS = {
-    "filtered": "src/scraper/fetch_all_filtered_jobs.py",
-    "fixed": "src/scraper/fetch_and_parse_all.py",
-}
+DEFAULT_FILTERED_LISTING_URL = (
+    "https://www.jobs.tu-berlin.de/en/job-postings"
+    "?filter%5Bworktype_tub%5D%5B%5D=wiss-mlehr"
+    "&filter%5Bworktype_tub%5D%5B%5D=wiss-olehr"
+)
+
+FIXED_FETCH_URLS = [
+    "https://www.jobs.tu-berlin.de/en/job-postings/201185",
+    "https://www.jobs.tu-berlin.de/en/job-postings/201397",
+    "https://www.jobs.tu-berlin.de/en/job-postings/201399",
+    "https://www.jobs.tu-berlin.de/en/job-postings/201406",
+    "https://www.jobs.tu-berlin.de/en/job-postings/201084",
+    "https://www.jobs.tu-berlin.de/en/job-postings/201578",
+    "https://www.jobs.tu-berlin.de/en/job-postings/201223",
+    "https://www.jobs.tu-berlin.de/en/job-postings/201342",
+    "https://www.jobs.tu-berlin.de/en/job-postings/201553",
+    "https://www.jobs.tu-berlin.de/en/job-postings/201596",
+    "https://www.jobs.tu-berlin.de/en/job-postings/201309",
+    "https://www.jobs.tu-berlin.de/en/job-postings/201069",
+]
 
 SINGLE_URL_SCRAPER = "src/scraper/scrape_single_url.py"
-
-TRANSLATE_SCRIPTS = {
-    "rules": "src/scraper/translate_markdowns.py",
-    "deep": "src/scraper/deep_translate_jobs.py",
-}
 
 
 def run_python_script(
@@ -53,7 +64,18 @@ def run_cv_command(args: list[str]) -> None:
 
 
 def run_fetch(mode: str) -> None:
-    run_python_script(FETCH_SCRIPTS[mode])
+    if mode in {"listing", "filtered"}:
+        run_fetch_listing(
+            url=DEFAULT_FILTERED_LISTING_URL,
+            source="tu_berlin",
+            strict_english=True,
+            delay=0.5,
+        )
+        return
+    if mode == "fixed":
+        run_fetch_url(urls=FIXED_FETCH_URLS, source="tu_berlin", strict_english=True)
+        return
+    raise ValueError(f"Unsupported fetch mode: {mode}")
 
 
 def run_fetch_url(urls: list[str], source: str, strict_english: bool) -> None:
@@ -87,10 +109,10 @@ def run_fetch_listing(
 
 
 def run_translate(mode: str) -> None:
-    if mode in {"rules", "both"}:
-        run_python_script(TRANSLATE_SCRIPTS["rules"])
-    if mode in {"deep", "both"}:
-        run_python_script(TRANSLATE_SCRIPTS["deep"])
+    print(
+        "[warn] translate stage is deprecated and now a no-op. "
+        "Use fetch-url/fetch-listing with --strict-english instead."
+    )
 
 
 def run_regenerate() -> None:
@@ -680,7 +702,6 @@ def run_archive_passed(source: str, today: str | None, apply: bool) -> int:
     return 0
 
 
-
 def run_motivation_build(
     job_id: str,
     source: str,
@@ -690,7 +711,7 @@ def run_motivation_build(
 ) -> Path:
     warn_if_not_phd_cv_env()
     ensure_repo_import_path()
-    from src.motivation_letter import MotivationLetterService
+    from src.motivation_letter.service import MotivationLetterService
 
     service = MotivationLetterService()
     result = service.generate_for_job(job_id=job_id, source=source)
@@ -717,6 +738,24 @@ def run_motivation_build(
     return result.letter_path
 
 
+def run_motivation_pre(job_id: str, source: str, output_name: str) -> Path:
+    warn_if_not_phd_cv_env()
+    ensure_repo_import_path()
+    from src.motivation_letter.service import MotivationLetterService
+
+    service = MotivationLetterService()
+    create_pre_letter = getattr(service, "create_pre_letter")
+    result = create_pre_letter(job_id=job_id, source=source)
+    pre_letter_path = result.pre_letter_path
+    if output_name != pre_letter_path.name:
+        custom_path = pre_letter_path.parent / output_name
+        pre_letter_path = copy_into(pre_letter_path, custom_path)
+
+    print(f"[done] wrote {pre_letter_path}")
+    print(f"[done] wrote {result.analysis_path}")
+    return pre_letter_path
+
+
 def run_app_prepare(job_id: str, source: str, target: str, ats_mode: str) -> int:
     warn_if_not_phd_cv_env()
     ensure_repo_import_path()
@@ -727,7 +766,7 @@ def run_app_prepare(job_id: str, source: str, target: str, ats_mode: str) -> int
     )
     from src.cv_generator.ats import run_ats_analysis
     from src.cv_generator.config import CVConfig
-    from src.motivation_letter import MotivationLetterService
+    from src.motivation_letter.service import MotivationLetterService
 
     job_dir = get_job_dir(source, job_id)
     job_md = job_dir / "job.md"
@@ -818,7 +857,7 @@ def run_app_renderize(
     ensure_repo_import_path()
 
     from src.cv_generator.ats import run_ats_analysis
-    from src.motivation_letter import MotivationLetterService
+    from src.motivation_letter.service import MotivationLetterService
     from src.render.pdf import extract_docx_text, extract_pdf_text
 
     job_dir = get_job_dir(source, job_id)
@@ -1213,6 +1252,74 @@ def build_cv_tailoring(job_id: str, source: str = "tu_berlin") -> Path:
     return get_job_dir(source, job_id) / "planning" / "cv_tailoring.md"
 
 
+def run_match_propose(job_id: str, source: str = "tu_berlin") -> Path:
+    ensure_repo_import_path()
+    from src.cv_generator.pipeline import MatchProposalPipeline
+
+    pipeline = MatchProposalPipeline()
+    proposal_path = pipeline.execute_proposal(job_id=job_id, source=source)
+    print(f"[done] wrote {proposal_path}")
+    return proposal_path
+
+
+def _set_match_proposal_status(path: Path, status: str) -> None:
+    content = path.read_text(encoding="utf-8")
+    if not content.startswith("---\n"):
+        return
+    header, sep, body = content.partition("\n---\n")
+    if not sep:
+        return
+    lines = header.splitlines()
+    updated = []
+    replaced = False
+    for line in lines:
+        if line.startswith("status:"):
+            updated.append(f"status: {status}")
+            replaced = True
+        else:
+            updated.append(line)
+    if not replaced:
+        updated.append(f"status: {status}")
+    path.write_text("\n".join(updated) + "\n---\n" + body, encoding="utf-8")
+
+
+def run_match_approve(job_id: str, source: str = "tu_berlin") -> Path:
+    ensure_repo_import_path()
+    from src.cv_generator.pipeline import parse_reviewed_proposal
+
+    job_dir = get_job_dir(source, job_id)
+    proposal_path = job_dir / "planning" / "match_proposal.md"
+    if not proposal_path.exists():
+        raise FileNotFoundError(
+            f"Match proposal not found: {proposal_path}. Run match-propose first."
+        )
+
+    mapping = parse_reviewed_proposal(proposal_path)
+    if not mapping.claims:
+        raise ValueError(
+            "No reviewed decisions found in match_proposal.md. "
+            "Mark decisions with [x] approve|edit|reject, then rerun."
+        )
+
+    approved_or_edited = [
+        claim for claim in mapping.claims if claim.decision in {"approved", "edited"}
+    ]
+    if not approved_or_edited:
+        raise ValueError(
+            "No approved or edited claims found. Approve at least one claim before locking."
+        )
+
+    locked = mapping.model_copy(update={"status": "approved"})
+    reviewed_path = job_dir / "planning" / "reviewed_mapping.json"
+    reviewed_path.write_text(
+        locked.model_dump_json(indent=2) + "\n",
+        encoding="utf-8",
+    )
+    _set_match_proposal_status(proposal_path, "approved")
+    print(f"[done] wrote {reviewed_path}")
+    return reviewed_path
+
+
 def collect_pipeline_stats() -> tuple[int, int, dict[str, list[str]], bool]:
     if not PIPELINE_ROOT.exists():
         return 0, 0, {}, False
@@ -1289,15 +1396,15 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser = subparsers.add_parser("run", help="Run a full pipeline sequence")
     run_parser.add_argument(
         "--fetch",
-        choices=["filtered", "fixed", "skip"],
-        default="filtered",
+        choices=["listing", "filtered", "fixed", "skip"],
+        default="listing",
         help="Fetch mode for job scraping",
     )
     run_parser.add_argument(
         "--translate",
         choices=["rules", "deep", "both", "skip"],
-        default="rules",
-        help="Translation stage mode",
+        default="skip",
+        help="Deprecated translation stage mode (no-op)",
     )
     run_parser.add_argument(
         "--regenerate",
@@ -1316,7 +1423,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     fetch_parser = subparsers.add_parser("fetch", help="Run only fetch stage")
-    fetch_parser.add_argument("mode", choices=["filtered", "fixed"], help="Fetch mode")
+    fetch_parser.add_argument(
+        "mode",
+        choices=["listing", "filtered", "fixed"],
+        help="Fetch mode",
+    )
 
     fetch_url_parser = subparsers.add_parser(
         "fetch-url",
@@ -1403,10 +1514,10 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     translate_parser = subparsers.add_parser(
-        "translate", help="Run only translation stage"
+        "translate", help="Deprecated translation stage (no-op)"
     )
     translate_parser.add_argument(
-        "mode", choices=["rules", "deep", "both"], help="Translation mode"
+        "mode", choices=["rules", "deep", "both"], help="Deprecated translation mode"
     )
 
     subparsers.add_parser("regenerate", help="Regenerate trackers from local raw HTML")
@@ -1420,9 +1531,47 @@ def build_parser() -> argparse.ArgumentParser:
     cv_parser.add_argument(
         "--source", default="tu_berlin", help="Pipeline source namespace"
     )
+    match_propose_parser = subparsers.add_parser(
+        "match-propose",
+        help="Generate a human-reviewable requirement-to-evidence proposal",
+    )
+    match_propose_parser.add_argument(
+        "job_id", help="Job id under data/pipelined_data/<source>"
+    )
+    match_propose_parser.add_argument(
+        "--source", default="tu_berlin", help="Pipeline source namespace"
+    )
+
+    match_approve_parser = subparsers.add_parser(
+        "match-approve",
+        help="Parse reviewed match proposal and lock reviewed_mapping.json",
+    )
+    match_approve_parser.add_argument(
+        "job_id", help="Job id under data/pipelined_data/<source>"
+    )
+    match_approve_parser.add_argument(
+        "--source", default="tu_berlin", help="Pipeline source namespace"
+    )
+
+    motivation_pre_parser = subparsers.add_parser(
+        "motivation-pre",
+        help="Generate motivation pre-letter planning scaffold",
+    )
+    motivation_pre_parser.add_argument(
+        "job_id", help="Job id under data/pipelined_data/<source>"
+    )
+    motivation_pre_parser.add_argument(
+        "--source", default="tu_berlin", help="Pipeline source namespace"
+    )
+    motivation_pre_parser.add_argument(
+        "--output-name",
+        default="motivation_letter.pre.md",
+        help="Pre-letter output filename under planning/",
+    )
+
     motivation_build_parser = subparsers.add_parser(
         "motivation-build",
-        help="Generate final motivation letter from pre-scaffold",
+        help="Generate motivation letter from full job context",
     )
     motivation_build_parser.add_argument(
         "job_id", help="Job id under data/pipelined_data/<source>"
@@ -1847,6 +1996,33 @@ def main() -> int:
         output_path = build_cv_tailoring(args.job_id, source=args.source)
         print(f"[done] wrote {output_path}")
         return 0
+    if args.command == "match-propose":
+        try:
+            run_match_propose(job_id=args.job_id, source=args.source)
+            return 0
+        except Exception as exc:
+            print(f"[error] match-propose failed: {exc}")
+            return 1
+    if args.command == "match-approve":
+        try:
+            run_match_approve(job_id=args.job_id, source=args.source)
+            return 0
+        except Exception as exc:
+            print(f"[error] match-approve failed: {exc}")
+            return 1
+
+    if args.command == "motivation-pre":
+        try:
+            run_motivation_pre(
+                job_id=args.job_id,
+                source=args.source,
+                output_name=args.output_name,
+            )
+            return 0
+        except Exception as exc:
+            print(f"[error] motivation-pre failed: {exc}")
+            return 1
+
     if args.command == "motivation-build":
         try:
             run_motivation_build(

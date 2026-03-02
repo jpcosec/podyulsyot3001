@@ -168,3 +168,18 @@ python src/cli/pipeline.py motivation-build 201084
 2. Manually review and approve, run `match-approve`, verify `ReviewedMapping` parses correctly
 3. Run `cv-build` consuming the reviewed mapping, verify CV reflects approved claims
 4. Compare output quality: old 3-agent flow vs new single-match + human review
+
+## Verification Results (2026-03-02)
+
+### Live Testing on Job 201711
+- ✅ Scraper produced 56-line `job.md` with full posting (vs. 46 lines filtered)
+- ✅ `match-propose` extracted 8 requirements with evidence mapping
+- ✅ `match-approve` parsed human-marked decisions and locked `reviewed_mapping.json`
+- ✅ Parser accepts both `req_N` and `RN` heading formats
+
+### Regex Enhancement
+The heading pattern now accepts both formats:
+- `### R1: requirement text [COVERAGE]` (original format)
+- `### req_1: requirement text [COVERAGE]` (generator output format)
+
+This provides flexibility while maintaining backward compatibility.

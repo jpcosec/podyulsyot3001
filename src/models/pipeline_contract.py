@@ -9,7 +9,15 @@ from src.models.job import JobPosting
 
 class EvidenceItem(BaseModel):
     id: str
-    type: Literal["cv_line", "role", "project", "publication", "education", "skill"]
+    type: Literal[
+        "cv_line",
+        "role",
+        "project",
+        "publication",
+        "education",
+        "skill",
+        "language",
+    ]
     text: str
     source_ref: str = ""
 
@@ -71,3 +79,20 @@ class PipelineState(BaseModel):
     mapping: list[RequirementMapping]
     proposed_claims: list[ProposedClaim] = Field(default_factory=list)
     render: RenderConfig = Field(default_factory=RenderConfig)
+
+
+class ReviewedClaim(BaseModel):
+    req_id: str
+    decision: Literal["approved", "edited", "rejected"]
+    claim_text: str
+    evidence_ids: list[str] = Field(default_factory=list)
+    section: str = "summary"
+    notes: str = ""
+
+
+class ReviewedMapping(BaseModel):
+    job_id: str
+    status: Literal["proposed", "reviewed", "approved"] = "proposed"
+    claims: list[ReviewedClaim] = Field(default_factory=list)
+    gaps: list[str] = Field(default_factory=list)
+    summary: str = ""

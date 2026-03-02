@@ -144,3 +144,37 @@ After all three fixes, the application flow is:
 ```
 
 Each step has a clear input, a clear output, and a human checkpoint where it matters most.
+
+## Implementation Notes
+
+**`motivation-pre` command removal:**
+- Deleted pre-letter scaffold command from `src/cli/pipeline.py` CLI parser
+- Removed `create_pre_letter()` method from `src/motivation_letter/service.py`
+- Removed `MotivationPreResult` dataclass from `src/models/pipeline_contract.py`
+- Removed exports from `src/motivation_letter/__init__.py`
+- Pre-letter flow has been entirely replaced by single `motivation-build` call with full context
+
+**`generate_for_job()` mapping guard:**
+- Now checks `reviewed_mapping.status == "approved"` before proceeding with letter generation
+- Raises `ValueError` with clear message if mapping exists but isn't approved: "Run match-approve <job_id> first to lock the mapping"
+- Prevents accidental generation from unreviewed or rejected claims
+
+**`_format_insights()` simplified:**
+- Removed hardcoded reference to dev artifact file "motivation_letter copy.md"
+- Now uses static defaults: strengths preserved from approved claims, improvements applied from acknowledged gaps
+- No longer attempts to dynamically parse pre-letter markdown
+
+## Verification Results (2026-03-02)
+
+### Live Testing on Job 201711
+- ✅ Full job description passed to LLM (researched "spintronic Terahertz", "XFEL")
+- ✅ Letter references specific job details not in CV
+- ✅ Letter synthesizes approved claims with research context
+- ✅ Guard prevents generation without approved mapping (raises ValueError)
+- ✅ Backward compat: unreviewed proposals still allow generation if approved proposal exists
+
+### Guard Behavior
+- If `reviewed_mapping.json` exists with status="approved": ✅ Generate
+- If `match_proposal.md` exists with status="approved": ✅ Generate
+- If `match_proposal.md` exists with status="proposed": ❌ Raises error
+- If no mapping at all: ✅ Generate (backward compat for old workflow)

@@ -84,7 +84,7 @@ def run_ats_analysis(
     cv_text: str,
     job_description: str = "",
     prompt_path: Path | None = None,
-    ats_mode: str = "fallback",
+    ats_mode: str = "combined",
     weights: tuple[float, float] = (0.6, 0.4),
 ) -> dict[str, Any]:
     prompt_file = prompt_path or Path("src/prompts/ats_evaluation.txt")

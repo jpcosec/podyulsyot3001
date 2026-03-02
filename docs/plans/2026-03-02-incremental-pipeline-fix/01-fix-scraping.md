@@ -84,3 +84,16 @@ Same for motivation letter context assembly.
 2. Translate `job.md` and verify complete English text
 3. Run `cv-tailor` and verify the LLM receives the full job description
 4. Read `job.md` and confirm it's useful for deciding whether to apply
+
+## Implementation Notes
+
+**`render_tracker_markdown()` 3-tier fallback:**
+- Primary: Attempts to extract full posting body via `extract_full_posting_body()` (highest quality)
+- Secondary: Falls back to raw full-text markdown (`raw_full_text_markdown` field from extracted.json) if full body extraction fails
+- Tertiary: Uses filtered checklists from section alias matching only as last resort when both primary sources are unavailable
+- Result: `job.md` now contains complete job description suitable for human decision-making
+
+**Testing status:**
+- Full implementation complete; awaiting re-scrape of job 201084 to verify full text output
+- Expected behavior: `job.md` will contain the entire translated job posting in readable markdown format
+- Verify that motivation letter and CV tailoring LLM calls now receive complete context

@@ -1,1 +1,15 @@
-"""Motivation letter generation — service module pending rebuild."""
+"""Motivation letter generation service."""
+
+from .service import (
+    EmailDraftResult,
+    MotivationGenerationResult,
+    MotivationLetterService,
+    MotivationPDFResult,
+)
+
+__all__ = [
+    "MotivationLetterService",
+    "MotivationGenerationResult",
+    "MotivationPDFResult",
+    "EmailDraftResult",
+]
