@@ -1,5 +1,31 @@
 # Changelog
 
+## 2026-03-02 — Pipeline Redesign Phase 4: Ingestion Step
+
+- Added `src/steps/ingestion.py` with three entry points for job scraping and ingestion:
+  - `run(state, *, force=False, url=None, strict_english=True)` — Main step function following the StepResult protocol
+  - `run_from_url(url, source="tu_berlin", *, strict_english=True)` — Ingest a single job from URL
+  - `run_from_listing(listing_url, source="tu_berlin", *, strict_english=True, delay=0.5)` — Crawl and ingest all jobs from a listing page
+- Wraps existing scraper modules (`src/scraper/scrape_single_url.py`, `src/scraper/fetch_listing.py`, `src/scraper/generate_populated_tracker.py`) without duplicating logic
+- Uses `JobState` for path resolution and artifact management (via `state.artifact_path()` and `state.write_artifact()`)
+- Produces exactly the STEP_OUTPUTS["ingestion"] contract: `raw/raw.html`, `raw/source_text.md`, `raw/extracted.json`, `job.md`
+- Implements three ingestion patterns: fresh scrape (if URL provided), regeneration from cached raw HTML, or error if neither available
+- Added comprehensive test suite (`tests/steps/test_ingestion.py`) with 18 tests covering all three functions, error handling, force re-runs, parameter passing, and URL parsing
+- All tests passing; ingestion step ready for integration into CLI dispatch
+- Created `src/steps/__init__.py` with `StepResult` dataclass and STEPS registry (if not already present from Phase 3)
+
+## 2026-03-02 — Pipeline Redesign Phase 2: Comment System
+
+- Added `src/utils/comments.py` with comment extraction and logging system for iterative feedback
+- Implemented `InlineComment` and `CommentLogEntry` dataclasses for structured comment tracking
+- `extract_comments()` extracts all `<!-- ... -->` HTML comments from markdown files with line numbers and context
+- `extract_comments_from_files()` provides batch extraction with relative path support via job_dir parameter
+- `load_comment_log()` and `append_to_comment_log()` handle JSON persistence with graceful error handling
+- `format_comments_for_prompt()` converts comments to human-readable text blocks suitable for LLM injection
+- Regex uses `re.DOTALL` to properly handle multiline comments
+- Added comprehensive test suite (`tests/utils/test_comments.py`) with 22 tests covering extraction, logging, formatting, and edge cases
+- All tests passing; ready for Phase 3 (steps package protocol)
+
 ## 2026-03-02 — Incremental Pipeline Fix: Code Review Fixes
 
 - **Motivation guard:** `motivation-build` now requires approved mapping (`match-approve`) before generating letters; raises ValueError if mapping exists but isn't approved
