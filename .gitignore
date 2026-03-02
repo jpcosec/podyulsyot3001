@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.ruff_cache/
+.pytest_cache/
+
+# Local agent/runtime state
+.serena/
+
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.bcf
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.blg
+*.bbl
+*.run.xml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.obsidian/
+
+# Environment and build artifacts
+.env
+.venv/
+src/ats_tester/.venv/
+data/pipelined_data/**/build/
+data/pipelined_data/**/output/
