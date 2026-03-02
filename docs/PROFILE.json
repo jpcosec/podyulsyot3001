@@ -1,0 +1,156 @@
+{
+  "schema_version": "1.1",
+  "last_updated": "2026-02-26",
+  "owner": {
+    "full_name": "Juan Pablo Andres Ruiz Rodriguez",
+    "preferred_name": "Juan Pablo Ruiz Rodriguez",
+    "first_name": "Juan Pablo",
+    "middle_name": "Andres",
+    "last_name": "Ruiz Rodriguez",
+    "birth_date": "1992-11-20",
+    "nationality": "Chilean",
+    "location": {
+      "current_city": "Berlin",
+      "current_country": "Germany",
+      "open_to_relocation": true
+    },
+    "contact": {
+      "primary_email": "juanpablo.ruiz.r@gmail.com",
+      "primary_phone": "015222144630",
+      "addresses": [
+        {
+          "label": "current",
+          "value": "Ostendstrasse 27, 12459 Berlin, Germany"
+        },
+        {
+          "label": "historic_cv_record",
+          "value": "Jordanbad 4, 88400 Biberach an der Riss, Germany"
+        }
+      ]
+    },
+    "links": {
+      "linkedin": "https://www.linkedin.com/in/juanpabloruizr/",
+      "github": "https://github.com/jpcosec"
+    },
+    "legal_status": {
+      "germany_visa": {
+        "type": "Chancenkarte",
+        "status": "active",
+        "evidence_file": "/home/jp/buscapega/pega alemania/Visum.jpg"
+      },
+      "work_authorization": {
+        "germany": true
+      }
+    }
+  },
+  "professional_identity": {
+    "primary_headline": "Machine Learning Engineer",
+    "secondary_headlines": [
+      "Data Scientist",
+      "AI Research Engineer"
+    ],
+    "focus_areas": [
+      "Machine Learning",
+      "Computer Vision",
+      "Affective Computing",
+      "AI in Education",
+      "Data Engineering",
+      "LLM-enabled document and workflow automation"
+    ],
+    "current_research": [
+      "Intelligent Tutoring Systems (ITS)",
+      "LAETEC-Vision stress-detection computer vision module",
+      "RAG and LLM-based pedagogical interventions"
+    ]
+  },
+  "job_summary_snapshot": {
+    "source_file": "/home/jp/phd/data/pipelined_data/tu_berlin/summary.csv",
+    "captured_on": "2026-02-26",
+    "total_jobs": 28,
+    "observed_counts": {
+      "research_assistant_titles": 15,
+      "research_associate_or_postdoc_titles": 7,
+      "phd_or_qualification_titles": 2,
+      "german_language_titles": 5,
+      "part_time_markers": {
+        "0.5": 1,
+        "0.75": 5,
+        "0.8": 1,
+        "0.9": 1
+      }
+    },
+    "deadline_range": {
+      "earliest": "2026-02-27",
+      "latest": "2026-03-20"
+    },
+    "known_data_gaps": [
+      {
+        "field": "duration",
+        "unknown_count": 5,
+        "records": [
+          {
+            "job_id": "200069",
+            "url": "https://www.jobs.tu-berlin.de/en/job-postings/200069"
+          },
+          {
+            "job_id": "201399",
+            "url": "https://www.jobs.tu-berlin.de/en/job-postings/201399"
+          },
+          {
+            "job_id": "201553",
+            "url": "https://www.jobs.tu-berlin.de/en/job-postings/201553"
+          },
+          {
+            "job_id": "201010",
+            "url": "https://www.jobs.tu-berlin.de/en/job-postings/201010"
+          },
+          {
+            "job_id": "201188",
+            "url": "https://www.jobs.tu-berlin.de/en/job-postings/201188"
+          }
+        ]
+      },
+      {
+        "field": "salary",
+        "unknown_count": 5,
+        "records": [
+          {
+            "job_id": "200069",
+            "url": "https://www.jobs.tu-berlin.de/en/job-postings/200069"
+          },
+          {
+            "job_id": "201399",
+            "url": "https://www.jobs.tu-berlin.de/en/job-postings/201399"
+          },
+          {
+            "job_id": "201553",
+            "url": "https://www.jobs.tu-berlin.de/en/job-postings/201553"
+          },
+          {
+            "job_id": "201010",
+            "url": "https://www.jobs.tu-berlin.de/en/job-postings/201010"
+          },
+          {
+            "job_id": "201188",
+            "url": "https://www.jobs.tu-berlin.de/en/job-postings/201188"
+          }
+        ]
+      }
+    ]
+  },
+  "credential_snippets": {
+    "visa_status_short": "I currently hold an active Chancenkarte visa in Germany.",
+    "work_authorization_short": "I am authorized to reside and work in Germany under my active Chancenkarte status.",
+    "degree_equivalency_short": "My Electrical Engineering degree (300+ ECTS) is validated by Anabin/ZAB as equivalent to a German Master's/Diplom."
+  },
+  "source_of_truth": {
+    "primary_files": [
+      "/home/jp/phd/src/cv_generator/main.tex",
+      "/home/jp/phd/src/cv_generator/Txt/1-CV-body.tex",
+      "/home/jp/phd/src/cv_generator/Txt/p1_sidebar.tex",
+      "/home/jp/phd/data/reference_data/agent_feedback/templates/application_master_template.md",
+      "/home/jp/buscapega/Pega/CV_aleman/Lebenslauf/src/data/user_info2.json",
+      "/home/jp/phd/data/pipelined_data/tu_berlin/summary.csv"
+    ]
+  }
+}

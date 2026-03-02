@@ -738,24 +738,6 @@ def run_motivation_build(
     return result.letter_path
 
 
-def run_motivation_pre(job_id: str, source: str, output_name: str) -> Path:
-    warn_if_not_phd_cv_env()
-    ensure_repo_import_path()
-    from src.motivation_letter.service import MotivationLetterService
-
-    service = MotivationLetterService()
-    create_pre_letter = getattr(service, "create_pre_letter")
-    result = create_pre_letter(job_id=job_id, source=source)
-    pre_letter_path = result.pre_letter_path
-    if output_name != pre_letter_path.name:
-        custom_path = pre_letter_path.parent / output_name
-        pre_letter_path = copy_into(pre_letter_path, custom_path)
-
-    print(f"[done] wrote {pre_letter_path}")
-    print(f"[done] wrote {result.analysis_path}")
-    return pre_letter_path
-
-
 def run_app_prepare(job_id: str, source: str, target: str, ats_mode: str) -> int:
     warn_if_not_phd_cv_env()
     ensure_repo_import_path()
@@ -1551,22 +1533,6 @@ def build_parser() -> argparse.ArgumentParser:
     )
     match_approve_parser.add_argument(
         "--source", default="tu_berlin", help="Pipeline source namespace"
-    )
-
-    motivation_pre_parser = subparsers.add_parser(
-        "motivation-pre",
-        help="Generate motivation pre-letter planning scaffold",
-    )
-    motivation_pre_parser.add_argument(
-        "job_id", help="Job id under data/pipelined_data/<source>"
-    )
-    motivation_pre_parser.add_argument(
-        "--source", default="tu_berlin", help="Pipeline source namespace"
-    )
-    motivation_pre_parser.add_argument(
-        "--output-name",
-        default="motivation_letter.pre.md",
-        help="Pre-letter output filename under planning/",
     )
 
     motivation_build_parser = subparsers.add_parser(

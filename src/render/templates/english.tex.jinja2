@@ -1,0 +1,103 @@
+% Definition of the class moderncv with some parameters. Font size 11pt, paper size A4, font sans
+\documentclass[11pt, a4paper, sans]{moderncv}
+
+% Includes all the necessary packages from packages.tex
+\input{Einstellungen/packages}
+
+% Defines commands and parameters for modifying the included packages
+\input{Einstellungen/commands}
+
+% Beginning of document
+\begin{document}
+    \pagestyle{empty}
+
+    % ATS: H1 name marker — before the visible title block so it leads the text stream
+    \atswhite{\# {{ personal.full_name }}}
+
+    %Creates the CV title with Name and photo
+    \myCVtitle[Curriculum Vitae]{ {{ personal.first_name }} }{ {{ personal.last_name }} }{Abbildungen/profile.jpg}
+
+    %Reduce the vertical space by 10 points
+    \vspace*{-10pt}
+
+    % ATS: tagline — white, invisible to human eye, present in text stream
+    {% if personal.tagline %}\atswhite{ {{ personal.tagline }} }{% endif %}
+
+    % ## embedded inside section title — eliminates duplication in text extraction
+    \section{\atswhite{\#\# }Contact}
+        \cvcontact{Phone}{ {{ personal.phone }} }
+        \cvcontact{Email}{\href{mailto:{{ personal.email }} }{ {{ personal.email }} }}
+    {% if personal.address %}
+        \cvcontact{Address}{ {{ personal.address }} }
+    {% endif %}
+
+    {% if summary %}
+    \section{\atswhite{\#\# }Summary}
+        \cvline{}{ {{ summary | latex_safe }} }
+    {% endif %}
+
+    \section{\atswhite{\#\# }Education}
+    {% for edu in education %}
+        \cvitem{ {{ edu.start_date|replace('-', '/') }} -- {{ edu.end_date|replace('-', '/') }} }{\textbf{ {{- edu.degree -}}{% if edu.specialization %} ({{ edu.specialization }}){% endif %} } -- {{ edu.institution }}, {{ edu.location }}{% if edu.equivalency_note %}\newline\textit{ {{ edu.equivalency_note }} }{% endif %}}
+    {% endfor %}
+
+    \section{\atswhite{\#\# }Work Experience}
+    {% for job in experience %}
+
+        \cventry{\atswhite{\#\#\# }{{ job.start_date|replace('-', '/') }} -- {{ job.end_date|replace('-', '/') }} }
+                { {{ job.role }} }
+                { {{ job.organization }} }
+                { {{ job.location }} }
+                {}
+                {
+        {% if job.achievements %}
+                \begin{itemize}
+            {% for item in job.achievements %}
+                    \item {{ item | latex_safe }}
+            {% endfor %}
+                \end{itemize}
+        {% endif %}
+                }
+
+    {% if not loop.last %}
+        \vspace{6pt}
+    {% endif %}
+    {% endfor %}
+
+    \section{\atswhite{\#\# }Publications}
+    {% for pub in publications|groupby('year')|reverse %}
+        \cvline{ {{ pub.grouper }} }{
+                \begin{itemize}
+        {% for p in pub.list %}
+                    \item \textit{``{{ p.title }}''} {{ p.venue }}{% if p.url %} \url{ {{ p.url }} }{% endif %}
+        {% endfor %}
+                \end{itemize}
+                }
+    {% endfor %}
+
+    \section{\atswhite{\#\# }Languages}
+    {% for lang in languages %}
+        \cvcontact{\atswhite{* }{{ lang.name }}}{ {{ lang.level }}{% if lang.note %} ({{ lang.note }}){% endif %} }
+    {% endfor %}
+
+    \section{\atswhite{\#\# }Technical Skills}
+    {% for category, items in skills.items() %}
+        {% if items %}
+        \noindent\atswhite{* }\textbf{ {{ category|replace('_', ' ')|title }} }
+        \nopagebreak[4]
+        \hspace{0pt}\rule{\linewidth}{0.2pt}
+        \nopagebreak[4]
+        {% if items is string %}
+        {{ items }}
+        {% else %}
+        {{ items|join(', ') }}
+        {% endif %}
+        \vspace{6pt}
+
+        {% endif %}
+    {% endfor %}
+
+    % Signature
+    \sign{ {{ personal.full_name }} }{ {{ personal.city or '' }} }{Abbildungen/profile.jpg}
+
+\end{document}

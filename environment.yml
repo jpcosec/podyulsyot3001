@@ -1,0 +1,18 @@
+name: phd-cv
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+    - python-docx
+    - python-dotenv
+    - jinja2
+    - beautifulsoup4
+    - PyPDF2
+    - deep-translator
+    - spacy==3.7.2
+    - https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.0/en_core_web_sm-3.7.0.tar.gz
+    - google-genai
+    - pytest

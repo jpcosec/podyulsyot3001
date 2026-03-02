@@ -1,0 +1,133 @@
+{
+  "personal": {
+    "first_name": "Juan Pablo",
+    "last_name": "Ruiz Rodriguez",
+    "full_name": "Juan Pablo Ruiz Rodriguez",
+    "address": "Jordanbad 4",
+    "city": "Biberach an der Riss",
+    "postal_code": "88400",
+    "phone": "015222144630",
+    "email": "juanpablo.ruiz.r@gmail.com",
+    "nationality": "Chilean",
+    "birthday": "1992-11-20",
+    "work_permission": "Germany",
+    "profile_image": "Abbildungen/profile.jpg",
+    "signature_image": "Abbildungen/signature.jpg"
+  },
+  "education": [
+    {
+      "start_date": "2011-03",
+      "end_date": "2019-06",
+      "field": "Elektronikingenieurwesen",
+      "institution": "Universidad de Chile",
+      "location": "Santiago de Chile, Chile",
+      "level": "EQF 6"
+    }
+  ],
+  "experience": [
+    {
+      "start_date": "2025-07",
+      "end_date": "2025-09",
+      "title": "Machine Learning Berater",
+      "company": "AraraDS",
+      "location": "Santiago, Chile",
+      "description": [
+        "Ereignisgesteuerte Pipeline-Orchestrierung mit Kafka und Airflow",
+        "Dokumentenverarbeitung auf Basis von LLMs und generativer KI"
+      ]
+    },
+    {
+      "start_date": "2024-04",
+      "end_date": "2025-06",
+      "title": "Data Engineer",
+      "company": "Globalconexus",
+      "location": "Santiago, Chile",
+      "description": [
+        "Dashboard-Entwicklung mit PowerBI",
+        "ETL-Pipeline-Entwicklung mit Azure Data Factory und Databricks"
+      ]
+    },
+    {
+      "start_date": "2023-03",
+      "end_date": "2023-10",
+      "title": "Data Engineer",
+      "company": "Walmart",
+      "location": "Santiago, Chile",
+      "description": [
+        "Cloud-basierte Verarbeitung großer Datenmengen in Pipelines"
+      ]
+    },
+    {
+      "start_date": "2021-09",
+      "end_date": "2023-03",
+      "title": "Data Science Berater",
+      "company": "Deloitte",
+      "location": "Santiago, Chile",
+      "description": [
+        "Data-Science-Algorithmen",
+        "Backend-Infrastruktur",
+        "API-Entwicklung"
+      ]
+    },
+    {
+      "start_date": "2019-03",
+      "end_date": "2021-08",
+      "title": "Machine Learning Engineer",
+      "company": "Kwali",
+      "location": "Santiago, Chile",
+      "description": [
+        "Algorithmen fuer maschinelle Bildverarbeitung",
+        "Backend-Infrastruktur"
+      ]
+    }
+  ],
+  "publications": [
+    {
+      "year": 2025,
+      "title": "Exploration of Incremental Synthetic Non-Morphed Images for Single Morphing Attack Detection",
+      "authors": ["David Benavente-Rios", "Juan Ruiz Rodriguez", "Gustavo Gatica"],
+      "venue": "NeurIPS 2025",
+      "url": "https://arxiv.org/abs/2510.09836"
+    },
+    {
+      "year": 2025,
+      "title": "Intelligent Tutor for Tasks in the Domain of Linear Algebra",
+      "authors": ["Miguel Rodriguez", "Eduardo Puraivan", "Luis Puebla-Rives", "Juan Pablo Ruiz-Rodriguez", "Diego Saavedra-Lizana", "Mauricio Gamboa", "Connie Cofre-Morales", "Karina Huencho-Iturra", "Pablo Gregori-Huerta"],
+      "venue": "ICITED 2025"
+    }
+  ],
+  "skills": {
+    "languages": [
+      {
+        "name": "Spanish",
+        "level": "Muttersprache"
+      },
+      {
+        "name": "English",
+        "level": "C1 (Verstehen, Sprechen, Schreiben)"
+      },
+      {
+        "name": "German",
+        "level": "A2 (Verstehen, Sprechen, Schreiben)"
+      }
+    ],
+    "technical": [
+      {
+        "category": "Machine Learning",
+        "skills": ["TensorFlow", "Keras", "SK-Learn", "OpenCV"]
+      },
+      {
+        "category": "Data Engineering",
+        "skills": ["ETL-Pipelines", "Azure Data Factory", "Databricks", "PowerBI"]
+      },
+      {
+        "category": "Cloud Computing",
+        "skills": ["Pipeline-Orchestrierung", "Kafka", "Airflow"]
+      },
+      {
+        "category": "Backend",
+        "skills": ["Infrastruktur", "API-Entwicklung", "Data-Warehouse-Systeme"]
+      }
+    ]
+  }
+}

@@ -1,0 +1,242 @@
+{
+  "snapshot_version": "1.0",
+  "captured_on": "2026-02-26",
+  "source": {
+    "external_root": "/home/jp/buscapega",
+    "primary_profile_file": "/home/jp/buscapega/Pega/CV_aleman/Lebenslauf/src/data/user_info2.json"
+  },
+  "owner": {
+    "full_name": "Juan Pablo Andres Ruiz Rodriguez",
+    "preferred_name": "Juan Pablo Ruiz Rodriguez",
+    "birth_date": "1992-11-20",
+    "nationality": "Chilean",
+    "contact": {
+      "email": "juanpablo.ruiz.r@gmail.com",
+      "phone": "015222144630",
+      "addresses": [
+        {
+          "label": "current",
+          "value": "Ostendstrasse 27, 12459 Berlin, Germany"
+        },
+        {
+          "label": "historical",
+          "value": "Jordanbad 4, 88400 Biberach an der Riss, Germany"
+        }
+      ]
+    },
+    "links": {
+      "linkedin": "https://www.linkedin.com/in/juanpabloruizr/",
+      "github": "https://github.com/jpcosec"
+    },
+    "legal_status": {
+      "visa_type": "Chancenkarte",
+      "visa_status": "active",
+      "visa_evidence_file": "/home/jp/buscapega/pega alemania/Visum.jpg",
+      "work_permission_germany": true
+    },
+    "professional_summary": "Machine Learning Engineer and Research Associate bridging applied AI research and production-oriented data systems. Experienced in Python, workflow orchestration (Airflow), and MLOps lifecycle practices (versioning, deployment, monitoring). Background in IoT, ROS, and FAIR-aligned experimentation. Proven experience deploying scalable data and ML pipelines across major cloud providers including Azure, AWS, and Google Cloud (Vertex AI, S3, Spark, BigQuery). Fully compliant with MSCA mobility rules with an Anabin/ZAB validated German Master's equivalency.",
+    "tagline": "Research Assistant Candidate | Applied AI & MLOps"
+  },
+  "education": [
+    {
+      "degree": "Electrical Engineering",
+      "specialization": "Computational Intelligence",
+      "institution": "Universidad de Chile",
+      "location": "Santiago, Chile",
+      "start_date": "2011-03",
+      "end_date": "2019-06",
+      "level_reference": "EQF 6",
+      "equivalency_note": "Program exceeds 300 ECTS and validated by Anabin/ZAB as equivalent to a German Master's/Diplom."
+    }
+  ],
+  "experience": [
+    {
+      "role": "Machine Learning Consultant",
+      "organization": "AraraDS",
+      "location": "Santiago, Chile",
+      "start_date": "2025-07",
+      "end_date": "2025-09",
+      "keywords": [
+        "Kafka",
+        "Airflow",
+        "LLMs",
+        "GenAI",
+        "Document Processing",
+        "OCR"
+      ],
+      "achievements": [
+        "Built and deployed Python-based data and ML pipelines with Apache Airflow for production orchestration and scheduling",
+        "Integrated LLM-assisted extraction workflows within event-driven document pipelines using Kafka",
+        "Applied MLOps practices including model versioning, deployment, and monitoring for iterative experimentation"
+      ]
+    },
+    {
+      "role": "Research Associate (AI in Education)",
+      "organization": "Universidad de Playa Ancha (UPLA)",
+      "location": "Valparaiso, Chile (remote/hybrid)",
+      "start_date": "2024-11",
+      "end_date": "2025-06",
+      "keywords": [
+        "ITS",
+        "PyTorch",
+        "TensorFlow",
+        "Experiment Design",
+        "Learning Analytics"
+      ],
+      "achievements": [
+        "Designed Intelligent Tutoring System (ITS) architecture integrating affective sensing, RAG-backed domain knowledge, and pedagogical decision logic",
+        "Developed LAETEC-Vision leveraging PyTorch for real-time cognitive-state classification",
+        "Designed reproducible evaluation workflows and structured experiment metadata following FAIR data principles for adaptive interventions"
+      ]
+    },
+    {
+      "role": "Data Engineer",
+      "organization": "Globalconexus",
+      "location": "Santiago, Chile",
+      "start_date": "2024-04",
+      "end_date": "2025-06",
+      "keywords": [
+        "Azure Data Factory",
+        "Databricks",
+        "PySpark",
+        "Power BI",
+        "Delta Lake"
+      ],
+      "achievements": [
+        "Built and maintained scalable enterprise data pipelines leveraging Azure Data Factory, Databricks, and PySpark",
+        "Implemented model deployment monitoring and constructed semantic reporting layers in Power BI"
+      ]
+    },
+    {
+      "role": "Data Engineer",
+      "organization": "Walmart",
+      "location": "Santiago, Chile",
+      "start_date": "2023-03",
+      "end_date": "2023-10"
+    },
+    {
+      "role": "Data Science Consultant",
+      "organization": "Deloitte",
+      "location": "Santiago, Chile",
+      "start_date": "2021-09",
+      "end_date": "2023-03",
+      "achievements": [
+        "Developed ML models and integrated backend/API components for applied analytics use cases"
+      ]
+    },
+    {
+      "role": "Machine Learning Engineer",
+      "organization": "Kwali",
+      "location": "Santiago, Chile",
+      "start_date": "2019-03",
+      "end_date": "2021-08",
+      "achievements": [
+        "Built computer vision-based quality assurance and reporting systems",
+        "Designed and deployed real-time image processing pipelines on constrained edge devices including Raspberry Pi and Jetson Nano"
+      ]
+    },
+    {
+      "role": "Electronics Intern",
+      "organization": "DSM Noisemaker",
+      "location": "Santiago, Chile",
+      "start_date": "2017-12",
+      "end_date": "2018-03",
+      "keywords": [
+        "Audio Processing",
+        "Embedded Solutions",
+        "Control Interfaces",
+        "Circuit Design"
+      ],
+      "achievements": [
+        "Researched digital audio technologies and developed digital control systems for analog sound processing circuits",
+        "Prototyped and tested embedded solutions for audio processing and control interfaces"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "name": "Metadata-Driven Code Generation Framework",
+      "role": "Creator",
+      "stack": [
+        "Python",
+        "FastAPI",
+        "Beanie/Pydantic",
+        "Jinja2",
+        "React/TypeScript",
+        "Prefect",
+        "Docker"
+      ]
+    }
+  ],
+  "publications": [
+    {
+      "year": 2025,
+      "title": "Exploration of Incremental Synthetic Non-Morphed Images for Single Morphing Attack Detection",
+      "venue": "NeurIPS 2025 (Workshop)",
+      "url": "https://arxiv.org/abs/2510.09836"
+    },
+    {
+      "year": 2025,
+      "title": "Intelligent Tutor for Tasks in the Domain of Linear Algebra",
+      "venue": "ICITED 2025"
+    }
+  ],
+  "languages": [
+    {
+      "name": "Spanish",
+      "level": "CEFR C2",
+      "note": "Native"
+    },
+    {
+      "name": "English",
+      "level": "CEFR C1"
+    },
+    {
+      "name": "German",
+      "level": "CEFR A2"
+    }
+  ],
+  "skills": {
+    "programming_languages": [
+      "Python",
+      "JavaScript",
+      "Java",
+      "C",
+      "Verilog"
+    ],
+    "ml_ai": [
+      "scikit-learn",
+      "TensorFlow/Keras",
+      "PyTorch",
+      "LLM prompting",
+      "guardrails",
+      "model evaluation",
+      "Vertex AI"
+    ],
+    "data_platforms": [
+      "Azure Data Factory",
+      "Databricks",
+      "Spark",
+      "Delta Lake",
+      "Power BI",
+      "BigQuery",
+      "S3"
+    ],
+    "orchestration_devops": [
+      "Airflow",
+      "Prefect",
+      "Docker",
+      "Git",
+      "CI/CD",
+      "AWS",
+      "Azure",
+      "Google Cloud"
+    ],
+    "electronics_robotics": [
+      "Arduino",
+      "G-code",
+      "ROS",
+      "SPICE"
+    ]
+  }
+}

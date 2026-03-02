@@ -1,0 +1,1068 @@
+{
+  "generated_at_utc": "2026-02-26T22:10:09.309235+00:00",
+  "file_count": 177,
+  "files": [
+    {
+      "path": "data/pipelined_data/tu_berlin/200069/job.md",
+      "size_bytes": 4096,
+      "sha256": "d1a5dd8215070a3d4c6fde22e9d048d02720ae0a92e454c084f785bb9418fb37",
+      "modified_utc": "2026-02-26T18:47:31.772358+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/200069/proposal_text.md",
+      "size_bytes": 1411,
+      "sha256": "3676b0bdcfed70bd98b961eeb4523bce4899892db54b403e5d0dcfc87f82ab88",
+      "modified_utc": "2026-02-26T11:38:12.509250+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/200069/raw.html",
+      "size_bytes": 34543,
+      "sha256": "35ed5e1dd3d809b6b71c4c4bf174b095cbc816bbfd6481a988c8f2d39df5064b",
+      "modified_utc": "2026-02-25T00:05:05.343280+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/200069/summary.json",
+      "size_bytes": 268,
+      "sha256": "d09dea2eeffae60d7bd737c77cb7aaaed1c1e931d6bb8ff58059f6491a92217c",
+      "modified_utc": "2026-02-26T18:04:47.210222+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/200879/job.md",
+      "size_bytes": 6579,
+      "sha256": "a244c78b77171f6e09953ca6442b0f474eb7b6aa30d9e1831d54a18b4676f45e",
+      "modified_utc": "2026-02-26T18:47:31.771854+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/200879/proposal_text.md",
+      "size_bytes": 2595,
+      "sha256": "a39d28ae5108d744ca9d6c18bff3a520ecfdd882e0402713f2ba575dbfb0da78",
+      "modified_utc": "2026-02-26T11:38:12.355132+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/200879/raw.html",
+      "size_bytes": 36907,
+      "sha256": "326a6cbda988e4e905a096e7dd98d13dfb5cfaab4c633d07e5f18eee29e0265f",
+      "modified_utc": "2026-02-25T00:05:12.084378+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/200879/summary.json",
+      "size_bytes": 311,
+      "sha256": "51fa2bbfa7db6127698813f0c06ecd21107a8775ca2586fcbbffae9f5ecec1dd",
+      "modified_utc": "2026-02-26T18:04:47.210991+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/200897/job.md",
+      "size_bytes": 6474,
+      "sha256": "a95a67a7b4845cf19cbba37e05a53be9ae490f43dfa81cc12aac0bb42da4f36c",
+      "modified_utc": "2026-02-26T18:47:31.771785+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/200897/proposal_text.md",
+      "size_bytes": 2549,
+      "sha256": "549b09dc87b940ace8db24d9d2f1f5489377752eda5511eca33b6eb2b9559918",
+      "modified_utc": "2026-02-26T11:38:12.340836+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/200897/raw.html",
+      "size_bytes": 36214,
+      "sha256": "03e8eb675537591dcfc1d76cb229b5e781dd4efc3fd65654b032358caeaa00fd",
+      "modified_utc": "2026-02-25T00:05:10.990844+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/200897/summary.json",
+      "size_bytes": 302,
+      "sha256": "81b49597859b5c581fa267fa776e1bd8d0811017b91e10d3dfc512ed33a98b74",
+      "modified_utc": "2026-02-26T18:04:47.211700+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201010/job.md",
+      "size_bytes": 4033,
+      "sha256": "1c7b1ead0c8a29a18f4c8cc35bfda91599734de380f106ee3653853f04b2e43f",
+      "modified_utc": "2026-02-26T18:47:31.761972+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201010/proposal_text.md",
+      "size_bytes": 1373,
+      "sha256": "19532ee998dc01c3953faeac28e84e951a32e7a053ea26dd16af6c7e71cef61e",
+      "modified_utc": "2026-02-26T11:38:12.192927+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201010/raw.html",
+      "size_bytes": 34602,
+      "sha256": "97d069820be5f0d120d0fe072e72216115237a77d1087419f1626bdccea6083b",
+      "modified_utc": "2026-02-25T00:05:06.971437+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201010/summary.json",
+      "size_bytes": 295,
+      "sha256": "cc0526f89c1abf718cc10e79e5f513bc39ca6cb17addc61bd5a429f8552f82be",
+      "modified_utc": "2026-02-26T18:04:47.212447+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201067/job.md",
+      "size_bytes": 3958,
+      "sha256": "0ff5740e8d3fe2039339f6a7755e4c980591b06de3002d57400dc7fd98ccbd5e",
+      "modified_utc": "2026-02-26T18:47:31.771490+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201067/proposal_text.md",
+      "size_bytes": 1252,
+      "sha256": "4360293016617d3a70a1839648e0d1dbdaaaadaa660c165a751bd606eb545a56",
+      "modified_utc": "2026-02-26T11:38:12.310073+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201067/raw.html",
+      "size_bytes": 35738,
+      "sha256": "52369d5cb49e17d82ff65834c85ae9fffb396cd734b9604e3998fe4baf652af2",
+      "modified_utc": "2026-02-25T00:05:11.252374+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201067/summary.json",
+      "size_bytes": 301,
+      "sha256": "6bbf9969270343b7d511f2f183cb6cf424667568892a840c44eefa3eb003c857",
+      "modified_utc": "2026-02-26T18:04:47.213104+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201069/job.md",
+      "size_bytes": 5386,
+      "sha256": "918f7bffeab1073d5c5328d000476bcc070c7a2f9b86d5ff560146646d4d0b19",
+      "modified_utc": "2026-02-26T18:47:31.772244+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201069/proposal_text.md",
+      "size_bytes": 2020,
+      "sha256": "1a9aba66ed22639eda387cfdd1b84e8d150a5ef0108033766ee4ab6787064564",
+      "modified_utc": "2026-02-26T11:38:12.462132+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201069/raw.html",
+      "size_bytes": 37611,
+      "sha256": "889695bda3630c16244bed0f66bd237046128b6e6e978e5aa8ba46173a41010e",
+      "modified_utc": "2026-02-25T00:05:11.534792+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201069/summary.json",
+      "size_bytes": 296,
+      "sha256": "18d7cc5413e7a8bc6fb90c069eeb9f6cf73d4d968f44b94c87bcca0174a7b978",
+      "modified_utc": "2026-02-26T18:04:47.213615+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201084/cv_content_preview.md",
+      "size_bytes": 3750,
+      "sha256": "3208d56181b2ce1f6d6b97f842fde6f958ef72f4057ed704c7150c9b9e5e1798",
+      "modified_utc": "2026-02-26T21:35:24.458907+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201084/cv_tailoring.md",
+      "size_bytes": 2764,
+      "sha256": "4d667b4ee36b0beca50df83a1a23901b032e6549ea454ad80f86507419184d85",
+      "modified_utc": "2026-02-26T22:09:19.065027+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201084/job.md",
+      "size_bytes": 6843,
+      "sha256": "1aee949014b4a1a07c010e8856990d0394171346f7fd1a7ede41495dcc39188f",
+      "modified_utc": "2026-02-26T19:12:31.145379+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201084/latex/CV_TU_Berlin_201084.aux",
+      "size_bytes": 407,
+      "sha256": "31cb200b28ee6d31a44d467997ccf9c79d34baf94730651a26c41c37edcf2ef5",
+      "modified_utc": "2026-02-26T22:09:26.331725+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201084/latex/CV_TU_Berlin_201084.bcf",
+      "size_bytes": 107482,
+      "sha256": "6c73885cc3d6d217c9429485151c0d892c8fc1a013334745f2d9681773c32c5c",
+      "modified_utc": "2026-02-26T22:09:26.335725+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201084/latex/CV_TU_Berlin_201084.log",
+      "size_bytes": 65080,
+      "sha256": "ce768d8b320da2aa69894351cb5e4e3f32f76012bc5c164ed6ae1c89212e434f",
+      "modified_utc": "2026-02-26T22:09:26.369725+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201084/latex/CV_TU_Berlin_201084.out",
+      "size_bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "modified_utc": "2026-02-26T22:09:23.871725+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201084/latex/CV_TU_Berlin_201084.pdf",
+      "size_bytes": 226599,
+      "sha256": "24d966308357cc13e1a287200473b2943b68f607c2a7d1e65a646beeb4cc9ceb",
+      "modified_utc": "2026-02-26T22:09:26.369725+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201084/latex/CV_TU_Berlin_201084.run.xml",
+      "size_bytes": 2426,
+      "sha256": "301e88ff5de0026b234a21e5e66a33ddf699fa59098fd8a22e0ce4a837ab735b",
+      "modified_utc": "2026-02-26T22:09:26.338066+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201084/latex/CV_TU_Berlin_201084.tex",
+      "size_bytes": 1025,
+      "sha256": "46adec6d5ab1424ef8da3af3c2eaca53814561cc33662f26b6bad8d9f4777d08",
+      "modified_utc": "2026-02-26T22:09:19.064838+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201084/latex/CV_TU_Berlin_201084_body.tex",
+      "size_bytes": 2045,
+      "sha256": "e01e08c77005e928b7f488a32974070b415d0b940acaf8dbd8031734006e1494",
+      "modified_utc": "2026-02-26T22:09:19.064748+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201084/motivation_letter.md",
+      "size_bytes": 2620,
+      "sha256": "559fe44866f99da492d4cfe102018b01b4130140f23b6c2701f1ebbb9d3f97f3",
+      "modified_utc": "2026-02-26T21:10:23.322065+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201084/proposal_text.md",
+      "size_bytes": 2565,
+      "sha256": "4f2683cf74176f176f834e04d9de4fd948ef2b047ca24c03f1b8f3ace4d33356",
+      "modified_utc": "2026-02-26T11:38:12.391551+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201084/raw.html",
+      "size_bytes": 35294,
+      "sha256": "c0732e6cb6cf9abcfca11c2830958d79e82d8e6634ae7fbd9f069d7e20a0667b",
+      "modified_utc": "2026-02-25T00:05:07.754002+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201084/summary.json",
+      "size_bytes": 277,
+      "sha256": "84f857832e5d327cff5413fe2123253ae5861abcae968d6eac4eaa5ec1b1a533",
+      "modified_utc": "2026-02-26T18:04:47.214102+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201115/job.md",
+      "size_bytes": 4044,
+      "sha256": "6ed2f594e094374d6d142e308d1686cad3c2828d9030b89755682a46c64daecb",
+      "modified_utc": "2026-02-26T18:47:31.772593+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201115/proposal_text.md",
+      "size_bytes": 1366,
+      "sha256": "d6edafe11d304b1eb7e5ac6f809ab08fbe42f0ecea74340be134076679f93ead",
+      "modified_utc": "2026-02-26T11:38:12.600072+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201115/raw.html",
+      "size_bytes": 33476,
+      "sha256": "dc2d747de7fd68ee0530e44916ddcb9cb5d546fe78161bcf9800f2556b0f45f6",
+      "modified_utc": "2026-02-25T00:05:10.469014+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201115/summary.json",
+      "size_bytes": 298,
+      "sha256": "6dd2cccbb9e15ffed8388f96a476dc7fbc1b4215a30b7398400cb62488d560fa",
+      "modified_utc": "2026-02-26T18:04:47.214750+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201185/job.md",
+      "size_bytes": 3110,
+      "sha256": "72adb09536152ceb40cbc21f8e0dcd27698345814629d3175182c2b3db76b1fa",
+      "modified_utc": "2026-02-26T18:47:31.772302+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201185/proposal_text.md",
+      "size_bytes": 862,
+      "sha256": "99be231161338f0854888fbd43cd4ee40516e6cc790e83fd80bf62f5c386f046",
+      "modified_utc": "2026-02-26T11:38:12.495327+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201185/raw.html",
+      "size_bytes": 34110,
+      "sha256": "3cf3971d5a0c0fbbece24ee11fe0ab6e9232946c9ce6991c12bdc794622983ab",
+      "modified_utc": "2026-02-25T00:05:09.695360+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201185/summary.json",
+      "size_bytes": 271,
+      "sha256": "ed667c33531b3672e858e07ccd9da04921af2c6d06122aae77077d0e91a3dad5",
+      "modified_utc": "2026-02-26T18:04:47.215332+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201188/job.md",
+      "size_bytes": 2544,
+      "sha256": "019fa5a31d7c2fbc2924e332a8578d3a0a941624dc767b445b80913ef864eaea",
+      "modified_utc": "2026-02-26T18:47:31.772052+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201188/proposal_text.md",
+      "size_bytes": 652,
+      "sha256": "0337f31ab62b9e05868f97e5dd49f769d06ce12d745beca2de7025afbbd509d5",
+      "modified_utc": "2026-02-26T11:38:12.411750+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201188/raw.html",
+      "size_bytes": 35571,
+      "sha256": "f9fbf0149a6690e6b2eef37cd4a2be32b15571b29ed91ba1663ca38d104c9bde",
+      "modified_utc": "2026-02-25T00:05:09.108789+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201188/summary.json",
+      "size_bytes": 272,
+      "sha256": "99fd2bc4d339a4165aef5fbd02e504c1a7a5330047552b7094142dfdab98edca",
+      "modified_utc": "2026-02-26T18:04:47.216545+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201191/job.md",
+      "size_bytes": 3864,
+      "sha256": "1ee7aefb82e55f2fb9995faa3b83aacd37f46234d044cb839617d3726921f1ec",
+      "modified_utc": "2026-02-26T18:47:31.762064+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201191/proposal_text.md",
+      "size_bytes": 1268,
+      "sha256": "b9e8ace7f5a29709e951a1eb876c968f490e659819d37f093a75e11502cf9b92",
+      "modified_utc": "2026-02-26T11:38:12.218181+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201191/raw.html",
+      "size_bytes": 33458,
+      "sha256": "d493306c0c616b0cb4dff49c2c93ffa5ad4ce737f4273a26d35517fac3521004",
+      "modified_utc": "2026-02-25T00:05:05.577785+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201191/summary.json",
+      "size_bytes": 290,
+      "sha256": "73091a5c239d496e3302955198b4ffdb58a4e08889770af563e77acce6317ca2",
+      "modified_utc": "2026-02-26T18:04:47.217053+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201203/job.md",
+      "size_bytes": 3983,
+      "sha256": "6285d0a0017204c93a7055a912b3037f990d18690e71ef5429fb0d83f22ed392",
+      "modified_utc": "2026-02-26T18:47:31.772192+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201203/proposal_text.md",
+      "size_bytes": 1345,
+      "sha256": "651213214dea9abc8451049d6a21abfd5f72db722698ba04bf5a2ba19adc800c",
+      "modified_utc": "2026-02-26T11:38:12.444067+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201203/raw.html",
+      "size_bytes": 33512,
+      "sha256": "f3f5669feef1cf32f092acbe93caec0e9ddeb26494fa52460253d1c6cf4c8efe",
+      "modified_utc": "2026-02-25T00:05:04.834172+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201203/summary.json",
+      "size_bytes": 271,
+      "sha256": "c6e937a77861ef29a6eeb61404bd531809b514efa25e1a55b1e1f7fc65023cb6",
+      "modified_utc": "2026-02-26T18:04:47.217741+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201219/job.md",
+      "size_bytes": 4547,
+      "sha256": "37fc663cab382d21b99e5d50065aef3ee709d0099c7e28d032ace7da722ac563",
+      "modified_utc": "2026-02-26T18:47:31.772507+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201219/proposal_text.md",
+      "size_bytes": 1608,
+      "sha256": "a904d0de6d447e9e56165a3e203156637803d708a4f461749e8fa326b9671079",
+      "modified_utc": "2026-02-26T11:38:12.572394+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201219/raw.html",
+      "size_bytes": 34308,
+      "sha256": "76b5069805d671b2c54ad2929bab13b453f7e80e88db71730adbaa70c24a0b9e",
+      "modified_utc": "2026-02-25T00:05:10.208084+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201219/summary.json",
+      "size_bytes": 301,
+      "sha256": "4742753c9dd0ece76f3e8340eff1cae447c30a047b71045492b947131fd28c4a",
+      "modified_utc": "2026-02-26T18:04:47.218271+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201222/job.md",
+      "size_bytes": 3600,
+      "sha256": "d0323c25d4bc87df5722bb9aaf3f6e15fb63ef0ed0f4aa15242be8fd46f6a402",
+      "modified_utc": "2026-02-26T18:47:31.771914+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201222/proposal_text.md",
+      "size_bytes": 1086,
+      "sha256": "6c5e2b9c7f3d8d651bc99ae4e93d4d2981cf77e4fe3d20ac5e2bad2e5d1b61f1",
+      "modified_utc": "2026-02-26T11:38:12.375063+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201222/raw.html",
+      "size_bytes": 35524,
+      "sha256": "bfcaccf04ab52d0c2ce123d95260954e9683573dec6216937e2f9c29c416b8b4",
+      "modified_utc": "2026-02-25T00:05:05.083566+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201222/summary.json",
+      "size_bytes": 301,
+      "sha256": "969058975791a4a71afd9f23f7acbf1935b11a719bdf345b3f28ba7af03ed0ea",
+      "modified_utc": "2026-02-26T18:04:47.218788+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201223/job.md",
+      "size_bytes": 3934,
+      "sha256": "4877bd98d447dd3bf20e1d2961fb897be8131dde3da62026d0ae39a454f0e3b2",
+      "modified_utc": "2026-02-26T18:47:31.762177+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201223/proposal_text.md",
+      "size_bytes": 1302,
+      "sha256": "c27f744297293520439cb442f32ba06bb747ddc8d5238549a2396abfea92be0d",
+      "modified_utc": "2026-02-26T11:38:12.260530+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201223/raw.html",
+      "size_bytes": 34269,
+      "sha256": "75fd7efedb5e24ce804f81aaf25c5beefed6488c91f2bf447a5d206c2292e215",
+      "modified_utc": "2026-02-25T00:05:06.415392+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201223/summary.json",
+      "size_bytes": 306,
+      "sha256": "6e43b3e9673615bd71c7e6c8c34734982e21ff1e9aa72fd4978333a7c3172161",
+      "modified_utc": "2026-02-26T18:04:47.219180+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201300/job.md",
+      "size_bytes": 4200,
+      "sha256": "f971abc74f97f3a860d404f3e2f081b7db5b779dcf50ba5a6e8fe3c812fcbb85",
+      "modified_utc": "2026-02-26T18:47:31.761762+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201300/proposal_text.md",
+      "size_bytes": 1432,
+      "sha256": "74f9a4b4282e543b75d67696d536bbbbad86190d08c65847c35aaffa0b35b2b4",
+      "modified_utc": "2026-02-26T11:38:12.166832+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201300/raw.html",
+      "size_bytes": 34522,
+      "sha256": "8c5bd4e084d6ef65e8e0425bc0757e7538a5e6aa5ca63ee79139cec88e3ea237",
+      "modified_utc": "2026-02-25T00:05:08.808789+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201300/summary.json",
+      "size_bytes": 308,
+      "sha256": "36632b918ec1c58144e0a78f4f48011e170890140febc37698133818555ab736",
+      "modified_utc": "2026-02-26T18:04:47.219544+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201309/job.md",
+      "size_bytes": 4796,
+      "sha256": "d6b33307d715543d8e0de075c1e45fc46f5b705156c410ef471a3831ca629846",
+      "modified_utc": "2026-02-26T18:47:31.772551+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201309/proposal_text.md",
+      "size_bytes": 1750,
+      "sha256": "b83544719c4b2028c10d2d5441913541fd70fbc19322e1d09947eb4a99a53a76",
+      "modified_utc": "2026-02-26T11:38:12.586965+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201309/raw.html",
+      "size_bytes": 34549,
+      "sha256": "8adc1e3ebeff5a40321ed35408062feaf022e019834af70f67003df10d5b02fb",
+      "modified_utc": "2026-02-25T00:05:09.370440+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201309/summary.json",
+      "size_bytes": 288,
+      "sha256": "ca2d2bc1169275d945fbd956d6e8d1778735399a8bb7bc70db452e1aeab58c01",
+      "modified_utc": "2026-02-26T18:04:47.219964+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201342/job.md",
+      "size_bytes": 5440,
+      "sha256": "ad63946b3df9f474575178bb9d42a4ba0138547fca336a1fc23c6fc74c365969",
+      "modified_utc": "2026-02-26T18:47:31.771030+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201342/proposal_text.md",
+      "size_bytes": 2052,
+      "sha256": "8981d36cca3e94ea222116a731aa3a31600150afee28c7d11a9162a778daab7b",
+      "modified_utc": "2026-02-26T11:38:12.294050+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201342/raw.html",
+      "size_bytes": 34742,
+      "sha256": "50356c4d00a03342dd9a0e82a8f351d315eed70656a4fc556ffc812afaee7cef",
+      "modified_utc": "2026-02-25T00:05:07.237436+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201342/summary.json",
+      "size_bytes": 308,
+      "sha256": "cc26c4b30559068d7e61970b5aa0ab7ec15002adae229fef8482213cb546946c",
+      "modified_utc": "2026-02-26T18:04:47.220303+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201396/job.md",
+      "size_bytes": 3603,
+      "sha256": "8c1dea28710723b4be8bd47a4389ab56a4596dec2b5b6011cb4387c0fe5d388a",
+      "modified_utc": "2026-02-26T18:47:31.762210+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201396/proposal_text.md",
+      "size_bytes": 1155,
+      "sha256": "eb7b37c917d8545b7be130182a8cd87e406a59b53b701ccfbdde76e241be5cf5",
+      "modified_utc": "2026-02-26T11:38:12.279701+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201396/raw.html",
+      "size_bytes": 33353,
+      "sha256": "e9b6d48dedd99ef8d2daaf774f240fa33a73adf2c821b92179674bc39c4919f4",
+      "modified_utc": "2026-02-25T00:05:09.939844+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201396/summary.json",
+      "size_bytes": 271,
+      "sha256": "ea1a57f5be9178cffbbca994737e9c131afd576ad44f9c467f42216e8ded2198",
+      "modified_utc": "2026-02-26T18:04:47.220650+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201397/job.md",
+      "size_bytes": 5397,
+      "sha256": "25b4cb6c93022dc6883e6eef04414474599e588669092350e7b37b1b081252da",
+      "modified_utc": "2026-02-26T18:47:31.772131+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201397/proposal_text.md",
+      "size_bytes": 2016,
+      "sha256": "2ce22d48129330fb834c0ebfcc9e65676b8681d656b158d8fcbf1851cc71ef3d",
+      "modified_utc": "2026-02-26T11:38:12.428024+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201397/raw.html",
+      "size_bytes": 35638,
+      "sha256": "0a81eff7dd8aa45c59cdedcbe5faadbc63d6e8f49d1eac1d61f7bcee66482d2c",
+      "modified_utc": "2026-02-25T00:05:10.743686+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201397/summary.json",
+      "size_bytes": 291,
+      "sha256": "9cb2608178286fbf0e298d13eb009b20c94caa8a5aae4ce411c95fffd8911801",
+      "modified_utc": "2026-02-26T18:04:47.221148+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201399/job.md",
+      "size_bytes": 4747,
+      "sha256": "efee18f22b79c746074d914ad8457c1120ae6a1e95dabf1d3faf6caaf0a26e7e",
+      "modified_utc": "2026-02-26T18:47:31.761917+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201399/proposal_text.md",
+      "size_bytes": 1755,
+      "sha256": "5cdcdcec3c2833077dd8ad68e897167e4f3ec99a352ef37bdd49ede1e85527a7",
+      "modified_utc": "2026-02-26T11:38:12.180542+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201399/raw.html",
+      "size_bytes": 35693,
+      "sha256": "024901e219103b78af426fd1241f55ce80d5318856b76f8558b4b1ef2f0d7403",
+      "modified_utc": "2026-02-25T00:05:06.143383+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201399/summary.json",
+      "size_bytes": 253,
+      "sha256": "160562528c4a3ccbbe8bbdb892bf102ac92590ae9e0abbe19e804b284f8854a2",
+      "modified_utc": "2026-02-26T18:04:47.221630+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201404/job.md",
+      "size_bytes": 4115,
+      "sha256": "cd61d204a09e7a509e27778d9c7e9a0c15ba02b5d06db2ed194ef3dda18a806b",
+      "modified_utc": "2026-02-26T18:47:31.772430+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201404/proposal_text.md",
+      "size_bytes": 1398,
+      "sha256": "4a5bcef5bbd7eb9cab80dd7403e6d23f040cdfd94ccaf152d06d812dd8cb61cf",
+      "modified_utc": "2026-02-26T11:38:12.543903+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201404/raw.html",
+      "size_bytes": 33637,
+      "sha256": "f676ef772c2b0733d794b62ee5fe322d80428f8ba384f1acb569811335bc2dec",
+      "modified_utc": "2026-02-25T00:05:08.534215+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201404/summary.json",
+      "size_bytes": 285,
+      "sha256": "30cd8674908d9e48f91e63274ec3255c6a1aae37036e48b079e188f0d127f37c",
+      "modified_utc": "2026-02-26T18:04:47.221955+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201406/job.md",
+      "size_bytes": 4196,
+      "sha256": "7a7ea5f410637e788e93f43ea4e78ebcddee253f40f8e3c9dc22c0e790b3bbea",
+      "modified_utc": "2026-02-26T18:47:31.771645+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201406/proposal_text.md",
+      "size_bytes": 1389,
+      "sha256": "8b2aeb10cd10b4cf636faa4e4e941f12969f61ac371e96db9ea96583322b80c0",
+      "modified_utc": "2026-02-26T11:38:12.324132+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201406/raw.html",
+      "size_bytes": 33682,
+      "sha256": "ad3623a7c73651ded593507fcc8eeb41611317200af69b321b990dc98a7046bd",
+      "modified_utc": "2026-02-25T00:05:05.854785+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201406/summary.json",
+      "size_bytes": 273,
+      "sha256": "3f7ce8105584a0284c1a3816ea098ed4473dd679ad15a0ab2e5973ede9758dce",
+      "modified_utc": "2026-02-26T18:04:47.222250+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201553/job.md",
+      "size_bytes": 3589,
+      "sha256": "89ae547264a8cb80cb89400f432fe0c2f5ad6990d6c66d1420c68ed946033f85",
+      "modified_utc": "2026-02-26T18:47:31.772396+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201553/proposal_text.md",
+      "size_bytes": 1150,
+      "sha256": "7a55467055b709680187db965bea50da649d6bf40bb7239468d633762c11afda",
+      "modified_utc": "2026-02-26T11:38:12.528501+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201553/raw.html",
+      "size_bytes": 35108,
+      "sha256": "b5c8e8e05154067c3252535f3aad2f68d7a614f42dae8e7c2a018f0c2ad2ad3c",
+      "modified_utc": "2026-02-25T00:05:06.727786+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201553/summary.json",
+      "size_bytes": 285,
+      "sha256": "4753886520c585d8bc4820760a17248d16e2ba12e47b7ae7aee2d176ea4f7749",
+      "modified_utc": "2026-02-26T18:04:47.222631+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201578/job.md",
+      "size_bytes": 4442,
+      "sha256": "64fb729c1500629106a5b9d81aae5944dbe2c531ed8fab84b5d89f9b9d2e93e6",
+      "modified_utc": "2026-02-26T18:47:31.762105+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201578/proposal_text.md",
+      "size_bytes": 1485,
+      "sha256": "c9591076b3beae81ef5fd9a95b54e4ed0e854996003941073d54d041da548b45",
+      "modified_utc": "2026-02-26T11:38:12.233142+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201578/raw.html",
+      "size_bytes": 34680,
+      "sha256": "59cd14586630af8296bf74943c60ae656a2fb7fe957680ab17c9e0cf7f0d3cbf",
+      "modified_utc": "2026-02-25T00:05:11.812303+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201578/summary.json",
+      "size_bytes": 334,
+      "sha256": "9c96a9d293b9adcf4cb408e75dfe69a99c10d5efea03cf3a48b58d63134f7c04",
+      "modified_utc": "2026-02-26T18:04:47.223037+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201596/job.md",
+      "size_bytes": 4010,
+      "sha256": "faea3a4d2daa639cacf53f403ac2554157d7041edf7b6054a91ca0c23d361ace",
+      "modified_utc": "2026-02-26T18:47:31.762141+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201596/proposal_text.md",
+      "size_bytes": 1318,
+      "sha256": "840c509c376d6c248bdd69fcd615e68cd456f2961f6b7ad38ec21ef30c0d4d79",
+      "modified_utc": "2026-02-26T11:38:12.248066+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201596/raw.html",
+      "size_bytes": 35335,
+      "sha256": "a6d60b239e60832ce1278fb1bddfb5e7c69657f42cc1ff901af290322a9debc3",
+      "modified_utc": "2026-02-25T00:05:08.009548+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201596/summary.json",
+      "size_bytes": 354,
+      "sha256": "fc16bfee57039a7f90c40bb567fc253d6c1566ad1fa8addbeb5bf2db114a1b93",
+      "modified_utc": "2026-02-26T18:04:47.223406+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201711/job.md",
+      "size_bytes": 4201,
+      "sha256": "e272b93168592f302b78b8f1d4319b0b5e0631a845bd76acc702abb8d76d0afb",
+      "modified_utc": "2026-02-26T18:47:31.772470+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201711/proposal_text.md",
+      "size_bytes": 1362,
+      "sha256": "134446ed3c420343c51c9f05a314065bb840fab8b7bc4db3ead0b1229035d646",
+      "modified_utc": "2026-02-26T11:38:12.558104+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201711/raw.html",
+      "size_bytes": 34906,
+      "sha256": "c546dab6a20018f6b44fc977662e29a6f5d5ee5f4a02cddc63e10226222baaa1",
+      "modified_utc": "2026-02-25T00:05:07.498660+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201711/summary.json",
+      "size_bytes": 348,
+      "sha256": "7b09934b45753438eb752bfd6bd5f44916bca407a45dde9c47d42105e84ae2c1",
+      "modified_utc": "2026-02-26T18:04:47.223835+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201791/job.md",
+      "size_bytes": 4239,
+      "sha256": "f34f9a23c591f63d7a4eecc444fa4a26b016cb995f9ed613cdbd160adb67924d",
+      "modified_utc": "2026-02-26T18:47:31.762022+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201791/proposal_text.md",
+      "size_bytes": 1458,
+      "sha256": "62d0c29e34550e0ba12bae62ccd6cb1e3e306191ad5b77c402e7df45c033b26c",
+      "modified_utc": "2026-02-26T11:38:12.205157+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201791/raw.html",
+      "size_bytes": 32938,
+      "sha256": "40b148b1e5d6107599acc8945b134c3c1a74968c62a7e3fec52b89461451740b",
+      "modified_utc": "2026-02-25T00:05:08.264788+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/201791/summary.json",
+      "size_bytes": 291,
+      "sha256": "b617e0739df577aa3bdfcc84b182c4302fb0c395258ce2b9a02ffa83c4939545",
+      "modified_utc": "2026-02-26T18:04:47.224174+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/_source_listing/job-postings?filter%5Bfulltextsearch%5D=&filter%5Bworktype_tub%5D%5B%5D.html",
+      "size_bytes": 53269,
+      "sha256": "adcdef1e670b1e34ac27cf204da7c57f3748fcdec94e164722c9f81b6442338d",
+      "modified_utc": "2026-02-24T15:03:32.916280+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/_source_listing/page.html",
+      "size_bytes": 53269,
+      "sha256": "adcdef1e670b1e34ac27cf204da7c57f3748fcdec94e164722c9f81b6442338d",
+      "modified_utc": "2026-02-24T15:03:32.916280+00:00"
+    },
+    {
+      "path": "data/pipelined_data/tu_berlin/summary.csv",
+      "size_bytes": 6595,
+      "sha256": "03fc2026fcb16c07ecf3cf6cfa11982eaf60d67d8f913d032bca07c4c5f1fb26",
+      "modified_utc": "2026-02-25T00:05:12.093880+00:00"
+    },
+    {
+      "path": "data/reference_data/agent_feedback/recommendation_letters/recommendation_letter_proposal_academic_miguel_rodriguez.md",
+      "size_bytes": 2578,
+      "sha256": "0dd325fc86ee404c7ed294ba7fd4ea617be2efd9d4b63e93e6e3209bec95ff45",
+      "modified_utc": "2026-02-26T10:45:05.826126+00:00"
+    },
+    {
+      "path": "data/reference_data/agent_feedback/recommendation_letters/recommendation_letter_proposal_professional_jp_morales.md",
+      "size_bytes": 2035,
+      "sha256": "d71b94f798648c35e0101d6758925b5ba3e5fc8d4b12e82b1738fe7abf4f83a3",
+      "modified_utc": "2026-02-26T10:45:18.040288+00:00"
+    },
+    {
+      "path": "data/reference_data/agent_feedback/recommendation_letters/recommendation_letter_template_academic.md",
+      "size_bytes": 2052,
+      "sha256": "ed005800b4b1fec4fdc2fc5b164f1da530af491f48aee46874e34744f25a3803",
+      "modified_utc": "2026-02-26T09:29:15.894846+00:00"
+    },
+    {
+      "path": "data/reference_data/agent_feedback/recommendation_letters/recommendation_letter_template_professional.md",
+      "size_bytes": 1857,
+      "sha256": "bcd30b3366040fbeeaff0aab97910d7fe541448f0d2ef77309d8231cdaf5b37e",
+      "modified_utc": "2026-02-26T09:24:53.520067+00:00"
+    },
+    {
+      "path": "data/reference_data/agent_feedback/templates/Application_Template.md",
+      "size_bytes": 892,
+      "sha256": "3f825e03da2e96fbbaef186fca7ab775cc72a6bb1f344c2c782d5b440b9e66b1",
+      "modified_utc": "2026-02-24T23:02:28.497098+00:00"
+    },
+    {
+      "path": "data/reference_data/agent_feedback/templates/application_master_template.md",
+      "size_bytes": 5622,
+      "sha256": "995229350efde167a75c04f3edeb4144b933ee3b4f59b5e944566d82e132d0ad",
+      "modified_utc": "2026-02-24T20:24:08.193708+00:00"
+    },
+    {
+      "path": "data/reference_data/agent_feedback/templates/recommendation_request_email_templates.md",
+      "size_bytes": 1428,
+      "sha256": "6700ebda1b88e3331580ddd9980a5538127b4a0a75f3b3400d79533094485783",
+      "modified_utc": "2026-02-26T18:49:35.944982+00:00"
+    },
+    {
+      "path": "data/reference_data/application_assets/cv/CV_Juan_Pablo_Ruiz.pdf",
+      "size_bytes": 233139,
+      "sha256": "52662ef1cdfbd8a3eced58b17842fa7282b11a4c54903909fde4aa21206e9b91",
+      "modified_utc": "2026-02-25T22:19:22.689659+00:00"
+    },
+    {
+      "path": "data/reference_data/application_assets/cv/CV_jp_ruiz_1page.pdf",
+      "size_bytes": 195964,
+      "sha256": "24ed53624f5a9cc51e932a64bcefd860f187056a1897e2666e4a175b92d4efa8",
+      "modified_utc": "2026-02-25T22:10:37.385969+00:00"
+    },
+    {
+      "path": "data/reference_data/application_assets/documents/Anabin Titelvalidierung.pdf",
+      "size_bytes": 67189,
+      "sha256": "994896b5e15094d2238eebcd7266f1dea506cb6458abb70b667dc27dbd086756",
+      "modified_utc": "2026-02-26T18:31:21.447943+00:00"
+    },
+    {
+      "path": "data/reference_data/application_assets/documents/Language Certificate.pdf",
+      "size_bytes": 58508,
+      "sha256": "165d10c6d6f9431e857edfa81581802c0ccf986ae4dea61b7c26a36b743f9c55",
+      "modified_utc": "2026-02-26T18:31:21.456015+00:00"
+    },
+    {
+      "path": "data/reference_data/application_assets/documents/Lebenslauf.pdf",
+      "size_bytes": 91886,
+      "sha256": "d2b8e2f2f0ff2614138d77ae7619d596abc67b6611fd0adf95cd9e42d2fdfa42",
+      "modified_utc": "2026-02-26T18:31:21.485616+00:00"
+    },
+    {
+      "path": "data/reference_data/application_assets/documents/Study certificate.pdf",
+      "size_bytes": 4912440,
+      "sha256": "f8fd4fb294cd4a1d94ae7aad29e7bc695a8e6a575adcd6c701ca38be2ec32df8",
+      "modified_utc": "2026-02-26T18:31:21.494015+00:00"
+    },
+    {
+      "path": "data/reference_data/application_assets/publications/ICITED_2025_Tutor.pdf",
+      "size_bytes": 383468,
+      "sha256": "fe5193bc16285d93c7c13338c43889ed74c8f30edeb727e7860c1ac6bcc9de32",
+      "modified_utc": "2026-02-25T21:50:48.508232+00:00"
+    },
+    {
+      "path": "data/reference_data/application_assets/publications/ICITED_Summary.md",
+      "size_bytes": 1499,
+      "sha256": "3a3b45a514a7693c2f5da817e0c51490295b008b1e1406ab3ab85d37822baddc",
+      "modified_utc": "2026-02-25T21:51:22.206891+00:00"
+    },
+    {
+      "path": "data/reference_data/application_assets/publications/NeurIPS_2024_SMAD.pdf",
+      "size_bytes": 171133,
+      "sha256": "0625078f7ef4b5ea69924812e8d91bb36f8ed24ab41e2a3f6020ad0946ae81d0",
+      "modified_utc": "2026-02-25T21:50:48.504825+00:00"
+    },
+    {
+      "path": "data/reference_data/application_assets/publications/NeurIPS_Summary.md",
+      "size_bytes": 1618,
+      "sha256": "0b535907324be9a9647c90231599390359797201772789b75bbd148cd0566cf8",
+      "modified_utc": "2026-02-25T21:51:20.246504+00:00"
+    },
+    {
+      "path": "data/reference_data/archive/TU_Berlin_200069.md",
+      "size_bytes": 2483,
+      "sha256": "74bf8cb11f1a402fdebfef1e87c13ddcff45299568979e6b2709cf30c921fb17",
+      "modified_utc": "2026-02-24T23:59:25.033273+00:00"
+    },
+    {
+      "path": "data/reference_data/archive/TU_Berlin_200879.md",
+      "size_bytes": 3698,
+      "sha256": "b502e9f2ba1436b36dbfd54def3fab9e144d8670f06146cd31a05fbf4497e3b3",
+      "modified_utc": "2026-02-24T23:59:27.243075+00:00"
+    },
+    {
+      "path": "data/reference_data/archive/TU_Berlin_200897.md",
+      "size_bytes": 3647,
+      "sha256": "fed72b711019ab87b5aba417681093b1826b24c737281efb190f54019b798a61",
+      "modified_utc": "2026-02-24T23:59:30.149889+00:00"
+    },
+    {
+      "path": "data/reference_data/archive/TU_Berlin_201010.md",
+      "size_bytes": 2549,
+      "sha256": "325ba1df3fbec04d2d2338c3487bcad8ea02801f86d539f06505a14b9a90c4dc",
+      "modified_utc": "2026-02-24T23:59:28.011322+00:00"
+    },
+    {
+      "path": "data/reference_data/archive/TU_Berlin_201067.md",
+      "size_bytes": 2387,
+      "sha256": "082e58c7fb96551f68169399df45a70bd30f5c32fac40c375243126b1ebe622f",
+      "modified_utc": "2026-02-24T23:59:23.718458+00:00"
+    },
+    {
+      "path": "data/reference_data/archive/TU_Berlin_201069.md",
+      "size_bytes": 3073,
+      "sha256": "cf161917eb4dc113ca17e211cbc87e98df734545e41296d1a1a703026e737cd9",
+      "modified_utc": "2026-02-24T23:59:25.597893+00:00"
+    },
+    {
+      "path": "data/reference_data/archive/TU_Berlin_201084.md",
+      "size_bytes": 3667,
+      "sha256": "f320670db7c17d4029d467f024ec994b9925b4cccff501e4e465cf418627fd10",
+      "modified_utc": "2026-02-24T23:59:23.465823+00:00"
+    },
+    {
+      "path": "data/reference_data/archive/TU_Berlin_201115.md",
+      "size_bytes": 2385,
+      "sha256": "54e632baee4cca527374e2f5b4689bb3c521de36b950102cb927a8f7e025e024",
+      "modified_utc": "2026-02-24T23:59:24.766317+00:00"
+    },
+    {
+      "path": "data/reference_data/archive/TU_Berlin_201185.md",
+      "size_bytes": 1961,
+      "sha256": "b4ae4c2bd473ce1fe88b5801be0ac49d367bea3c1d5c04568b7b2f5a945501fd",
+      "modified_utc": "2026-02-24T23:59:27.743917+00:00"
+    },
+    {
+      "path": "data/reference_data/archive/TU_Berlin_201188.md",
+      "size_bytes": 1777,
+      "sha256": "6b708078ed5fced14a746809cd79ea19ba4e6d064751fd5d586d862c8e5399da",
+      "modified_utc": "2026-02-24T23:59:29.267992+00:00"
+    },
+    {
+      "path": "data/reference_data/archive/TU_Berlin_201191.md",
+      "size_bytes": 2410,
+      "sha256": "dddb7209c64b759a2096c88f73e7be3bcc0f0f80a6d43f7ee61f78c519813199",
+      "modified_utc": "2026-02-24T23:59:26.962321+00:00"
+    },
+    {
+      "path": "data/reference_data/archive/TU_Berlin_201203.md",
+      "size_bytes": 2452,
+      "sha256": "ae11432d56f39cfb54b8560e1638a3f7b4aed420492db006222be4e0d3f1dccf",
+      "modified_utc": "2026-02-24T23:59:29.536034+00:00"
+    },
+    {
+      "path": "data/reference_data/archive/TU_Berlin_201219.md",
+      "size_bytes": 2702,
+      "sha256": "4ab25288b1c46757f54af08df9a9786efc8e37e31badfa26d4fa4d9b61ab02ab",
+      "modified_utc": "2026-02-24T23:59:26.173728+00:00"
+    },
+    {
+      "path": "data/reference_data/archive/TU_Berlin_201222.md",
+      "size_bytes": 2195,
+      "sha256": "8dd212b0e57e0b73e300ecb6ba6f8b058a52eee6512fbce497d415d8434a5dce",
+      "modified_utc": "2026-02-24T23:59:28.565636+00:00"
+    },
+    {
+      "path": "data/reference_data/archive/TU_Berlin_201223.md",
+      "size_bytes": 2386,
+      "sha256": "1d763f43ddd3111be9de200866f511bb4d7d030caab1c41f17a7cd2ce5a59082",
+      "modified_utc": "2026-02-24T23:59:24.505553+00:00"
+    },
+    {
+      "path": "data/reference_data/archive/TU_Berlin_201300.md",
+      "size_bytes": 2544,
+      "sha256": "dcedd0dcd564a7409044220849d8f92e50ace76e79c8594644afb80da1121273",
+      "modified_utc": "2026-02-24T23:59:28.932870+00:00"
+    },
+    {
+      "path": "data/reference_data/archive/TU_Berlin_201309.md",
+      "size_bytes": 2789,
+      "sha256": "4d198050138842bb950347b686dcade55531a8281fee095dba99437de2118b8b",
+      "modified_utc": "2026-02-24T23:59:26.453283+00:00"
+    },
+    {
+      "path": "data/reference_data/archive/TU_Berlin_201342.md",
+      "size_bytes": 3190,
+      "sha256": "0f98e560b12696f32ea523f6e13c4599e9c479e3c7f4cfc3f6a4b68085fa2344",
+      "modified_utc": "2026-02-24T23:59:27.493599+00:00"
+    },
+    {
+      "path": "data/reference_data/archive/TU_Berlin_201396.md",
+      "size_bytes": 2262,
+      "sha256": "20ee16f96d898e3e0b6408f81bae0ae8c1f3a9a21d92ffe33b502c9467b247ff",
+      "modified_utc": "2026-02-24T23:59:28.283560+00:00"
+    },
+    {
+      "path": "data/reference_data/archive/TU_Berlin_201397.md",
+      "size_bytes": 3098,
+      "sha256": "ac4172be0b5f1fe365ce167c96286efc5946d729c8d3a61d28a96ba8f4acdfb0",
+      "modified_utc": "2026-02-24T23:59:25.890213+00:00"
+    },
+    {
+      "path": "data/reference_data/archive/TU_Berlin_201399.md",
+      "size_bytes": 2715,
+      "sha256": "a924c4defde00a76995b03503cb834ff8485753067178e6ce38d41e597ca5b4b",
+      "modified_utc": "2026-02-24T23:59:30.415997+00:00"
+    },
+    {
+      "path": "data/reference_data/archive/TU_Berlin_201404.md",
+      "size_bytes": 2531,
+      "sha256": "30636164a38f10a9b755ad97ed32d926baea73dbfc79f5c419ae7f22aea1feda",
+      "modified_utc": "2026-02-24T23:59:23.980286+00:00"
+    },
+    {
+      "path": "data/reference_data/archive/TU_Berlin_201406.md",
+      "size_bytes": 2518,
+      "sha256": "bf9ae01cfde42da6c44e1fff7abeec9d482a4bf0bd6338d261a0ed6db7191e7e",
+      "modified_utc": "2026-02-24T23:59:26.706544+00:00"
+    },
+    {
+      "path": "data/reference_data/archive/TU_Berlin_201553.md",
+      "size_bytes": 2275,
+      "sha256": "67673675166f7c3a58c7414824dc27a602c1ad67ab6024eeb2b97ccdc2d7afcc",
+      "modified_utc": "2026-02-24T23:59:25.306650+00:00"
+    },
+    {
+      "path": "data/reference_data/archive/TU_Berlin_201578.md",
+      "size_bytes": 2594,
+      "sha256": "36cf1f8a8014d921ffed1a54e9653b6d80e1731411358cdd79b2fb702f6f10e8",
+      "modified_utc": "2026-02-24T23:59:30.753326+00:00"
+    },
+    {
+      "path": "data/reference_data/archive/TU_Berlin_201596.md",
+      "size_bytes": 2379,
+      "sha256": "2c8b6827bd8c189749597eb78f47de0c15b17ab58a002ab3813b94a5f3251548",
+      "modified_utc": "2026-02-24T23:59:31.036456+00:00"
+    },
+    {
+      "path": "data/reference_data/archive/TU_Berlin_201711.md",
+      "size_bytes": 2520,
+      "sha256": "018ef5adce5d19cdf5518be01168d437ecb98ec1855f0bf53ac49718ed3ad2d2",
+      "modified_utc": "2026-02-24T23:59:24.248373+00:00"
+    },
+    {
+      "path": "data/reference_data/archive/TU_Berlin_201791.md",
+      "size_bytes": 2587,
+      "sha256": "f5b81781fb7a1b0165aaa5c0039aa609faef05826c6867fea9df978cc887353c",
+      "modified_utc": "2026-02-24T23:59:29.797325+00:00"
+    },
+    {
+      "path": "data/reference_data/backup/backup_compendium.json",
+      "size_bytes": 43037,
+      "sha256": "2e87096eec5e7ffc7d380e14be2003740e54ac68d7b94869b1f1b449294e6a6d",
+      "modified_utc": "2026-02-26T21:32:27.164007+00:00"
+    },
+    {
+      "path": "data/reference_data/profile/PROFILE.json",
+      "size_bytes": 4771,
+      "sha256": "3fe74f1ff6335df69d0079cdf24303087aa8a3dbcb65d325bc673893fb840a16",
+      "modified_utc": "2026-02-26T19:01:22.510695+00:00"
+    },
+    {
+      "path": "data/reference_data/profile/PROFILE.md",
+      "size_bytes": 10992,
+      "sha256": "bfef3beaf2141346566eb9e63204007d1ac4d5bb65ce483317532dcb1fb47d58",
+      "modified_utc": "2026-02-26T19:01:22.508805+00:00"
+    },
+    {
+      "path": "data/reference_data/profile/base_profile/README.md",
+      "size_bytes": 922,
+      "sha256": "05212459c50eeb3273b1f49e892327486af15dff0466921c008b5d813a7187a4",
+      "modified_utc": "2026-02-26T18:47:35.836333+00:00"
+    },
+    {
+      "path": "data/reference_data/profile/base_profile/job_summary_gaps.json",
+      "size_bytes": 1266,
+      "sha256": "07d5688c237adff6b53bf8661d975ff19b25cfc20abda7d33218aa0a50b1735d",
+      "modified_utc": "2026-02-26T18:49:21.624879+00:00"
+    },
+    {
+      "path": "data/reference_data/profile/base_profile/profile_base_data.json",
+      "size_bytes": 4588,
+      "sha256": "6f911bcc62071723ee30ec7ffbf0237d54f7039657695efb35a6e7f2de713e29",
+      "modified_utc": "2026-02-26T10:16:01.380282+00:00"
+    }
+  ]
+}

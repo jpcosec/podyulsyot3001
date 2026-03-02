@@ -1,0 +1,18 @@
+#!/bin/bash
+# CV Generator CLI wrapper with proper Python environment handling
+# This script ensures the correct Python interpreter is used from the conda environment
+
+set -e
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+ENV_PATH="$HOME/anaconda3/envs/phd-cv"
+PYTHON_BIN="$ENV_PATH/bin/python3.11"
+
+# Check if environment exists
+if [ ! -f "$PYTHON_BIN" ]; then
+    echo "Error: conda environment not found at $ENV_PATH"
+    exit 1
+fi
+
+# Run the CLI with the correct Python interpreter
+exec "$PYTHON_BIN" "$SCRIPT_DIR/src/cv_generator/__main__.py" "$@"

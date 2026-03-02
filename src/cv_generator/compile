@@ -1,0 +1,408 @@
+#!/usr/bin/env python3
+"""CV build CLI with canonical profile and pipelined outputs."""
+
+import argparse
+import subprocess
+import sys
+from pathlib import Path
+from shutil import copy2, copytree
+
+from dotenv import load_dotenv
+
+from ats import extract_docx_text, run_ats_analysis, write_ats_report
+from config import CVConfig
+from loaders.profile_loader import load_base_profile
+from renderer import DocumentRenderer
+from src.utils import render_to_file
+
+
+def get_base_dir() -> Path:
+    return Path(__file__).parent
+
+
+def resolve_output_paths(config: CVConfig, source: str, job_id: str, file_stem: str) -> dict[str, Path]:
+    render_dir = config.cv_render_dir(source=source, job_id=job_id)
+    cv_root = render_dir.parent
+    return {
+        "cv_root": cv_root,
+        "render_dir": render_dir,
+        "docx": render_dir / f"{file_stem}.docx",
+        "tex": render_dir / f"{file_stem}.tex",
+        "pdf": render_dir / f"{file_stem}.pdf",
+        "ats": cv_root / "ats" / "report.json",
+    }
+
+
+def resolve_job_description_path(config: CVConfig, source: str, job_id: str, path_override: str | None) -> Path | None:
+    if path_override:
+        path = Path(path_override)
+        return path if path.exists() else None
+    candidate = config.pipeline_root / source / job_id / "job.md"
+    return candidate if candidate.exists() else None
+
+
+def load_job_description(config: CVConfig, source: str, job_id: str, path_override: str | None) -> str:
+    path = resolve_job_description_path(config, source, job_id, path_override)
+    if not path:
+        return ""
+    return path.read_text(encoding="utf-8")
+
+
+def map_profile_to_template_context(profile: dict) -> dict:
+    owner = profile.get("owner", {})
+    contact = owner.get("contact", {})
+    addresses = contact.get("addresses", [])
+    current_address = next((a for a in addresses if a.get("label") == "current"), {})
+    address_value = current_address.get("value", "")
+
+    personal = {
+        "first_name": owner.get("preferred_name", "").split(" ")[0] or owner.get("full_name", ""),
+        "last_name": " ".join(owner.get("preferred_name", "").split(" ")[1:]),
+        "full_name": owner.get("full_name", ""),
+        "address": address_value,
+        "city": "",
+        "postal_code": "",
+        "phone": contact.get("phone", ""),
+        "email": contact.get("email", ""),
+        "nationality": owner.get("nationality", ""),
+        "birthday": owner.get("birth_date", ""),
+        "work_permission": "Germany" if owner.get("legal_status", {}).get("work_permission_germany") else "",
+    }
+
+    education = []
+    for edu in profile.get("education", []):
+        education.append(
+            {
+                "start_date": edu.get("start_date", ""),
+                "end_date": edu.get("end_date", ""),
+                "field": edu.get("degree", ""),
+                "location": edu.get("location", ""),
+                "institution": edu.get("institution", ""),
+                "level": edu.get("level_reference", ""),
+                "focus": [edu.get("specialization", "")] if edu.get("specialization") else [],
+            }
+        )
+
+    experience = []
+    for exp in profile.get("experience", []):
+        experience.append(
+            {
+                "start_date": exp.get("start_date", ""),
+                "end_date": exp.get("end_date", ""),
+                "title": exp.get("role", ""),
+                "company": exp.get("organization", ""),
+                "organization": exp.get("organization", ""),
+                "role": exp.get("role", ""),
+                "location": exp.get("location", ""),
+                "description": exp.get("achievements", []),
+                "achievements": exp.get("achievements", []),
+            }
+        )
+
+    publications = []
+    for pub in profile.get("publications", []):
+        publications.append(
+            {
+                "year": pub.get("year", ""),
+                "authors": pub.get("authors", []),
+                "title": pub.get("title", ""),
+                "venue": pub.get("venue", ""),
+                "url": pub.get("url", ""),
+                "contribution": pub.get("contribution", ""),
+            }
+        )
+
+    return {
+        "personal": personal,
+        "education": education,
+        "experience": experience,
+        "projects": profile.get("projects", []),
+        "publications": publications,
+        "skills": {
+            "languages": profile.get("languages", []),
+            **profile.get("skills", {}),
+        },
+        "summary": owner.get("professional_summary", ""),
+    }
+
+
+def load_canonical_context(config: CVConfig) -> dict:
+    profile = load_base_profile(config.profile_path())
+    return map_profile_to_template_context(profile)
+
+
+def show_status(config: CVConfig, source: str, job_id: str) -> None:
+    data = load_canonical_context(config)
+    paths = resolve_output_paths(config, source, job_id, "cv")
+
+    print("\n" + "=" * 70)
+    print("CV COMPILATION STATUS")
+    print("=" * 70)
+    print(f"\nProfile source: {config.profile_path()}")
+    print(f"Render output: {paths['render_dir']}")
+
+    personal = data.get("personal", {})
+    print("\nPERSONAL INFORMATION:")
+    print(f"  Name: {personal.get('full_name')}")
+    print(f"  Email: {personal.get('email')}")
+    print(f"  Phone: {personal.get('phone')}")
+
+    print("\nCV CONTENT:")
+    print(f"  Education entries: {len(data.get('education', []))}")
+    print(f"  Work experiences: {len(data.get('experience', []))}")
+    print(f"  Publications: {len(data.get('publications', []))}")
+    print(f"  Language skills: {len(data.get('skills', {}).get('languages', []))}")
+
+    templates_dir = get_base_dir() / "src" / "templates"
+    print("\nAVAILABLE TEMPLATES:")
+    for template_file in ["german.tex.jinja2", "english.tex.jinja2", "spanish.tex.jinja2"]:
+        template_path = templates_dir / template_file
+        status = "OK" if template_path.exists() else "MISSING"
+        print(f"  {status:8} {template_file}")
+
+    print("=" * 70 + "\n")
+
+
+def render_docx(context: dict, output_path: Path) -> None:
+    renderer = DocumentRenderer()
+    personal = context.get("personal", {})
+    links = []
+    if personal.get("email"):
+        links.append(personal["email"])
+    contact_info = " | ".join([personal.get("phone", ""), *links]).strip(" |")
+    renderer.render_header(
+        name=personal.get("full_name") or f"{personal.get('first_name', '')} {personal.get('last_name', '')}".strip(),
+        titles="Machine Learning Engineer",
+        contact_info=contact_info,
+    )
+    if context.get("summary"):
+        renderer.render_summary(context["summary"])
+    renderer.render_experience(context.get("experience", []))
+    renderer.render_education(context.get("education", []))
+    renderer.render_publications(context.get("publications", []))
+    renderer.render_languages(context.get("skills", {}).get("languages", []))
+    renderer.render_skills({k: v for k, v in context.get("skills", {}).items() if k != "languages"})
+    renderer.save(output_path)
+
+
+def prepare_latex_assets(render_dir: Path) -> None:
+    legacy_root = get_base_dir() / "DHIK_filled"
+    for folder in ["Einstellungen", "Abbildungen"]:
+        src = legacy_root / folder
+        dst = render_dir / folder
+        if src.exists() and not dst.exists():
+            copytree(src, dst)
+    compile_sh = legacy_root / "compile.sh"
+    if compile_sh.exists():
+        copy2(compile_sh, render_dir / "compile.sh")
+
+
+def render_latex(context: dict, language: str, output_path: Path) -> None:
+    template_name = f"{language}.tex.jinja2"
+    template_dir = get_base_dir() / "src" / "templates"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    prepare_latex_assets(output_path.parent)
+    render_to_file(
+        template_name=template_name,
+        template_dir=template_dir,
+        context=context,
+        output_path=output_path,
+    )
+
+
+def build_latex_pdf(tex_path: Path) -> None:
+    result = subprocess.run(
+        ["pdflatex", "-interaction=nonstopmode", "-shell-escape", tex_path.name],
+        cwd=tex_path.parent,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        log_tail = result.stdout[-2000:] if len(result.stdout) > 2000 else result.stdout
+        raise RuntimeError(f"pdflatex failed for {tex_path}:\n{log_tail}")
+
+
+def run_ats_for_docx(
+    config: CVConfig,
+    source: str,
+    job_id: str,
+    docx_path: Path,
+    job_description_path: str | None,
+    ats_mode: str,
+    ats_prompt: str | None,
+) -> Path:
+    paths = resolve_output_paths(config, source, job_id, "cv")
+    jd = load_job_description(config, source, job_id, job_description_path)
+    text = extract_docx_text(docx_path)
+    prompt_path = Path(ats_prompt) if ats_prompt else None
+    analysis = run_ats_analysis(
+        cv_text=text,
+        job_description=jd,
+        prompt_path=prompt_path,
+        ats_mode=ats_mode,
+    )
+    write_ats_report(paths["ats"], analysis)
+    return paths["ats"]
+
+
+def render_cv(
+    config: CVConfig,
+    source: str,
+    job_id: str,
+    language: str,
+    output_format: str,
+    run_ats: bool,
+    job_description_path: str | None,
+    ats_mode: str,
+    ats_prompt: str | None,
+) -> None:
+    context = load_canonical_context(config)
+    paths = resolve_output_paths(config, source, job_id, "cv")
+
+    if output_format == "docx":
+        render_docx(context, paths["docx"])
+        print(f"Generated: {paths['docx']}")
+        if run_ats:
+            report_path = run_ats_for_docx(
+                config,
+                source,
+                job_id,
+                paths["docx"],
+                job_description_path,
+                ats_mode,
+                ats_prompt,
+            )
+            print(f"ATS report: {report_path}")
+        return
+
+    render_latex(context, language, paths["tex"])
+    print(f"Generated: {paths['tex']}")
+
+
+def build_cv(
+    config: CVConfig,
+    source: str,
+    job_id: str,
+    language: str,
+    output_format: str,
+    run_ats: bool,
+    job_description_path: str | None,
+    ats_mode: str,
+    ats_prompt: str | None,
+) -> None:
+    render_cv(
+        config,
+        source,
+        job_id,
+        language,
+        output_format,
+        run_ats,
+        job_description_path,
+        ats_mode,
+        ats_prompt,
+    )
+    if output_format == "latex":
+        paths = resolve_output_paths(config, source, job_id, "cv")
+        build_latex_pdf(paths["tex"])
+        print(f"Generated: {paths['pdf']}")
+
+
+def validate_ats(
+    config: CVConfig,
+    source: str,
+    job_id: str,
+    file_stem: str,
+    job_description_path: str | None,
+    ats_mode: str,
+    ats_prompt: str | None,
+) -> None:
+    paths = resolve_output_paths(config, source, job_id, file_stem)
+    if not paths["docx"].exists():
+        raise FileNotFoundError(f"DOCX not found for ATS validation: {paths['docx']}")
+    report_path = run_ats_for_docx(
+        config,
+        source,
+        job_id,
+        paths["docx"],
+        job_description_path,
+        ats_mode,
+        ats_prompt,
+    )
+    print(f"ATS report: {report_path}")
+
+
+def main() -> None:
+    load_dotenv(get_base_dir() / ".env")
+    config = CVConfig.from_defaults()
+
+    parser = argparse.ArgumentParser(description="Compile CV from canonical profile data")
+    subparsers = parser.add_subparsers(dest="command", help="Command to execute")
+
+    shared = argparse.ArgumentParser(add_help=False)
+    shared.add_argument("--job-id", default="manual", help="Target job id for pipelined output")
+    shared.add_argument("--source", default="tu_berlin", help="Pipeline source namespace")
+    shared.add_argument("--format", choices=["docx", "latex"], default="docx", help="Render format")
+    shared.add_argument("--job-description", default=None, help="Path to job description markdown/text")
+    shared.add_argument("--no-ats", action="store_true", help="Skip ATS report generation for DOCX")
+    shared.add_argument("--ats-mode", choices=["fallback", "strict"], default="fallback", help="ATS engine requirement mode")
+    shared.add_argument("--ats-prompt", default=None, help="Optional path to ATS LLM prompt file")
+
+    subparsers.add_parser("status", parents=[shared], help="Show CV source and render status")
+
+    render_parser = subparsers.add_parser("render", parents=[shared], help="Render CV")
+    render_parser.add_argument("language", choices=["german", "english", "spanish"], help="CV language")
+
+    build_parser = subparsers.add_parser("build", parents=[shared], help="Render and compile CV")
+    build_parser.add_argument("language", choices=["german", "english", "spanish"], help="CV language")
+
+    validate_parser = subparsers.add_parser("validate-ats", parents=[shared], help="Generate ATS report from existing DOCX")
+    validate_parser.add_argument("--file-stem", default="cv", help="DOCX base name under rendered directory")
+
+    args = parser.parse_args()
+
+    if args.command == "status" or not args.command:
+        show_status(config, source=args.source, job_id=args.job_id)
+    elif args.command == "render":
+        render_cv(
+            config,
+            source=args.source,
+            job_id=args.job_id,
+            language=args.language,
+            output_format=args.format,
+            run_ats=not args.no_ats,
+            job_description_path=args.job_description,
+            ats_mode=args.ats_mode,
+            ats_prompt=args.ats_prompt,
+        )
+    elif args.command == "build":
+        build_cv(
+            config,
+            source=args.source,
+            job_id=args.job_id,
+            language=args.language,
+            output_format=args.format,
+            run_ats=not args.no_ats,
+            job_description_path=args.job_description,
+            ats_mode=args.ats_mode,
+            ats_prompt=args.ats_prompt,
+        )
+    elif args.command == "validate-ats":
+        validate_ats(
+            config,
+            source=args.source,
+            job_id=args.job_id,
+            file_stem=args.file_stem,
+            job_description_path=args.job_description,
+            ats_mode=args.ats_mode,
+            ats_prompt=args.ats_prompt,
+        )
+    else:
+        parser.print_help()
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as exc:
+        print(f"Error: {exc}")
+        sys.exit(1)

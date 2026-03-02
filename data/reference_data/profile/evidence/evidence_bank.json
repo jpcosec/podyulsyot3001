@@ -1,0 +1,5021 @@
+{
+  "version": "1.0",
+  "updated_at_utc": "2026-03-01T23:36:41.370511+00:00",
+  "items": [
+    {
+      "bank_id": "EB00001",
+      "fingerprint": "8bbe67937dac7b9568ba72cde2b15a0e266852cec0d624496c2f7936c073e684",
+      "category": "summary",
+      "text": "Machine Learning Engineer and Research Associate bridging applied AI research and production-oriented data systems. Experienced in Python, workflow orchestration (Airflow), and MLOps lifecycle practices (versioning, deployment, monitoring). Background in IoT, ROS, and FAIR-aligned experimentation. Proven experience deploying scalable data and ML pipelines across major cloud providers including Azure, AWS, and Google Cloud (Vertex AI, S3, Spark, BigQuery). Fully compliant with MSCA mobility rules with an Anabin/ZAB validated German Master's equivalency.",
+      "tags": [
+        "across",
+        "airflow",
+        "anabin",
+        "applied",
+        "associate",
+        "aws",
+        "azure",
+        "background",
+        "bigquery",
+        "bridging",
+        "cloud",
+        "compliant",
+        "data",
+        "deploying",
+        "deployment",
+        "engineer",
+        "equivalency.",
+        "experience",
+        "experienced",
+        "experimentation.",
+        "fair-aligned",
+        "fully",
+        "german",
+        "google",
+        "including",
+        "iot",
+        "learning",
+        "lifecycle",
+        "machine",
+        "major",
+        "master",
+        "mlops",
+        "mobility",
+        "monitoring",
+        "msca",
+        "orchestration",
+        "pipelines",
+        "practices",
+        "production-oriented",
+        "proven",
+        "providers",
+        "python",
+        "research",
+        "ros",
+        "rules",
+        "scalable",
+        "spark",
+        "systems.",
+        "validated",
+        "versioning",
+        "vertex",
+        "workflow",
+        "zab"
+      ],
+      "source_refs": [
+        "profile.owner.professional_summary"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": [
+        "Abschluss: Master, Diplom oder \u00c4quivalent",
+        "Advanced knowledge in data science, compiler construction, and distributed systems programming",
+        "Demonstrated experience with FAIR data principles (desirable).",
+        "Experience and very good knowledge of quantitative methods of empirical social science research",
+        "Experience in open-source development, project management",
+        "Experience in the Python programming language",
+        "Experience with (differential) software testing",
+        "Experience with collecting and analyzing EEG data",
+        "Experience with collecting and analyzing eye tracking data",
+        "Experience with obtaining ethics approval is a plus",
+        "Experience with workflow orchestration and scheduling tools (e.g. Airflow, Cylc) (desirable).",
+        "Good experience in big data analysis of multiple climate variables",
+        "In-depth knowledge in SQL databases and declarative query processing in the context of data mining In-depth knowledge in programming distributed and parallel databases and data analysis algorithms, as well as experience in open source projects (e.g., software development, GitHub) and associated programming and software development skills (e.g. Java, C/C++, Python)",
+        "Practical knowledge of MLOps principles, including model versioning, deployment, monitoring, and continuous learning (desirable).",
+        "Programming skills: Matlab, Python etc.",
+        "Programming skills: Python",
+        "Proven expertise in hardware security",
+        "Publication and project experience",
+        "Qualification: Diplom, Master or equivalent and PhD",
+        "Qualification: Master, Diplom or equivalent",
+        "Qualification: Master, Diplom or equivalent and PhD",
+        "Qualification: Master, Diploma or equivalent",
+        "Software skills: High-dimensional data processing and/or control software e.g. Labview",
+        "Solid knowledge in the fields of Entrepreneurship, Technology and Innovation Management from studies and own research",
+        "Solid knowledge in theoretical and applied/practical computer science)",
+        "Strong Python programming skills, including deployment in real-time or automated environments (desirable).",
+        "Strong knowledge and skills in machine learning",
+        "Studiengang: Physik, Data Science, MINT-Fach",
+        "Successfully completed academic degree (Master's, Diploma or equivalent) in physics, process engineering, data science or a related field.",
+        "Successfully completed academic degree (Master, Diplom or equivalent) in Industrial Engineering, Business Informatics, Business Mathematics, Business and Law or comparable",
+        "Successfully completed academic university degree (Diplom, Master or equivalent) in psychology, cognitive or social neurosciences, computational neurosciences or related areas",
+        "Successfully completed scientific university degree (Master, Diplom or equivalent) in physics, computer science, electrical engineering, or a related field",
+        "Successfully completed university degree (Master, Diplom or equivalent) and PhD with distinction in hydrology, water engineering, environmental sciences, geoecology, or geography",
+        "Successfully completed university degree (Master, Diplom or equivalent) and a doctorate (PhD) with a focus on data management, distributed systems, or scalable data analysis",
+        "Successfully completed university degree (Master, Diplom or equivalent) in Computer Science, Computer Engineering, Electrical Engineering, or a related field",
+        "Successfully completed university degree (Master, Diplom or equivalent) in computer science or Business Informatics",
+        "Successfully completed university degree (Master, Diplom or equivalent) in physics, photonics, or a comparable field",
+        "Successfully completed university degree (Master, Diplom, or equivalent) and PhD in electrical engineering, computer science, or a related field",
+        "Successfully completed university degree (Master, Diploma or equivalent) in physics or a very related field",
+        "Successfully completed univerty degree (Master, Diplom or equivalent) in Computer Science, Computer Engineering, Physics or a related field",
+        "Very good experience in hydrological modeling",
+        "Very good knowledge of German and English",
+        "a succeessfully completed academic university degree (Master, Diploma, or equivalent) in Process Engineering, Chemical Engineering, Information Technology in Mechanical Engineering, etc. is required",
+        "experience in explosion protection (is desirable)",
+        "experience in programming PCS7 (is desirable)",
+        "experience in programming process control Systems (is desirable)",
+        "first practical experiences in programming with Python or LabVIEW are an advantage",
+        "fundamental knowledge in applied Optics",
+        "hands on experience with femtosecond lasers"
+      ]
+    },
+    {
+      "bank_id": "EB00002",
+      "fingerprint": "551e7731e14967e6a82430cda3e3be9212583fcc1c2da891f1fba0c81ea38a1a",
+      "category": "tagline",
+      "text": "Research Assistant Candidate | Applied AI & MLOps",
+      "tags": [
+        "applied",
+        "assistant",
+        "candidate",
+        "mlops",
+        "research"
+      ],
+      "source_refs": [
+        "profile.owner.tagline"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": [
+        "Experience and very good knowledge of quantitative methods of empirical social science research",
+        "Solid knowledge in the fields of Entrepreneurship, Technology and Innovation Management from studies and own research",
+        "Solid knowledge in theoretical and applied/practical computer science)",
+        "fundamental knowledge in applied Optics"
+      ]
+    },
+    {
+      "bank_id": "EB00003",
+      "fingerprint": "83b66224e3bdafae5e5a97a10501a9d9dada6fb7bd8a78a5b248e7ef00240525",
+      "category": "education",
+      "text": "Electrical Engineering (Computational Intelligence) at Universidad de Chile from 2011-03 to 2019-06. Program exceeds 300 ECTS and validated by Anabin/ZAB as equivalent to a German Master's/Diplom.",
+      "tags": [
+        "2011-03",
+        "2019-06.",
+        "300",
+        "anabin",
+        "chile",
+        "computational",
+        "diplom.",
+        "ects",
+        "electrical",
+        "engineering",
+        "equivalent",
+        "exceeds",
+        "german",
+        "intelligence",
+        "master",
+        "program",
+        "universidad",
+        "validated",
+        "zab"
+      ],
+      "source_refs": [
+        "profile.education"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": [
+        "Abschluss: Master, Diplom oder \u00c4quivalent",
+        "Degree Program: Biochemistry, Biotechnology",
+        "Degree Program: Business informatics, Industrial engineering, Business Mathematics, Business and Law",
+        "Degree Program: Computer science, Mathematics",
+        "Degree Program: Engineering, Business informatics, Computer science",
+        "Degree Program: Engineering, Process Engineering, Chemical Engineering, Information Technology in Mechanical Engineering",
+        "Degree Program: Environmental sciences, Geographie, hydrology, water engineering, geoecology",
+        "Degree Program: Mechanical engineering, mechanical engineering, biomedical engineerin",
+        "Degree Program: Physics",
+        "Degree Program: Physics, process engineering, data science",
+        "Degree Program: Psychology, cognitive or social neurosciences, computational neurosciences",
+        "Qualification: Diplom, Master or equivalent and PhD",
+        "Qualification: Master, Diplom or equivalent",
+        "Qualification: Master, Diplom or equivalent and PhD",
+        "Qualification: Master, Diploma or equivalent",
+        "Successfully completed academic degree (Master's, Diploma or equivalent) in physics, process engineering, data science or a related field.",
+        "Successfully completed academic degree (Master, Diplom or equivalent) in Industrial Engineering, Business Informatics, Business Mathematics, Business and Law or comparable",
+        "Successfully completed academic university degree (Diplom, Master or equivalent) in psychology, cognitive or social neurosciences, computational neurosciences or related areas",
+        "Successfully completed scientific university degree (Master, Diplom or equivalent) in physics, computer science, electrical engineering, or a related field",
+        "Successfully completed university degree (Master, Diplom or equivalent) and PhD with distinction in hydrology, water engineering, environmental sciences, geoecology, or geography",
+        "Successfully completed university degree (Master, Diplom or equivalent) and a doctorate (PhD) with a focus on data management, distributed systems, or scalable data analysis",
+        "Successfully completed university degree (Master, Diplom or equivalent) in Computer Science, Computer Engineering, Electrical Engineering, or a related field",
+        "Successfully completed university degree (Master, Diplom or equivalent) in computer science or Business Informatics",
+        "Successfully completed university degree (Master, Diplom or equivalent) in physics, photonics, or a comparable field",
+        "Successfully completed university degree (Master, Diplom, or equivalent) and PhD in electrical engineering, computer science, or a related field",
+        "Successfully completed university degree (Master, Diploma or equivalent) in physics or a very related field",
+        "Successfully completed univerty degree (Master, Diplom or equivalent) in Computer Science, Computer Engineering, Physics or a related field",
+        "Very good knowledge of German and English",
+        "a succeessfully completed academic university degree (Master, Diploma, or equivalent) in Process Engineering, Chemical Engineering, Information Technology in Mechanical Engineering, etc. is required"
+      ]
+    },
+    {
+      "bank_id": "EB00004",
+      "fingerprint": "d639c28cfa78d68e58b3e6d4f07d03f82262703628bef9ed7aa1dcc952dd229f",
+      "category": "experience",
+      "text": "Machine Learning Consultant at AraraDS (2025-07 to 2025-09)",
+      "tags": [
+        "2025-07",
+        "2025-09",
+        "ararads",
+        "consultant",
+        "learning",
+        "machine"
+      ],
+      "source_refs": [
+        "profile.experience"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": [
+        "Strong knowledge and skills in machine learning"
+      ]
+    },
+    {
+      "bank_id": "EB00005",
+      "fingerprint": "b569bf1e4d2007c02ecf29f6be8ac7bf6c2b038a7be58128a0ef639f3c46a7f0",
+      "category": "achievement",
+      "text": "Machine Learning Consultant / AraraDS: Built and deployed Python-based data and ML pipelines with Apache Airflow for production orchestration and scheduling",
+      "tags": [
+        "airflow",
+        "apache",
+        "ararads",
+        "built",
+        "consultant",
+        "data",
+        "deployed",
+        "learning",
+        "machine",
+        "orchestration",
+        "pipelines",
+        "production",
+        "python-based",
+        "scheduling"
+      ],
+      "source_refs": [
+        "profile.experience.achievements"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": [
+        "Demonstrated experience with FAIR data principles (desirable).",
+        "Experience with collecting and analyzing EEG data",
+        "Experience with collecting and analyzing eye tracking data",
+        "Experience with workflow orchestration and scheduling tools (e.g. Airflow, Cylc) (desirable).",
+        "Good experience in big data analysis of multiple climate variables",
+        "In-depth knowledge in SQL databases and declarative query processing in the context of data mining In-depth knowledge in programming distributed and parallel databases and data analysis algorithms, as well as experience in open source projects (e.g., software development, GitHub) and associated programming and software development skills (e.g. Java, C/C++, Python)",
+        "Strong knowledge and skills in machine learning"
+      ]
+    },
+    {
+      "bank_id": "EB00006",
+      "fingerprint": "23c355cc00797ffd670155363a6bfbf1354b2a9a8b2c093e0edcdd1048c3fbbf",
+      "category": "achievement",
+      "text": "Machine Learning Consultant / AraraDS: Integrated LLM-assisted extraction workflows within event-driven document pipelines using Kafka",
+      "tags": [
+        "ararads",
+        "consultant",
+        "document",
+        "event-driven",
+        "extraction",
+        "integrated",
+        "kafka",
+        "learning",
+        "llm-assisted",
+        "machine",
+        "pipelines",
+        "using",
+        "within",
+        "workflows"
+      ],
+      "source_refs": [
+        "profile.experience.achievements"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": []
+    },
+    {
+      "bank_id": "EB00007",
+      "fingerprint": "448b75bc2ae39a5ad3f0334ed347eb39364f48dfcb245f911de0ac33019ee307",
+      "category": "achievement",
+      "text": "Machine Learning Consultant / AraraDS: Applied MLOps practices including model versioning, deployment, and monitoring for iterative experimentation",
+      "tags": [
+        "applied",
+        "ararads",
+        "consultant",
+        "deployment",
+        "experimentation",
+        "including",
+        "iterative",
+        "learning",
+        "machine",
+        "mlops",
+        "model",
+        "monitoring",
+        "practices",
+        "versioning"
+      ],
+      "source_refs": [
+        "profile.experience.achievements"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": [
+        "Practical knowledge of MLOps principles, including model versioning, deployment, monitoring, and continuous learning (desirable).",
+        "Strong Python programming skills, including deployment in real-time or automated environments (desirable).",
+        "fundamental knowledge in applied Optics"
+      ]
+    },
+    {
+      "bank_id": "EB00008",
+      "fingerprint": "4d22ef6d34a62d41472dfc8e4bb26337be811e1c427550c33f4c63b82e749b21",
+      "category": "experience",
+      "text": "Research Associate (AI in Education) at Universidad de Playa Ancha (UPLA) (2024-11 to 2025-06)",
+      "tags": [
+        "2024-11",
+        "2025-06",
+        "ancha",
+        "associate",
+        "education",
+        "playa",
+        "research",
+        "universidad",
+        "upla"
+      ],
+      "source_refs": [
+        "profile.experience"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": []
+    },
+    {
+      "bank_id": "EB00009",
+      "fingerprint": "4c4fd132dcf18e717e29ab917f6de5d5725e23a17520e340c017dc4a82af6f9a",
+      "category": "achievement",
+      "text": "Research Associate (AI in Education) / Universidad de Playa Ancha (UPLA): Designed Intelligent Tutoring System (ITS) architecture integrating affective sensing, RAG-backed domain knowledge, and pedagogical decision logic",
+      "tags": [
+        "affective",
+        "ancha",
+        "architecture",
+        "associate",
+        "decision",
+        "designed",
+        "domain",
+        "education",
+        "integrating",
+        "intelligent",
+        "its",
+        "knowledge",
+        "logic",
+        "pedagogical",
+        "playa",
+        "rag-backed",
+        "research",
+        "sensing",
+        "system",
+        "tutoring",
+        "universidad",
+        "upla"
+      ],
+      "source_refs": [
+        "profile.experience.achievements"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": [
+        "Basic knowledge of quantum information theory",
+        "Experience and very good knowledge of quantitative methods of empirical social science research",
+        "In-depth knowledge in database technologies",
+        "Knowledge of LaTeX",
+        "Solid knowledge in the fields of Entrepreneurship, Technology and Innovation Management from studies and own research",
+        "Strong knowledge and skills in computer security",
+        "Very good knowledge of English",
+        "Very good knowledge of German and English",
+        "Very good knowledge of statistical methods",
+        "in-depth knowledge of algorithmic discrete mathematics"
+      ]
+    },
+    {
+      "bank_id": "EB00010",
+      "fingerprint": "aa464e2ce077f9e621afa5df1059e05ec5f9ac7dae4d3a7936217b3419f13eec",
+      "category": "achievement",
+      "text": "Research Associate (AI in Education) / Universidad de Playa Ancha (UPLA): Developed LAETEC-Vision leveraging PyTorch for real-time cognitive-state classification",
+      "tags": [
+        "ancha",
+        "associate",
+        "classification",
+        "cognitive-state",
+        "developed",
+        "education",
+        "laetec-vision",
+        "leveraging",
+        "playa",
+        "pytorch",
+        "real-time",
+        "research",
+        "universidad",
+        "upla"
+      ],
+      "source_refs": [
+        "profile.experience.achievements"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": []
+    },
+    {
+      "bank_id": "EB00011",
+      "fingerprint": "9d8e4cbc494b9a7006950b93d33b5fcb54d753d06b09099b7dd58055c7040882",
+      "category": "achievement",
+      "text": "Research Associate (AI in Education) / Universidad de Playa Ancha (UPLA): Designed reproducible evaluation workflows and structured experiment metadata following FAIR data principles for adaptive interventions",
+      "tags": [
+        "adaptive",
+        "ancha",
+        "associate",
+        "data",
+        "designed",
+        "education",
+        "evaluation",
+        "experiment",
+        "fair",
+        "following",
+        "interventions",
+        "metadata",
+        "playa",
+        "principles",
+        "reproducible",
+        "research",
+        "structured",
+        "universidad",
+        "upla",
+        "workflows"
+      ],
+      "source_refs": [
+        "profile.experience.achievements"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": [
+        "Demonstrated experience with FAIR data principles (desirable).",
+        "Experience with collecting and analyzing EEG data",
+        "Experience with collecting and analyzing eye tracking data",
+        "Good experience in big data analysis of multiple climate variables",
+        "Structured and independent working style desirable"
+      ]
+    },
+    {
+      "bank_id": "EB00012",
+      "fingerprint": "bb4ea07216e3966916d3733cda3248485b805447d59b9bec571d6db1a3b52a7d",
+      "category": "experience",
+      "text": "Data Engineer at Globalconexus (2024-04 to 2025-06)",
+      "tags": [
+        "2024-04",
+        "2025-06",
+        "data",
+        "engineer",
+        "globalconexus"
+      ],
+      "source_refs": [
+        "profile.experience"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": []
+    },
+    {
+      "bank_id": "EB00013",
+      "fingerprint": "b8272ef9e8d8f9a82d66221a08dd61d87eae1269671750c641452a02b54332af",
+      "category": "achievement",
+      "text": "Data Engineer / Globalconexus: Built and maintained scalable enterprise data pipelines leveraging Azure Data Factory, Databricks, and PySpark",
+      "tags": [
+        "azure",
+        "built",
+        "data",
+        "databricks",
+        "engineer",
+        "enterprise",
+        "factory",
+        "globalconexus",
+        "leveraging",
+        "maintained",
+        "pipelines",
+        "pyspark",
+        "scalable"
+      ],
+      "source_refs": [
+        "profile.experience.achievements"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": [
+        "Successfully completed university degree (Master, Diplom or equivalent) and a doctorate (PhD) with a focus on data management, distributed systems, or scalable data analysis"
+      ]
+    },
+    {
+      "bank_id": "EB00014",
+      "fingerprint": "a54240529db63ffc971625af27e523a806f52b8148c9b8a0447ebec53c295054",
+      "category": "achievement",
+      "text": "Data Engineer / Globalconexus: Implemented model deployment monitoring and constructed semantic reporting layers in Power BI",
+      "tags": [
+        "constructed",
+        "data",
+        "deployment",
+        "engineer",
+        "globalconexus",
+        "implemented",
+        "layers",
+        "model",
+        "monitoring",
+        "power",
+        "reporting",
+        "semantic"
+      ],
+      "source_refs": [
+        "profile.experience.achievements"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": [
+        "Practical knowledge of MLOps principles, including model versioning, deployment, monitoring, and continuous learning (desirable)."
+      ]
+    },
+    {
+      "bank_id": "EB00015",
+      "fingerprint": "e1da34d3131924e3cbdeae0a42bc4d16c74f063d7d4d77030a997dda710259cc",
+      "category": "experience",
+      "text": "Data Engineer at Walmart (2023-03 to 2023-10)",
+      "tags": [
+        "2023-03",
+        "2023-10",
+        "data",
+        "engineer",
+        "walmart"
+      ],
+      "source_refs": [
+        "profile.experience"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": []
+    },
+    {
+      "bank_id": "EB00016",
+      "fingerprint": "36a664e496ee96a823531db817f5eb152dcde20af02520d5856b39bb1085306d",
+      "category": "experience",
+      "text": "Data Science Consultant at Deloitte (2021-09 to 2023-03)",
+      "tags": [
+        "2021-09",
+        "2023-03",
+        "consultant",
+        "data",
+        "deloitte",
+        "science"
+      ],
+      "source_refs": [
+        "profile.experience"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": [
+        "Advanced knowledge in data science, compiler construction, and distributed systems programming",
+        "Degree Program: Computer science, Mathematics",
+        "Degree Program: Engineering, Business informatics, Computer science",
+        "Degree Program: Physics, process engineering, data science",
+        "Femtosecond lasers or ultrafast science",
+        "Readiness to implement open science desirable",
+        "Studiengang: Physik, Data Science, MINT-Fach",
+        "Successfully completed academic degree (Master's, Diploma or equivalent) in physics, process engineering, data science or a related field.",
+        "Successfully completed scientific university degree (Master, Diplom or equivalent) in physics, computer science, electrical engineering, or a related field",
+        "Successfully completed university degree (Master, Diplom or equivalent) in Computer Science, Computer Engineering, Electrical Engineering, or a related field",
+        "Successfully completed university degree (Master, Diplom or equivalent) in computer science or Business Informatics",
+        "Successfully completed university degree (Master, Diplom, or equivalent) and PhD in electrical engineering, computer science, or a related field",
+        "Successfully completed univerty degree (Master, Diplom or equivalent) in Computer Science, Computer Engineering, Physics or a related field"
+      ]
+    },
+    {
+      "bank_id": "EB00017",
+      "fingerprint": "95d58f19ad50920ee955eccc4fa25aebb1c6c05fc285f4699964a46327fe25e0",
+      "category": "achievement",
+      "text": "Data Science Consultant / Deloitte: Developed ML models and integrated backend/API components for applied analytics use cases",
+      "tags": [
+        "analytics",
+        "api",
+        "applied",
+        "backend",
+        "cases",
+        "components",
+        "consultant",
+        "data",
+        "deloitte",
+        "developed",
+        "integrated",
+        "models",
+        "science",
+        "use"
+      ],
+      "source_refs": [
+        "profile.experience.achievements"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": [
+        "Advanced knowledge in data science, compiler construction, and distributed systems programming",
+        "Degree Program: Computer science, Mathematics",
+        "Degree Program: Engineering, Business informatics, Computer science",
+        "Degree Program: Physics, process engineering, data science",
+        "Femtosecond lasers or ultrafast science",
+        "Micro-assembly of optical components",
+        "Readiness to implement open science desirable",
+        "Solid knowledge in theoretical and applied/practical computer science)",
+        "Studiengang: Physik, Data Science, MINT-Fach"
+      ]
+    },
+    {
+      "bank_id": "EB00018",
+      "fingerprint": "683488d9f7b5fe7c226f32cd5422799b53abfafaa93b18d816eb432a46cf52b4",
+      "category": "experience",
+      "text": "Machine Learning Engineer at Kwali (2019-03 to 2021-08)",
+      "tags": [
+        "2019-03",
+        "2021-08",
+        "engineer",
+        "kwali",
+        "learning",
+        "machine"
+      ],
+      "source_refs": [
+        "profile.experience"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": []
+    },
+    {
+      "bank_id": "EB00019",
+      "fingerprint": "df19770703efa4702f4da8d5877940325a19adab51d23de549f4c53e7cfe5981",
+      "category": "achievement",
+      "text": "Machine Learning Engineer / Kwali: Built computer vision-based quality assurance and reporting systems",
+      "tags": [
+        "assurance",
+        "built",
+        "computer",
+        "engineer",
+        "kwali",
+        "learning",
+        "machine",
+        "quality",
+        "reporting",
+        "systems",
+        "vision-based"
+      ],
+      "source_refs": [
+        "profile.experience.achievements"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": [
+        "Strong knowledge and skills in computer security",
+        "experience in programming process control Systems (is desirable)"
+      ]
+    },
+    {
+      "bank_id": "EB00020",
+      "fingerprint": "7bb08cfaab20f13dc0ed95c666a4a1888ffafda10f736382215fb032cea6c874",
+      "category": "achievement",
+      "text": "Machine Learning Engineer / Kwali: Designed and deployed real-time image processing pipelines on constrained edge devices including Raspberry Pi and Jetson Nano",
+      "tags": [
+        "constrained",
+        "deployed",
+        "designed",
+        "devices",
+        "edge",
+        "engineer",
+        "image",
+        "including",
+        "jetson",
+        "kwali",
+        "learning",
+        "machine",
+        "nano",
+        "pipelines",
+        "processing",
+        "raspberry",
+        "real-time"
+      ],
+      "source_refs": [
+        "profile.experience.achievements"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": []
+    },
+    {
+      "bank_id": "EB00021",
+      "fingerprint": "e718effc3dc9ee3879ac79aaab652707f5e14c20a4e428eb611188b065a077bb",
+      "category": "experience",
+      "text": "Electronics Intern at DSM Noisemaker (2017-12 to 2018-03)",
+      "tags": [
+        "2017-12",
+        "2018-03",
+        "dsm",
+        "electronics",
+        "intern",
+        "noisemaker"
+      ],
+      "source_refs": [
+        "profile.experience"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": []
+    },
+    {
+      "bank_id": "EB00022",
+      "fingerprint": "6ec60a702f55fecb02dba235759beccb23e892c129925b6d8bf654f84928ee7d",
+      "category": "achievement",
+      "text": "Electronics Intern / DSM Noisemaker: Researched digital audio technologies and developed digital control systems for analog sound processing circuits",
+      "tags": [
+        "analog",
+        "audio",
+        "circuits",
+        "control",
+        "developed",
+        "digital",
+        "dsm",
+        "electronics",
+        "intern",
+        "noisemaker",
+        "processing",
+        "researched",
+        "sound",
+        "systems",
+        "technologies"
+      ],
+      "source_refs": [
+        "profile.experience.achievements"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": [
+        "In-depth knowledge in database technologies",
+        "Software skills: High-dimensional data processing and/or control software e.g. Labview",
+        "experience in programming process control Systems (is desirable)"
+      ]
+    },
+    {
+      "bank_id": "EB00023",
+      "fingerprint": "ca211254ef3367b3edbca94c4978804a051c903f4a6e3a48125a9513975f2cc2",
+      "category": "achievement",
+      "text": "Electronics Intern / DSM Noisemaker: Prototyped and tested embedded solutions for audio processing and control interfaces",
+      "tags": [
+        "audio",
+        "control",
+        "dsm",
+        "electronics",
+        "embedded",
+        "interfaces",
+        "intern",
+        "noisemaker",
+        "processing",
+        "prototyped",
+        "solutions",
+        "tested"
+      ],
+      "source_refs": [
+        "profile.experience.achievements"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": [
+        "Software skills: High-dimensional data processing and/or control software e.g. Labview"
+      ]
+    },
+    {
+      "bank_id": "EB00024",
+      "fingerprint": "c5495eaee1a4d861ed182c08aa1b08d026ff3593e85b4e78d7274713edf8b910",
+      "category": "publication",
+      "text": "2025: Exploration of Incremental Synthetic Non-Morphed Images for Single Morphing Attack Detection (NeurIPS 2025 (Workshop))",
+      "tags": [
+        "2025",
+        "attack",
+        "detection",
+        "exploration",
+        "images",
+        "incremental",
+        "morphing",
+        "neurips",
+        "non-morphed",
+        "single",
+        "synthetic",
+        "workshop"
+      ],
+      "source_refs": [
+        "profile.publications"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": []
+    },
+    {
+      "bank_id": "EB00025",
+      "fingerprint": "eab2fbac937a04b6d967876c1bf8d3753944b170050bde61102a4f677af26b65",
+      "category": "publication",
+      "text": "2025: Intelligent Tutor for Tasks in the Domain of Linear Algebra (ICITED 2025)",
+      "tags": [
+        "2025",
+        "algebra",
+        "domain",
+        "icited",
+        "intelligent",
+        "linear",
+        "tasks",
+        "tutor"
+      ],
+      "source_refs": [
+        "profile.publications"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": []
+    },
+    {
+      "bank_id": "EB00026",
+      "fingerprint": "b00fd28333719537fccba4dfc26288de1368d2dc63961695f7aae46080d0c229",
+      "category": "language",
+      "text": "Spanish: CEFR C2 (Native)",
+      "tags": [
+        "cefr",
+        "native",
+        "spanish"
+      ],
+      "source_refs": [
+        "profile.languages"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": []
+    },
+    {
+      "bank_id": "EB00027",
+      "fingerprint": "225ea555a37d2d5a4d77fb6840f857973dcbb75e65eb6bc471d217f7626d276e",
+      "category": "language",
+      "text": "English: CEFR C1",
+      "tags": [
+        "cefr",
+        "english"
+      ],
+      "source_refs": [
+        "profile.languages"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": [
+        "Very good knowledge of English"
+      ]
+    },
+    {
+      "bank_id": "EB00028",
+      "fingerprint": "1641d29b6703ce1a969f640f3c8b2c954cebcf4b0d937ba47f91b31f058985fa",
+      "category": "language",
+      "text": "German: CEFR A2",
+      "tags": [
+        "cefr",
+        "german"
+      ],
+      "source_refs": [
+        "profile.languages"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": []
+    },
+    {
+      "bank_id": "EB00029",
+      "fingerprint": "781a1b2dff95c021d59229110274becf0d3c8c2d2e9fabb7105e62bbfdfa9f4f",
+      "category": "skill",
+      "text": "programming_languages: Python, JavaScript, Java, C, Verilog",
+      "tags": [
+        "java",
+        "javascript",
+        "languages",
+        "programming",
+        "python",
+        "verilog"
+      ],
+      "source_refs": [
+        "profile.skills.programming_languages"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": [
+        "Experience in the Python programming language",
+        "In-depth knowledge in SQL databases and declarative query processing in the context of data mining In-depth knowledge in programming distributed and parallel databases and data analysis algorithms, as well as experience in open source projects (e.g., software development, GitHub) and associated programming and software development skills (e.g. Java, C/C++, Python)",
+        "Programming skills: Matlab, Python etc.",
+        "Programming skills: Python",
+        "Strong Python programming skills, including deployment in real-time or automated environments (desirable).",
+        "experience in programming PCS7 (is desirable)",
+        "first practical experiences in programming with Python or LabVIEW are an advantage"
+      ]
+    },
+    {
+      "bank_id": "EB00030",
+      "fingerprint": "918b3f75e724b795687c86aadf8b344fba473b7450ad47e2d0a1955ec949ba92",
+      "category": "skill",
+      "text": "ml_ai: scikit-learn, TensorFlow/Keras, PyTorch, LLM prompting, guardrails, model evaluation, Vertex AI",
+      "tags": [
+        "evaluation",
+        "guardrails",
+        "keras",
+        "llm",
+        "model",
+        "prompting",
+        "pytorch",
+        "scikit-learn",
+        "tensorflow",
+        "vertex"
+      ],
+      "source_refs": [
+        "profile.skills.ml_ai"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": []
+    },
+    {
+      "bank_id": "EB00031",
+      "fingerprint": "64d4d76dd50e5ec2c2585c6089c707f5d50fb3a2475ed81a1aac4d1f03ea2d62",
+      "category": "skill",
+      "text": "data_platforms: Azure Data Factory, Databricks, Spark, Delta Lake, Power BI, BigQuery, S3",
+      "tags": [
+        "azure",
+        "bigquery",
+        "data",
+        "databricks",
+        "delta",
+        "factory",
+        "lake",
+        "platforms",
+        "power",
+        "spark"
+      ],
+      "source_refs": [
+        "profile.skills.data_platforms"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": []
+    },
+    {
+      "bank_id": "EB00032",
+      "fingerprint": "6f0d21a88ca80f97d4ac917d23ae233e8a220e83d06cc6937dc0a020251cbef1",
+      "category": "skill",
+      "text": "orchestration_devops: Airflow, Prefect, Docker, Git, CI/CD, AWS, Azure, Google Cloud",
+      "tags": [
+        "airflow",
+        "aws",
+        "azure",
+        "cloud",
+        "devops",
+        "docker",
+        "git",
+        "google",
+        "orchestration",
+        "prefect"
+      ],
+      "source_refs": [
+        "profile.skills.orchestration_devops"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": [
+        "Experience with workflow orchestration and scheduling tools (e.g. Airflow, Cylc) (desirable)."
+      ]
+    },
+    {
+      "bank_id": "EB00033",
+      "fingerprint": "aa88f93e708df04edc1ba69bc98a8c25f407549db11e6c8f08abc99c04d3b66e",
+      "category": "skill",
+      "text": "electronics_robotics: Arduino, G-code, ROS, SPICE",
+      "tags": [
+        "arduino",
+        "electronics",
+        "g-code",
+        "robotics",
+        "ros",
+        "spice"
+      ],
+      "source_refs": [
+        "profile.skills.electronics_robotics"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": []
+    },
+    {
+      "bank_id": "EB00034",
+      "fingerprint": "39d1328358653481f14afffb1d0d90fb6abbaa7287b8c6eeae599a61fd216788",
+      "category": "legal",
+      "text": "Visa type: Chancenkarte; work permission Germany: True",
+      "tags": [
+        "chancenkarte",
+        "germany",
+        "permission",
+        "true",
+        "type",
+        "visa",
+        "work"
+      ],
+      "source_refs": [
+        "profile.owner.legal_status"
+      ],
+      "first_seen_utc": "2026-03-01T22:32:58.005077+00:00",
+      "last_seen_utc": "2026-03-01T23:36:41.370511+00:00",
+      "used_in_jobs": [
+        "tu_berlin/200069",
+        "tu_berlin/200879",
+        "tu_berlin/200897",
+        "tu_berlin/201010",
+        "tu_berlin/201067",
+        "tu_berlin/201069",
+        "tu_berlin/201084",
+        "tu_berlin/201115",
+        "tu_berlin/201185",
+        "tu_berlin/201188",
+        "tu_berlin/201191",
+        "tu_berlin/201203",
+        "tu_berlin/201219",
+        "tu_berlin/201222",
+        "tu_berlin/201223",
+        "tu_berlin/201300",
+        "tu_berlin/201309",
+        "tu_berlin/201342",
+        "tu_berlin/201396",
+        "tu_berlin/201397",
+        "tu_berlin/201399",
+        "tu_berlin/201404",
+        "tu_berlin/201406",
+        "tu_berlin/201553",
+        "tu_berlin/201578",
+        "tu_berlin/201596",
+        "tu_berlin/201711",
+        "tu_berlin/201791"
+      ],
+      "linked_requirements": [
+        "Ability to work in a team is desirable"
+      ]
+    }
+  ],
+  "job_runs": [
+    {
+      "run_id": "tu_berlin/201084/2026-03-01T22:32:58.005077+00:00",
+      "source": "tu_berlin",
+      "job_id": "201084",
+      "generated_at_utc": "2026-03-01T22:32:58.005077+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed academic degree (Master's, Diploma or equivalent) in physics, process engineering, data science or a related field.",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003",
+            "EB00016"
+          ]
+        },
+        {
+          "requirement": "Strong Python programming skills, including deployment in real-time or automated environments (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00029"
+          ]
+        },
+        {
+          "requirement": "Experience with workflow orchestration and scheduling tools (e.g. Airflow, Cylc) (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00032"
+          ]
+        },
+        {
+          "requirement": "Demonstrated experience with FAIR data principles (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00011"
+          ]
+        },
+        {
+          "requirement": "Practical knowledge of MLOps principles, including model versioning, deployment, monitoring, and continuous learning (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00014"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Physics, process engineering, data science",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003",
+            "EB00016",
+            "EB00017"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201084/2026-03-01T22:33:01.532867+00:00",
+      "source": "tu_berlin",
+      "job_id": "201084",
+      "generated_at_utc": "2026-03-01T22:33:01.532867+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed academic degree (Master's, Diploma or equivalent) in physics, process engineering, data science or a related field.",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003",
+            "EB00016"
+          ]
+        },
+        {
+          "requirement": "Strong Python programming skills, including deployment in real-time or automated environments (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00029"
+          ]
+        },
+        {
+          "requirement": "Experience with workflow orchestration and scheduling tools (e.g. Airflow, Cylc) (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00032"
+          ]
+        },
+        {
+          "requirement": "Demonstrated experience with FAIR data principles (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00011"
+          ]
+        },
+        {
+          "requirement": "Practical knowledge of MLOps principles, including model versioning, deployment, monitoring, and continuous learning (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00014"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Physics, process engineering, data science",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003",
+            "EB00016",
+            "EB00017"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201084/2026-03-01T22:34:06.282614+00:00",
+      "source": "tu_berlin",
+      "job_id": "201084",
+      "generated_at_utc": "2026-03-01T22:34:06.282614+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed academic degree (Master's, Diploma or equivalent) in physics, process engineering, data science or a related field.",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003",
+            "EB00016"
+          ]
+        },
+        {
+          "requirement": "Strong Python programming skills, including deployment in real-time or automated environments (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00029"
+          ]
+        },
+        {
+          "requirement": "Experience with workflow orchestration and scheduling tools (e.g. Airflow, Cylc) (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00032"
+          ]
+        },
+        {
+          "requirement": "Demonstrated experience with FAIR data principles (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00011"
+          ]
+        },
+        {
+          "requirement": "Practical knowledge of MLOps principles, including model versioning, deployment, monitoring, and continuous learning (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00014"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Physics, process engineering, data science",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003",
+            "EB00016",
+            "EB00017"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201084/2026-03-01T22:34:38.945049+00:00",
+      "source": "tu_berlin",
+      "job_id": "201084",
+      "generated_at_utc": "2026-03-01T22:34:38.945049+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed academic degree (Master's, Diploma or equivalent) in physics, process engineering, data science or a related field.",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003",
+            "EB00016"
+          ]
+        },
+        {
+          "requirement": "Strong Python programming skills, including deployment in real-time or automated environments (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00029"
+          ]
+        },
+        {
+          "requirement": "Experience with workflow orchestration and scheduling tools (e.g. Airflow, Cylc) (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00032"
+          ]
+        },
+        {
+          "requirement": "Demonstrated experience with FAIR data principles (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00011"
+          ]
+        },
+        {
+          "requirement": "Practical knowledge of MLOps principles, including model versioning, deployment, monitoring, and continuous learning (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00014"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Physics, process engineering, data science",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003",
+            "EB00016",
+            "EB00017"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201084/2026-03-01T22:36:44.296819+00:00",
+      "source": "tu_berlin",
+      "job_id": "201084",
+      "generated_at_utc": "2026-03-01T22:36:44.296819+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed academic degree (Master's, Diploma or equivalent) in physics, process engineering, data science or a related field.",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003",
+            "EB00016"
+          ]
+        },
+        {
+          "requirement": "Strong Python programming skills, including deployment in real-time or automated environments (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00029"
+          ]
+        },
+        {
+          "requirement": "Experience with workflow orchestration and scheduling tools (e.g. Airflow, Cylc) (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00032"
+          ]
+        },
+        {
+          "requirement": "Demonstrated experience with FAIR data principles (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00011"
+          ]
+        },
+        {
+          "requirement": "Practical knowledge of MLOps principles, including model versioning, deployment, monitoring, and continuous learning (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00014"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Physics, process engineering, data science",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003",
+            "EB00016",
+            "EB00017"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201084/2026-03-01T22:36:50.492615+00:00",
+      "source": "tu_berlin",
+      "job_id": "201084",
+      "generated_at_utc": "2026-03-01T22:36:50.492615+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed academic degree (Master's, Diploma or equivalent) in physics, process engineering, data science or a related field.",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003",
+            "EB00016"
+          ]
+        },
+        {
+          "requirement": "Strong Python programming skills, including deployment in real-time or automated environments (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00029"
+          ]
+        },
+        {
+          "requirement": "Experience with workflow orchestration and scheduling tools (e.g. Airflow, Cylc) (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00032"
+          ]
+        },
+        {
+          "requirement": "Demonstrated experience with FAIR data principles (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00011"
+          ]
+        },
+        {
+          "requirement": "Practical knowledge of MLOps principles, including model versioning, deployment, monitoring, and continuous learning (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00014"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Physics, process engineering, data science",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003",
+            "EB00016",
+            "EB00017"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201084/2026-03-01T22:38:51.063490+00:00",
+      "source": "tu_berlin",
+      "job_id": "201084",
+      "generated_at_utc": "2026-03-01T22:38:51.063490+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed academic degree (Master's, Diploma or equivalent) in physics, process engineering, data science or a related field.",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003",
+            "EB00016"
+          ]
+        },
+        {
+          "requirement": "Strong Python programming skills, including deployment in real-time or automated environments (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00029"
+          ]
+        },
+        {
+          "requirement": "Experience with workflow orchestration and scheduling tools (e.g. Airflow, Cylc) (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00032"
+          ]
+        },
+        {
+          "requirement": "Demonstrated experience with FAIR data principles (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00011"
+          ]
+        },
+        {
+          "requirement": "Practical knowledge of MLOps principles, including model versioning, deployment, monitoring, and continuous learning (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00014"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Physics, process engineering, data science",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003",
+            "EB00016",
+            "EB00017"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201084/2026-03-01T22:45:20.818907+00:00",
+      "source": "tu_berlin",
+      "job_id": "201084",
+      "generated_at_utc": "2026-03-01T22:45:20.818907+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed academic degree (Master's, Diploma or equivalent) in physics, process engineering, data science or a related field.",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003",
+            "EB00016"
+          ]
+        },
+        {
+          "requirement": "Strong Python programming skills, including deployment in real-time or automated environments (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00029"
+          ]
+        },
+        {
+          "requirement": "Experience with workflow orchestration and scheduling tools (e.g. Airflow, Cylc) (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00032"
+          ]
+        },
+        {
+          "requirement": "Demonstrated experience with FAIR data principles (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00011"
+          ]
+        },
+        {
+          "requirement": "Practical knowledge of MLOps principles, including model versioning, deployment, monitoring, and continuous learning (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00014"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Physics, process engineering, data science",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003",
+            "EB00016",
+            "EB00017"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201084/2026-03-01T22:46:45.095774+00:00",
+      "source": "tu_berlin",
+      "job_id": "201084",
+      "generated_at_utc": "2026-03-01T22:46:45.095774+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed academic degree (Master's, Diploma or equivalent) in physics, process engineering, data science or a related field.",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003",
+            "EB00016"
+          ]
+        },
+        {
+          "requirement": "Strong Python programming skills, including deployment in real-time or automated environments (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00029"
+          ]
+        },
+        {
+          "requirement": "Experience with workflow orchestration and scheduling tools (e.g. Airflow, Cylc) (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00032"
+          ]
+        },
+        {
+          "requirement": "Demonstrated experience with FAIR data principles (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00011"
+          ]
+        },
+        {
+          "requirement": "Practical knowledge of MLOps principles, including model versioning, deployment, monitoring, and continuous learning (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00014"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Physics, process engineering, data science",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003",
+            "EB00016",
+            "EB00017"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201084/2026-03-01T23:12:39.314818+00:00",
+      "source": "tu_berlin",
+      "job_id": "201084",
+      "generated_at_utc": "2026-03-01T23:12:39.314818+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed academic degree (Master's, Diploma or equivalent) in physics, process engineering, data science or a related field.",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003",
+            "EB00016"
+          ]
+        },
+        {
+          "requirement": "Strong Python programming skills, including deployment in real-time or automated environments (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00029"
+          ]
+        },
+        {
+          "requirement": "Experience with workflow orchestration and scheduling tools (e.g. Airflow, Cylc) (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00032"
+          ]
+        },
+        {
+          "requirement": "Demonstrated experience with FAIR data principles (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00011"
+          ]
+        },
+        {
+          "requirement": "Practical knowledge of MLOps principles, including model versioning, deployment, monitoring, and continuous learning (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00014"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Physics, process engineering, data science",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003",
+            "EB00016",
+            "EB00017"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201084/2026-03-01T23:13:56.057544+00:00",
+      "source": "tu_berlin",
+      "job_id": "201084",
+      "generated_at_utc": "2026-03-01T23:13:56.057544+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed academic degree (Master's, Diploma or equivalent) in physics, process engineering, data science or a related field.",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003",
+            "EB00016"
+          ]
+        },
+        {
+          "requirement": "Strong Python programming skills, including deployment in real-time or automated environments (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00029"
+          ]
+        },
+        {
+          "requirement": "Experience with workflow orchestration and scheduling tools (e.g. Airflow, Cylc) (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00032"
+          ]
+        },
+        {
+          "requirement": "Demonstrated experience with FAIR data principles (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00011"
+          ]
+        },
+        {
+          "requirement": "Practical knowledge of MLOps principles, including model versioning, deployment, monitoring, and continuous learning (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00014"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Physics, process engineering, data science",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003",
+            "EB00016",
+            "EB00017"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201084/2026-03-01T23:15:47.507764+00:00",
+      "source": "tu_berlin",
+      "job_id": "201084",
+      "generated_at_utc": "2026-03-01T23:15:47.507764+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed academic degree (Master's, Diploma or equivalent) in physics, process engineering, data science or a related field.",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003",
+            "EB00016"
+          ]
+        },
+        {
+          "requirement": "Strong Python programming skills, including deployment in real-time or automated environments (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00029"
+          ]
+        },
+        {
+          "requirement": "Experience with workflow orchestration and scheduling tools (e.g. Airflow, Cylc) (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00032"
+          ]
+        },
+        {
+          "requirement": "Demonstrated experience with FAIR data principles (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00011"
+          ]
+        },
+        {
+          "requirement": "Practical knowledge of MLOps principles, including model versioning, deployment, monitoring, and continuous learning (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00014"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Physics, process engineering, data science",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003",
+            "EB00016",
+            "EB00017"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201084/2026-03-01T23:16:54.165690+00:00",
+      "source": "tu_berlin",
+      "job_id": "201084",
+      "generated_at_utc": "2026-03-01T23:16:54.165690+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed academic degree (Master's, Diploma or equivalent) in physics, process engineering, data science or a related field.",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003",
+            "EB00016"
+          ]
+        },
+        {
+          "requirement": "Strong Python programming skills, including deployment in real-time or automated environments (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00029"
+          ]
+        },
+        {
+          "requirement": "Experience with workflow orchestration and scheduling tools (e.g. Airflow, Cylc) (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00032"
+          ]
+        },
+        {
+          "requirement": "Demonstrated experience with FAIR data principles (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00011"
+          ]
+        },
+        {
+          "requirement": "Practical knowledge of MLOps principles, including model versioning, deployment, monitoring, and continuous learning (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00014"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Physics, process engineering, data science",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003",
+            "EB00016",
+            "EB00017"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/200069/2026-03-01T23:32:21.599413+00:00",
+      "source": "tu_berlin",
+      "job_id": "200069",
+      "generated_at_utc": "2026-03-01T23:32:21.599413+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Abschluss: Master, Diplom oder \u00c4quivalent",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/200069/2026-03-01T23:33:15.207805+00:00",
+      "source": "tu_berlin",
+      "job_id": "200069",
+      "generated_at_utc": "2026-03-01T23:33:15.207805+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Abschluss: Master, Diplom oder \u00c4quivalent",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/200879/2026-03-01T23:34:20.010510+00:00",
+      "source": "tu_berlin",
+      "job_id": "200879",
+      "generated_at_utc": "2026-03-01T23:34:20.010510+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent and PhD",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Mechanical engineering, mechanical engineering, biomedical engineerin",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/200879/2026-03-01T23:34:23.985914+00:00",
+      "source": "tu_berlin",
+      "job_id": "200879",
+      "generated_at_utc": "2026-03-01T23:34:23.985914+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent and PhD",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Mechanical engineering, mechanical engineering, biomedical engineerin",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/200897/2026-03-01T23:34:24.690946+00:00",
+      "source": "tu_berlin",
+      "job_id": "200897",
+      "generated_at_utc": "2026-03-01T23:34:24.690946+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Mechanical engineering, mechanical engineering, biomedical engineerin",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/200897/2026-03-01T23:34:49.629692+00:00",
+      "source": "tu_berlin",
+      "job_id": "200897",
+      "generated_at_utc": "2026-03-01T23:34:49.629692+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Mechanical engineering, mechanical engineering, biomedical engineerin",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201010/2026-03-01T23:34:50.284356+00:00",
+      "source": "tu_berlin",
+      "job_id": "201010",
+      "generated_at_utc": "2026-03-01T23:34:50.284356+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Abschluss: Master, Diplom oder \u00c4quivalent",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201010/2026-03-01T23:34:54.175789+00:00",
+      "source": "tu_berlin",
+      "job_id": "201010",
+      "generated_at_utc": "2026-03-01T23:34:54.175789+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Abschluss: Master, Diplom oder \u00c4quivalent",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201067/2026-03-01T23:34:54.900470+00:00",
+      "source": "tu_berlin",
+      "job_id": "201067",
+      "generated_at_utc": "2026-03-01T23:34:54.900470+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed university degree (Master, Diploma or equivalent) in physics or a very related field",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Programming skills: Python",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00029"
+          ]
+        },
+        {
+          "requirement": "Femtosecond lasers or ultrafast science",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00016",
+            "EB00017"
+          ]
+        },
+        {
+          "requirement": "Software skills: High-dimensional data processing and/or control software e.g. Labview",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00022",
+            "EB00023"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Physics",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201067/2026-03-01T23:34:58.490227+00:00",
+      "source": "tu_berlin",
+      "job_id": "201067",
+      "generated_at_utc": "2026-03-01T23:34:58.490227+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed university degree (Master, Diploma or equivalent) in physics or a very related field",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Programming skills: Python",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00029"
+          ]
+        },
+        {
+          "requirement": "Femtosecond lasers or ultrafast science",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00016",
+            "EB00017"
+          ]
+        },
+        {
+          "requirement": "Software skills: High-dimensional data processing and/or control software e.g. Labview",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00022",
+            "EB00023"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Physics",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201069/2026-03-01T23:34:59.176050+00:00",
+      "source": "tu_berlin",
+      "job_id": "201069",
+      "generated_at_utc": "2026-03-01T23:34:59.176050+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed academic degree (Master, Diplom or equivalent) in Industrial Engineering, Business Informatics, Business Mathematics, Business and Law or comparable",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Solid knowledge in the fields of Entrepreneurship, Technology and Innovation Management from studies and own research",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00002",
+            "EB00009"
+          ]
+        },
+        {
+          "requirement": "Experience and very good knowledge of quantitative methods of empirical social science research",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00002",
+            "EB00009"
+          ]
+        },
+        {
+          "requirement": "Very good knowledge of German and English",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003",
+            "EB00009"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Business informatics, Industrial engineering, Business Mathematics, Business and Law",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201069/2026-03-01T23:35:03.054044+00:00",
+      "source": "tu_berlin",
+      "job_id": "201069",
+      "generated_at_utc": "2026-03-01T23:35:03.054044+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed academic degree (Master, Diplom or equivalent) in Industrial Engineering, Business Informatics, Business Mathematics, Business and Law or comparable",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Solid knowledge in the fields of Entrepreneurship, Technology and Innovation Management from studies and own research",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00002",
+            "EB00009"
+          ]
+        },
+        {
+          "requirement": "Experience and very good knowledge of quantitative methods of empirical social science research",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00002",
+            "EB00009"
+          ]
+        },
+        {
+          "requirement": "Very good knowledge of German and English",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003",
+            "EB00009"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Business informatics, Industrial engineering, Business Mathematics, Business and Law",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201084/2026-03-01T23:35:03.672687+00:00",
+      "source": "tu_berlin",
+      "job_id": "201084",
+      "generated_at_utc": "2026-03-01T23:35:03.672687+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed academic degree (Master's, Diploma or equivalent) in physics, process engineering, data science or a related field.",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003",
+            "EB00016"
+          ]
+        },
+        {
+          "requirement": "Strong Python programming skills, including deployment in real-time or automated environments (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00029"
+          ]
+        },
+        {
+          "requirement": "Experience with workflow orchestration and scheduling tools (e.g. Airflow, Cylc) (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00032"
+          ]
+        },
+        {
+          "requirement": "Demonstrated experience with FAIR data principles (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00011"
+          ]
+        },
+        {
+          "requirement": "Practical knowledge of MLOps principles, including model versioning, deployment, monitoring, and continuous learning (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00014"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Physics, process engineering, data science",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003",
+            "EB00016",
+            "EB00017"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201084/2026-03-01T23:35:07.670241+00:00",
+      "source": "tu_berlin",
+      "job_id": "201084",
+      "generated_at_utc": "2026-03-01T23:35:07.670241+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed academic degree (Master's, Diploma or equivalent) in physics, process engineering, data science or a related field.",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003",
+            "EB00016"
+          ]
+        },
+        {
+          "requirement": "Strong Python programming skills, including deployment in real-time or automated environments (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00029"
+          ]
+        },
+        {
+          "requirement": "Experience with workflow orchestration and scheduling tools (e.g. Airflow, Cylc) (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00032"
+          ]
+        },
+        {
+          "requirement": "Demonstrated experience with FAIR data principles (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00011"
+          ]
+        },
+        {
+          "requirement": "Practical knowledge of MLOps principles, including model versioning, deployment, monitoring, and continuous learning (desirable).",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00007",
+            "EB00014"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Physics, process engineering, data science",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003",
+            "EB00016",
+            "EB00017"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201115/2026-03-01T23:35:08.329650+00:00",
+      "source": "tu_berlin",
+      "job_id": "201115",
+      "generated_at_utc": "2026-03-01T23:35:08.329650+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed university degree (Master, Diplom or equivalent) and PhD with distinction in hydrology, water engineering, environmental sciences, geoecology, or geography",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Very good knowledge of statistical methods",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00009"
+          ]
+        },
+        {
+          "requirement": "Very good experience in hydrological modeling",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001"
+          ]
+        },
+        {
+          "requirement": "Good experience in big data analysis of multiple climate variables",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00011"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent and PhD",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Environmental sciences, Geographie, hydrology, water engineering, geoecology",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201115/2026-03-01T23:35:12.175215+00:00",
+      "source": "tu_berlin",
+      "job_id": "201115",
+      "generated_at_utc": "2026-03-01T23:35:12.175215+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed university degree (Master, Diplom or equivalent) and PhD with distinction in hydrology, water engineering, environmental sciences, geoecology, or geography",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Very good knowledge of statistical methods",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00009"
+          ]
+        },
+        {
+          "requirement": "Very good experience in hydrological modeling",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001"
+          ]
+        },
+        {
+          "requirement": "Good experience in big data analysis of multiple climate variables",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00011"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent and PhD",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Environmental sciences, Geographie, hydrology, water engineering, geoecology",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201185/2026-03-01T23:35:12.817716+00:00",
+      "source": "tu_berlin",
+      "job_id": "201185",
+      "generated_at_utc": "2026-03-01T23:35:12.817716+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Strong knowledge and skills in machine learning",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00004",
+            "EB00005"
+          ]
+        },
+        {
+          "requirement": "Strong knowledge and skills in computer security",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00009",
+            "EB00019"
+          ]
+        },
+        {
+          "requirement": "Experience with (differential) software testing",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201185/2026-03-01T23:35:16.592664+00:00",
+      "source": "tu_berlin",
+      "job_id": "201185",
+      "generated_at_utc": "2026-03-01T23:35:16.592664+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Strong knowledge and skills in machine learning",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00004",
+            "EB00005"
+          ]
+        },
+        {
+          "requirement": "Strong knowledge and skills in computer security",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00009",
+            "EB00019"
+          ]
+        },
+        {
+          "requirement": "Experience with (differential) software testing",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201188/2026-03-01T23:35:17.272111+00:00",
+      "source": "tu_berlin",
+      "job_id": "201188",
+      "generated_at_utc": "2026-03-01T23:35:17.272111+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Abschluss: Master, Diplom oder \u00c4quivalent",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201188/2026-03-01T23:35:20.890607+00:00",
+      "source": "tu_berlin",
+      "job_id": "201188",
+      "generated_at_utc": "2026-03-01T23:35:20.890607+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Abschluss: Master, Diplom oder \u00c4quivalent",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201191/2026-03-01T23:35:21.601542+00:00",
+      "source": "tu_berlin",
+      "job_id": "201191",
+      "generated_at_utc": "2026-03-01T23:35:21.601542+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed university degree (Master, Diplom or equivalent) in physics, photonics, or a comparable field",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Micro-assembly of optical components",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00017"
+          ]
+        },
+        {
+          "requirement": "Structured and independent working style desirable",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00011"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201191/2026-03-01T23:35:25.873760+00:00",
+      "source": "tu_berlin",
+      "job_id": "201191",
+      "generated_at_utc": "2026-03-01T23:35:25.873760+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed university degree (Master, Diplom or equivalent) in physics, photonics, or a comparable field",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Micro-assembly of optical components",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00017"
+          ]
+        },
+        {
+          "requirement": "Structured and independent working style desirable",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00011"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201203/2026-03-01T23:35:27.220158+00:00",
+      "source": "tu_berlin",
+      "job_id": "201203",
+      "generated_at_utc": "2026-03-01T23:35:27.220158+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed university degree (Master, Diplom or equivalent) in Computer Science, Computer Engineering, Electrical Engineering, or a related field",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003",
+            "EB00016"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201203/2026-03-01T23:35:30.792022+00:00",
+      "source": "tu_berlin",
+      "job_id": "201203",
+      "generated_at_utc": "2026-03-01T23:35:30.792022+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed university degree (Master, Diplom or equivalent) in Computer Science, Computer Engineering, Electrical Engineering, or a related field",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003",
+            "EB00016"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201219/2026-03-01T23:35:31.425759+00:00",
+      "source": "tu_berlin",
+      "job_id": "201219",
+      "generated_at_utc": "2026-03-01T23:35:31.425759+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Qualification: Master, Diploma or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Biochemistry, Biotechnology",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201219/2026-03-01T23:35:35.165454+00:00",
+      "source": "tu_berlin",
+      "job_id": "201219",
+      "generated_at_utc": "2026-03-01T23:35:35.165454+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Qualification: Master, Diploma or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Biochemistry, Biotechnology",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201222/2026-03-01T23:35:35.786841+00:00",
+      "source": "tu_berlin",
+      "job_id": "201222",
+      "generated_at_utc": "2026-03-01T23:35:35.786841+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed university degree (Master, Diploma or equivalent) in physics or a very related field",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Programming skills: Matlab, Python etc.",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00029"
+          ]
+        },
+        {
+          "requirement": "Femtosecond lasers or ultrafast science",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00016",
+            "EB00017"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Physics",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201222/2026-03-01T23:35:39.451071+00:00",
+      "source": "tu_berlin",
+      "job_id": "201222",
+      "generated_at_utc": "2026-03-01T23:35:39.451071+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed university degree (Master, Diploma or equivalent) in physics or a very related field",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Programming skills: Matlab, Python etc.",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00029"
+          ]
+        },
+        {
+          "requirement": "Femtosecond lasers or ultrafast science",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00016",
+            "EB00017"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Physics",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201223/2026-03-01T23:35:40.208797+00:00",
+      "source": "tu_berlin",
+      "job_id": "201223",
+      "generated_at_utc": "2026-03-01T23:35:40.208797+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "in-depth knowledge of algorithmic discrete mathematics",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00009"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent and PhD",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Computer science, Mathematics",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003",
+            "EB00016",
+            "EB00017"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201223/2026-03-01T23:35:44.079112+00:00",
+      "source": "tu_berlin",
+      "job_id": "201223",
+      "generated_at_utc": "2026-03-01T23:35:44.079112+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "in-depth knowledge of algorithmic discrete mathematics",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00009"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent and PhD",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Computer science, Mathematics",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003",
+            "EB00016",
+            "EB00017"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201300/2026-03-01T23:35:44.747317+00:00",
+      "source": "tu_berlin",
+      "job_id": "201300",
+      "generated_at_utc": "2026-03-01T23:35:44.747317+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent and PhD",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Physics",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201300/2026-03-01T23:35:48.355303+00:00",
+      "source": "tu_berlin",
+      "job_id": "201300",
+      "generated_at_utc": "2026-03-01T23:35:48.355303+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent and PhD",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Physics",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201309/2026-03-01T23:35:49.028206+00:00",
+      "source": "tu_berlin",
+      "job_id": "201309",
+      "generated_at_utc": "2026-03-01T23:35:49.028206+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Qualification: Diplom, Master or equivalent and PhD",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201309/2026-03-01T23:35:52.920722+00:00",
+      "source": "tu_berlin",
+      "job_id": "201309",
+      "generated_at_utc": "2026-03-01T23:35:52.920722+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Qualification: Diplom, Master or equivalent and PhD",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201342/2026-03-01T23:35:53.592802+00:00",
+      "source": "tu_berlin",
+      "job_id": "201342",
+      "generated_at_utc": "2026-03-01T23:35:53.592802+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed university degree (Master, Diplom or equivalent) and a doctorate (PhD) with a focus on data management, distributed systems, or scalable data analysis",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003",
+            "EB00013"
+          ]
+        },
+        {
+          "requirement": "Solid knowledge in theoretical and applied/practical computer science)",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00002",
+            "EB00017"
+          ]
+        },
+        {
+          "requirement": "In-depth knowledge in database technologies",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00009",
+            "EB00022"
+          ]
+        },
+        {
+          "requirement": "Advanced knowledge in data science, compiler construction, and distributed systems programming",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00016",
+            "EB00017"
+          ]
+        },
+        {
+          "requirement": "Experience in open-source development, project management",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent and PhD",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201342/2026-03-01T23:35:57.347035+00:00",
+      "source": "tu_berlin",
+      "job_id": "201342",
+      "generated_at_utc": "2026-03-01T23:35:57.347035+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed university degree (Master, Diplom or equivalent) and a doctorate (PhD) with a focus on data management, distributed systems, or scalable data analysis",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003",
+            "EB00013"
+          ]
+        },
+        {
+          "requirement": "Solid knowledge in theoretical and applied/practical computer science)",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00002",
+            "EB00017"
+          ]
+        },
+        {
+          "requirement": "In-depth knowledge in database technologies",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00009",
+            "EB00022"
+          ]
+        },
+        {
+          "requirement": "Advanced knowledge in data science, compiler construction, and distributed systems programming",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00016",
+            "EB00017"
+          ]
+        },
+        {
+          "requirement": "Experience in open-source development, project management",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent and PhD",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201396/2026-03-01T23:35:57.941177+00:00",
+      "source": "tu_berlin",
+      "job_id": "201396",
+      "generated_at_utc": "2026-03-01T23:35:57.941177+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed scientific university degree (Master, Diplom or equivalent) in physics, computer science, electrical engineering, or a related field",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003",
+            "EB00016"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201396/2026-03-01T23:36:01.509225+00:00",
+      "source": "tu_berlin",
+      "job_id": "201396",
+      "generated_at_utc": "2026-03-01T23:36:01.509225+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed scientific university degree (Master, Diplom or equivalent) in physics, computer science, electrical engineering, or a related field",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003",
+            "EB00016"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201397/2026-03-01T23:36:02.219190+00:00",
+      "source": "tu_berlin",
+      "job_id": "201397",
+      "generated_at_utc": "2026-03-01T23:36:02.219190+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed academic university degree (Diplom, Master or equivalent) in psychology, cognitive or social neurosciences, computational neurosciences or related areas",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Experience with collecting and analyzing EEG data",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00011"
+          ]
+        },
+        {
+          "requirement": "Experience with collecting and analyzing eye tracking data",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00011"
+          ]
+        },
+        {
+          "requirement": "Very good knowledge of English",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00009",
+            "EB00027"
+          ]
+        },
+        {
+          "requirement": "Experience with obtaining ethics approval is a plus",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001"
+          ]
+        },
+        {
+          "requirement": "Readiness to implement open science desirable",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00016",
+            "EB00017"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Psychology, cognitive or social neurosciences, computational neurosciences",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201397/2026-03-01T23:36:06.038281+00:00",
+      "source": "tu_berlin",
+      "job_id": "201397",
+      "generated_at_utc": "2026-03-01T23:36:06.038281+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed academic university degree (Diplom, Master or equivalent) in psychology, cognitive or social neurosciences, computational neurosciences or related areas",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Experience with collecting and analyzing EEG data",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00011"
+          ]
+        },
+        {
+          "requirement": "Experience with collecting and analyzing eye tracking data",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00011"
+          ]
+        },
+        {
+          "requirement": "Very good knowledge of English",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00009",
+            "EB00027"
+          ]
+        },
+        {
+          "requirement": "Experience with obtaining ethics approval is a plus",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001"
+          ]
+        },
+        {
+          "requirement": "Readiness to implement open science desirable",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00016",
+            "EB00017"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Psychology, cognitive or social neurosciences, computational neurosciences",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201399/2026-03-01T23:36:06.684641+00:00",
+      "source": "tu_berlin",
+      "job_id": "201399",
+      "generated_at_utc": "2026-03-01T23:36:06.684641+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Abschluss: Master, Diplom oder \u00c4quivalent",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201399/2026-03-01T23:36:10.226572+00:00",
+      "source": "tu_berlin",
+      "job_id": "201399",
+      "generated_at_utc": "2026-03-01T23:36:10.226572+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Abschluss: Master, Diplom oder \u00c4quivalent",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201404/2026-03-01T23:36:10.856064+00:00",
+      "source": "tu_berlin",
+      "job_id": "201404",
+      "generated_at_utc": "2026-03-01T23:36:10.856064+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed univerty degree (Master, Diplom or equivalent) in Computer Science, Computer Engineering, Physics or a related field",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003",
+            "EB00016"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201404/2026-03-01T23:36:14.966181+00:00",
+      "source": "tu_berlin",
+      "job_id": "201404",
+      "generated_at_utc": "2026-03-01T23:36:14.966181+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed univerty degree (Master, Diplom or equivalent) in Computer Science, Computer Engineering, Physics or a related field",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003",
+            "EB00016"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201406/2026-03-01T23:36:15.601879+00:00",
+      "source": "tu_berlin",
+      "job_id": "201406",
+      "generated_at_utc": "2026-03-01T23:36:15.601879+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Basic knowledge of quantum information theory",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00009"
+          ]
+        },
+        {
+          "requirement": "Experience in the Python programming language",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00029"
+          ]
+        },
+        {
+          "requirement": "Knowledge of LaTeX",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00009"
+          ]
+        },
+        {
+          "requirement": "Ability to work in a team is desirable",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00034"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201406/2026-03-01T23:36:19.347658+00:00",
+      "source": "tu_berlin",
+      "job_id": "201406",
+      "generated_at_utc": "2026-03-01T23:36:19.347658+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Basic knowledge of quantum information theory",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00009"
+          ]
+        },
+        {
+          "requirement": "Experience in the Python programming language",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00029"
+          ]
+        },
+        {
+          "requirement": "Knowledge of LaTeX",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00009"
+          ]
+        },
+        {
+          "requirement": "Ability to work in a team is desirable",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00034"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201553/2026-03-01T23:36:20.005208+00:00",
+      "source": "tu_berlin",
+      "job_id": "201553",
+      "generated_at_utc": "2026-03-01T23:36:20.005208+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Abschluss: Master, Diplom oder \u00c4quivalent",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Studiengang: Physik, Data Science, MINT-Fach",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00016",
+            "EB00017"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201553/2026-03-01T23:36:23.538139+00:00",
+      "source": "tu_berlin",
+      "job_id": "201553",
+      "generated_at_utc": "2026-03-01T23:36:23.538139+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Abschluss: Master, Diplom oder \u00c4quivalent",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Studiengang: Physik, Data Science, MINT-Fach",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00016",
+            "EB00017"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201578/2026-03-01T23:36:24.243308+00:00",
+      "source": "tu_berlin",
+      "job_id": "201578",
+      "generated_at_utc": "2026-03-01T23:36:24.243308+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed university degree (Master, Diplom or equivalent) in computer science or Business Informatics",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003",
+            "EB00016"
+          ]
+        },
+        {
+          "requirement": "In-depth knowledge in SQL databases and declarative query processing in the context of data mining In-depth knowledge in programming distributed and parallel databases and data analysis algorithms, as well as experience in open source projects (e.g., software development, GitHub) and associated programming and software development skills (e.g. Java, C/C++, Python)",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00029"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Engineering, Business informatics, Computer science",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003",
+            "EB00016",
+            "EB00017"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201578/2026-03-01T23:36:27.939233+00:00",
+      "source": "tu_berlin",
+      "job_id": "201578",
+      "generated_at_utc": "2026-03-01T23:36:27.939233+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed university degree (Master, Diplom or equivalent) in computer science or Business Informatics",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003",
+            "EB00016"
+          ]
+        },
+        {
+          "requirement": "In-depth knowledge in SQL databases and declarative query processing in the context of data mining In-depth knowledge in programming distributed and parallel databases and data analysis algorithms, as well as experience in open source projects (e.g., software development, GitHub) and associated programming and software development skills (e.g. Java, C/C++, Python)",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00005",
+            "EB00029"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Engineering, Business informatics, Computer science",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003",
+            "EB00016",
+            "EB00017"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201596/2026-03-01T23:36:28.574841+00:00",
+      "source": "tu_berlin",
+      "job_id": "201596",
+      "generated_at_utc": "2026-03-01T23:36:28.574841+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "a succeessfully completed academic university degree (Master, Diploma, or equivalent) in Process Engineering, Chemical Engineering, Information Technology in Mechanical Engineering, etc. is required",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "experience in explosion protection (is desirable)",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001"
+          ]
+        },
+        {
+          "requirement": "experience in programming process control Systems (is desirable)",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00019",
+            "EB00022"
+          ]
+        },
+        {
+          "requirement": "experience in programming PCS7 (is desirable)",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00029"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Engineering, Process Engineering, Chemical Engineering, Information Technology in Mechanical Engineering",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201596/2026-03-01T23:36:32.381554+00:00",
+      "source": "tu_berlin",
+      "job_id": "201596",
+      "generated_at_utc": "2026-03-01T23:36:32.381554+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "a succeessfully completed academic university degree (Master, Diploma, or equivalent) in Process Engineering, Chemical Engineering, Information Technology in Mechanical Engineering, etc. is required",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "experience in explosion protection (is desirable)",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001"
+          ]
+        },
+        {
+          "requirement": "experience in programming process control Systems (is desirable)",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00019",
+            "EB00022"
+          ]
+        },
+        {
+          "requirement": "experience in programming PCS7 (is desirable)",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00029"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Engineering, Process Engineering, Chemical Engineering, Information Technology in Mechanical Engineering",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201711/2026-03-01T23:36:32.957878+00:00",
+      "source": "tu_berlin",
+      "job_id": "201711",
+      "generated_at_utc": "2026-03-01T23:36:32.957878+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "fundamental knowledge in applied Optics",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00002",
+            "EB00007"
+          ]
+        },
+        {
+          "requirement": "hands on experience with femtosecond lasers",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001"
+          ]
+        },
+        {
+          "requirement": "first practical experiences in programming with Python or LabVIEW are an advantage",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00029"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Physics",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201711/2026-03-01T23:36:36.959955+00:00",
+      "source": "tu_berlin",
+      "job_id": "201711",
+      "generated_at_utc": "2026-03-01T23:36:36.959955+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "fundamental knowledge in applied Optics",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00002",
+            "EB00007"
+          ]
+        },
+        {
+          "requirement": "hands on experience with femtosecond lasers",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001"
+          ]
+        },
+        {
+          "requirement": "first practical experiences in programming with Python or LabVIEW are an advantage",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00029"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        },
+        {
+          "requirement": "Degree Program: Physics",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201791/2026-03-01T23:36:37.861637+00:00",
+      "source": "tu_berlin",
+      "job_id": "201791",
+      "generated_at_utc": "2026-03-01T23:36:37.861637+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed university degree (Master, Diplom, or equivalent) and PhD in electrical engineering, computer science, or a related field",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003",
+            "EB00016"
+          ]
+        },
+        {
+          "requirement": "Proven expertise in hardware security",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001"
+          ]
+        },
+        {
+          "requirement": "Publication and project experience",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent and PhD",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        }
+      ]
+    },
+    {
+      "run_id": "tu_berlin/201791/2026-03-01T23:36:41.370511+00:00",
+      "source": "tu_berlin",
+      "job_id": "201791",
+      "generated_at_utc": "2026-03-01T23:36:41.370511+00:00",
+      "linked_requirements": [
+        {
+          "requirement": "Successfully completed university degree (Master, Diplom, or equivalent) and PhD in electrical engineering, computer science, or a related field",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003",
+            "EB00016"
+          ]
+        },
+        {
+          "requirement": "Proven expertise in hardware security",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001"
+          ]
+        },
+        {
+          "requirement": "Publication and project experience",
+          "coverage": "partial",
+          "evidence_bank_ids": [
+            "EB00001"
+          ]
+        },
+        {
+          "requirement": "Qualification: Master, Diplom or equivalent and PhD",
+          "coverage": "full",
+          "evidence_bank_ids": [
+            "EB00001",
+            "EB00003"
+          ]
+        }
+      ]
+    }
+  ]
+}

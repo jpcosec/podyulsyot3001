@@ -1,0 +1,180 @@
+% Definition of the class moderncv with some parameters. Font size 11pt, paper size A4, font sans
+\documentclass[11pt, a4paper, sans]{moderncv}
+
+% Includes all the necessary packages from packages.tex
+\input{Einstellungen/packages}
+
+% Defines commands and parameters for modifying the included packages
+\input{Einstellungen/commands}
+
+% Beginning of document
+\begin{document}
+    \pagestyle{empty}
+
+    %Creates the CV title with Name and photo
+    \myCVtitle{ Juan Pablo }{ Ruiz Rodriguez }{Abbildungen/profile.jpg}
+
+    %Reduce the vertical space by 10 points
+    \vspace*{-10pt}
+
+    %Personal information section
+    \section{Información Personal}
+        \cvline{Dirección}{ Jordanbad 4 \newline 88400, Biberach an der Riss }
+        \cvline{Teléfono}{ 015222144630 }
+        \cvline{E-mail}{\href{mailto: juanpablo.ruiz.r@gmail.com }{ juanpablo.ruiz.r@gmail.com }}
+        \cvline{Nacionalidad}{ Chileno }
+        \cvline{Fecha de nacimiento}{ 1992.11.20 }
+        \cvline{Permiso de trabajo}{ Alemania }
+
+    \section{Educación}
+        \cventry{ 2011/03 - 2019/06 }
+                { Ingeniería en Electrónica }
+                { Universidad de Chile }
+                { Santiago de Chile, Chile }
+                { EQF 6 }
+                {
+                }
+
+    \section{Experiencia Profesional}
+
+        \cventry{ 2025/07 - 2025/09 }
+                { Asesor de Machine Learning }
+                { AraraDS }
+                { Santiago, Chile }
+                {}
+                {
+                \begin{itemize}
+                    \item Orquestación de pipelines impulsada por eventos con Kafka y Airflow
+                    \item Procesamiento de documentos basado en LLMs e IA generativa
+                \end{itemize}
+                }
+
+        \vspace{6pt}
+
+        \cventry{ 2024/04 - 2025/06 }
+                { Ingeniero de Datos }
+                { Globalconexus }
+                { Santiago, Chile }
+                {}
+                {
+                \begin{itemize}
+                    \item Desarrollo de dashboards con PowerBI
+                    \item Desarrollo de pipelines ETL con Azure Data Factory y Databricks
+                \end{itemize}
+                }
+
+        \vspace{6pt}
+
+        \cventry{ 2023/03 - 2023/10 }
+                { Ingeniero de Datos }
+                { Walmart }
+                { Santiago, Chile }
+                {}
+                {
+                \begin{itemize}
+                    \item Procesamiento basado en la nube de grandes volúmenes de datos en pipelines
+                \end{itemize}
+                }
+
+        \vspace{6pt}
+
+        \cventry{ 2021/09 - 2023/03 }
+                { Asesor de Ciencia de Datos }
+                { Deloitte }
+                { Santiago, Chile }
+                {}
+                {
+                \begin{itemize}
+                    \item Algoritmos de ciencia de datos
+                    \item Infraestructura backend
+                    \item Desarrollo de API
+                \end{itemize}
+                }
+
+        \vspace{6pt}
+
+        \cventry{ 2019/03 - 2021/08 }
+                { Ingeniero de Machine Learning }
+                { Kwali }
+                { Santiago, Chile }
+                {}
+                {
+                \begin{itemize}
+                    \item Algoritmos para procesamiento de imágenes de máquina
+                    \item Infraestructura backend
+                \end{itemize}
+                }
+
+
+
+    \section{Publicaciones}
+        \cvline{ 2025 }{
+                \begin{itemize}
+                    \item David Benavente-Rios, Juan Ruiz Rodriguez, Gustavo Gatica: \textit{``Exploration of Incremental Synthetic Non-Morphed Images for Single Morphing Attack Detection''} NeurIPS 2025 \url{ https://arxiv.org/abs/2510.09836 }                    \item Miguel Rodriguez, Eduardo Puraivan, Luis Puebla-Rives, Juan Pablo Ruiz-Rodriguez, Diego Saavedra-Lizana, Mauricio Gamboa, Connie Cofre-Morales, Karina Huencho-Iturra, Pablo Gregori-Huerta: \textit{``Intelligent Tutor for Tasks in the Domain of Linear Algebra''} ICITED 2025                \end{itemize}
+                }
+
+    \section{Idiomas}
+            \cvlanguage{ Español }{ Lengua materna }{}
+            \cvlanguage{ Inglés }{ C1 (Comprensión, Expresión oral, Escritura) }{}
+            \cvlanguage{ Alemán }{ A2 (Comprensión, Expresión oral, Escritura) }{}
+
+    \section{Competencias Técnicas}
+        \noindent\textbf{Machine Learning}
+        \nopagebreak[4]
+        \hspace{0pt}\rule{\linewidth}{0.2pt}
+        \nopagebreak[4]
+        scikit-learn, TensorFlow/Keras, PyTorch, LLM-Prompting, Evaluación/Model Cards, Métodos Bayesianos
+        \vspace{8pt}
+
+        \noindent\textbf{Ingeniería de Datos y Big Data}
+        \nopagebreak[4]
+        \hspace{0pt}\rule{\linewidth}{0.2pt}
+        \nopagebreak[4]
+        ELT/ETL-Design, Azure Data Factory, Databricks, Spark, Delta Lake, Data Contracts
+        \vspace{8pt}
+
+        \noindent\textbf{Backend}
+        \nopagebreak[4]
+        \hspace{0pt}\rule{\linewidth}{0.2pt}
+        \nopagebreak[4]
+        FastAPI/Flask, API-Design, Kafka, PostgreSQL, MongoDB, Neo4j, Redis, gRPC/REST, Testing (pytest), Observability
+        \vspace{8pt}
+
+        \noindent\textbf{Visión por Computadora y Procesamiento de Imágenes}
+        \nopagebreak[4]
+        \hspace{0pt}\rule{\linewidth}{0.2pt}
+        \nopagebreak[4]
+        Deep Learning (CNNs, Transfer Learning), CV Clásica, Preprocesamiento, OpenCV, torchvision
+        \vspace{8pt}
+
+        \noindent\textbf{Cloud y Orquestación}
+        \nopagebreak[4]
+        \hspace{0pt}\rule{\linewidth}{0.2pt}
+        \nopagebreak[4]
+        Apache Airflow, Prefect, Docker/Containerización, CI/CD (Git, Pipelines)
+        \vspace{8pt}
+
+        \noindent\textbf{BI y Analytics}
+        \nopagebreak[4]
+        \hspace{0pt}\rule{\linewidth}{0.2pt}
+        \nopagebreak[4]
+        Power BI (DAX, RLS), Star Schema Modelado, Diseño de Dashboard y Governance
+        \vspace{8pt}
+
+        \noindent\textbf{Full-Stack y Frontend}
+        \nopagebreak[4]
+        \hspace{0pt}\rule{\linewidth}{0.2pt}
+        \nopagebreak[4]
+        Django (MVC, ORM, Admin), HTML/CSS/JavaScript, CRUD APIs, Templates, Godot (GDScript)
+        \vspace{8pt}
+
+        \noindent\textbf{Ingeniería Eléctrica y Sistemas Embebidos}
+        \nopagebreak[4]
+        \hspace{0pt}\rule{\linewidth}{0.2pt}
+        \nopagebreak[4]
+        C (Embebido/Fundamentos de Programación), Verilog (RTL-Design), Procesamiento de Señales, Circuitos Analógicos/Digitales, FPGA-Design
+
+    % Signature
+    \sign{ Juan Pablo Ruiz Rodriguez }{ Biberach an der Riss }{Abbildungen/profile.jpg}
+
+\end{document}

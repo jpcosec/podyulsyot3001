@@ -1,0 +1,689 @@
+{
+  "_meta": {
+    "schema_version": "2.0",
+    "last_updated": "2026-02-27",
+    "description": "Canonical multilingual profile. Single source of truth for the CV generator. Contains EN, DE, and ES content per entry. Technologies are annotated on every role and education phase.",
+    "supersedes": [
+      "user_info2.json",
+      "user_info_en2.json",
+      "user_info2_de.json",
+      "user_info_es.json (archived)",
+      "user_info_en.json (archived)",
+      "user_info.json (archived)",
+      "user_info_en2_chile.json (archived)"
+    ]
+  },
+  "personal": {
+    "first_name": "Juan Pablo",
+    "last_name": "Ruiz Rodriguez",
+    "full_name": "Juan Pablo Andres Ruiz Rodriguez",
+    "preferred_name": "Juan Pablo Ruiz Rodriguez",
+    "birthday": "1992-11-20",
+    "nationality": {
+      "en": "Chilean",
+      "de": "Chilenisch",
+      "es": "Chileno"
+    },
+    "addresses": [
+      {
+        "label": "current",
+        "address": "Ostendstrasse 27",
+        "city": "Berlin",
+        "postal_code": "12459",
+        "country": "Germany",
+        "phone": "015222144630"
+      },
+      {
+        "label": "chile",
+        "address": "Avenida Presidente Kennedy 7031, Las Condes",
+        "city": "Santiago",
+        "country": "Chile",
+        "phone": "+56965759835"
+      },
+      {
+        "label": "historic",
+        "address": "Jordanbad 4",
+        "city": "Biberach an der Riss",
+        "postal_code": "88400",
+        "country": "Germany"
+      }
+    ],
+    "email": "juanpablo.ruiz.r@gmail.com",
+    "work_permission": {
+      "en": "Germany",
+      "de": "Deutschland",
+      "es": "Alemania"
+    },
+    "visa": {
+      "type": "Chancenkarte",
+      "status": "active"
+    },
+    "links": {
+      "linkedin": "https://www.linkedin.com/in/juanpabloruizr/",
+      "github": "https://github.com/jpcosec"
+    },
+    "profile_image": "Abbildungen/profile.jpg",
+    "signature_image": "Abbildungen/signature.jpg",
+    "interests": ["Machine Learning", "Music", "Cuisine"],
+    "referees": [
+      {
+        "name": "Juan Pablo Morales",
+        "email": "juanpablo@kwali.com",
+        "title": "CTO at Kwali"
+      },
+      {
+        "name": "Miguel Alejandro Rodriguez",
+        "email": "mrodriguez@upla.cl",
+        "title": "Researcher at Universidad de Playa Ancha"
+      }
+    ]
+  },
+  "education": [
+    {
+      "start_date": "2011-03",
+      "end_date": "2019-06",
+      "field": {
+        "en": "Electronics Engineering",
+        "de": "Elektronikingenieurwesen",
+        "es": "Ingeniería en Electrónica"
+      },
+      "specialization": {
+        "en": "Computational Intelligence",
+        "de": "Computationale Intelligenz",
+        "es": "Inteligencia Computacional"
+      },
+      "institution": "Universidad de Chile",
+      "location": {
+        "en": "Santiago, Chile",
+        "de": "Santiago de Chile, Chile",
+        "es": "Santiago de Chile, Chile"
+      },
+      "level": "EQF 6",
+      "equivalency_note": "Program exceeds 300 ECTS; validated by Anabin/ZAB as equivalent to German Master's/Diplom.",
+      "focus": {
+        "en": [
+          "Computational Intelligence, Robotics, and applied ML",
+          "Signal processing, control systems, and embedded/prototyping"
+        ],
+        "de": [
+          "Computationale Intelligenz, Robotik und angewandtes ML",
+          "Signalverarbeitung, Regelungstechnik und Embedded/Prototyping"
+        ],
+        "es": [
+          "Inteligencia Computacional, Robótica y ML aplicado",
+          "Procesamiento de señales, control e integración embebida/prototipado"
+        ]
+      },
+      "technologies": [
+        "Python", "MATLAB", "C", "Verilog",
+        "TensorFlow", "scikit-learn", "OpenCV",
+        "Signal processing (DSP)", "FPGA design",
+        "Analog/digital circuit design", "Embedded systems"
+      ]
+    }
+  ],
+  "experience": [
+    {
+      "start_date": "2025-07",
+      "end_date": "2025-09",
+      "title": {
+        "en": "Machine Learning Consultant",
+        "de": "Machine-Learning-Berater",
+        "es": "Asesor de Machine Learning"
+      },
+      "company": "AraraDS",
+      "location": "Santiago, Chile",
+      "scope": {
+        "en": "End-to-end LLM/GenAI document pipeline for medical/administrative workflows (ingestion→OCR→classification→validation→export).",
+        "de": "End-to-End-LLM/GenAI-Dokumentenpipeline für medizinische/administrative Workflows (Aufnahme→OCR→Klassifizierung→Validierung→Export).",
+        "es": "Pipeline LLM/GenAI de punta a punta para flujos médico-administrativos (ingestión→OCR→clasificación→validación→exportación)."
+      },
+      "description": {
+        "en": [
+          "Designed an event-driven, microservice-oriented document-processing pipeline leveraging Kafka topics for decoupled ingestion, enrichment, and delivery stages.",
+          "Built orchestrations with Apache Airflow (DAGs with task-level retries, SLAs, XCom-based metadata) to coordinate OCR, classification, and validation steps.",
+          "Implemented LLM-based components (prompting, few-shot templates, and guardrails) for document classification, entity extraction, and consistency checks.",
+          "Set up annotation/ground-truthing workflows and feedback loops to continuously improve model prompts and post-processing heuristics."
+        ],
+        "de": [
+          "Entwarf eine ereignisgesteuerte, mikrodienst-orientierte Dokumenten-Verarbeitungspipeline mit Kafka-Topics für entkoppelte Aufnahme, Anreicherung und Lieferungsphasen.",
+          "Erstellte Orchestrierungen mit Apache Airflow (DAGs mit Task-Level-Retries, SLAs, XCom-basierte Metadaten) zur Koordination von OCR-, Klassifizierungs- und Validierungsschritten.",
+          "Implementierte LLM-basierte Komponenten (Prompting, Few-Shot-Templates und Guardrails) für Dokumentenklassifizierung, Entity-Extraction und Konsistenzprüfungen.",
+          "Setzte Annotations-/Ground-Truthing-Workflows und Feedback-Schleifen auf, um kontinuierlich Prompts und Post-Processing-Heuristiken zu verbessern."
+        ],
+        "es": [
+          "Diseñé una canalización de procesamiento de documentos orientada a microservicios y eventos, usando Kafka para desacoplar ingestión, enriquecimiento y entrega.",
+          "Orquesté con Apache Airflow (DAGs con reintentos, SLAs y XCom) las etapas de OCR, clasificación y validación.",
+          "Implementé componentes basados en LLM (prompting, plantillas few-shot y guardrails) para clasificación de documentos, extracción de entidades y chequeos de consistencia.",
+          "Levanté flujos de anotación/ground-truth y bucles de retroalimentación para mejorar prompts y reglas de post-proceso de forma continua."
+        ]
+      },
+      "technologies": [
+        "Python", "Pydantic", "FastAPI",
+        "Apache Kafka", "Apache Airflow",
+        "OpenCV", "Tesseract", "Cloud OCR",
+        "LangChain", "LLM APIs",
+        "Docker", "Docker Compose",
+        "PostgreSQL", "Object Storage"
+      ],
+      "deliverables": {
+        "en": [
+          "Production-ready Airflow DAGs and Kafka topic contracts",
+          "LLM prompt packs with versioning and evaluation harness",
+          "Monitoring dashboards and run books"
+        ],
+        "de": [
+          "Produktionsreife Airflow-DAGs und Kafka-Topic-Verträge",
+          "LLM-Prompt-Packs mit Versionierung und Evaluierungs-Harness",
+          "Monitoring-Dashboards und Run Books"
+        ],
+        "es": [
+          "DAGs productivos en Airflow y contratos de tópicos Kafka",
+          "Prompts versionados con harness de evaluación",
+          "Tableros de monitoreo y run books"
+        ]
+      }
+    },
+    {
+      "start_date": "2024-11",
+      "end_date": "present",
+      "title": {
+        "en": "Research Associate (AI in Education)",
+        "de": "Forschungsassoziat (KI in der Bildung)",
+        "es": "Investigador Asociado (IA en Educación)"
+      },
+      "company": "Universidad de Playa Ancha (UPLA)",
+      "location": {
+        "en": "Valparaíso, Chile (remote/hybrid)",
+        "de": "Valparaíso, Chile (remote/hybrid)",
+        "es": "Valparaíso, Chile (remoto/híbrido)"
+      },
+      "scope": {
+        "en": "Educational AI / Intelligent Tutoring Systems: content modeling, assessment design, learning analytics.",
+        "de": "Bildungs-KI / Intelligente Tutorensysteme: Content-Modellierung, Assessments-Design, Lern-Analytik.",
+        "es": "IA educativa / Sistemas Tutores Inteligentes: modelado de contenido, diseño de evaluaciones, analítica de aprendizaje."
+      },
+      "description": {
+        "en": [
+          "Co-led the research stream for an AI-assisted Intelligent Tutor in Linear Algebra (content modeling, task design, and evaluation).",
+          "Designed experimental protocols (train/val/test splits, ablations, cross-cohort comparisons) and reproducible pipelines for data and metrics.",
+          "Developed model prototypes and supporting services for content recommendation, hint generation, and learner feedback.",
+          "Co-authored the ICITED 2025 paper: contributed to methodology, experiments, and results interpretation."
+        ],
+        "de": [
+          "Co-Leitung des Forschungsstroms für einen KI-gestützten Intelligenten Tutor in Linearer Algebra (Content-Modellierung, Aufgabendesign und Evaluierung).",
+          "Entwurf von Experimentalprotokollen (Train/Val/Test-Splits, Ablationen, Kohorten-Vergleiche) und reproduciblen Pipelines für Daten und Metriken.",
+          "Entwicklung von Modellprototypen und unterstützenden Services für Content-Empfehlungen, Hinweis-Generierung und Lerner-Feedback.",
+          "Co-Autor des ICITED 2025 Papers: Beitrag zu Methodik, Experimenten und Ergebnisinterpretation."
+        ],
+        "es": [
+          "Co-lideré la línea de investigación para un Tutor Inteligente asistido por IA en Álgebra Lineal (modelado de contenidos, diseño de tareas y evaluación).",
+          "Diseñé protocolos experimentales (splits de train/val/test, ablations, comparación entre cohortes) y pipelines reproducibles de datos y métricas.",
+          "Desarrollé prototipos de modelos y servicios de soporte para recomendación de contenidos, generación de pistas y retroalimentación al estudiante.",
+          "Coautor del paper ICITED 2025: aporte a metodología, experimentos e interpretación de resultados."
+        ]
+      },
+      "technologies": [
+        "Python", "scikit-learn", "PyTorch", "TensorFlow",
+        "Pandas", "NumPy", "Jupyter",
+        "FastAPI",
+        "Git", "Experiment tracking"
+      ],
+      "deliverables": {
+        "en": [
+          "Reproducible experiment code and evaluation scripts",
+          "Datasets and annotation schemas for linear algebra tasks",
+          "Paper sections (Methods, Experiments) and submission materials"
+        ],
+        "de": [
+          "Reproducible Experiment-Code und Evaluierungs-Skripte",
+          "Datasets und Annotationsschemas für Linearer-Algebra-Aufgaben",
+          "Paper-Sektionen (Methoden, Experimente) und Einreichungsmaterialien"
+        ],
+        "es": [
+          "Código reproducible de experimentos y scripts de evaluación",
+          "Datasets y esquemas de anotación para tareas de álgebra lineal",
+          "Secciones del paper (Métodos, Experimentos) y materiales de envío"
+        ]
+      },
+      "highlights": [
+        "Bridged research → prototype with measurable learning outcomes",
+        "Instituted experiment tracking and versioned datasets"
+      ]
+    },
+    {
+      "start_date": "2024-04",
+      "end_date": "2025-06",
+      "title": {
+        "en": "Data Engineer",
+        "de": "Data Engineer",
+        "es": "Ingeniero de Datos"
+      },
+      "company": "Globalconexus",
+      "location": "Santiago, Chile",
+      "scope": {
+        "en": "Enterprise analytics platform: ingestion→bronze/silver/gold layers→Power BI.",
+        "de": "Enterprise-Analytics-Plattform: Aufnahme→Bronze/Silver/Gold-Schichten→Power BI.",
+        "es": "Plataforma analítica empresarial: ingestión→capas bronze/silver/gold→Power BI."
+      },
+      "description": {
+        "en": [
+          "Developed and maintained ELT/ETL pipelines with Azure Data Factory integrating heterogeneous sources (files, APIs, DBs) into curated layers.",
+          "Implemented Databricks jobs (PySpark) for transformations, quality checks, and incremental loads with partitioning and job parameterization.",
+          "Built Power BI semantic models (star schemas, DAX measures, role-level security) and published governed datasets for business stakeholders."
+        ],
+        "de": [
+          "Entwicklung und Wartung von ELT/ETL-Pipelines mit Azure Data Factory, Integration heterogener Quellen (Dateien, APIs, DBs) in kuratierte Schichten.",
+          "Implementierung von Databricks-Jobs (PySpark) für Transformationen, Qualitätsprüfungen und inkrementelle Loads mit Partitionierung und Job-Parametrisierung.",
+          "Konstruktion von Power BI Semantic Models (Star Schemas, DAX Measures, Role-Level Security) und Veröffentlichung von verwalteten Datasets für Business-Stakeholder."
+        ],
+        "es": [
+          "Desarrollé y mantuve pipelines ELT/ETL con Azure Data Factory integrando fuentes heterogéneas hacia capas curadas.",
+          "Implementé jobs en Databricks (PySpark) para transformaciones, controles de calidad y cargas incrementales con particionado y parametrización.",
+          "Construí modelos semánticos en Power BI (esquemas estrella, medidas DAX, RLS) y publiqué datasets gobernados para el negocio."
+        ]
+      },
+      "technologies": [
+        "Azure Data Factory", "Azure Databricks", "PySpark",
+        "Delta Lake", "Azure Storage", "Azure Key Vault",
+        "Power BI", "DAX", "Role-Level Security",
+        "Git", "CI/CD"
+      ],
+      "deliverables": {
+        "en": [
+          "ADF pipelines and linked services with parameterized datasets",
+          "Databricks notebooks and jobs with QA checks",
+          "Power BI models and report bundles"
+        ],
+        "de": [
+          "ADF-Pipelines und Linked Services mit parametrisierten Datasets",
+          "Databricks-Notebooks und Jobs mit QA-Prüfungen",
+          "Power BI Models und Report-Bundles"
+        ],
+        "es": [
+          "Pipelines ADF y linked services parametrizados",
+          "Notebooks/jobs Databricks con QA",
+          "Modelos y reportes Power BI"
+        ]
+      }
+    },
+    {
+      "start_date": "2023-03",
+      "end_date": "2023-10",
+      "title": {
+        "en": "Data Engineer",
+        "de": "Data Engineer",
+        "es": "Ingeniero de Datos"
+      },
+      "company": "Walmart",
+      "location": "Santiago, Chile",
+      "scope": {
+        "en": "Cloud-based retail data platform: large-scale ingestion, transformation, and governed analytics.",
+        "de": "Cloud-basierte Retail-Datenplattform: Großskalige Aufnahme, Transformation und verwaltete Analytik.",
+        "es": "Plataforma de datos retail en la nube: ingestión a gran escala, transformación y analítica gobernada."
+      },
+      "description": {
+        "en": [
+          "Contributed to cloud-based data pipelines for large-scale datasets (retail operations, sales, logistics).",
+          "Built automated ingestion and transformation steps with attention to cost-aware storage and compute.",
+          "Collaborated with analytics teams to expose curated datasets and data contracts."
+        ],
+        "de": [
+          "Beitrag zu Cloud-basierten Data Pipelines für großskalige Datasets (Retail-Operationen, Verkauf, Logistik).",
+          "Aufbau automatisierter Aufnahme- und Transformationsschritte mit Fokus auf kosteneffiziente Speicherung und Rechenressourcen.",
+          "Zusammenarbeit mit Analytics-Teams zur Bereitstellung kurierter Datasets und Data Contracts."
+        ],
+        "es": [
+          "Aporté a pipelines de datos en la nube para datasets a gran escala (operaciones retail, ventas, logística).",
+          "Construí procesos automáticos de ingestión y transformación con foco en costos de cómputo y almacenamiento.",
+          "Colaboré con analítica para exponer datasets curados y contratos de datos."
+        ]
+      },
+      "technologies": [
+        "Cloud data lake/warehouse", "Spark",
+        "Workflow schedulers", "Git",
+        "Data contracts", "Cost-aware compute"
+      ],
+      "deliverables": {
+        "en": [
+          "Ingestion frameworks and modular transformation jobs",
+          "Data dictionaries and onboarding guides"
+        ],
+        "de": [
+          "Aufnahme-Frameworks und modulare Transformations-Jobs",
+          "Data Dictionaries und Onboarding-Guides"
+        ],
+        "es": [
+          "Frameworks de ingestión y jobs modulares de transformación",
+          "Diccionarios de datos y guías de onboarding"
+        ]
+      }
+    },
+    {
+      "start_date": "2021-09",
+      "end_date": "2023-03",
+      "title": {
+        "en": "Data Science Consultant",
+        "de": "Data-Science-Berater",
+        "es": "Asesor de Ciencia de Datos"
+      },
+      "company": "Deloitte",
+      "location": "Santiago, Chile",
+      "scope": {
+        "en": "ML prototyping and productionization for enterprise clients: classification, forecasting, and NLP use cases.",
+        "de": "ML-Prototypisierung und Produktivschaltung für Unternehmenskunden: Klassifizierung, Forecasting und NLP-Anwendungsfälle.",
+        "es": "Prototipado y puesta en producción de ML para clientes enterprise: clasificación, forecasting y NLP."
+      },
+      "description": {
+        "en": [
+          "Built ML prototypes and productionized services for classification, forecasting and NLP use cases.",
+          "Designed and deployed backend APIs to serve models (versioning, inference endpoints, logging).",
+          "Partnered with stakeholders to translate business needs into measurable ML deliverables."
+        ],
+        "de": [
+          "Erstellung von ML-Prototypen und produktive Services für Klassifizierung, Forecasting und NLP-Anwendungsfälle.",
+          "Entwurf und Bereitstellung von Backend-APIs zur Modell-Bereitstellung (Versionierung, Inferenz-Endpoints, Logging).",
+          "Partnerschaft mit Stakeholdern zur Übersetzung von Geschäftsanforderungen in messbare ML-Ergebnisse."
+        ],
+        "es": [
+          "Desarrollé prototipos y servicios productivos de ML para clasificación, forecasting y NLP.",
+          "Diseñé y desplegué APIs backend para servir modelos (versionado, endpoints de inferencia, logging).",
+          "Trabajé con stakeholders para traducir necesidades de negocio en entregables medibles de ML."
+        ]
+      },
+      "technologies": [
+        "Python", "scikit-learn", "TensorFlow", "Keras",
+        "FastAPI", "Flask",
+        "Docker",
+        "SQL", "NoSQL",
+        "Apache Airflow",
+        "NLP"
+      ],
+      "deliverables": {
+        "en": [
+          "Model cards and evaluation reports",
+          "API specs and deployment run books"
+        ],
+        "de": [
+          "Model Cards und Evaluierungs-Reports",
+          "API-Spezifikationen und Deployment Run Books"
+        ],
+        "es": [
+          "Model cards y reportes de evaluación",
+          "Especificaciones de API y run books de despliegue"
+        ]
+      }
+    },
+    {
+      "start_date": "2019-03",
+      "end_date": "2021-08",
+      "title": {
+        "en": "Machine Learning Engineer",
+        "de": "Machine-Learning-Engineer",
+        "es": "Ingeniero de Machine Learning"
+      },
+      "company": "Kwali",
+      "location": "Santiago, Chile",
+      "scope": {
+        "en": "Computer vision inspection platform: detection, tracking, defect classification, and reporting.",
+        "de": "Computer-Vision-Inspektionsplattform: Detektion, Tracking, Defekt-Klassifizierung und Reporting.",
+        "es": "Plataforma de inspección por visión computacional: detección, tracking, clasificación de defectos y reportería."
+      },
+      "description": {
+        "en": [
+          "Developed computer vision pipelines for QA/inspection and reporting (detection, tracking, defect classification).",
+          "Implemented backend services to manage image flows, model inference, and result persistence.",
+          "Collaborated with product to define acceptance criteria, evaluation datasets, and field-validation plans."
+        ],
+        "de": [
+          "Entwicklung von Computer-Vision-Pipelines für QA/Inspection und Reporting (Detektion, Tracking, Defekt-Klassifizierung).",
+          "Implementierung von Backend-Services zur Verwaltung von Bildflüssen, Modell-Inferenz und Ergebnis-Persistierung.",
+          "Zusammenarbeit mit Produkt zur Festlegung von Akzeptanzkriterien, Evaluierungs-Datasets und Validierungsplänen vor Ort."
+        ],
+        "es": [
+          "Desarrollé pipelines de visión computacional para QA/inspección y reportería (detección, tracking, clasificación de defectos).",
+          "Implementé servicios backend para manejo de flujos de imágenes, inferencia de modelos y persistencia de resultados.",
+          "Colaboré con producto para criterios de aceptación, datos de evaluación y validación en terreno."
+        ]
+      },
+      "technologies": [
+        "Python", "OpenCV",
+        "TensorFlow", "PyTorch",
+        "FastAPI",
+        "Docker",
+        "SQL"
+      ],
+      "deliverables": {
+        "en": [
+          "Reusable CV modules and inference services",
+          "Operational dashboards and incident playbooks"
+        ],
+        "de": [
+          "Wiederverwendbare CV-Module und Inferenz-Services",
+          "Operationale Dashboards und Incident Playbooks"
+        ],
+        "es": [
+          "Módulos CV reutilizables y servicios de inferencia",
+          "Dashboards operacionales y playbooks de incidentes"
+        ]
+      }
+    }
+  ],
+  "projects": [
+    {
+      "name": "Metadata-Driven Code Generation Framework",
+      "role": {
+        "en": "Creator",
+        "de": "Schöpfer",
+        "es": "Creador"
+      },
+      "summary": {
+        "en": "Pure-Python framework that generates REST APIs, Admin UI, and CLI from lightweight decorators (@datamodel, @operation). Includes Prefect orchestration and type-safe pipelines.",
+        "de": "Pure-Python-Framework, das REST APIs, Admin UI und CLI aus leichtgewichtigen Dekoratoren (@datamodel, @operation) generiert. Enthält Prefect-Orchestrierung und Type-Safe Pipelines.",
+        "es": "Framework en Python que genera REST APIs, Admin UI y CLI a partir de decoradores ligeros (@datamodel, @operation), con orquestación en Prefect y tipado extremo a extremo."
+      },
+      "highlights": {
+        "en": [
+          "Auto-generation of FastAPI + UI (Refine/React) + CLI",
+          "Model/operation registries and Jinja2 codegen",
+          "Idempotent compilation cache and regeneration"
+        ],
+        "de": [
+          "Auto-Generierung von FastAPI + UI (Refine/React) + CLI",
+          "Modell-/Operations-Registries und Jinja2-Codegen",
+          "Idempotente Kompilierungs-Cache und Regeneration"
+        ],
+        "es": [
+          "Auto-generación de FastAPI + UI (Refine/React) + CLI",
+          "Registries de modelos/operaciones y codegen Jinja2",
+          "Caché de compilación y regeneración idempotente"
+        ]
+      },
+      "technologies": [
+        "Python", "FastAPI", "Beanie", "Pydantic",
+        "Jinja2", "React", "TypeScript",
+        "Prefect", "Docker"
+      ]
+    }
+  ],
+  "publications": [
+    {
+      "year": 2025,
+      "title": "Exploration of Incremental Synthetic Non-Morphed Images for Single Morphing Attack Detection",
+      "authors": ["David Benavente-Rios", "Juan Ruiz Rodriguez", "Gustavo Gatica"],
+      "venue": "NeurIPS 2025 (Workshop)",
+      "url": "https://arxiv.org/abs/2510.09836",
+      "contribution": {
+        "en": "Designed training/evaluation routines for S-MAD with incremental synthetic data; analyzed cross-dataset generalization.",
+        "de": "Entwurf von Trainings-/Evaluierungs-Routinen für S-MAD mit inkrementellen synthetischen Daten; Analyse der Cross-Dataset-Generalisierung.",
+        "es": "Diseñé rutinas de entrenamiento/evaluación para S-MAD con datos sintéticos incrementales; analicé la generalización entre datasets."
+      },
+      "technologies": ["PyTorch", "Computer Vision", "GAN/Synthetic data", "Evaluation harnesses"]
+    },
+    {
+      "year": 2025,
+      "title": "Intelligent Tutor for Tasks in the Domain of Linear Algebra",
+      "authors": [
+        "Miguel Rodriguez", "Eduardo Puraivan", "Luis Puebla-Rives",
+        "Juan Pablo Ruiz-Rodriguez", "Diego Saavedra-Lizana",
+        "Mauricio Gamboa", "Connie Cofre-Morales",
+        "Karina Huencho-Iturra", "Pablo Gregori-Huerta"
+      ],
+      "venue": "ICITED 2025",
+      "technologies": ["Python", "scikit-learn", "Experiment design", "Learning analytics"]
+    }
+  ],
+  "languages": [
+    {
+      "name": { "en": "Spanish", "de": "Spanisch", "es": "Español" },
+      "level": { "en": "Native Speaker", "de": "Muttersprache", "es": "Lengua materna" },
+      "cefr": "C2"
+    },
+    {
+      "name": { "en": "English", "de": "Englisch", "es": "Inglés" },
+      "level": {
+        "en": "C1 (Listening, Speaking, Writing)",
+        "de": "C1 (Hören, Sprechen, Schreiben)",
+        "es": "C1 (Comprensión, Expresión oral, Escritura)"
+      },
+      "cefr": "C1"
+    },
+    {
+      "name": { "en": "German", "de": "Deutsch", "es": "Alemán" },
+      "level": {
+        "en": "A2 (Listening, Speaking, Writing)",
+        "de": "A2 (Hören, Sprechen, Schreiben)",
+        "es": "A2 (Comprensión, Expresión oral, Escritura)"
+      },
+      "cefr": "A2"
+    }
+  ],
+  "skills": {
+    "programming_languages": {
+      "rated": [
+        { "name": "Python", "rating": 5, "max": 5 },
+        { "name": "JavaScript", "rating": 4, "max": 5 },
+        { "name": "Java", "rating": 3, "max": 5 }
+      ],
+      "additional": ["C", "Verilog", "GDScript"]
+    },
+    "technical": [
+      {
+        "category": {
+          "en": "Machine Learning",
+          "de": "Machine Learning",
+          "es": "Machine Learning"
+        },
+        "skills": [
+          "scikit-learn", "TensorFlow/Keras", "PyTorch",
+          "LLM prompting and guardrails",
+          "Evaluation/Model cards",
+          "Bayesian methods (PyMC/NumPyro/Stan)"
+        ]
+      },
+      {
+        "category": {
+          "en": "Computer Vision and Image Processing",
+          "de": "Computer Vision und Bildverarbeitung",
+          "es": "Visión Computacional y Procesamiento de Imágenes"
+        },
+        "skills": [
+          "Deep learning for vision (CNNs, transfer learning, fine-tuning)",
+          "Classical CV (filtering, morphology, SIFT/ORB, HOG)",
+          "Preprocessing (denoising, normalization, thresholding)",
+          "OpenCV / torchvision"
+        ]
+      },
+      {
+        "category": {
+          "en": "Data Engineering and Big Data",
+          "de": "Data Engineering und Big Data",
+          "es": "Ingeniería de Datos y Big Data"
+        },
+        "skills": [
+          "ELT/ETL design (batch/streaming)",
+          "Azure Data Factory", "Databricks (PySpark)",
+          "Spark", "Delta Lake",
+          "Data contracts and quality checks"
+        ]
+      },
+      {
+        "category": {
+          "en": "Cloud and Orchestration",
+          "de": "Cloud und Orchestrierung",
+          "es": "Nube y Orquestación"
+        },
+        "skills": [
+          "Apache Airflow", "Prefect",
+          "Docker/Containerization",
+          "CI/CD (Git, pipelines)"
+        ]
+      },
+      {
+        "category": {
+          "en": "Backend",
+          "de": "Backend",
+          "es": "Backend"
+        },
+        "skills": [
+          "FastAPI/Flask",
+          "API design (auth, versioning, logging)",
+          "Messaging and streaming (Apache Kafka)",
+          "Databases: PostgreSQL/SQL, MongoDB, Neo4j (Cypher), Redis (cache/queues), Data Warehouse systems",
+          "gRPC/REST",
+          "Testing (pytest) and observability (logging/metrics)"
+        ]
+      },
+      {
+        "category": {
+          "en": "Full-Stack and Frontend",
+          "de": "Full-Stack und Frontend",
+          "es": "Full-Stack y Frontend"
+        },
+        "skills": [
+          "Django (MVC, ORM, admin)",
+          "HTML / CSS / JavaScript",
+          "CRUD APIs and forms",
+          "Templates and basic UX",
+          "Godot (GDScript) for interactive prototypes"
+        ]
+      },
+      {
+        "category": {
+          "en": "Electrical and Embedded Systems",
+          "de": "Elektrotechnik und Embedded Systems",
+          "es": "Electrónica y Sistemas Embebidos"
+        },
+        "skills": [
+          "C (embedded/programming fundamentals)",
+          "Verilog (RTL design)",
+          "Signal processing (DSP fundamentals)",
+          "Analog and digital circuits (design/troubleshooting)",
+          "FPGA design and prototyping"
+        ]
+      },
+      {
+        "category": {
+          "en": "BI and Analytics",
+          "de": "BI und Analytics",
+          "es": "BI y Analítica"
+        },
+        "skills": [
+          "Power BI (DAX, RLS)",
+          "Star schema modeling",
+          "Dashboard design and governance"
+        ]
+      }
+    ],
+    "methods": [
+      "MLOps fundamentals (packaging, versioning, monitoring)",
+      "Experiment tracking and reproducibility",
+      "Data quality frameworks (DQ checks, SLAs)",
+      "Agile delivery with stakeholders"
+    ],
+    "tools": [
+      "Git/GitHub", "Make", "Jinja2 codegen",
+      "Shell scripting", "VS Code/Jupyter"
+    ]
+  }
+}
