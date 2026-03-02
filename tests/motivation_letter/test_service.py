@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from unittest.mock import patch
 
-from src.cv_generator.config import CVConfig
+from src.utils.config import CVConfig
 from src.motivation_letter.service import MotivationLetterService
 
 

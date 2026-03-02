@@ -19,7 +19,7 @@ import logging
 from pathlib import Path
 
 from src.agent import tools
-from src.cv_generator.config import CVConfig
+from src.utils.config import CVConfig
 from src.models.application import ApplicationBatch, ApplicationPlan, FitAnalysis
 from src.models.job import JobPosting
 

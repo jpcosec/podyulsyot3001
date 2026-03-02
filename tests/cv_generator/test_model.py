@@ -1,7 +1,7 @@
 import json
 import pytest
 from pathlib import Path
-from src.cv_generator.model import CVModel
+from src.utils.model import CVModel
 
 FIXTURE = Path("tests/cv_generator/fixtures/sample_profile.json")
 

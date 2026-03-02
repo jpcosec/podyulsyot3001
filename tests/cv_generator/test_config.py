@@ -1,4 +1,4 @@
-from src.cv_generator.config import CVConfig
+from src.utils.config import CVConfig
 
 
 def test_config_profile_path_exists():

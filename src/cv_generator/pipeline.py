@@ -9,9 +9,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal
 
-from src.cv_generator.config import CVConfig
-from src.cv_generator.loaders.profile_loader import load_base_profile
-from src.cv_generator.model import CVModel
+from src.utils.config import CVConfig
+from src.utils.loaders.profile_loader import load_base_profile
+from src.utils.model import CVModel
 from src.models.job import JobPosting, JobRequirement
 from src.models.pipeline_contract import PipelineState, ReviewedClaim, ReviewedMapping
 from src.prompts import load_prompt

@@ -18,9 +18,9 @@ from dotenv import load_dotenv
 
 from src.ats_tester import DeterministicContentEvaluator
 from src.cv_generator.ats import run_ats_analysis, write_ats_report
-from src.cv_generator.config import CVConfig
-from src.cv_generator.loaders.profile_loader import load_base_profile
-from src.cv_generator.model import CVModel
+from src.utils.config import CVConfig
+from src.utils.loaders.profile_loader import load_base_profile
+from src.utils.model import CVModel
 from src.render.docx import DocumentRenderer
 from src.render.latex import render_to_file
 from src.render.pdf import extract_docx_text, extract_pdf_text
