@@ -63,7 +63,6 @@ Each step is registered in `src/steps/__init__.py` and callable via CLI: `pipeli
 ### Entry Points
 - **`src/cli/pipeline.py`** — thin CLI dispatcher that routes commands to step functions (now ~300 lines, was 2149)
 - **`src/steps/`** — all 7 step modules implementing the pipeline workflow
-- **`src/cv_generator/__main__.py`** — legacy CV module entry point (kept for backwards compatibility)
 
 ### Path & State Management
 - **`src/utils/state.py`** — `JobState` class (single authority for job paths and artifact tracking)
@@ -71,7 +70,7 @@ Each step is registered in `src/steps/__init__.py` and callable via CLI: `pipeli
   - `state.step_complete(step)` — check step completion
   - `state.pending_steps()` — list incomplete steps
   - `state.read_artifact()` / `state.write_artifact()` — unified I/O
-- **`src/cv_generator/config.py`** — `CVConfig` (still used by __main__.py)
+- **`src/utils/config.py`** — `CVConfig` (project root, profile root, pipeline root)
 - Profile canonical path: `data/reference_data/profile/base_profile/profile_base_data.json`
 - Pipeline output root: `data/pipelined_data/tu_berlin/<job_id>/`
 - Always use `Path(__file__).resolve().parents[n]` — never hardcode `/home/jp/phd`.
@@ -88,7 +87,7 @@ Each step is registered in `src/steps/__init__.py` and callable via CLI: `pipeli
 - **`src/render/pdf.py`** — text extraction via `pdftotext` subprocess (preferred over pypdf)
 
 ### ATS Engine
-- **`src/cv_generator/ats.py`** — dual-engine orchestration: code (0.6 weight) + Gemini LLM (0.4 weight)
+- **`src/utils/ats.py`** — dual-engine orchestration: code (0.6 weight) + Gemini LLM (0.4 weight)
 - **`src/ats_tester/deterministic_evaluator.py`** — `DeterministicContentEvaluator` (code path)
 - Gemini client: `src/utils/gemini.py` — uses `google-genai` SDK (NOT `google-generativeai`), model from `GEMINI_MODEL` env var
 
@@ -119,15 +118,21 @@ data/pipelined_data/tu_berlin/<job_id>/
 
 **DOCX templates** (`--docx-template classic|modern|harvard|executive`): all produce identical ATS scores; differ only in font, color, and margins.
 
-## Legacy Files (Phase 10 — Deleted)
-All the following have been deleted as part of Phase 10 cleanup:
+## Legacy Files (Phase 10 & 11 — Deleted)
+
+### Phase 10
 - `src/cv_generator/renderer.py` (superseded by `src/render/docx.py`)
 - `src/cv_generator/styles.py` (superseded by `src/render/styles.py`)
-- `src/cv_generator/compile` (superseded by `__main__.py`)
+- `src/cv_generator/compile` (superseded by CLI)
 - `src/cv_generator/Code/`, `DHIK_filled/`, `Txt/`, `src/` (legacy data directories)
 - `src/build_word_cv.py` (legacy hardcoded DOCX builder)
 - `src/ats_tester/backend/`, `frontend/` (orphaned web app scaffolding)
 - `src/scraper/fetch_jobs.sh` (legacy shell wrapper)
+
+### Phase 11 (cv_generator Complete Cleanup)
+- **Entire `src/cv_generator/` directory deleted**
+  - Migrated modules: `config.py`, `loaders/`, `model.py`, `ats.py`, `pipeline.py`, `__main__.py` → `src/utils/`
+  - `__main__.py` renamed to `cv_rendering.py` for clarity
 
 ## Documentation Policy
 - Top-level docs: `README.md`, `docs/`.

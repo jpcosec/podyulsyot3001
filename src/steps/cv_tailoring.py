@@ -1,6 +1,6 @@
 """CV tailoring step: Generate tailored CV content for a job posting.
 
-This step wraps the CVTailoringPipeline class from cv_generator/pipeline.py
+This step wraps the CVTailoringPipeline class from utils/pipeline.py
 and adds comment reading for iterative feedback refinement.
 
 Reads:

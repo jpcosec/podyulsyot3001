@@ -1,6 +1,6 @@
 """Matching step: Generate match proposal and approve reviewed mapping.
 
-This step wraps the MatchProposalPipeline class from cv_generator/pipeline.py
+This step wraps the MatchProposalPipeline class from utils/pipeline.py
 and adds comment reading for iterative feedback refinement.
 
 Produces:

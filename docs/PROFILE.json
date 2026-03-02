@@ -145,9 +145,6 @@
   },
   "source_of_truth": {
     "primary_files": [
-      "/home/jp/phd/src/cv_generator/main.tex",
-      "/home/jp/phd/src/cv_generator/Txt/1-CV-body.tex",
-      "/home/jp/phd/src/cv_generator/Txt/p1_sidebar.tex",
       "/home/jp/phd/data/reference_data/agent_feedback/templates/application_master_template.md",
       "/home/jp/buscapega/Pega/CV_aleman/Lebenslauf/src/data/user_info2.json",
       "/home/jp/phd/data/pipelined_data/tu_berlin/summary.csv"

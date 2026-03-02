@@ -54,14 +54,14 @@ The current implementation is script-first (not package-first): most automation 
 │   ├── cli/
 │   │   ├── pipeline.py             # unified pipeline CLI (primary entrypoint)
 │   │   └── README.md
-│   ├── cv_generator/               # CV domain logic
-│   │   ├── __main__.py             # direct module CLI
-│   │   ├── config.py               # CVConfig — path authority
-│   │   ├── model.py                # CVModel dataclass
-│   │   ├── ats.py                  # ATS orchestration (dual engine)
-│   │   ├── pipeline.py             # multi-agent tailoring
-│   │   └── loaders/
-│   │       └── profile_loader.py
+│   ├── steps/                      # pipeline step modules
+│   │   ├── ingestion.py
+│   │   ├── matching.py
+│   │   ├── cv_tailoring.py
+│   │   ├── motivation.py
+│   │   ├── email_draft.py
+│   │   ├── rendering.py
+│   │   └── packaging.py
 │   ├── render/                     # shared rendering infrastructure
 │   │   ├── docx.py                 # DocumentRenderer (ATS-safe single-column)
 │   │   ├── latex.py                # jinja2 → .tex
@@ -151,18 +151,21 @@ Each step is an independent function with signature `run(state: JobState, **kwar
 - **`rendering.py`** — convert .md → PDFs (DOCX/LaTeX)
 - **`packaging.py`** — merge PDFs → Final_Application.pdf
 
-### Utilities
+### Utilities & Configuration
 - **`src/utils/state.py`** — `JobState` class (unified path authority + artifact tracking)
+- **`src/utils/config.py`** — `CVConfig` (project/profile/pipeline roots)
 - **`src/utils/comments.py`** — extract & log inline HTML comments for feedback loops
 - **`src/utils/loader.py`** — JSON/file loading helpers
 - **`src/utils/gemini.py`** — `GeminiClient` (google-genai SDK)
 - **`src/utils/pdf_merger.py`** — merge & compress PDFs via Ghostscript
 - **`src/utils/build_backup_compendium.py`** — rebuild backup manifest
 
-### CV Generation
-- **`src/cv_generator/__main__.py`** — legacy module CLI (kept for compatibility)
-- **`src/cv_generator/pipeline.py`** — `CVTailoringPipeline`, `MatchProposalPipeline`
-- **`src/cv_generator/ats.py`** — ATS dual-engine (code 0.6 + Gemini LLM 0.4)
+### CV & ATS Modules
+- **`src/utils/model.py`** — `CVModel`, `ContactInfo`, `EducationEntry`, etc.
+- **`src/utils/loaders/`** — `load_base_profile()` (profile loading)
+- **`src/utils/pipeline.py`** — `CVTailoringPipeline`, `MatchProposalPipeline`
+- **`src/utils/ats.py`** — ATS dual-engine (code 0.6 + Gemini LLM 0.4)
+- **`src/utils/cv_rendering.py`** — rendering orchestration functions
 - **`src/render/docx.py`** — `DocumentRenderer` (ATS-safe single-column DOCX)
 - **`src/render/latex.py`** — jinja2 → `.tex` rendering
 - **`src/render/pdf.py`** — PDF text extraction (pdftotext)
@@ -184,15 +187,20 @@ System dependency:
 - `texlive` / `pdflatex` for LaTeX CV builds when using `--via latex`
 - `ghostscript` (`gs`) for PDF compression.
 
-## Architecture Improvements (Phase 10 — Complete)
+## Architecture Improvements (Phases 10–11 — Complete)
 
 ### What Was Done
 
-**Phase 10 deleted all legacy code and updated documentation:**
+**Phase 10 deleted all legacy code and refactored pipeline as steps:**
 - Removed superseded files: `src/cv_generator/{renderer.py, styles.py, compile}`, legacy data directories (`Code/`, `DHIK_filled/`, `Txt/`, `src/`)
 - Removed `src/build_word_cv.py` (hardcoded builder, not integrated)
 - Removed orphaned web app scaffolding: `src/ats_tester/{backend, frontend, .git}`
 - Removed legacy shell wrappers: `src/scraper/fetch_jobs.sh`
+
+**Phase 11 completed cv_generator cleanup:**
+- Deleted entire `src/cv_generator/` directory
+- Migrated all modules to `src/utils/`: config, loaders, model, ats, pipeline, cv_rendering
+- Consolidated CV/ATS functionality under `src/utils/` while keeping rendering in `src/render/`
 
 **Refactored entire pipeline as independent steps** (Phases 1–9):
 - Introduced `JobState` class for unified path authority and artifact tracking

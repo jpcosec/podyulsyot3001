@@ -32,7 +32,7 @@ python src/cli/pipeline.py cv-template-test <job_id> <language> --via docx --tar
 Direct module path (when needed):
 
 ```bash
-python -m src.cv_generator validate-ats --job-id <job_id> --source tu_berlin --ats-target pdf
+python -m src.utils validate-ats --job-id <job_id> --source tu_berlin --ats-target pdf
 ```
 
 ## 2) Output Contract
