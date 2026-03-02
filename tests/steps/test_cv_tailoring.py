@@ -207,7 +207,7 @@ Fermentation, SCADA, PLC
 """
 
         monkeypatch.setattr(
-            "src.cv_generator.__main__.build_to_render_markdown",
+            "src.utils.cv_rendering.build_to_render_markdown",
             mock_build_markdown,
         )
 
@@ -264,7 +264,7 @@ Fermentation, SCADA, PLC
             return "# John Doe\n## EDUCATION"
 
         monkeypatch.setattr(
-            "src.cv_generator.__main__.build_to_render_markdown",
+            "src.utils.cv_rendering.build_to_render_markdown",
             mock_build_markdown,
         )
 
@@ -297,7 +297,7 @@ Fermentation, SCADA, PLC
             return "# John Doe\n## SUMMARY\nTest summary"
 
         monkeypatch.setattr(
-            "src.cv_generator.__main__.build_to_render_markdown",
+            "src.utils.cv_rendering.build_to_render_markdown",
             mock_build_markdown,
         )
 
@@ -344,7 +344,7 @@ Fermentation, SCADA, PLC
             return "# John Doe"
 
         monkeypatch.setattr(
-            "src.cv_generator.__main__.build_to_render_markdown",
+            "src.utils.cv_rendering.build_to_render_markdown",
             mock_build_markdown,
         )
 
@@ -405,7 +405,7 @@ Python, Rust
 """
 
         monkeypatch.setattr(
-            "src.cv_generator.__main__.build_to_render_markdown",
+            "src.utils.cv_rendering.build_to_render_markdown",
             mock_build_markdown,
         )
 
@@ -540,7 +540,7 @@ Fermentation, SCADA, PLC Control, Automation
 """
 
         monkeypatch.setattr(
-            "src.cv_generator.__main__.build_to_render_markdown",
+            "src.utils.cv_rendering.build_to_render_markdown",
             mock_build_markdown,
         )
 

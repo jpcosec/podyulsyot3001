@@ -239,17 +239,17 @@ def test_validate_ats_produces_report(mock_job_state: Mock):
     }
 
     with patch("src.steps.rendering.CVConfig.from_defaults", return_value=mock_config):
-        with patch("src.cv_generator.__main__.resolve_output_paths", return_value=mock_paths):
-            with patch("src.cv_generator.__main__.load_job_description", return_value="Job description"):
+        with patch("src.utils.cv_rendering.resolve_output_paths", return_value=mock_paths):
+            with patch("src.utils.cv_rendering.load_job_description", return_value="Job description"):
                 with patch("src.render.pdf.extract_pdf_text", return_value="CV text"):
-                    with patch("src.cv_generator.ats.run_ats_analysis") as mock_ats:
+                    with patch("src.utils.ats.run_ats_analysis") as mock_ats:
                         mock_ats.return_value = {
                             "status": "ok",
                             "code_score": 70,
                             "llm_score": 75,
                             "final_score": 72.5,
                         }
-                        with patch("src.cv_generator.ats.write_ats_report") as mock_write:
+                        with patch("src.utils.ats.write_ats_report") as mock_write:
                             result = validate_ats(
                                 mock_job_state,
                                 ats_target="pdf",
@@ -271,8 +271,8 @@ def test_validate_ats_handles_missing_pdf(mock_job_state: Mock):
     }
 
     with patch("src.steps.rendering.CVConfig.from_defaults", return_value=mock_config):
-        with patch("src.cv_generator.__main__.resolve_output_paths", return_value=mock_paths):
-            with patch("src.cv_generator.__main__.load_job_description", return_value="JD"):
+        with patch("src.utils.cv_rendering.resolve_output_paths", return_value=mock_paths):
+            with patch("src.utils.cv_rendering.load_job_description", return_value="JD"):
                 with pytest.raises(FileNotFoundError, match="PDF not found"):
                     validate_ats(mock_job_state, ats_target="pdf")
 
@@ -293,10 +293,10 @@ def test_validate_ats_handles_docx(mock_job_state: Mock):
     # Mock extract_docx_text to avoid trying to parse mock DOCX file
     with patch("src.steps.rendering.extract_docx_text", return_value="CV text"):
         with patch("src.steps.rendering.CVConfig.from_defaults", return_value=mock_config):
-            with patch("src.cv_generator.__main__.resolve_output_paths", return_value=mock_paths):
-                with patch("src.cv_generator.__main__.load_job_description", return_value="JD"):
-                    with patch("src.cv_generator.ats.run_ats_analysis", return_value={"status": "ok"}):
-                        with patch("src.cv_generator.ats.write_ats_report"):
+            with patch("src.utils.cv_rendering.resolve_output_paths", return_value=mock_paths):
+                with patch("src.utils.cv_rendering.load_job_description", return_value="JD"):
+                    with patch("src.utils.ats.run_ats_analysis", return_value={"status": "ok"}):
+                        with patch("src.utils.ats.write_ats_report"):
                             result = validate_ats(
                                 mock_job_state,
                                 ats_target="docx",
@@ -326,9 +326,9 @@ def test_template_test_produces_report(mock_job_state: Mock):
 
     with patch("src.steps.rendering.run"):
         with patch("src.steps.rendering.CVConfig.from_defaults"):
-            with patch("src.cv_generator.__main__.resolve_output_paths"):
-                with patch("src.cv_generator.__main__._validate_render_parity", return_value=mock_parity):
-                    with patch("src.cv_generator.__main__._template_score", return_value=95.0):
+            with patch("src.utils.cv_rendering.resolve_output_paths"):
+                with patch("src.utils.cv_rendering._validate_render_parity", return_value=mock_parity):
+                    with patch("src.utils.cv_rendering._template_score", return_value=95.0):
                         report = template_test(
                             mock_job_state,
                             via="docx",
@@ -354,9 +354,9 @@ def test_template_test_enforces_perfect(mock_job_state: Mock):
 
     with patch("src.steps.rendering.run"):
         with patch("src.steps.rendering.CVConfig.from_defaults"):
-            with patch("src.cv_generator.__main__.resolve_output_paths"):
-                with patch("src.cv_generator.__main__._validate_render_parity", return_value=mock_parity):
-                    with patch("src.cv_generator.__main__._template_score", return_value=90.0):
+            with patch("src.utils.cv_rendering.resolve_output_paths"):
+                with patch("src.utils.cv_rendering._validate_render_parity", return_value=mock_parity):
+                    with patch("src.utils.cv_rendering._template_score", return_value=90.0):
                         with pytest.raises(RuntimeError, match="expected 100.0%"):
                             template_test(
                                 mock_job_state,
@@ -379,9 +379,9 @@ def test_template_test_passes_perfect(mock_job_state: Mock):
 
     with patch("src.steps.rendering.run"):
         with patch("src.steps.rendering.CVConfig.from_defaults"):
-            with patch("src.cv_generator.__main__.resolve_output_paths"):
-                with patch("src.cv_generator.__main__._validate_render_parity", return_value=mock_parity):
-                    with patch("src.cv_generator.__main__._template_score", return_value=100.0):
+            with patch("src.utils.cv_rendering.resolve_output_paths"):
+                with patch("src.utils.cv_rendering._validate_render_parity", return_value=mock_parity):
+                    with patch("src.utils.cv_rendering._template_score", return_value=100.0):
                         report = template_test(
                             mock_job_state,
                             via="docx",
@@ -405,7 +405,7 @@ def test_template_test_handles_unavailable_parity(mock_job_state: Mock):
 
     with patch("src.steps.rendering.run"):
         with patch("src.steps.rendering.CVConfig.from_defaults"):
-            with patch("src.cv_generator.__main__.resolve_output_paths"):
-                with patch("src.cv_generator.__main__._validate_render_parity", return_value=mock_parity):
+            with patch("src.utils.cv_rendering.resolve_output_paths"):
+                with patch("src.utils.cv_rendering._validate_render_parity", return_value=mock_parity):
                     with pytest.raises(RuntimeError, match="unavailable"):
                         template_test(mock_job_state, via="docx", target="pdf")
