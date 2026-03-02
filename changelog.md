@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026-03-02 — Pipeline Redesign Phase 6: Motivation and Email-Draft Steps
+
+- Added `src/steps/motivation.py` with `run()` function that wraps `MotivationLetterService.generate_for_job()`
+  - Reads: job.md, planning/reviewed_mapping.json, profile data, comments from previous outputs
+  - Produces: planning/motivation_letter.md (rendered letter), planning/motivation_letter.json (structured output)
+  - Implements StepResult protocol with comment extraction and logging via `append_to_comment_log()`
+  - Returns error if reviewed_mapping.json missing (requires 'match-approve' to run first)
+  - Force re-run support for iterative refinement
+- Added `src/steps/email_draft.py` with `run()` function that wraps `MotivationLetterService.generate_email_draft()`
+  - Reads: planning/motivation_letter.json, job.md, comments from previous outputs
+  - Produces: planning/application_email.md (email draft with To, Subject, body, closing, sender info)
+  - Implements StepResult protocol with comment extraction and logging
+  - Returns error if motivation_letter.json missing (requires 'motivate' to run first)
+  - Force re-run support for iteration
+- Both steps extract comments from previous outputs and input files for iterative refinement via `extract_comments()`
+- Both steps log extracted comments to `.metadata/comments.jsonl` via `append_to_comment_log()`
+- MotivationLetterService in `src/motivation_letter/service.py` remains unchanged — steps are thin wrappers
+- Added comprehensive test suites:
+  - `tests/steps/test_motivation.py`: 5 tests covering artifact production, completion skip, force re-run, missing input errors, comment reading
+  - `tests/steps/test_email_draft.py`: 5 tests covering email generation, completion skip, missing input errors, force re-run, content verification
+- All tests passing; motivation and email-draft steps ready for integration into CLI dispatch
+- Phase 6 complete; next: Phase 7 (CV tailoring step)
+
 ## 2026-03-02 — Pipeline Redesign Phase 4: Ingestion Step
 
 - Added `src/steps/ingestion.py` with three entry points for job scraping and ingestion:
