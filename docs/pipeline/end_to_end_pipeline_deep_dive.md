@@ -6,6 +6,8 @@ It is the canonical technical walkthrough for maintainers and automation agents.
 
 > Update (2026-03-03): runtime orchestration is graph-coordinated via `pipeline job <id> run` and `pipeline job <id> run --resume`. Historical command references in this file are retained for migration context.
 
+For operator-focused usage details, see `docs/pipeline/langgraph_run_hitl_testing_guide.md`.
+
 ## 1) System Overview
 
 The workflow has three major lanes:

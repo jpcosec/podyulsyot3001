@@ -269,6 +269,7 @@ pytest tests/cli/test_pipeline.py::test_parse_job_render_custom_options -xvs
 ## See Also
 
 - `docs/plans/2026-03-02-pipeline-redesign-design.md` — Full design document
+- `docs/pipeline/langgraph_run_hitl_testing_guide.md` — Graph run/resume + HITL + testing guide
 - `docs/pipeline/match_review_regeneration_loop.md` — Match proposal iterative review loop
 - `src/steps/` — Step implementations
 - `src/utils/state.py` — JobState API

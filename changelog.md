@@ -21,6 +21,7 @@
 - Updated CLI and maintainer docs to reflect graph run/resume flow:
   - `src/cli/README.md`
   - `CLAUDE.md`
+- Added operator playbook `docs/pipeline/langgraph_run_hitl_testing_guide.md` covering runtime behavior, human review loop, and testing procedures.
 
 ## 2026-03-03 — Match Proposal Review Regeneration Loop
 

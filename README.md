@@ -108,6 +108,7 @@ The current implementation is script-first (not package-first): most automation 
 │   │   └── ats_checker_deep_dive.md
 │   ├── pipeline/
 │   │   ├── end_to_end_pipeline_deep_dive.md
+│   │   ├── langgraph_run_hitl_testing_guide.md
 │   │   ├── match_review_regeneration_loop.md
 │   │   ├── motivation_letter_system_deep_dive.md
 │   │   ├── command_surface_and_mutation_audit.md
@@ -146,6 +147,8 @@ The default run path is graph-coordinated:
 Individual step commands remain available and support comment-based feedback loops.
 
 **See `docs/pipeline/end_to_end_pipeline_deep_dive.md` for complete step DAG and CLI details.**
+
+**See `docs/pipeline/langgraph_run_hitl_testing_guide.md` for run/resume, HITL review behavior, and testing workflow.**
 
 ## Key Modules
 
