@@ -54,7 +54,12 @@ The current implementation is script-first (not package-first): most automation 
 │   ├── cli/
 │   │   ├── pipeline.py             # unified pipeline CLI (primary entrypoint)
 │   │   └── README.md
-│   ├── steps/                      # pipeline step modules
+│   ├── graph/                      # graph-style pipeline coordinator + domain modules
+│   │   ├── pipeline.py             # run/resume coordinator with review interrupt
+│   │   ├── agents/                 # shared agent runner infrastructure
+│   │   ├── parsers/                # reviewed proposal + claim parsing helpers
+│   │   └── pipelines/              # CV tailoring and match proposal pipelines
+│   ├── steps/                      # pipeline step modules (targeted/manual execution)
 │   │   ├── ingestion.py
 │   │   ├── matching.py
 │   │   ├── cv_tailoring.py
@@ -67,20 +72,28 @@ The current implementation is script-first (not package-first): most automation 
 │   │   ├── latex.py                # jinja2 → .tex
 │   │   ├── pdf.py                  # text extraction (DOCX + PDF)
 │   │   ├── styles.py               # CVStyles constants
-│   │   ├── templates/latex/        # english/german/spanish .tex.jinja2
+│   │   ├── templates/              # english/german/spanish .tex.jinja2
 │   │   └── assets/                 # LaTeX assets (Einstellungen/, Abbildungen/)
 │   ├── utils/                      # shared low-level infrastructure
+│   │   ├── state.py                # JobState (unified path authority + artifact tracking)
+│   │   ├── config.py               # CVConfig (project/profile/pipeline roots)
+│   │   ├── comments.py             # extract & log inline HTML comments
 │   │   ├── loader.py               # JSON/file loading
 │   │   ├── gemini.py               # GeminiClient (google-genai SDK)
-│   │   ├── nlp/
-│   │   │   └── text_analyzer.py    # TextAnalyzer (spaCy, language-registry ready)
+│   │   ├── model.py                # CVModel, ContactInfo, EducationEntry, etc.
+│   │   ├── pipeline.py             # compatibility shim re-exporting src/graph symbols
+│   │   ├── ats.py                  # ATS dual-engine (code + Gemini LLM)
+│   │   ├── cv_rendering.py         # rendering orchestration
+│   │   ├── loaders/                # load_base_profile() (profile loading)
 │   │   ├── pdf_merger.py           # merge/compress final application PDFs
 │   │   └── build_backup_compendium.py
 │   └── ats_tester/
-│       ├── deterministic_evaluator.py  # DeterministicContentEvaluator + parity checker
-│       └── backend/                # web UI (separate Flask app, independent)
+│       └── deterministic_evaluator.py  # DeterministicContentEvaluator + parity checker
 ├── tests/
-│   ├── cv_generator/
+│   ├── cli/
+│   ├── steps/
+│   ├── scraper/
+│   ├── motivation_letter/
 │   ├── render/
 │   └── utils/
 ├── docs/
@@ -94,7 +107,11 @@ The current implementation is script-first (not package-first): most automation 
 │   │   ├── ats-guidelines.md       # ATS formatting rules and constraints
 │   │   └── ats_checker_deep_dive.md
 │   ├── pipeline/
-│   │   └── end_to_end_pipeline_deep_dive.md
+│   │   ├── end_to_end_pipeline_deep_dive.md
+│   │   ├── match_review_regeneration_loop.md
+│   │   ├── motivation_letter_system_deep_dive.md
+│   │   ├── command_surface_and_mutation_audit.md
+│   │   └── current_architecture_analysis.md
 │   └── data/
 │       └── backup_compendium.md
 ├── environment.yml                 # conda env spec (phd-cv, Python 3.11)
@@ -112,34 +129,37 @@ Additional profile metadata:
 
 - Two broad categories under `data/`: `pipelined_data/` and `reference_data/`.
 - Canonical pipeline root: `data/pipelined_data/{website_source}/{job_id}/`.
-- Each job folder has four sub-zones: `raw/` (scraped, auto-generated), `planning/` (human+agent authored), `cv/` (rendered artifacts + ATS reports), `output/` (final PDFs, gitignored), `build/` (LaTeX scratch, gitignored). `job.md` lives at the job root.
+- Each job folder has five sub-zones: `raw/` (scraped, auto-generated), `planning/` (human+agent authored), `cv/` (rendered artifacts + ATS reports), `output/` (final PDFs, gitignored), `build/` (LaTeX scratch, gitignored). `job.md` lives at the job root.
 - Current website source: `tu_berlin`.
 - Reference details and naming live in `data/README.md`.
 
-## Workflow Overview (Phase 10 — Step-Based)
+## Workflow Overview
 
-The pipeline now runs as a sequence of independent **steps**, each transforming artifacts:
+The default run path is graph-coordinated:
 
-1. **ingest** — Fetch TU Berlin job posting → raw artifacts
-2. **match** — Extract requirements + generate match proposal → human review
-3. **match-approve** — Lock approved mapping (human-curated) → canonical mapping
-4. **motivate** — Generate motivation letter content
-5. **draft-email** — Compose application email
-6. **tailor-cv** — Tailor CV to job requirements → canonical render source (`cv/to_render.md`)
-7. **render** — Convert `.md` content → PDF (DOCX/LaTeX pipeline)
-8. **package** — Merge PDFs → Final_Application.pdf
+1. **ingest** -> fetch TU Berlin job posting -> raw artifacts
+2. **match** -> generate requirement/evidence proposal + keywords
+3. **review gate (interrupt)** -> user edits `planning/match_proposal.md`
+4. **run --resume** -> auto-lock reviewed mapping and continue
+5. **motivate** -> **tailor-cv** -> **draft-email** -> **render** -> **package**
 
-Each step can be run individually, supports comment-based feedback loops, and checks can be cached/skipped.
+Individual step commands remain available and support comment-based feedback loops.
 
 **See `docs/pipeline/end_to_end_pipeline_deep_dive.md` for complete step DAG and CLI details.**
 
-## Key Modules (Phase 10 — Refactored)
+## Key Modules
 
 ### CLI & Orchestration
-- **`src/cli/pipeline.py`** (~300 lines, was 2149)
-  - Thin dispatcher routing commands to step functions
+- **`src/cli/pipeline.py`**
+  - Thin dispatcher routing `job <id> run` to graph coordinator
   - Command groups: `job <id> <step>`, `jobs` (listing), `ingest-*` (helpers), `archive`, `index`, `backup`
   - See `CLAUDE.md` for complete CLI command reference
+
+### Graph Coordinator (`src/graph/`)
+- **`pipeline.py`** — graph-style run/resume coordinator with explicit review interrupt
+- **`parsers/`** — deterministic proposal parsing + claim-building helpers
+- **`agents/base.py`** — shared `AgentRunner` for matcher/seller/checker execution
+- **`pipelines/`** — extracted `CVTailoringPipeline` and `MatchProposalPipeline`
 
 ### Pipeline Steps (`src/steps/`)
 Each step is an independent function with signature `run(state: JobState, **kwargs) -> StepResult`
@@ -163,7 +183,7 @@ Each step is an independent function with signature `run(state: JobState, **kwar
 ### CV & ATS Modules
 - **`src/utils/model.py`** — `CVModel`, `ContactInfo`, `EducationEntry`, etc.
 - **`src/utils/loaders/`** — `load_base_profile()` (profile loading)
-- **`src/utils/pipeline.py`** — `CVTailoringPipeline`, `MatchProposalPipeline`
+- **`src/utils/pipeline.py`** — compatibility shim for legacy imports
 - **`src/utils/ats.py`** — ATS dual-engine (code 0.6 + Gemini LLM 0.4)
 - **`src/utils/cv_rendering.py`** — rendering orchestration functions
 - **`src/render/docx.py`** — `DocumentRenderer` (ATS-safe single-column DOCX)
@@ -187,49 +207,20 @@ System dependency:
 - `texlive` / `pdflatex` for LaTeX CV builds when using `--via latex`
 - `ghostscript` (`gs`) for PDF compression.
 
-## Architecture Improvements (Phases 10–11 — Complete)
+## Known Limitations
 
-### What Was Done
+- Some tests require API keys (Gemini, spaCy) that may not be available offline.
+- LaTeX PDF parity checker is best-effort (~86% order match) — sufficient for practical use.
 
-**Phase 10 deleted all legacy code and refactored pipeline as steps:**
-- Removed superseded files: `src/cv_generator/{renderer.py, styles.py, compile}`, legacy data directories (`Code/`, `DHIK_filled/`, `Txt/`, `src/`)
-- Removed `src/build_word_cv.py` (hardcoded builder, not integrated)
-- Removed orphaned web app scaffolding: `src/ats_tester/{backend, frontend, .git}`
-- Removed legacy shell wrappers: `src/scraper/fetch_jobs.sh`
-
-**Phase 11 completed cv_generator cleanup:**
-- Deleted entire `src/cv_generator/` directory
-- Migrated all modules to `src/utils/`: config, loaders, model, ats, pipeline, cv_rendering
-- Consolidated CV/ATS functionality under `src/utils/` while keeping rendering in `src/render/`
-
-**Refactored entire pipeline as independent steps** (Phases 1–9):
-- Introduced `JobState` class for unified path authority and artifact tracking
-- Implemented comment system for iterative feedback loops
-- Created 7 modular step functions (ingestion, matching, motivation, cv_tailoring, email_draft, rendering, packaging)
-- Rewrote `src/cli/pipeline.py` from 2149 lines → ~300 lines (thin dispatcher)
-
-### Current Architecture
-
-**Strengths**
-- Clean step-based pipeline with independent, testable functions
-- Unified path/state management via `JobState`
-- Comment-driven feedback loops for iterative refinement
-- Comprehensive CLI with job-specific and batch operations
-- CV and reference assets centralized and reusable
-- Full test coverage (47 tests passing)
-
-### Remaining Gaps
-
-- Scraper scripts may still need to migrate raw artifacts to `raw/` sub-zone (TBD in Phase 11)
-- Some optional test failures related to missing API keys (expected for offline testing)
-- LaTeX PDF parity checker is best-effort (~86% order match) — sufficient for practical use
-
-## Typical Usage (Phase 10 — New Step-Based CLI)
+## Typical Usage
 
 **Single job workflow:**
 ```bash
-# Run all steps in sequence
+# Run graph coordinator (pauses at review gate when needed)
 python src/cli/pipeline.py job 201084 run
+
+# Resume after reviewing/editing planning/match_proposal.md
+python src/cli/pipeline.py job 201084 run --resume
 
 # Or run steps individually
 python src/cli/pipeline.py job 201084 ingest                    # fetch job
@@ -273,8 +264,11 @@ python src/cli/pipeline.py backup
 
 ## Deep Dive
 
-- End-to-end technical walkthrough: `docs/pipeline/end_to_end_pipeline_deep_dive.md`
-- ATS checker architecture and troubleshooting: `docs/cv/ats_checker_deep_dive.md`
+- End-to-end pipeline walkthrough: `docs/pipeline/end_to_end_pipeline_deep_dive.md`
+- Match review & regeneration loop: `docs/pipeline/match_review_regeneration_loop.md`
+- Motivation letter subsystem: `docs/pipeline/motivation_letter_system_deep_dive.md`
+- Command surface & mutation audit: `docs/pipeline/command_surface_and_mutation_audit.md`
+- ATS checker architecture: `docs/cv/ats_checker_deep_dive.md`
 
 ## CV Engine Recommendation
 
