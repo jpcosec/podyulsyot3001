@@ -23,6 +23,7 @@ python src/cli/pipeline.py job 201084 package                   # merge into Fin
 # Shortcuts
 python src/cli/pipeline.py job 201084 run                       # run graph coordinator until done/review gate
 python src/cli/pipeline.py job 201084 run --resume              # resume after editing match proposal
+python src/cli/pipeline.py job 201084 graph-status              # inspect graph checkpoint state
 python src/cli/pipeline.py job 201084 status                    # show step completion table
 
 # Job queries

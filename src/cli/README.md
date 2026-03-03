@@ -32,6 +32,7 @@ pipeline job <job_id> package           # Merge PDFs into Final_Application.pdf
 pipeline job <job_id> status            # Show step completion + pending steps
 pipeline job <job_id> run               # Graph-coordinated run until completion or review interrupt
 pipeline job <job_id> run --resume      # Resume after editing planning/match_proposal.md
+pipeline job <job_id> graph-status      # Inspect checkpointed graph state
 pipeline job <job_id> regenerate <step> # Re-run a single step (reads comments)
 ```
 

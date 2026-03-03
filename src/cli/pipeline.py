@@ -116,6 +116,7 @@ Examples:
             "package",
             "status",
             "run",
+            "graph-status",
             "regenerate",
             "validate-ats",
             "template-test",
@@ -334,6 +335,9 @@ def _handle_job(args: argparse.Namespace) -> int:
             resume=args.resume,
             args=args,
         )
+
+    if verb == "graph-status":
+        return _show_graph_status(state)
 
     # Regenerate command (re-run a specific step)
     if verb == "regenerate":
@@ -996,6 +1000,53 @@ def _run_graph(
         return 1
 
     print(result.message)
+    return 0
+
+
+def _show_graph_status(state: JobState) -> int:
+    """Inspect current LangGraph checkpoint state for a job."""
+    from src.graph.pipeline import build_graph
+
+    try:
+        from langgraph.checkpoint.sqlite import SqliteSaver  # type: ignore[import-not-found]
+    except ImportError:
+        print(
+            "Error: LangGraph runtime unavailable. Install langgraph dependencies.",
+            file=sys.stderr,
+        )
+        return 1
+
+    db_path = state.job_dir / ".graph" / "checkpoints.db"
+    if not db_path.exists():
+        print(
+            f"No graph state for job {state.job_id}. Run 'pipeline job {state.job_id} run' first."
+        )
+        return 1
+
+    config = {"configurable": {"thread_id": f"{state.source}/{state.job_id}"}}
+    with SqliteSaver.from_conn_string(f"sqlite:///{db_path}") as checkpointer:
+        graph = build_graph().compile(checkpointer=checkpointer)
+        snapshot = graph.get_state(config)
+
+    values = snapshot.values if snapshot else {}
+    next_nodes = list(snapshot.next) if snapshot and snapshot.next else []
+    executed = values.get("step_results", [])
+
+    print(f"Job: {state.job_id}")
+    print(f"Checkpoint DB: {db_path}")
+    print(f"Executed nodes: {len(executed)}")
+
+    if next_nodes:
+        print(f"Next node(s): {', '.join(next_nodes)}")
+    else:
+        print("Next node(s): none")
+
+    if "review_gate" in next_nodes:
+        print("Review gate pending. Resume with:")
+        print(f"  pipeline job {state.job_id} run --resume")
+    elif not next_nodes:
+        print("Graph appears complete for current thread.")
+
     return 0
 
 

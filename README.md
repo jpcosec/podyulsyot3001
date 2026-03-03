@@ -201,6 +201,8 @@ Python libraries used by scripts:
 - `pypdf` or `PyPDF2`
 - `spacy` (optional but recommended for full deterministic ATS engine)
 - `deep-translator` (optional translation path)
+- `langgraph`
+- `langgraph-checkpoint-sqlite`
 
 System dependency:
 - `libreoffice` (`soffice`) for DOCX -> PDF conversion when using `--via docx`

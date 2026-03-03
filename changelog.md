@@ -12,10 +12,12 @@
   - agent runtime: `src/graph/agents/base.py`
   - pipelines: `src/graph/pipelines/{tailoring.py,matching.py}`
   - `src/utils/pipeline.py` now serves as compatibility shim re-exporting legacy symbols.
-- Added graph-style coordinator in `src/graph/pipeline.py` and routed `pipeline job <id> run` through it:
+- Added real LangGraph `StateGraph` coordinator in `src/graph/pipeline.py` and routed `pipeline job <id> run` through it:
   - interrupt behavior at review gate when `planning/reviewed_mapping.json` is missing
   - resume path via `pipeline job <id> run --resume`
   - automatic review lock on resume (invokes matching approval step)
+  - `pipeline job <id> graph-status` for checkpoint inspection
+- Added LangGraph runtime dependencies to `environment.yml` (`langgraph`, `langgraph-checkpoint-sqlite`) and ignored runtime checkpoint files via `**/.graph/`.
 - Updated CLI and maintainer docs to reflect graph run/resume flow:
   - `src/cli/README.md`
   - `CLAUDE.md`
