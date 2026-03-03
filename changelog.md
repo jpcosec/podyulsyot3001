@@ -1,5 +1,71 @@
 # Changelog
 
+## 2026-03-03 — LangGraph Migration Hard-Cut Steps (No `run` Fallback)
+
+- Updated migration plans in `docs/plans/2026-03-03-langgraph-pipeline/` to enforce hard cutover semantics:
+  - `pipeline job <id> run` as graph-first path
+  - explicit removal of `run --legacy` fallback after tagged cutover
+  - mandatory refactors: keyword-domain split and pipeline-domain decomposition
+- Split keyword extraction out of `src/steps/matching.py` into dedicated module `src/steps/keywords.py`.
+- Split mixed domains from `src/utils/pipeline.py` into focused `src/graph/` modules:
+  - parsers: `src/graph/parsers/{proposal_parser.py,claim_builder.py}`
+  - agent runtime: `src/graph/agents/base.py`
+  - pipelines: `src/graph/pipelines/{tailoring.py,matching.py}`
+  - `src/utils/pipeline.py` now serves as compatibility shim re-exporting legacy symbols.
+- Added graph-style coordinator in `src/graph/pipeline.py` and routed `pipeline job <id> run` through it:
+  - interrupt behavior at review gate when `planning/reviewed_mapping.json` is missing
+  - resume path via `pipeline job <id> run --resume`
+  - automatic review lock on resume (invokes matching approval step)
+- Updated CLI and maintainer docs to reflect graph run/resume flow:
+  - `src/cli/README.md`
+  - `CLAUDE.md`
+
+## 2026-03-03 — Match Proposal Review Regeneration Loop
+
+- Added iterative match-proposal regeneration behavior in `src/utils/pipeline.py`:
+  - Previous proposal is now passed back as revision context with parsed reviewed claims and inline user comments.
+  - Regeneration directives enforce: keep approved claims stable, remove rejected claims, and regenerate edited evidence.
+  - Existing `planning/match_proposal.md` is archived automatically as `planning/match_proposal.roundN.md` before writing the new round.
+  - Evidence IDs are revalidated against current evidence items to avoid stale references in regenerated proposals.
+- Relaxed decision parsing in `src/utils/pipeline.py` to accept non-strict checkbox formatting (for example `[ x]`, `[x ]`, `x[ ]`).
+- Updated matching step behavior in `src/steps/matching.py`:
+  - Comments are logged before matcher execution so feedback is not lost on failures.
+  - `match-approve` now logs extracted proposal comments as part of the review loop.
+  - Regenerating `match` invalidates stale `planning/reviewed_mapping.json`, forcing explicit re-approval.
+- Expanded tests in `tests/steps/test_matching.py`:
+  - Flexible checkbox parsing coverage.
+  - Proposal comment logging coverage in `match-approve`.
+  - Stale reviewed-mapping invalidation on regeneration.
+  - Round-archive naming behavior (`match_proposal.roundN.md`).
+- Added loop documentation at `docs/pipeline/match_review_regeneration_loop.md` and linked it from `src/cli/README.md`.
+
+## 2026-03-03 — Remove English-Only Ingestion Filter
+
+- Removed strict-English filtering from ingestion runtime; job scraping now always ingests and records language metadata only.
+- Updated scraper interfaces to drop `strict_english` parameters:
+  - `src/scraper/scrape_single_url.py` (`run_for_url`, CLI parser)
+  - `src/scraper/fetch_listing.py` (`crawl_listing`)
+  - `src/steps/ingestion.py` (`run`, `run_from_url`, `run_from_listing`)
+- Removed `--strict-english` option from unified CLI ingestion commands in `src/cli/pipeline.py`.
+- Updated `src/agent/tools.py` to use the new ingestion signature.
+- Fixed `ingest-url` handler in `src/cli/pipeline.py` to call `run_for_url` per URL.
+- Unified translation behavior between fresh ingest and regenerate flows by introducing shared source-text normalization in `src/scraper/scrape_single_url.py` (`normalize_source_text_to_english`).
+- Added explicit language verification for `/en/job-postings/<id>` fetches before accepting them; fallback remains line-level translation when `/en` content is still non-English.
+- Reused the same normalization logic in `src/scraper/generate_populated_tracker.py` to keep regeneration consistent with normal ingestion.
+- Updated `pipeline jobs --category` in `src/cli/pipeline.py` to filter by posting metadata category (job header/frontmatter) instead of matching-derived `planning/keywords.json` categories.
+- Added explicit job-query aliases in `src/cli/pipeline.py`: `--filter-by-keyword` / `--filterbykeyword` and `--filter-by-property` / `--filterbyproperty` (`KEY=VALUE`) for Obsidian-property-driven filtering.
+- Added marker-driven archiving in `src/cli/pipeline.py`: `pipeline archive --marked` now archives open jobs tagged in `job.md` frontmatter (e.g., `archive: true`, `status: archived`, or `tags: [archive]`).
+- Implemented `pipeline index` to rebuild `summary.csv` and `summary_detailed.csv` with pipeline status (`open`/`archived`), and wired archive operations to refresh the index after archiving.
+- Enhanced property filtering to read Obsidian frontmatter values (including list tags), so `pipeline jobs --filter-by-property "tags=..."` works directly on `job.md` markers.
+- Extended rebuilt index output to include tag markers (`Tags` column in `summary_detailed.csv`, tags appended in `summary.csv` facts).
+- Added marker-driven execution command `pipeline run-marked` to gather jobs by frontmatter tags (default `continue,yes`) and run either the next step or all remaining steps.
+- Enforced canonical progression with approval gate for automated runs (`ingest -> match -> match-approve -> motivate -> tailor-cv -> draft-email -> render -> package`).
+- Updated related tests and CLI docs:
+  - `tests/cli/test_pipeline.py`
+  - `tests/steps/test_ingestion.py`
+  - `tests/scraper/test_fetch_listing.py`
+  - `src/cli/README.md`
+
 ## 2026-03-02 — Pipeline Redesign Phase 6: Motivation and Email-Draft Steps
 
 - Added `src/steps/motivation.py` with `run()` function that wraps `MotivationLetterService.generate_for_job()`
@@ -52,7 +118,6 @@
 ## 2026-03-02 — Incremental Pipeline Fix: Code Review Fixes
 
 - **Motivation guard:** `motivation-build` now requires approved mapping (`match-approve`) before generating letters; raises ValueError if mapping exists but isn't approved
-- **Removed `motivation-pre`:** Deleted pre-letter scaffold command, `create_pre_letter()` method, and `MotivationPreResult` dataclass per Fix 3 plan
 - **Scraper full-text output:** `render_tracker_markdown()` now uses full posting body as primary output, with raw markdown fallback; filtered checklists only as last resort
 - **Cleaned up `_format_insights`:** Removed hardcoded reference to dev artifact file "motivation_letter copy.md"
 - **ATS default mode:** Changed default `ats_mode` from "fallback" to "combined"
@@ -84,18 +149,16 @@
 - `src/agent/orchestrator.py` — `ApplicationAgent` for batch application processing
 - `apply-to <urls>` CLI command — guided application workflow with human-in-the-loop checkpoints
 - `src/prompts/email_draft.txt` — Agent prompt for email generation
-- `src/prompts/motivation_pre_letter.txt` — Agent prompt for motivation letter planning
 
 ### Changed
 - `src/cv_generator/pipeline.py` — Rewritten as `CVTailoringPipeline` using full prompts from files + Pydantic models
-- `src/motivation_letter/service.py` — Rebuilt as agent-driven (pre-letter plan + generation + email all via LLM)
+- `src/motivation_letter/service.py` — Rebuilt as agent-driven (letter generation + email via LLM)
 - `src/cv_generator/ats.py` — Uses `src/prompts/` loader instead of hardcoded path
 
 ### Removed
 - `CV_RULES` constant from `src/cli/pipeline.py` — replaced by MATCHER agent
 - `render_job_cv_body()`, `render_job_cv_main()`, `ensure_job_cv_sources()` — hardcoded LaTeX content
 - `build_cv_tailoring()` hardcoded logic — now delegates to `CVTailoringPipeline`
-- `_build_section_plan()`, `_render_pre_letter()` and helper methods from `MotivationLetterService` — replaced by pre-letter agent
 - Hardcoded email draft template from `generate_email_draft()` — replaced by email agent
 - `data/reference_data/prompts/AST.md` — duplicate of ATS prompt
 
@@ -107,7 +170,7 @@
 - Expanded `jobs-index` inventory reporting to track active vs archived counts, overlap IDs (same job ID present in both), and unique known totals; updated `tests/cli/test_pipeline_review.py` with inventory coverage.
 - Enforced English-first scraping defaults for `fetch-url` and `fetch-listing` (strict English enabled by default, optional `--allow-non-english` override).
 - Added `archive-passed` CLI command with dry-run by default and `--apply` mode to move expired active jobs into `archive/`, including JSON report output at `data/pipelined_data/archive_passed_report_<source>.json`.
-- Hardened motivation generation parsing in `src/motivation_letter/service.py` to tolerate JSON wrapped in extra text/fences for pre-letter, final letter, and email-draft outputs.
+- Hardened motivation generation parsing in `src/motivation_letter/service.py` to tolerate JSON wrapped in extra text/fences for final-letter and email-draft outputs.
 - Updated CV pipeline schema and orchestration: `language` is now accepted as an evidence item type in `src/models/pipeline_contract.py`, and seller/checker steps in `src/cv_generator/pipeline.py` can recover missing top-level state fields from prior validated step output.
 
 ## 2026-03-02
@@ -117,8 +180,8 @@
 
 ## 2026-03-01 (continued)
 
-- Expanded motivation-letter generation with a two-step flow: synthetic pre-letter scaffold (`motivation_letter.pre.md`) plus final expansion; inserted explicit format-insights bridge (strengths to preserve + improvements to apply) between pre-render and final prompt, now dynamically analyzed from `planning/motivation_letter copy.md` when present; added requirement-to-evidence analysis and reusable cross-job evidence bank at `data/reference_data/profile/evidence/evidence_bank.json`, implemented in `src/motivation_letter/service.py` with tests in `tests/motivation_letter/test_service.py`.
-- Added pipeline CLI commands `motivation-pre` and `motivation-build` in `src/cli/pipeline.py` and parser tests in `tests/cli/test_pipeline.py`.
+- Expanded motivation-letter generation with format-insights integration (strengths to preserve + improvements to apply), dynamically analyzed from `planning/motivation_letter copy.md` when present; added requirement-to-evidence analysis and reusable cross-job evidence bank at `data/reference_data/profile/evidence/evidence_bank.json`, implemented in `src/motivation_letter/service.py` with tests in `tests/motivation_letter/test_service.py`.
+- Added motivation pipeline CLI command `motivation-build` in `src/cli/pipeline.py` and parser tests in `tests/cli/test_pipeline.py`.
 - Added `.env` auto-loading fallback for Gemini credentials in `src/utils/gemini.py` and a conda environment reminder warning (`phd-cv`) for motivation commands in `src/cli/pipeline.py`.
 - Updated `motivation-build` to produce formal PDF output (`output/motivation_letter.pdf`) and an application email draft (`planning/application_email.md`); added PDF/email service methods and tests.
 - Added unified two-stage application lifecycle in `src/cli/pipeline.py`: `app-prepare`, `app-review`, `app-renderize` with state tracking at `output/state.md`, prep-comment review (`<!-- ... -->`), and ATS analysis in both prep and renderize stages for CV and motivation targets.
