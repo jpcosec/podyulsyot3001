@@ -1,10 +1,5 @@
-"""Backwards-compatibility shim for extracted pipeline domains.
+"""Parsing helpers for proposal review and claim generation."""
 
-Pipeline classes and helpers were split into focused modules under `src/graph/`.
-This module re-exports the legacy symbols so existing imports keep working.
-"""
-
-from src.graph.agents.base import AgentRunner
 from src.graph.parsers.claim_builder import (
     _confidence_from_coverage,
     _propose_claim_text,
@@ -17,14 +12,8 @@ from src.graph.parsers.proposal_parser import (
     _parse_decision,
     parse_reviewed_proposal,
 )
-from src.graph.pipelines.matching import MatchProposalPipeline
-from src.graph.pipelines.tailoring import CVMultiAgentPipeline, CVTailoringPipeline
 
 __all__ = [
-    "AgentRunner",
-    "CVTailoringPipeline",
-    "CVMultiAgentPipeline",
-    "MatchProposalPipeline",
     "build_claim_text",
     "_propose_claim_text",
     "_confidence_from_coverage",
