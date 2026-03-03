@@ -4,7 +4,7 @@ This document describes the new unified CLI for the PhD application pipeline, in
 
 ## Overview
 
-The CLI uses a thin argparse dispatcher that routes commands to a step registry. All business logic lives in `src/steps/*.py`.
+The CLI uses a thin argparse dispatcher. `pipeline job <id> run` routes through `src/graph/pipeline.py` (graph-style coordinator with review interrupt/resume), while individual verbs remain available via `src/steps/*.py`.
 
 The new command structure reduces ~27 old commands to 20 clear, hierarchical commands:
 
@@ -23,14 +23,15 @@ Execute pipeline steps for a specific job. Each step reads inputs and produces o
 ```bash
 pipeline job <job_id> ingest            # Scrape + parse job posting
 pipeline job <job_id> match             # Generate requirement-evidence mapping
-pipeline job <job_id> match-approve     # Lock reviewed mapping for current application
+pipeline job <job_id> match-approve     # Optional manual review lock (run --resume handles this automatically)
 pipeline job <job_id> motivate          # Generate motivation letter content
 pipeline job <job_id> tailor-cv         # Tailor CV from profile + matching
 pipeline job <job_id> draft-email       # Generate application email
 pipeline job <job_id> render            # Render CV + motivation to PDF
 pipeline job <job_id> package           # Merge PDFs into Final_Application.pdf
 pipeline job <job_id> status            # Show step completion + pending steps
-pipeline job <job_id> run               # Execute all pending steps in order
+pipeline job <job_id> run               # Graph-coordinated run until completion or review interrupt
+pipeline job <job_id> run --resume      # Resume after editing planning/match_proposal.md
 pipeline job <job_id> regenerate <step> # Re-run a single step (reads comments)
 ```
 
@@ -51,6 +52,9 @@ pipeline jobs --expiring <days>         # Jobs with deadline within N days
 pipeline jobs --expired                 # Jobs past deadline
 pipeline jobs --keyword <word>          # Filter by matching keyword
 pipeline jobs --category <cat>          # Filter by job category
+pipeline jobs --filter-by-property <k=v> # Filter by metadata property
+pipeline jobs --filter-by-property tags=continue  # Filter by frontmatter tag
+pipeline jobs --filter-by-property tags=review    # Filter review-marked jobs
 ```
 
 ### Ingestion Helpers
@@ -64,7 +68,6 @@ pipeline ingest-listing <url>           # Crawl listing page
 
 Both support:
 - `--source <name>` (default: `tu_berlin`)
-- `--strict-english` (only ingest English postings)
 
 ### Archive Management
 
@@ -73,12 +76,28 @@ Move jobs out of active pipeline.
 ```bash
 pipeline archive <job_id>              # Archive specific job
 pipeline archive --expired             # Archive all expired jobs
+pipeline archive --marked              # Archive jobs marked in frontmatter
+```
+
+Archive markers read from `job.md` frontmatter include:
+- `archive: true` / `archived: true`
+- `status: archived`
+- `tags: [archive]` (also accepts `reject`, `rejected`, `drop`)
+
+### Marker-Driven Execution
+
+Run next or all steps for jobs tagged in frontmatter (Obsidian-friendly triage).
+
+```bash
+pipeline run-marked                               # default tags continue,yes; run next step only
+pipeline run-marked --tags continue,yes --mode all
+pipeline run-marked --tags review,comments --mode next
 ```
 
 ### Admin Commands
 
 ```bash
-pipeline index                         # Rebuild job index (currently no-op)
+pipeline index                         # Rebuild summary.csv and summary_detailed.csv
 pipeline backup                        # Rebuild backup manifest
 ```
 
@@ -87,6 +106,7 @@ pipeline backup                        # Rebuild backup manifest
 ### Global Options (all job commands)
 
 - `--force`: Re-run step even if outputs already exist
+- `--resume`: Resume interrupted graph run (for `job <id> run`)
 - `--source <name>`: Job source (default: `tu_berlin`)
 
 ### Rendering Options (render, validate-ats, template-test steps)
@@ -110,12 +130,12 @@ pipeline backup                        # Rebuild backup manifest
 # Single-job workflow
 pipeline job 201084 ingest
 pipeline job 201084 match
-pipeline job 201084 match-approve
 pipeline job 201084 render --via docx --docx-template modern
 pipeline job 201084 package
 
-# Quick full pipeline
+# Graph run with review interrupt/resume
 pipeline job 201084 run
+pipeline job 201084 run --resume
 
 # Re-run a step after making edits
 pipeline job 201084 regenerate tailor-cv
@@ -136,6 +156,14 @@ pipeline archive --expired
 ```
 
 ## Architecture
+
+### Graph Coordinator
+
+`pipeline job <id> run` executes via `src/graph/pipeline.py`:
+
+- Runs nodes in order: ingest -> match -> review_gate -> motivate -> tailor-cv -> draft-email -> render -> package
+- Pauses at review_gate when `planning/reviewed_mapping.json` is missing
+- Resumes with `pipeline job <id> run --resume` (auto-runs review lock)
 
 ### Step Registry
 
@@ -199,7 +227,9 @@ Steps support inline feedback via HTML comments:
 - Conducted research on bioprocess optimization
 ```
 
-Comments are extracted, logged to `planning/comments_log.json`, and passed to regenerating steps as context.
+Comments are extracted and logged to `.metadata/comments.jsonl` inside each job folder.
+
+For matching, iterative review/regeneration also archives proposal rounds (`match_proposal.roundN.md`) and re-locks reviewed mappings on each round.
 
 See `src/utils/comments.py` for utilities.
 
@@ -238,6 +268,7 @@ pytest tests/cli/test_pipeline.py::test_parse_job_render_custom_options -xvs
 ## See Also
 
 - `docs/plans/2026-03-02-pipeline-redesign-design.md` — Full design document
+- `docs/pipeline/match_review_regeneration_loop.md` — Match proposal iterative review loop
 - `src/steps/` — Step implementations
 - `src/utils/state.py` — JobState API
 - `src/utils/comments.py` — Comment system

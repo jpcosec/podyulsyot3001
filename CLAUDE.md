@@ -11,18 +11,18 @@ System dependencies: `libreoffice` (DOCX→PDF), `pdflatex` / `texlive` (LaTeX b
 ## Common Commands
 
 ```bash
-# Step-based workflow (Phase 10 — new CLI)
+# Graph-based workflow (default run path)
 python src/cli/pipeline.py job 201084 ingest                    # fetch job posting
 python src/cli/pipeline.py job 201084 match                     # generate match proposal
-python src/cli/pipeline.py job 201084 match-approve             # lock approved mapping
 python src/cli/pipeline.py job 201084 tailor-cv --language english  # tailor CV content
 python src/cli/pipeline.py job 201084 motivate                  # generate motivation letter
 python src/cli/pipeline.py job 201084 draft-email               # compose email
-python src/cli/pipeline.py job 201084 render --via docx --template modern  # render PDFs
+python src/cli/pipeline.py job 201084 render --via docx --docx-template modern  # render PDFs
 python src/cli/pipeline.py job 201084 package                   # merge into Final_Application.pdf
 
 # Shortcuts
-python src/cli/pipeline.py job 201084 run                       # run all steps in sequence
+python src/cli/pipeline.py job 201084 run                       # run graph coordinator until done/review gate
+python src/cli/pipeline.py job 201084 run --resume              # resume after editing match proposal
 python src/cli/pipeline.py job 201084 status                    # show step completion table
 
 # Job queries
@@ -48,8 +48,14 @@ pytest tests/render/test_docx.py::test_function  # single test
 
 ## Architecture
 
-### Step-Based Pipeline (Phase 10 — Complete)
-Pipeline is now organized as **independent step functions** in `src/steps/`:
+### Graph Coordinator (Current)
+Primary orchestration now lives in `src/graph/pipeline.py`:
+- graph-style run flow with review interrupt/resume (`run` / `run --resume`)
+- review gate pauses when `planning/reviewed_mapping.json` is missing
+- individual step verbs remain available for targeted/manual execution
+
+### Legacy Step Modules
+Step implementations remain in `src/steps/`:
 1. **ingestion** — scrape jobs, parse HTML → raw artifacts
 2. **matching** — extract requirements, generate proposals, approve matches
 3. **motivation** — generate motivation letter content
@@ -58,7 +64,7 @@ Pipeline is now organized as **independent step functions** in `src/steps/`:
 6. **rendering** — convert content (.md) → PDFs (DOCX/LaTeX)
 7. **packaging** — merge PDFs into final submission
 
-Each step is registered in `src/steps/__init__.py` and callable via CLI: `pipeline job <id> <step-name>`
+Each step is registered in `src/steps/__init__.py` and callable via CLI: `pipeline job <id> <step-name>`.
 
 ### Entry Points
 - **`src/cli/pipeline.py`** — thin CLI dispatcher that routes commands to step functions (now ~300 lines, was 2149)
