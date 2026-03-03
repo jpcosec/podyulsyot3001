@@ -4,6 +4,8 @@ This document describes the full operational pipeline used in this repository, f
 
 It is the canonical technical walkthrough for maintainers and automation agents.
 
+> Update (2026-03-03): runtime orchestration is graph-coordinated via `pipeline job <id> run` and `pipeline job <id> run --resume`. Historical command references in this file are retained for migration context.
+
 ## 1) System Overview
 
 The workflow has three major lanes:
@@ -11,6 +13,23 @@ The workflow has three major lanes:
 1. **Job ingestion lane**: fetch, parse, normalize, and track TU Berlin postings.
 2. **CV lane**: generate CV artifacts (DOCX/LaTeX/PDF), then run ATS analysis.
 3. **Submission lane**: package and compress final PDFs for application upload.
+
+### 1.1 Current graph coordinator
+
+Primary orchestration now runs through `src/graph/pipeline.py`.
+
+Graph flow:
+
+```text
+ingest -> match -> review_gate(interrupt) -> motivate -> tailor_cv -> draft_email -> render -> package
+```
+
+Review behavior:
+
+- `python src/cli/pipeline.py job <id> run` executes until review lock is needed.
+- If `planning/reviewed_mapping.json` is missing, run interrupts at review gate.
+- After editing `planning/match_proposal.md`, use `python src/cli/pipeline.py job <id> run --resume`.
+- Resume auto-locks reviewed mapping, then continues through downstream nodes.
 
 Primary entrypoint (CLI-first policy):
 
@@ -87,8 +106,8 @@ Implementation: `src/cli/pipeline.py`
 - `app-run`: one-command orchestrator for prepare -> review -> renderize (stops at review when unresolved comments exist)
 - `app-status`: show current staged workflow status for one job from `<job_id>/output/state.md`
 - `jobs-index`: generate central index of job ids by source folder at `data/pipelined_data/job_ids_index.{json,md}`
-- `motivation-pre`: generate synthetic pre-letter scaffold + evidence analysis in `<job_id>/planning/`
-- `motivation-build`: generate final motivation letter from pre-letter + prompt bridge insights, then produce `output/motivation_letter.pdf` and `planning/application_email.md` draft
+- `motivation-build`: generate motivation letter content + evidence analysis in `<job_id>/planning/`
+- `motivation-build`: generate final motivation letter using prompt bridge insights, then produce `output/motivation_letter.pdf` and `planning/application_email.md` draft
 
 Motivation subsystem full internals (context contracts, prompt boundaries, hardcoded vs agent-driven areas, and target architecture):
 
