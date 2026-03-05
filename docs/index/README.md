@@ -4,6 +4,12 @@ This index is the entrypoint for the documentation architecture.
 
 Use this folder to navigate by concept instead of by historical file location.
 
+Supporting index docs:
+
+- Canonical map: `docs/index/canonical_map.md`
+- Conceptual tree: `docs/index/conceptual_tree.md`
+- Pruning plan: `docs/index/pruning_plan.md`
+
 ## Canonical concept map
 
 - Philosophy: `docs/philosophy/`

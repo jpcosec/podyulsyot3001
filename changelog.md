@@ -8,6 +8,7 @@
 - Moved template discipline docs to `docs/templates/`, including taxonomic LLM templates under `docs/templates/llm/`.
 - Moved prompt specifications under templates to `docs/templates/prompts/`.
 - Added `docs/index/README.md` and `docs/index/conceptual_tree.md` as the canonical navigation and conceptual tree for documentation maintenance.
+- Added `docs/index/canonical_map.md` and `docs/index/pruning_plan.md` to make canonical ownership and migration cleanup explicit.
 - Added compatibility stubs in legacy paths (`docs/architecture/`, `docs/overview/`, `docs/prompts/`) that point to canonical moved documents.
 - Updated top-level `README.md` documentation map to reflect the new structure and canonical paths.
 - Added root `.gitignore` to exclude `.serena/`, `.pytest_cache/`, and Python cache artifacts.
