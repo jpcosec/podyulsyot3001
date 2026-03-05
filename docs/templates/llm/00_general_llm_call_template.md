@@ -13,6 +13,49 @@ This template is taxonomy-agnostic and intentionally explicit about inputs, outp
 3. LLM output must be schema-validated (Pydantic) before returning.
 4. Prompt assets are node-local (`prompt/` folder).
 5. No fallback-to-success on model or parse failures.
+6. `prompt/user_template.md` is rendered with Jinja2 using `logic_input.model_dump()`.
+
+## Prompt templating engine (Jinja2)
+
+Goal:
+
+- keep prompts in plain Markdown,
+- inject runtime variables from typed `LogicInput` at call time,
+- avoid ad-hoc string concatenation.
+
+Design:
+
+- central utility module (target): `src/ai/prompt_manager.py`,
+- utility owns text loading and Jinja rendering,
+- `logic.py` consumes rendered strings and calls `LLMRuntime`.
+
+Reference shape:
+
+```python
+from pathlib import Path
+from jinja2 import Environment, FileSystemLoader, StrictUndefined
+
+
+def load_text(path: Path) -> str:
+    return path.read_text(encoding="utf-8")
+
+
+def render_user_template(prompt_dir: Path, template_name: str, payload: dict) -> str:
+    env = Environment(
+        loader=FileSystemLoader(str(prompt_dir)),
+        undefined=StrictUndefined,
+        autoescape=False,
+        trim_blocks=True,
+        lstrip_blocks=True,
+    )
+    return env.get_template(template_name).render(**payload)
+```
+
+Jinja contract:
+
+- variable names in `prompt/user_template.md` must exactly match `LogicInput` field names,
+- rendering payload is `logic_input.model_dump()`,
+- unresolved variables are hard errors (`StrictUndefined`).
 
 ## Canonical runtime protocol
 
@@ -118,9 +161,10 @@ def run_logic(
     model_ref: str = "gemini-2.5-flash",
     temperature: float = 0.0,
 ) -> LogicOutput:
-    user_prompt = prompt_bundle.user_template.format(
-        job_id=logic_input.job_id,
-        payload_json=logic_input.model_dump_json(indent=2),
+    user_prompt = render_user_template(
+        prompt_dir=Path("prompt"),
+        template_name="user_template.md",
+        payload=logic_input.model_dump(),
     )
 
     output = runtime.generate_structured(
@@ -152,6 +196,14 @@ prompt/
 prompt_ref: match
 prompt_version: "1.0"
 owner: ai/nodes/match
+```
+
+Typical node-local prompt files:
+
+```text
+prompt/
+  system.md
+  user_template.md
 ```
 
 ## Input/output boundaries

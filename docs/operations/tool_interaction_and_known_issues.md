@@ -32,6 +32,56 @@ Command names below define the expected operator surface:
 
 If a command is unavailable in your current branch, use the documented equivalent and record the deviation in incident notes.
 
+## Control Plane resume contract (LangGraph)
+
+This section specifies how CLI commands interact with review interrupts.
+
+Execution identity rule:
+
+- LangGraph `thread_id` is always `f"{source}_{job_id}"`.
+
+### A) `phd2 review-validate` (Data Plane only)
+
+`review-validate` does not mutate LangGraph state.
+
+Flow:
+
+1. resolve `proposed/state.json` and `review/decision.md` through `WorkspaceManager`,
+2. call `sync_json_md.md_to_json(...)`,
+3. fail with actionable parse/hash error if invalid,
+4. write `review/decision.json` if valid.
+
+Example failure style:
+
+- `Line 14: multiple decision checkboxes marked`.
+
+### B) `phd2 run --resume` (Control Plane)
+
+`run --resume` wakes the graph from checkpoint state.
+
+Flow:
+
+1. compile graph with persistent checkpointer,
+2. set runtime config:
+
+```python
+config = {"configurable": {"thread_id": f"{source}_{job_id}"}}
+```
+
+3. resume from interrupt with empty invocation:
+
+```python
+graph.invoke(None, config)
+```
+
+When resumed, LangGraph executes the next pending review node (for example `review_match`).
+That review node reads `review/decision.json` from disk via `ArtifactReader` and emits routing (for example `{"review_decision": "approve"}`).
+
+Non-negotiable rule:
+
+- CLI never injects decision JSON directly into LangGraph state.
+- CLI only validates disk artifacts (`review-validate`) and wakes graph execution (`run --resume`).
+
 ## Typical operator session
 
 Example flow for a single job:

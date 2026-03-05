@@ -19,6 +19,9 @@
   - artifact structure owned by `docs/reference/artifact_schemas.md`,
   - failure taxonomy owned by `docs/philosophy/structure_and_rationale.md`.
 - Added explicit "Authority scope" sections to core docs to reduce future drift and clarify ownership boundaries.
+- Merged graph flow documentation into canonical `docs/graph/nodes_summary.md` and removed `docs/graph/graph_definition.md`.
+- Added prompt rendering engine specification (Jinja2 + `LogicInput.model_dump()` contract) in `docs/templates/llm/00_general_llm_call_template.md` and `docs/templates/prompts/README.md`.
+- Added explicit CLI/LangGraph resume contract to operations docs, including `thread_id = f"{source}_{job_id}"`, `review-validate` data-plane behavior, and `graph.invoke(None, config)` resume behavior.
 
 ## 2026-03-04
 

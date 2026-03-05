@@ -83,6 +83,11 @@ Mandatory invariants before resume:
 3. decision artifact validates against the active proposed-state hash,
 4. decision parse is deterministic and unambiguous.
 
+Control-plane identity rule:
+
+- LangGraph `thread_id` is `f"{source}_{job_id}"`.
+- Resume wakes execution with checkpoint context; review nodes read decision artifacts from disk.
+
 If any invariant fails, resume must stop with an actionable error.
 
 ## Node role summary

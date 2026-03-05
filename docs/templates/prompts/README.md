@@ -46,3 +46,16 @@ These constraints apply to every prompt:
 - Do not create claims not supported by approved upstream artifacts.
 - Every proposed claim must cite evidence ids.
 - Return only the requested output artifacts.
+
+## Jinja rendering contract
+
+Prompts are authored as Markdown and rendered at runtime through Jinja2.
+
+Rules:
+
+1. Keep runtime variables in `prompt/user_template.md`.
+2. Variable names must match `LogicInput` field names exactly.
+3. Rendering payload is `logic_input.model_dump()`.
+4. Missing variables are hard failures (no silent defaults).
+
+See `docs/templates/llm/00_general_llm_call_template.md` for the canonical rendering template.
