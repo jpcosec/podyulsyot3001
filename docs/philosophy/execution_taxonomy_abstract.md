@@ -12,6 +12,11 @@ This document defines the PhD 2.0 taxonomy at an abstract level, before binding 
 
 It is the classification system used to derive template behavior.
 
+## Authority scope
+
+- Canonical owner for taxonomy definitions and classification tuple.
+- Does not define graph routing or artifact schemas.
+
 ## Core principle
 
 Classification is multi-axis, not single-axis.

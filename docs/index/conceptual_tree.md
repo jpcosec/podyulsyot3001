@@ -12,7 +12,7 @@ PhD 2.0 Docs
 │   ├── execution_taxonomy_abstract
 │   └── template_problem_statement
 ├── Graph (what runs)
-│   ├── graph_definition
+│   ├── nodes_summary
 │   └── node_io_matrix
 ├── Templates (how to implement)
 │   ├── node_template_discipline

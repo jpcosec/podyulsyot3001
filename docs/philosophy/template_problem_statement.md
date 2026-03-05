@@ -3,7 +3,7 @@
 Related references:
 
 - `docs/philosophy/structure_and_rationale.md`
-- `docs/graph/graph_definition.md`
+- `docs/graph/nodes_summary.md`
 - `docs/graph/node_io_matrix.md`
 - `docs/architecture/core_io_and_provenance_manager.md`
 - `plan/template/README.md`

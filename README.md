@@ -67,7 +67,7 @@ Start here:
 
 ## Graph (what runs)
 
-- Graph definition, node contracts, and review directives: `docs/graph/graph_definition.md`
+- Graph definition, node contracts, and review directives: `docs/graph/nodes_summary.md`
 - Node-by-node I/O matrix: `docs/graph/node_io_matrix.md`
 
 ## Templates (how to implement)

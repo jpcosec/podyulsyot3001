@@ -5,7 +5,7 @@ Related references:
 - `docs/philosophy/structure_and_rationale.md`
 - `docs/reference/artifact_schemas.md`
 - `docs/business_rules/sync_json_md.md`
-- `docs/graph/graph_definition.md`
+- `docs/graph/nodes_summary.md`
 
 ## Purpose
 
@@ -14,6 +14,11 @@ This document defines the centralized Data Plane for PhD 2.0.
 To prevent LangGraph state bloat and preserve strict HITL auditability, the graph memory (Control Plane) must only carry lightweight execution signals. Actual document payloads, semantic state, and review surfaces must live on disk (Data Plane).
 
 The Core I/O layer removes path boilerplate and ensures every node uses consistent read/write/provenance behavior.
+
+## Authority scope
+
+- Canonical owner for I/O mechanics (path resolution, read/write boundaries, provenance generation).
+- Uses artifact contracts defined in `docs/reference/artifact_schemas.md`.
 
 ## Location
 
@@ -34,11 +39,15 @@ Do not store full draft bodies, mapping arrays, or long semantic payloads in gra
 
 ## Data Plane (workspace artifacts)
 
-Store all canonical payload artifacts under:
+Canonical workspace artifact layout and schema contracts are defined in:
 
-- `data/jobs/<source>/<job_id>/...`
+- `docs/reference/artifact_schemas.md`
 
-JSON is canonical state; Markdown is the human-facing surface.
+This document focuses on I/O mechanics:
+
+- path resolution,
+- read/write validation boundaries,
+- provenance generation.
 
 ## Module responsibilities
 

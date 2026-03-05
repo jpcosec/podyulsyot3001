@@ -6,7 +6,7 @@ Related references:
 - `docs/philosophy/execution_taxonomy_abstract.md`
 - `docs/templates/taxonomy_template_catalog.md`
 - `docs/philosophy/structure_and_rationale.md`
-- `docs/graph/graph_definition.md`
+- `docs/graph/nodes_summary.md`
 - `docs/architecture/core_io_and_provenance_manager.md`
 
 ## Purpose
@@ -14,6 +14,11 @@ Related references:
 This document defines the strict implementation discipline for all pipeline nodes in PhD 2.0.
 
 By enforcing one GraphState contract, one error-routing pattern, and one package shape, we reduce style drift and block wax-model behaviors (especially silent fallback-to-success).
+
+## Authority scope
+
+- Canonical owner for node implementation discipline (package shape, orchestration contract, HITL contract).
+- Not the canonical owner for taxonomy leaf definitions, failure taxonomy matrix, or graph routing topology.
 
 ## 1) GraphState contract (Control Plane)
 
@@ -64,47 +69,16 @@ Hard rule:
 
 ## 2) Error handling and retry pattern
 
-The runtime uses two error classes:
+The canonical failure taxonomy and continuation matrix are defined in:
 
-## Fail-stop errors
+- `docs/philosophy/structure_and_rationale.md` (Node failure taxonomy)
 
-Examples:
+Template discipline requirement:
 
-- `SCHEMA_INVALID`
-- `POLICY_VIOLATION`
-- `PARSER_REJECTED`
-
-Node behavior:
-
-- raise typed exceptions immediately.
-
-Graph behavior:
-
-- no retry loop; run fails loudly for operator inspection.
-
-## Retryable errors
-
-Examples:
-
-- `MODEL_FAILURE`
-- `TOOL_FAILURE`
-- transient `IO_FAILURE`
-
-Node behavior:
-
-- catch expected retryable exception,
-- increment `error_state.attempt_count`,
-- write retry log entry to node metadata,
-- return updated `error_state`.
-
-Graph behavior:
-
-- conditional edge `should_retry` loops to same node while attempts are below configured max,
-- on max exceeded, escalate to fail-stop exception.
-
-Anti-wax rule:
-
-- no retry handler may return a fake success payload.
+1. nodes must classify failures using canonical taxonomy names,
+2. fail-stop classes must raise typed exceptions without implicit continuation,
+3. retryable classes must use bounded retry with explicit `error_state` updates,
+4. retry handlers must never return fake success payloads.
 
 ## 3) Base node template structure
 
@@ -170,108 +144,22 @@ Rules:
 
 ## 5) Taxonomy-to-template mapping
 
-All nodes share the base shape, but behavior and routing depend on taxonomy leaf.
+This document does not redefine taxonomy leaves.
 
-## 5.1 Non-LLM deterministic (`NLLM-D`)
+Canonical taxonomy source:
 
-Goal:
+- `docs/philosophy/execution_taxonomy_abstract.md`
 
-- predictable and reproducible transformations.
+Canonical per-leaf implementation templates:
 
-Examples:
+- `docs/templates/taxonomy_template_catalog.md`
+- `docs/templates/llm/README.md`
 
-- `ingest`, `render`, `package`.
+Template discipline requirement:
 
-Pattern:
-
-- no `prompt/`, no external network dependency,
-- read/write canonical artifacts,
-- direct routing to next node.
-
-## 5.2 Non-LLM bounded-nondeterministic (`NLLM-ND`)
-
-Goal:
-
-- handle bounded variability from external services.
-
-Examples:
-
-- `scraping`, `translate`.
-
-Pattern:
-
-- no `prompt/`, strict timeout and retry policies,
-- explicit `TOOL_FAILURE` routing behavior,
-- direct routing on success.
-
-## 5.3 LLM extracting
-
-Goal:
-
-- distill or consolidate into validated structured state.
-
-Examples:
-
-- `application_context_builder`, `feedback_distiller`.
-
-Pattern:
-
-- JSON-first output,
-- usually no review surface generation,
-- direct routing unless matrix marks explicit review gate.
-
-## 5.4 LLM matching
-
-Goal:
-
-- map evidence to requirements and propose claims.
-
-Examples:
-
-- `match`.
-
-Pattern:
-
-- logic returns structured JSON only,
-- writer persists JSON and deterministically generates review markdown via `sync_json_md`,
-- route to `pending_review`.
-
-## 5.5 LLM redacting
-
-Goal:
-
-- draft narrative content intended for human review and later delivery.
-
-Examples:
-
-- `motivation_letter_writer`, `cv_tailorer`, `email_drafter`.
-
-Pattern:
-
-- logic returns both structured state and native markdown draft,
-- writer persists both and generates decision surface,
-- route to `pending_review`.
-
-## 5.6 Reviewing parser nodes (non-LLM gatekeepers)
-
-Goal:
-
-- parse human decisions, enforce policy, and promote validated artifacts.
-
-Examples:
-
-- `review_match`, `review_motivation_letter`, `review_cv`, `review_email`.
-
-Pattern:
-
-1. call `sync_json_md.md_to_json()` for deterministic parsing,
-2. fail-stop on stale hash or parse ambiguity (`PARSER_REJECTED`),
-3. on `approve`, write approved artifact and provenance,
-4. return `review_decision` routing signal.
-
-Note:
-
-- LLM "reviewing" task type (prompt-level summarization/interpretation) is not allowed to replace deterministic gate parsing.
+1. classify node intent using the canonical taxonomy first,
+2. choose one leaf template from the catalog,
+3. implement node package shape and orchestration rules from this document.
 
 ## 6) HITL interrupt contract
 
@@ -287,26 +175,12 @@ This contract is mandatory for all review-gated flows.
 
 ## 7) Macro-node (subgraph) discipline
 
-To keep top-level orchestration clear, related node states should be grouped as LangGraph subgraphs.
+This document does not own graph routing topology.
 
-Required macro-nodes:
+Canonical source for primary flow and macro-node composition:
 
-1. `prep_subgraph`: `ingest -> extract_understand -> translate`
-2. `match_cycle_subgraph`: `match -> review_match` (+ regeneration loop)
-3. `context_cycle_subgraph`: `build_application_context -> review_application_context` (+ regeneration loop)
-4. `motivation_cycle_subgraph`: `generate_motivation_letter -> review_motivation_letter` (+ regeneration loop)
-5. `cv_cycle_subgraph`: `tailor_cv -> review_cv` (+ regeneration loop)
-6. `email_cycle_subgraph`: `draft_email -> review_email` (+ regeneration loop)
-7. `delivery_subgraph`: `render -> package`
+- `docs/graph/nodes_summary.md`
 
-Subgraph rules:
+Template discipline requirement:
 
-- internal nodes keep full audit semantics (no hidden combined logic),
-- subgraph input/output through GraphState control fields only,
-- payload data remains in Data Plane artifacts,
-- review decisions are consumed inside the corresponding cycle subgraph,
-- unresolved `error_state` must not leak silently across macro-node boundaries.
-
-`prep_subgraph` note:
-
-- this phase is not review-gated; it is a preprocessing macro-node where `translate` can be `NLLM-ND` with bounded retry semantics.
+- node implementations must be compatible with graph-level routing contracts and review-cycle boundaries defined in the graph doc.

@@ -30,7 +30,7 @@ Supporting index docs:
 
 ### 2) Understand runtime graph behavior
 
-1. `docs/graph/graph_definition.md`
+1. `docs/graph/nodes_summary.md`
 2. `docs/graph/node_io_matrix.md`
 3. `docs/architecture/core_io_and_provenance_manager.md`
 

@@ -4,7 +4,7 @@ Related references:
 
 - `docs/reference/artifact_schemas.md`
 - `docs/business_rules/claim_admissibility_and_policy.md`
-- `docs/graph/graph_definition.md`
+- `docs/graph/nodes_summary.md`
 
 ## Purpose
 

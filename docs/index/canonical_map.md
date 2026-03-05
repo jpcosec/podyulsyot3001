@@ -16,7 +16,7 @@ Any remaining references to old paths should be migrated to the canonical paths 
 ## Graph
 
 - Canonical docs:
-  - `docs/graph/graph_definition.md`
+  - `docs/graph/nodes_summary.md`
   - `docs/graph/node_io_matrix.md`
 
 ## Templates

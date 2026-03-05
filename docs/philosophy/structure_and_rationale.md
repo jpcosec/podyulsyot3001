@@ -2,7 +2,7 @@
 
 Related references:
 
-- `docs/graph/graph_definition.md`
+- `docs/graph/nodes_summary.md`
 - `docs/philosophy/execution_taxonomy_abstract.md`
 - `docs/philosophy/project_overview.md`
 - `docs/reference/document_glossary.md`
@@ -16,6 +16,11 @@ PhD 2.0 is rebuilt to prevent two failure modes observed in the previous attempt
 
 The architecture is intentionally strict so that each node is inspectable, testable, and replaceable without hidden side effects.
 
+## Authority scope
+
+- Canonical owner for architectural rationale and failure taxonomy (including fail-stop vs retryable classes).
+- Not the canonical source for taxonomy leaf definitions, graph topology, or artifact schema details.
+
 ## Design goals
 
 1. Make LLM-usage boundaries explicit first, then determinism class inside non-LLM steps.
@@ -24,24 +29,17 @@ The architecture is intentionally strict so that each node is inspectable, testa
 4. Keep the graph resumable and auditable.
 5. Make failures loud and actionable.
 
-## Execution classification model (authoritative)
+## Execution classification model (summary)
 
-Classification is two-stage:
+Canonical taxonomy definitions are specified in:
 
-1. **LLM usage**: does the step use an LLM? (`yes` / `no`)
-2. **Determinism class** (only for `no`): `deterministic` or `bounded_nondeterministic`
+- `docs/philosophy/execution_taxonomy_abstract.md`
 
-Why this model:
+This document only states the architectural implication:
 
-- "deterministic vs non-deterministic" alone is not enough for design decisions.
-- the operational boundary that matters most is LLM dependency.
-- non-LLM steps can still be non-deterministic when they depend on external services.
-
-Example:
-
-- `translate` is **non-LLM** but often **bounded_nondeterministic** (external translation backend).
-- `render` is **non-LLM deterministic** under fixed toolchain/template inputs.
-- `match` is **LLM** and therefore semantically non-deterministic.
+- LLM usage is the primary boundary,
+- predictability class is evaluated inside non-LLM steps,
+- taxonomy classification must be completed before template selection.
 
 ## Layered structure
 
@@ -106,20 +104,17 @@ Reason:
 
 ## Data model and artifact lifecycle
 
-Canonical workspace layout per job:
+Canonical artifact structure and schemas are specified in:
 
-`data/jobs/<source>/<job_id>/`
+- `docs/reference/artifact_schemas.md`
+- `docs/architecture/core_io_and_provenance_manager.md`
 
-- `raw/` imported or scraped source artifacts.
-- `nodes/<node>/input/` optional frozen inputs for reproducibility.
-- `nodes/<node>/proposed/` machine proposal artifacts.
-- `nodes/<node>/review/` human-editable decision artifacts.
-- `nodes/<node>/approved/` canonical approved state.
-- `nodes/<node>/meta/` provenance and metadata.
-- `runtime/checkpoints/` graph resume state.
-- `final/` final deliverables.
+This document only states the architectural posture:
 
-JSON is canonical. Markdown exists for human review and must roundtrip through the sync tool.
+- job state is persisted on disk under the canonical workspace root,
+- JSON is canonical machine state,
+- Markdown is the human review surface,
+- graph state carries control signals only.
 
 ## Review protocol and gating
 

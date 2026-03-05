@@ -13,6 +13,12 @@
 - Updated top-level `README.md` documentation map to reflect the new structure and canonical paths.
 - Added root `.gitignore` to exclude `.serena/`, `.pytest_cache/`, and Python cache artifacts.
 - Added folder-level indexes: `docs/philosophy/README.md`, `docs/graph/README.md`, `docs/templates/README.md`, `docs/business_rules/README.md`, `docs/reference/README.md`, `docs/operations/README.md`, and `docs/architecture/README.md`.
+- Reduced cross-document redundancy by moving canonical ownership to single docs and replacing repeated taxonomy/routing/path content with references:
+  - taxonomy definitions owned by `docs/philosophy/execution_taxonomy_abstract.md`,
+  - flow routing owned by `docs/graph/nodes_summary.md`,
+  - artifact structure owned by `docs/reference/artifact_schemas.md`,
+  - failure taxonomy owned by `docs/philosophy/structure_and_rationale.md`.
+- Added explicit "Authority scope" sections to core docs to reduce future drift and clarify ownership boundaries.
 
 ## 2026-03-04
 

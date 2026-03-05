@@ -2,11 +2,16 @@
 
 Related references:
 
-- `docs/graph/graph_definition.md`
+- `docs/graph/nodes_summary.md`
 - `docs/graph/node_io_matrix.md`
 - `docs/reference/document_glossary.md`
 
 ## Design rule
+
+## Authority scope
+
+- Canonical owner for artifact paths, artifact schema contracts, and format split (JSON/Markdown/YAML).
+- Not the canonical source for graph routing policy.
 
 Use this format split consistently:
 

@@ -21,7 +21,7 @@ It is the quick semantic reference for operators and developers.
 ## Architecture docs
 
 - `docs/philosophy/structure_and_rationale.md`: layer boundaries, design rules, failure taxonomy, and rationale.
-- `docs/graph/graph_definition.md`: graph flow, node contracts, review branches, directives, and invariants.
+- `docs/graph/nodes_summary.md`: graph flow, node contracts, review branches, directives, and invariants.
 - `docs/graph/node_io_matrix.md`: node-by-node input/output contracts and downstream consumers.
 - `docs/reference/artifact_schemas.md`: full JSON schemas for every pipeline artifact.
 - `docs/business_rules/claim_admissibility_and_policy.md`: claim classes, evidence compatibility, coverage transitions, downstream policy.

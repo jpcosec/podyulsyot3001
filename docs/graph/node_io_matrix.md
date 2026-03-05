@@ -6,7 +6,7 @@ This matrix defines the final-state I/O contract expectations for each graph nod
 
 It complements:
 
-- `docs/graph/graph_definition.md` (flow and routing semantics)
+- `docs/graph/nodes_summary.md` (flow and routing semantics)
 - `docs/philosophy/structure_and_rationale.md` (architectural boundaries)
 
 JSON artifacts are canonical. Markdown artifacts are human-facing review surfaces.

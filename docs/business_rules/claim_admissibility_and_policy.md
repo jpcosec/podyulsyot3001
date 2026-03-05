@@ -3,7 +3,7 @@
 Related references:
 
 - `docs/reference/artifact_schemas.md`
-- `docs/graph/graph_definition.md`
+- `docs/graph/nodes_summary.md`
 - `docs/philosophy/structure_and_rationale.md`
 
 ## Purpose
