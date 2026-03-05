@@ -9,9 +9,10 @@
 - Moved prompt specifications under templates to `docs/templates/prompts/`.
 - Added `docs/index/README.md` and `docs/index/conceptual_tree.md` as the canonical navigation and conceptual tree for documentation maintenance.
 - Added `docs/index/canonical_map.md` and `docs/index/pruning_plan.md` to make canonical ownership and migration cleanup explicit.
-- Added compatibility stubs in legacy paths (`docs/architecture/`, `docs/overview/`, `docs/prompts/`) that point to canonical moved documents.
+- Removed temporary compatibility stubs after canonical links were migrated to reduce duplicate documentation surfaces.
 - Updated top-level `README.md` documentation map to reflect the new structure and canonical paths.
 - Added root `.gitignore` to exclude `.serena/`, `.pytest_cache/`, and Python cache artifacts.
+- Added folder-level indexes: `docs/philosophy/README.md`, `docs/graph/README.md`, `docs/templates/README.md`, `docs/business_rules/README.md`, `docs/reference/README.md`, `docs/operations/README.md`, and `docs/architecture/README.md`.
 
 ## 2026-03-04
 

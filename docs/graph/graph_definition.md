@@ -2,8 +2,8 @@
 
 Related references:
 
-- `docs/architecture/node_io_matrix.md`
-- `docs/architecture/structure_and_rationale.md`
+- `docs/graph/node_io_matrix.md`
+- `docs/philosophy/structure_and_rationale.md`
 
 ## Purpose
 
@@ -236,7 +236,7 @@ Review decision files (`review/decision.md`) support structured directives that 
 - Untagged notes are preserved as raw text only — no semantic extraction.
 - Missing required directive keys result in a validation error.
 
-See `docs/architecture/claim_admissibility_and_policy.md` for full admissibility rules and `docs/architecture/sync_json_md.md` for parser behavior.
+See `docs/business_rules/claim_admissibility_and_policy.md` for full admissibility rules and `docs/business_rules/sync_json_md.md` for parser behavior.
 
 ## Non-negotiable graph invariants
 

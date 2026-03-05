@@ -2,9 +2,9 @@
 
 Related references:
 
-- `docs/architecture/artifact_schemas.md`
-- `docs/architecture/graph_definition.md`
-- `docs/architecture/structure_and_rationale.md`
+- `docs/reference/artifact_schemas.md`
+- `docs/graph/graph_definition.md`
+- `docs/philosophy/structure_and_rationale.md`
 
 ## Purpose
 

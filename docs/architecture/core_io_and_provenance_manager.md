@@ -2,10 +2,10 @@
 
 Related references:
 
-- `docs/architecture/structure_and_rationale.md`
-- `docs/architecture/artifact_schemas.md`
-- `docs/architecture/sync_json_md.md`
-- `docs/architecture/graph_definition.md`
+- `docs/philosophy/structure_and_rationale.md`
+- `docs/reference/artifact_schemas.md`
+- `docs/business_rules/sync_json_md.md`
+- `docs/graph/graph_definition.md`
 
 ## Purpose
 

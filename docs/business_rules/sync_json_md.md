@@ -2,9 +2,9 @@
 
 Related references:
 
-- `docs/architecture/artifact_schemas.md`
-- `docs/architecture/claim_admissibility_and_policy.md`
-- `docs/architecture/graph_definition.md`
+- `docs/reference/artifact_schemas.md`
+- `docs/business_rules/claim_admissibility_and_policy.md`
+- `docs/graph/graph_definition.md`
 
 ## Purpose
 
@@ -156,5 +156,5 @@ Each category must have dedicated test cases. No category may be deferred.
 
 - **CLI**: `phd2 review-validate` calls `md_to_json` internally.
 - **Graph runtime**: checks for valid `review/decision.json` before allowing continuation.
-- **Review directives**: tagged directives in `decision.md` (see `docs/architecture/claim_admissibility_and_policy.md`) are parsed during `md_to_json`.
+- **Review directives**: tagged directives in `decision.md` (see `docs/business_rules/claim_admissibility_and_policy.md`) are parsed during `md_to_json`.
 - **Obsidian workflow**: `decision.md` files are designed for editing in Obsidian (see `docs/operations/tool_interaction_and_known_issues.md`).

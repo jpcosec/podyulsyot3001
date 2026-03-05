@@ -2,11 +2,11 @@
 
 Related references:
 
-- `docs/architecture/template_problem_statement.md`
-- `docs/architecture/execution_taxonomy_abstract.md`
-- `docs/architecture/taxonomy_template_catalog.md`
-- `docs/architecture/structure_and_rationale.md`
-- `docs/architecture/graph_definition.md`
+- `docs/philosophy/template_problem_statement.md`
+- `docs/philosophy/execution_taxonomy_abstract.md`
+- `docs/templates/taxonomy_template_catalog.md`
+- `docs/philosophy/structure_and_rationale.md`
+- `docs/graph/graph_definition.md`
 - `docs/architecture/core_io_and_provenance_manager.md`
 
 ## Purpose

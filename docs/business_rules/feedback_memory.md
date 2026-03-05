@@ -2,9 +2,9 @@
 
 Related references:
 
-- `docs/architecture/artifact_schemas.md`
-- `docs/architecture/claim_admissibility_and_policy.md`
-- `docs/architecture/graph_definition.md`
+- `docs/reference/artifact_schemas.md`
+- `docs/business_rules/claim_admissibility_and_policy.md`
+- `docs/graph/graph_definition.md`
 
 ## Purpose
 

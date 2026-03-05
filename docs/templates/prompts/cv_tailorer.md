@@ -32,7 +32,7 @@ Use validated application context and reviewed motivation direction to produce:
 
 ### A) `nodes/tailor_cv/proposed/view.md`
 
-CV tailoring notes with front matter. See `docs/architecture/artifact_schemas.md`.
+CV tailoring notes with front matter. See `docs/reference/artifact_schemas.md`.
 
 ### B) `nodes/tailor_cv/proposed/to_render.md`
 

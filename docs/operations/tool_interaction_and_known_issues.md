@@ -318,4 +318,4 @@ Review decision files (`review/decision.md`) are designed for editing in Obsidia
 
 For richer read-only inspection, nodes may optionally generate `proposed/view.html` from canonical JSON. This is a convenience feature, not part of the review protocol. The review truth always remains in validated artifacts (`review/decision.json` and `approved/state.json`).
 
-See `docs/architecture/sync_json_md.md` for the full sync service specification.
+See `docs/business_rules/sync_json_md.md` for the full sync service specification.

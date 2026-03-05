@@ -2,9 +2,9 @@
 
 Related references:
 
-- `docs/architecture/graph_definition.md`
-- `docs/architecture/node_io_matrix.md`
-- `docs/overview/document_glossary.md`
+- `docs/graph/graph_definition.md`
+- `docs/graph/node_io_matrix.md`
+- `docs/reference/document_glossary.md`
 
 ## Design rule
 
@@ -779,8 +779,8 @@ Rules:
 
 - `source_state_hash` must match the latest `proposed/state.json`. Mismatch = stale, parser rejects.
 - Exactly one decision per block. Multiple or zero = parser error.
-- See `docs/architecture/sync_json_md.md` for the full parsing contract.
-- See `docs/architecture/claim_admissibility_and_policy.md` for review directive format.
+- See `docs/business_rules/sync_json_md.md` for the full parsing contract.
+- See `docs/business_rules/claim_admissibility_and_policy.md` for review directive format.
 
 ---
 
@@ -792,7 +792,7 @@ Feedback artifacts live outside the per-node structure:
 - `feedback/active_memory.yaml`: distilled reusable rules for prompt injection.
 - `feedback/conflicts.yaml`: explicit conflicts requiring human resolution.
 
-See `docs/architecture/feedback_memory.md` for full schemas.
+See `docs/business_rules/feedback_memory.md` for full schemas.
 
 ---
 

@@ -105,7 +105,7 @@ JSON with this contract:
 
 ### B) `nodes/match/proposed/view.md`
 
-Markdown with YAML front matter. See `docs/architecture/artifact_schemas.md` for the full structure.
+Markdown with YAML front matter. See `docs/reference/artifact_schemas.md` for the full structure.
 
 ## Hard constraints
 

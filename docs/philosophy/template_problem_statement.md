@@ -2,9 +2,9 @@
 
 Related references:
 
-- `docs/architecture/structure_and_rationale.md`
-- `docs/architecture/graph_definition.md`
-- `docs/architecture/node_io_matrix.md`
+- `docs/philosophy/structure_and_rationale.md`
+- `docs/graph/graph_definition.md`
+- `docs/graph/node_io_matrix.md`
 - `docs/architecture/core_io_and_provenance_manager.md`
 - `plan/template/README.md`
 

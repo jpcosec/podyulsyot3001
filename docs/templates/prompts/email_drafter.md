@@ -52,6 +52,6 @@ Create a final email draft aligned with validated application context and review
 
 ### B) `nodes/draft_email/proposed/application_email.md`
 
-Markdown with front matter. See `docs/architecture/artifact_schemas.md`.
+Markdown with front matter. See `docs/reference/artifact_schemas.md`.
 
 This draft is not final until `review_email` approves it.

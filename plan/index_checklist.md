@@ -6,7 +6,7 @@ Reference docs:
 
 - `plan/phd2_stepwise_plan.md`
 - `plan/template/README.md`
-- `docs/architecture/structure_and_rationale.md`
+- `docs/philosophy/structure_and_rationale.md`
 - `docs/operations/tool_interaction_and_known_issues.md`
 
 ## Step Checklist

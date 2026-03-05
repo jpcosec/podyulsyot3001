@@ -54,6 +54,7 @@ Supporting index docs:
 
 ## Migration note
 
-Some legacy paths still exist as compatibility stubs under `docs/architecture/`, `docs/overview/`, and `docs/prompts/`.
+Legacy compatibility stubs were removed.
 
 When adding new content, always write to canonical paths listed above.
+If you encounter an old path in notes or historical docs, map it via `docs/index/canonical_map.md`.

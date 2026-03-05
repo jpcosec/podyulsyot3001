@@ -2,8 +2,8 @@
 
 Related references:
 
-- `docs/architecture/execution_taxonomy_abstract.md`
-- `docs/architecture/smart_template_discipline.md`
+- `docs/philosophy/execution_taxonomy_abstract.md`
+- `docs/templates/node_template_discipline.md`
 - `docs/architecture/core_io_and_provenance_manager.md`
 
 ## Purpose

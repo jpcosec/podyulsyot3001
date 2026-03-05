@@ -2,8 +2,8 @@
 
 Related references:
 
-- `docs/architecture/structure_and_rationale.md`
-- `docs/architecture/smart_template_discipline.md`
+- `docs/philosophy/structure_and_rationale.md`
+- `docs/templates/node_template_discipline.md`
 - `docs/architecture/core_io_and_provenance_manager.md`
 
 ## Purpose

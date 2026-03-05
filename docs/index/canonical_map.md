@@ -2,6 +2,9 @@
 
 This file defines the single source of truth for each concept area.
 
+Legacy compatibility stubs were removed on 2026-03-05.
+Any remaining references to old paths should be migrated to the canonical paths below.
+
 ## Philosophy
 
 - Canonical docs:
@@ -9,20 +12,12 @@ This file defines the single source of truth for each concept area.
   - `docs/philosophy/structure_and_rationale.md`
   - `docs/philosophy/execution_taxonomy_abstract.md`
   - `docs/philosophy/template_problem_statement.md`
-- Legacy aliases:
-  - `docs/overview/project_overview.md`
-  - `docs/architecture/structure_and_rationale.md`
-  - `docs/architecture/execution_taxonomy_abstract.md`
-  - `docs/architecture/template_problem_statement.md`
 
 ## Graph
 
 - Canonical docs:
   - `docs/graph/graph_definition.md`
   - `docs/graph/node_io_matrix.md`
-- Legacy aliases:
-  - `docs/architecture/graph_definition.md`
-  - `docs/architecture/node_io_matrix.md`
 
 ## Templates
 
@@ -31,11 +26,6 @@ This file defines the single source of truth for each concept area.
   - `docs/templates/taxonomy_template_catalog.md`
   - `docs/templates/llm/README.md`
   - `docs/templates/prompts/README.md`
-- Legacy aliases:
-  - `docs/architecture/smart_template_discipline.md`
-  - `docs/architecture/taxonomy_template_catalog.md`
-  - `docs/architecture/taxonomic_llm_templates/*.md`
-  - `docs/prompts/*.md`
 
 ## Business rules
 
@@ -43,10 +33,6 @@ This file defines the single source of truth for each concept area.
   - `docs/business_rules/claim_admissibility_and_policy.md`
   - `docs/business_rules/sync_json_md.md`
   - `docs/business_rules/feedback_memory.md`
-- Legacy aliases:
-  - `docs/architecture/claim_admissibility_and_policy.md`
-  - `docs/architecture/sync_json_md.md`
-  - `docs/architecture/feedback_memory.md`
 
 ## Reference
 
@@ -55,9 +41,6 @@ This file defines the single source of truth for each concept area.
   - `docs/reference/document_glossary.md`
   - `docs/architecture/core_io_and_provenance_manager.md`
   - `docs/architecture/core_io_manager.md`
-- Legacy aliases:
-  - `docs/architecture/artifact_schemas.md`
-  - `docs/overview/document_glossary.md`
 
 ## Operations
 

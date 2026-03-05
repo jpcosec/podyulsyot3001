@@ -2,23 +2,23 @@
 
 This plan keeps the current migration safe while reducing drift over time.
 
-## Phase 1 (already active)
+## Phase 1 (completed)
 
 1. Introduce canonical concept folders.
-2. Keep legacy locations as compatibility aliases.
+2. Use temporary compatibility aliases during transition.
 3. Publish canonical index and conceptual tree.
 
-## Phase 2 (recommended next)
+## Phase 2 (completed)
 
-1. Update internal links in canonical docs to point only to canonical paths.
-2. Remove repeated policy paragraphs from non-canonical docs and replace with short links.
-3. Add front matter metadata (`status`, `canonical_for`, `owner`) to canonical docs.
+1. Updated internal links in canonical docs to canonical paths.
+2. Removed compatibility alias files once migration stabilized.
+3. Added index-level governance docs (`canonical_map`, `conceptual_tree`, `pruning_plan`).
 
-## Phase 3 (cleanup)
+## Phase 3 (future hardening)
 
-1. Add checks that prevent new substantive content in alias files.
-2. Remove legacy aliases after two stable iterations.
-3. Keep migration notes in `changelog.md` only.
+1. Add checks that reject references to deprecated paths in docs.
+2. Add optional front matter metadata (`status`, `canonical_for`, `owner`) to canonical docs.
+3. Keep migration notes in `changelog.md` and docs index governance files.
 
 ## Split and merge recommendations
 

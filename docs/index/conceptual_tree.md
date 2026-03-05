@@ -26,6 +26,8 @@ PhD 2.0 Docs
 ├── Reference (contracts and glossary)
 │   ├── artifact_schemas
 │   └── document_glossary
+├── Architecture technicals (cross-cutting)
+│   └── core_io_and_provenance_manager
 ├── Operations (how to run)
 │   ├── tool_interaction_and_known_issues
 │   └── non_llm_recovery_demo

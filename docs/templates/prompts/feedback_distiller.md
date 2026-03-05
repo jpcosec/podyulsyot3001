@@ -47,7 +47,7 @@ cv_tailoring:
       confidence: 0.99
 ```
 
-See `docs/architecture/feedback_memory.md` for full active memory format.
+See `docs/business_rules/feedback_memory.md` for full active memory format.
 
 ## Hard constraints
 

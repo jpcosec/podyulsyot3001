@@ -72,7 +72,7 @@ Convert a reviewed match proposal markdown file into validated semantic state fo
 
 ### B) `feedback/events/matching/<timestamp>.json`
 
-Only if reusable review guidance is present and decision is `approve`. See `docs/architecture/feedback_memory.md` for the event schema.
+Only if reusable review guidance is present and decision is `approve`. See `docs/business_rules/feedback_memory.md` for the event schema.
 
 ## Hard constraints
 

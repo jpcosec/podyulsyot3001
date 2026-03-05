@@ -2,10 +2,10 @@
 
 Related references:
 
-- `docs/architecture/graph_definition.md`
-- `docs/architecture/execution_taxonomy_abstract.md`
-- `docs/overview/project_overview.md`
-- `docs/overview/document_glossary.md`
+- `docs/graph/graph_definition.md`
+- `docs/philosophy/execution_taxonomy_abstract.md`
+- `docs/philosophy/project_overview.md`
+- `docs/reference/document_glossary.md`
 
 ## Why this architecture exists
 

@@ -20,23 +20,23 @@ It is the quick semantic reference for operators and developers.
 
 ## Architecture docs
 
-- `docs/architecture/structure_and_rationale.md`: layer boundaries, design rules, failure taxonomy, and rationale.
-- `docs/architecture/graph_definition.md`: graph flow, node contracts, review branches, directives, and invariants.
-- `docs/architecture/node_io_matrix.md`: node-by-node input/output contracts and downstream consumers.
-- `docs/architecture/artifact_schemas.md`: full JSON schemas for every pipeline artifact.
-- `docs/architecture/claim_admissibility_and_policy.md`: claim classes, evidence compatibility, coverage transitions, downstream policy.
-- `docs/architecture/feedback_memory.md`: feedback event schema, storage model, retrieval strategy, conflict model.
-- `docs/architecture/sync_json_md.md`: JSON/Markdown sync service API, staleness protection, parser requirements.
+- `docs/philosophy/structure_and_rationale.md`: layer boundaries, design rules, failure taxonomy, and rationale.
+- `docs/graph/graph_definition.md`: graph flow, node contracts, review branches, directives, and invariants.
+- `docs/graph/node_io_matrix.md`: node-by-node input/output contracts and downstream consumers.
+- `docs/reference/artifact_schemas.md`: full JSON schemas for every pipeline artifact.
+- `docs/business_rules/claim_admissibility_and_policy.md`: claim classes, evidence compatibility, coverage transitions, downstream policy.
+- `docs/business_rules/feedback_memory.md`: feedback event schema, storage model, retrieval strategy, conflict model.
+- `docs/business_rules/sync_json_md.md`: JSON/Markdown sync service API, staleness protection, parser requirements.
 
 ## Overview docs
 
-- `docs/overview/project_overview.md`: what the project is and how it works end-to-end.
-- `docs/overview/document_glossary.md`: this glossary of document and artifact meanings.
+- `docs/philosophy/project_overview.md`: what the project is and how it works end-to-end.
+- `docs/reference/document_glossary.md`: this glossary of document and artifact meanings.
 
 ## Prompt docs
 
-- `docs/prompts/README.md`: prompt pack index and design principles.
-- `docs/prompts/matcher.md` through `docs/prompts/feedback_distiller.md`: per-prompt role, inputs, outputs, and constraints.
+- `docs/templates/prompts/README.md`: prompt pack index and design principles.
+- `docs/templates/prompts/matcher.md` through `docs/templates/prompts/feedback_distiller.md`: per-prompt role, inputs, outputs, and constraints.
 
 ## Operations docs
 

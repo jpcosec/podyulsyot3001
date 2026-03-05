@@ -32,7 +32,7 @@ Produce a reviewable motivation letter draft from validated application context.
 
 ### A) `nodes/generate_motivation_letter/proposed/letter.md`
 
-Markdown with front matter. See `docs/architecture/artifact_schemas.md` for structure.
+Markdown with front matter. See `docs/reference/artifact_schemas.md` for structure.
 
 ### B) `nodes/generate_motivation_letter/proposed/state.json`
 

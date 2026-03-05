@@ -60,7 +60,7 @@ Convert the reviewed motivation letter into validated downstream semantic state 
 
 ### B) `feedback/events/motivation_letter/<timestamp>.json`
 
-Only if reusable feedback is present and decision is `approve`. See `docs/architecture/feedback_memory.md`.
+Only if reusable feedback is present and decision is `approve`. See `docs/business_rules/feedback_memory.md`.
 
 ## Hard constraints
 
