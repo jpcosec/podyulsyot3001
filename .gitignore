@@ -2,3 +2,10 @@
 .pytest_cache/
 __pycache__/
 *.py[cod]
+data/Archived/
+data/jobs/
+data/.obsidian/
+.claude/
+.ruff_cache/
+**/__pycache__/
+.wezterm-init.sh
