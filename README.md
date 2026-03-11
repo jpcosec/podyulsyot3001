@@ -85,6 +85,7 @@ Start here:
 
 ## Reference
 
+- Actual runtime data behavior (current codebase): `docs/reference/data_management_actual_state.md`
 - Artifact JSON schemas: `docs/reference/artifact_schemas.md`
 - Document and artifact glossary: `docs/reference/document_glossary.md`
 - Core I/O and provenance data plane: `docs/architecture/core_io_and_provenance_manager.md`

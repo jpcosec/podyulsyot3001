@@ -13,6 +13,8 @@ This directory contains the specification for every LLM prompt in the PhD 2.0 pi
 
 ## Prompt index
 
+- Prompt anatomy standard: `prompt_anatomy_standard.md`
+
 | # | Prompt | Owner node | Purpose |
 |---|--------|-----------|---------|
 | 1 | [Matcher](matcher.md) | `match` | Map job requirements to profile evidence |
@@ -57,5 +59,6 @@ Rules:
 2. Variable names must match `LogicInput` field names exactly.
 3. Rendering payload is `logic_input.model_dump()`.
 4. Missing variables are hard failures (no silent defaults).
+5. Follow the two-file prompt anatomy (`system.md` + `user_template.md`) described in `docs/templates/prompts/prompt_anatomy_standard.md`.
 
 See `docs/templates/llm/00_general_llm_call_template.md` for the canonical rendering template.

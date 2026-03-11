@@ -32,6 +32,11 @@ Command names below define the expected operator surface:
 
 If a command is unavailable in your current branch, use the documented equivalent and record the deviation in incident notes.
 
+Current bootstrap command available in this workspace:
+
+- `python -m src.cli.run_prep_match --source <source> --job-id <id> --source-url <url> --profile-evidence <json-path>`
+- Resume form: `python -m src.cli.run_prep_match --source <source> --job-id <id> --resume`
+
 ## Control Plane resume contract (LangGraph)
 
 This section specifies how CLI commands interact with review interrupts.

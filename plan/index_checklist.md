@@ -5,6 +5,9 @@ This is the execution index for the rebuild. Complete steps in order and do not 
 Reference docs:
 
 - `plan/phd2_stepwise_plan.md`
+- `plan/step6_13_delta_generation_and_text_reviewers.md`
+- `plan/subplan/ui_review_cycle_adaptation_internal.md`
+- `plan/subplan/ui_review_cycle_designer_handoff.md`
 - `plan/template/README.md`
 - `docs/philosophy/structure_and_rationale.md`
 - `docs/operations/tool_interaction_and_known_issues.md`

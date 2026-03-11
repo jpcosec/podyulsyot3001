@@ -1,5 +1,45 @@
 # Changelog
 
+## 2026-03-11
+
+- Added incident diagnosis document `docs/operations/reviewed_jobs_pipeline_diagnosis.md` for reviewed-job pipeline resume failures, including reproduction evidence, root-cause analysis (legacy review hash-lock mismatch, empty checkpoints, missing `langgraph` dependency), and a recovery/verification plan.
+- Updated `docs/operations/README.md` to index the new diagnosis document.
+- Added recovery CLI `src/cli/migrate_review_hash_lock.py` to migrate legacy reviewed `nodes/match/review/decision.md` files into hash-locked format while preserving existing checkbox decisions and comments, with automatic backup files (`decision.legacy_reviewed*.md`) and `--dry-run` support.
+- Added migration tests in `tests/cli/test_migrate_review_hash_lock.py`.
+- Added checkpoint-independent batch continuation CLI `src/cli/run_available_jobs.py` to execute available prep-match jobs from artifacts (including regeneration flows) without relying on LangGraph checkpoint history.
+- Updated available-jobs planner logic to read the active review surface (`nodes/match/review/decision.md`) before falling back to `decision.json`, avoiding stale-round dry-run decisions.
+- Added CLI tests in `tests/cli/test_run_available_jobs.py`.
+- Added operator runbook `docs/operations/available_jobs_recovery_runbook.md` and indexed it from `docs/operations/README.md`.
+- Applied hash-lock migration and continuation on available TU Berlin jobs: regenerated review rounds for `201578`, `201588`, `201601`, `201606`, and `201695` (now pending review in round 2), generated first review for `201637` (pending review in round 1), and confirmed `201661` as completed on approve route.
+- Added comments inventory doc `docs/reference/comments_inventory.md` with collected `#TODO`, `<!-- -->`, and `<--` marker occurrences, and indexed it in `docs/reference/README.md`.
+- Refined `docs/reference/comments_inventory.md` into a path-tree view and explicitly excluded `data/` and `pipeline/` from the analysis, per operator request.
+- Extended `docs/reference/comments_inventory.md` scope to include `docs/` (excluding self-reference) and reported docs-specific comment-marker counts.
+
+## 2026-03-07
+
+- Added `docs/reference/data_management_actual_state.md` as the canonical implementation-first data management/usage/meaning reference, documenting current artifact paths, control-plane payload usage, match review round semantics, and explicit gaps versus target-state architecture.
+- Updated documentation indexes to include the new canonical entrypoint for current runtime data behavior: `docs/reference/README.md`, `docs/index/canonical_map.md`, `docs/index/README.md`, and root `README.md`.
+- Refactored `docs/graph/node_io_matrix.md` to explicitly split **current implemented node I/O** (prep-match runnable path plus `generate_documents` status) from **target-state I/O contracts**, reducing ambiguity between real runtime behavior and planned architecture.
+- Refactored `docs/graph/nodes_summary.md` with the same explicit split between **current implemented runtime graph** and **target full-graph contract**, including separate routing semantics, checkpoint/resume invariants, node role summaries, and Mermaid views.
+- Added `docs/graph/match_review_cycle.md` as an implementation-first walkthrough of the `match <-> review_match` loop, covering artifact writes, round immutability, hash-lock validation, decision parsing, regeneration semantics, and operator resume workflow.
+- Split UI migration planning into two dedicated docs:
+  - internal engineering subplan: `plan/subplan/ui_review_cycle_adaptation_internal.md`
+  - designer handoff brief: `plan/subplan/ui_review_cycle_designer_handoff.md`
+
+## 2026-03-06
+
+- Backfilled TU Berlin jobs `201399` and `201553` from archived translated artifacts (`/home/jp/phd-workspaces/phd/data/pipelined_data/tu_berlin`), restoring local raw inputs and synthetic `scrape`, `translate_if_needed`, and `extract_understand` approved states under `data/jobs/tu_berlin/`.
+- Updated `data/jobs/tu_berlin/_batch_extract_report.json` to mark `201399` and `201553` as successfully extracted with requirement/constraint counts derived from the restored artifacts.
+- Executed matching for backfilled jobs `201399` and `201553` (creating `nodes/match/approved/state.json` and `nodes/match/review/` round artifacts) and updated `data/jobs/tu_berlin/_batch_match_report.json` to reflect `pending_review` status.
+- Hardened Step 5 (`review_match`) fail-closed behavior in `src/nodes/review_match/logic.py` by enforcing `source_state_hash` validation, auto-regenerating unreviewed legacy `decision.md` files without hashes, and raising actionable errors for invalid checkbox markup.
+- Updated match decision rendering in `src/nodes/match/logic.py` to always include review front matter (`source_state_hash`, node, job_id, round) and default optional prompt fields (`prev_round`, `round_feedback`) to prevent undefined-template failures.
+- Added/updated tests for Step 5 hardening (`tests/nodes/match/test_match_logic.py`, `tests/nodes/review_match/test_review_match_logic.py`) including stale-hash and invalid-markup failure cases; full test suite passes (`51 passed`).
+- Added planning proposal `plan/step6_13_delta_generation_and_text_reviewers.md` describing the Step 6-13 delta-first generation strategy, deterministic assembly split, and explicit integration plan for text reviewer assistance nodes (non-routing).
+- Refined the Step 6-13 proposal with confirmed implementation decisions: `generate_documents` as graph-visible node, id-based CV injections, deterministic Jinja template rendering (CV/letter/email), anti-fluff as reviewer indicator, and plain-language definition of `text-reviewer-assist`.
+- Updated the Step 6-13 proposal so `text-reviewer-assist` is deterministic-only (no LLM call), producing non-routing indicator artifacts for human review support.
+- Implemented `generate_documents` as a graph-visible node package under `src/nodes/generate_documents/` with structured delta contracts, node-local prompts, deterministic Jinja templates (`cv_template.jinja2`, `cover_letter_template.jinja2`, `email_template.jinja2`), id-based CV injection validation, and deterministic assist indicator artifacts (`assist/proposed/state.json`, `assist/proposed/view.md`).
+- Added tests for the new node and contracts (`tests/nodes/generate_documents/test_contract.py`, `tests/nodes/generate_documents/test_generate_documents_logic.py`) and validated repository health with full suite pass (`55 passed`).
+
 ## 2026-03-05
 
 - Refactored documentation into concept-oriented folders to reduce ambiguity between philosophy, graph design, templates, business rules, and reference material.
@@ -22,6 +62,51 @@
 - Merged graph flow documentation into canonical `docs/graph/nodes_summary.md` and removed `docs/graph/graph_definition.md`.
 - Added prompt rendering engine specification (Jinja2 + `LogicInput.model_dump()` contract) in `docs/templates/llm/00_general_llm_call_template.md` and `docs/templates/prompts/README.md`.
 - Added explicit CLI/LangGraph resume contract to operations docs, including `thread_id = f"{source}_{job_id}"`, `review-validate` data-plane behavior, and `graph.invoke(None, config)` resume behavior.
+- Added `docs/reference/contract_composition_framework.md` as canonical contract design guidance for envelope/primitive composition and style constraints in `contract.py`.
+- Linked contract composition guidance from templates/index/reference docs to make it part of the active implementation path.
+- Added extracting taxonomy worked case document: `docs/reference/extracting_contract_case_job_understanding.md` with concrete primitives, `JobUnderstandingExtract` envelope, extracting input contract, `logic.py` integration, and profile normalization extension note.
+- Added matching taxonomy worked case document: `docs/reference/matching_contract_case_matrix_and_escape_hatch.md` with matrix primitives, `MatchEnvelope` source-text pointer, deterministic review rendering contract, and manual missing-requirement regeneration flow.
+- Added redacting taxonomy worked case document: `docs/reference/redacting_contract_case_traceable_dual_output.md` with style/strategy primitives, dual output envelope (`state` + `markdown_content`), and deterministic consumed-evidence anti-hallucination checks.
+- Updated `docs/reference/contract_composition_framework.md` to align canonical primitives and envelopes with matrix-based matching (`EvidenceEvaluation`/`RequirementMapping`), redacting dual-output behavior, and redacting polymorphism over `RedactingStateBase`.
+- Added reviewing taxonomy worked case document: `docs/reference/review_contract_case_decision_and_assistance.md` defining deterministic decision parsing (`DecisionEnvelope`) and optional LLM review assistance (`ReviewAssistEnvelope`) as separate contracts.
+- Added prompt anatomy standard in `docs/templates/prompts/prompt_anatomy_standard.md`, formalizing the two-file structure (`system.md` + `user_template.md`), XML-style input encapsulation, Jinja2 conditional blocks, and execution-step layout for future prompt refactors.
+- Added `docs/architecture/graph_reactivity_protocol.md` to formalize immediate emergent-evidence regeneration vs deferred feedback-memory learning as separate graph reactivity channels.
+- Implemented `src/ai/prompt_manager.py` with node-local template loading, strict Jinja2 rendering, and XML-tag boundary validation; added tests in `tests/ai/test_prompt_manager.py`.
+- Implemented `src/ai/llm_runtime.py` with structured Gemini execution (`response_schema` JSON mode + strict Pydantic validation) and added runtime unit tests in `tests/ai/test_llm_runtime.py`.
+- Added `docs/architecture/graph_state_contract.md` to formalize GraphState as a control-plane ledger (metadata + artifact refs, no business payload embedding).
+- Added `src/core/graph/state.py` and `src/core/graph/__init__.py` with typed GraphState contract and `build_thread_id(source, job_id)` helper; added test `tests/core/graph/test_state.py`.
+- Added `src/graph.py` as LangGraph orchestration builder with review-loop conditional routing and review interrupt defaults; added tests in `tests/core/graph/test_orchestrator.py`.
+- Added `src/nodes/extract_understand/` scaffold with node-local prompts (`prompt/system.md`, `prompt/user_template.md`) and `contract.py` including `analysis_notes` in `JobUnderstandingExtract`.
+- Implemented `src/nodes/extract_understand/logic.py` using `PromptManager` + `LLMRuntime` and state-driven input assembly; added tests in `tests/nodes/extract_understand/test_logic.py`.
+- Added compatibility runtime export module `src/ai/runtime.py` pointing to the canonical `LLMRuntime` implementation.
+- Added ingestion-stage node scaffolding: `src/nodes/scrape/` (`IngestedData` contract + scraping logic) and `src/nodes/translate_if_needed/` (conditional translation normalization logic).
+- Updated graph defaults to include prep stages (`scrape -> translate_if_needed -> extract_understand -> match`) before review cycles.
+- Added ingestion/prep tests: `tests/nodes/scrape/test_scrape_logic.py` and `tests/nodes/translate_if_needed/test_translate_if_needed_logic.py`; expanded graph orchestrator tests for new default flow.
+- Added matching-stage scaffold in `src/nodes/match/` (contract, prompts, and `logic.py`) using strict structured output via `MatchEnvelope`.
+- Added review-stage scaffold in `src/nodes/review_match/` with deterministic markdown generation/parsing and `DecisionEnvelope` persistence for review routing.
+- Ran batched open-job smoke run (`scrape -> translate_if_needed -> extract_understand`) and persisted report at `data/jobs/tu_berlin/_batch_extract_report.json`.
+- Added prep-match graph helpers in `src/graph.py`: `build_prep_match_node_registry()`, `create_prep_match_app()`, and `run_prep_match()` with canonical `thread_id` wiring.
+- Added minimal prep-match CLI runner `src/cli/run_prep_match.py` and tests for profile evidence loading in `tests/cli/test_run_prep_match.py`.
+- Copied canonical profile base snapshot into this repo at `data/reference_data/profile/base_profile/profile_base_data.json`.
+- Updated prep-match CLI profile loader to accept both evidence-list JSON and `profile_base_data.json` shape (auto-transform to `my_profile_evidence`).
+- Added session handoff/entrypoint doc: `docs/operations/next_session_entrypoint.md`.
+- Updated prep-match runner to use persistent sqlite checkpoints per job (`data/jobs/<source>/<job_id>/graph/checkpoint.sqlite`) enabling `--resume` across CLI invocations.
+- Updated match stage to persist `nodes/match/approved/state.json` and bootstrap `nodes/match/review/decision.md` before review interrupt.
+- Hardened `MatchEnvelope.decision_recommendation` normalization to tolerate multilingual/free-text model outputs while preserving strict enum contract.
+- Updated deterministic `decision.md` rendering to include explicit requirement text and resolved evidence descriptions (not only IDs) for easier human review.
+- Refined profile ingestion for matching: moved summary/tagline seeds into `cv_generation_context` in `profile_base_data.json` and stopped emitting `P_SUM` evidence, keeping matching evidence strictly auditable.
+- Added migration spec `docs/operations/match_review_rounds_current_state_and_migration.md` describing current round behavior, audit gaps, and required implementation changes for immutable per-round review history.
+- Added `src/core/round_manager.py` as infrastructure utility to manage immutable `round_<NNN>` artifacts under `nodes/match/review/rounds/`.
+- Refactored `src/nodes/match/logic.py` to use `RoundManager`: each execution creates a new round folder, writes canonical `rounds/round_<NNN>/decision.md`, then mirrors to active `review/decision.md`.
+- Implemented fail-closed regeneration input policy in `src/nodes/match/logic.py`: `request_regeneration` now requires a valid latest `feedback.json` with actionable patch entries.
+- Implemented feedback patch injection in `src/nodes/match/logic.py`: effective evidence now includes prior round `patch_evidence` artifacts without mutating base profile files.
+- Updated `src/nodes/match/prompt/user_template.md` to include optional `<round_feedback>` block for informed regeneration based on previous-round reviewer feedback.
+- Refactored `src/nodes/review_match/logic.py` to persist immutable per-round artifacts (`decision.md`, `decision.json`, `feedback.json`) and mirror active `review/decision.json`.
+- Added automatic `feedback.json` generation from parsed review decisions, including optional `PATCH_EVIDENCE:` JSON extraction from reviewer comments.
+- Added tests for round manager and updated review/match node tests for new round-folder layout and fail-closed regeneration behavior.
+- Hardened review checkbox parsing in `src/nodes/review_match/logic.py` to accept human-edited spacing variants (for example `[]` and `[ x]`) while still failing closed on invalid markers.
+- Standardized runtime prompts to English for extraction and matching by rewriting node-local prompt files in `src/nodes/extract_understand/prompt/` and `src/nodes/match/prompt/`, with explicit "output text must be in English" rules.
+- Normalized job artifact language for `tu_berlin/201397` by converting generated `state.json` content under extract/match approved artifacts to English.
 
 ## 2026-03-04
 

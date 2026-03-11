@@ -25,7 +25,7 @@ Goal:
 
 Design:
 
-- central utility module (target): `src/ai/prompt_manager.py`,
+- central utility module: `src/ai/prompt_manager.py` (`PromptManager`),
 - utility owns text loading and Jinja rendering,
 - `logic.py` consumes rendered strings and calls `LLMRuntime`.
 
@@ -87,6 +87,8 @@ class LLMRuntime(Protocol):
 ## Reference implementation (Gemini)
 
 This is the concrete baseline for the current stack:
+
+- Runtime implementation path: `src/ai/llm_runtime.py`
 
 ```python
 from google import genai
@@ -189,6 +191,12 @@ prompt/
   meta.yaml
   fewshots.jsonl        # optional
 ```
+
+Prompt anatomy guidance:
+
+- `system.md` contains static role/constraints/output-contract guardrails.
+- `user_template.md` contains runtime task context and Jinja2-injected payload.
+- Standard structure reference: `docs/templates/prompts/prompt_anatomy_standard.md`.
 
 `meta.yaml` minimum fields:
 

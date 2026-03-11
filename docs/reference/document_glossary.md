@@ -23,7 +23,14 @@ It is the quick semantic reference for operators and developers.
 - `docs/philosophy/structure_and_rationale.md`: layer boundaries, design rules, failure taxonomy, and rationale.
 - `docs/graph/nodes_summary.md`: graph flow, node contracts, review branches, directives, and invariants.
 - `docs/graph/node_io_matrix.md`: node-by-node input/output contracts and downstream consumers.
+- `docs/architecture/graph_reactivity_protocol.md`: distinguishes immediate present-case corrections (emergent evidence) from deferred learning updates (feedback memory).
+- `docs/architecture/graph_state_contract.md`: canonical control-plane GraphState ledger and checkpoint identity rules.
 - `docs/reference/artifact_schemas.md`: full JSON schemas for every pipeline artifact.
+- `docs/reference/contract_composition_framework.md`: envelope/primitive composition rules for node `contract.py` schemas.
+- `docs/reference/extracting_contract_case_job_understanding.md`: concrete extracting-case contract example for `extract_understand`.
+- `docs/reference/matching_contract_case_matrix_and_escape_hatch.md`: concrete matching-case contract with matrix modeling, source-text mirror, and deterministic escape-hatch regeneration flow.
+- `docs/reference/redacting_contract_case_traceable_dual_output.md`: concrete redacting-case contract with style strategy input, dual JSON+Markdown envelope, and deterministic consumed-evidence checks.
+- `docs/reference/review_contract_case_decision_and_assistance.md`: concrete reviewing-case contract separating deterministic decisions (`DecisionEnvelope`) from optional LLM assistance (`ReviewAssistEnvelope`).
 - `docs/business_rules/claim_admissibility_and_policy.md`: claim classes, evidence compatibility, coverage transitions, downstream policy.
 - `docs/business_rules/feedback_memory.md`: feedback event schema, storage model, retrieval strategy, conflict model.
 - `docs/business_rules/sync_json_md.md`: JSON/Markdown sync service API, staleness protection, parser requirements.

@@ -1,56 +1,114 @@
-# Graph Definition and Node Summary (Canonical)
+# Graph Flow and Node Summary
 
 Related references:
 
+- `src/graph.py`
+- `src/cli/run_prep_match.py`
 - `docs/graph/node_io_matrix.md`
-- `docs/philosophy/execution_taxonomy_abstract.md`
-- `docs/business_rules/sync_json_md.md`
+- `docs/reference/data_management_actual_state.md`
 - `docs/architecture/core_io_and_provenance_manager.md`
 
 ## Purpose
 
-This is the canonical graph document for runtime flow and node-level role summary.
+This document separates:
 
-It defines:
+1. **Current implemented graph behavior** (what runs now), and
+2. **Target full-graph contract** (where architecture is headed).
 
-1. end-to-end routing order,
-2. macro-subgraph composition,
-3. review-branch semantics,
-4. checkpoint and resume invariants,
-5. per-node role summary.
+The split exists to keep day-to-day operation aligned with the real codebase while preserving the long-term design contract.
 
 ## Authority scope
 
-- Canonical owner for graph topology and routing semantics.
-- Taxonomy definitions are owned by `docs/philosophy/execution_taxonomy_abstract.md`.
-- Artifact path/schema contracts are owned by `docs/reference/artifact_schemas.md` and `docs/graph/node_io_matrix.md`.
+- Canonical owner for topology and routing semantics at graph level.
+- Node-level path/schema detail is owned by `docs/graph/node_io_matrix.md` and `docs/reference/artifact_schemas.md`.
 
-## Canonical end-to-end flow
+## A) Current implemented runtime graph (actual codebase)
 
-Primary sequence:
+### Executable entrypoints
 
-1. `scraping` (pre-graph)
-2. `ingest`
+- Primary runtime path is the prep-match app built by `create_prep_match_app()` in `src/graph.py`.
+- Operator entrypoint is `python -m src.cli.run_prep_match` (`src/cli/run_prep_match.py`).
+
+### Current flow and branching
+
+Linear path:
+
+1. `scrape`
+2. `translate_if_needed`
 3. `extract_understand`
-4. `translate`
-5. `match`
-6. `review_match`
-7. `build_application_context`
-8. `review_application_context`
-9. `generate_motivation_letter`
-10. `review_motivation_letter`
-11. `tailor_cv`
-12. `review_cv`
-13. `draft_email`
-14. `review_email`
-15. `render`
-16. `package`
+4. `match`
+5. `review_match`
 
-## Canonical macro-node composition
+Current review routing (`review_match`):
 
-To keep top-level orchestration readable, the graph is grouped into subgraphs:
+- `approve` -> `package` (prep terminal node)
+- `request_regeneration` -> `match`
+- `reject` -> end
 
-1. `prep_subgraph`: `ingest -> extract_understand -> translate`
+`package` in this prep graph is a terminal state-update node, not the final delivery packager from the full target architecture.
+
+### Checkpoint and resume behavior (current)
+
+- `thread_id` is `f"{source}_{job_id}"`.
+- CLI stores checkpoints in `data/jobs/<source>/<job_id>/graph/checkpoint.sqlite` by default.
+- Resume invokes graph with `payload=None` and checkpoint config; execution restarts from checkpointed review context.
+- `review_match` enforces deterministic decision parsing and stale-hash protection for reviewed match state.
+
+### Current node role summary
+
+- `scrape` (`NLLM-ND`): fetches URL and builds ingested payload in state.
+- `translate_if_needed` (`NLLM-ND`): conditionally normalizes text language in state.
+- `extract_understand` (`LLM`): extracts structured job understanding into state.
+- `match` (`LLM`): generates requirement-evidence matching and persists round-based review artifacts.
+- `review_match` (`NLLM-D`): parses review markdown, validates routing decision, writes decision/feedback artifacts.
+- `package` (`NLLM-D`, prep terminal): marks run completed for this subgraph.
+
+### Implemented-but-not-wired note
+
+- `src/nodes/generate_documents/` is implemented and tested, with deterministic assist artifacts.
+- It is not currently part of `build_prep_match_node_registry()`.
+
+### Mermaid (current runtime)
+
+```mermaid
+flowchart TD
+    Scrape[scrape] --> Translate[translate_if_needed]
+    Translate --> Extract[extract_understand]
+    Extract --> Match[match]
+    Match --> ReviewMatch{review_match}
+
+    ReviewMatch -- request_regeneration --> Match
+    ReviewMatch -- approve --> PrepPackage[package (prep terminal)]
+    ReviewMatch -- reject --> Stop(((Stop)))
+
+    PrepPackage --> Done(((Done)))
+```
+
+## B) Target full-graph contract (architectural)
+
+This section describes the intended end-to-end graph contract used by architecture docs.
+
+### Target end-to-end flow
+
+1. `scrape`
+2. `translate_if_needed`
+3. `extract_understand`
+4. `match`
+5. `review_match`
+6. `build_application_context`
+7. `review_application_context`
+8. `generate_motivation_letter`
+9. `review_motivation_letter`
+10. `tailor_cv`
+11. `review_cv`
+12. `draft_email`
+13. `review_email`
+14. `render`
+15. `package`
+
+### Target macro-subgraph composition
+
+1. `prep_subgraph`: `scrape -> translate_if_needed -> extract_understand`
 2. `match_cycle_subgraph`: `match -> review_match` (+ regeneration loop)
 3. `context_cycle_subgraph`: `build_application_context -> review_application_context` (+ regeneration loop)
 4. `motivation_cycle_subgraph`: `generate_motivation_letter -> review_motivation_letter` (+ regeneration loop)
@@ -60,135 +118,91 @@ To keep top-level orchestration readable, the graph is grouped into subgraphs:
 
 Top-level expression:
 
-`scraping -> prep_subgraph -> match_cycle_subgraph -> context_cycle_subgraph -> motivation_cycle_subgraph -> cv_cycle_subgraph -> email_cycle_subgraph -> delivery_subgraph`
+`prep_subgraph -> match_cycle_subgraph -> context_cycle_subgraph -> motivation_cycle_subgraph -> cv_cycle_subgraph -> email_cycle_subgraph -> delivery_subgraph`
 
-## Review-branch semantics
+### Target review-branch semantics
 
 For every review node (`review_match`, `review_application_context`, `review_motivation_letter`, `review_cv`, `review_email`):
 
-- `approve` -> continue to next phase.
-- `request_regeneration` -> loop to the paired generation node.
-- `reject` -> terminate current run.
+- `approve` -> continue to next phase
+- `request_regeneration` -> loop to paired generator
+- `reject` -> terminate run
 
-Routing decisions must be explicit and persisted in run metadata.
+Routing decisions must be explicit and persisted in review artifacts.
 
-## Checkpoints and resume invariants
+### Target checkpoint and resume invariants
 
-Resume is allowed only at review interrupts.
+1. `run_id` matches checkpoint context.
+2. Pending review gate matches graph status.
+3. Decision artifact hash matches active proposed-state payload.
+4. Decision parse is deterministic and unambiguous.
 
-Mandatory invariants before resume:
+If any invariant fails, resume must stop with actionable error.
 
-1. `run_id` matches checkpoint context,
-2. pending review gate matches current graph status,
-3. decision artifact validates against the active proposed-state hash,
-4. decision parse is deterministic and unambiguous.
+### Target node role summary
 
-Control-plane identity rule:
+- `scrape` (`NLLM-ND`): fetches and normalizes source artifacts.
+- `translate_if_needed` (`NLLM-ND`): language normalization.
+- `extract_understand` (`LLM`): structured job understanding.
+- `match` (`LLM`): requirement-evidence matching proposal.
+- `review_match` (`NLLM-D`): deterministic match review gate.
+- `build_application_context` (`LLM`): downstream generation strategy context.
+- `review_application_context` (`NLLM-D`): deterministic context review gate.
+- `generate_motivation_letter` (`LLM`): motivation letter draft generation.
+- `review_motivation_letter` (`NLLM-D`): deterministic letter review gate.
+- `tailor_cv` (`LLM`): CV tailoring generation.
+- `review_cv` (`NLLM-D`): deterministic CV review gate.
+- `draft_email` (`LLM`): email draft generation.
+- `review_email` (`NLLM-D`): deterministic email review gate.
+- `render` (`NLLM-D`): deterministic render step.
+- `package` (`NLLM-D`): final packaging and manifest.
 
-- LangGraph `thread_id` is `f"{source}_{job_id}"`.
-- Resume wakes execution with checkpoint context; review nodes read decision artifacts from disk.
-
-If any invariant fails, resume must stop with an actionable error.
-
-## Node role summary
-
-This section summarizes role and execution class. Detailed I/O contracts live in `docs/graph/node_io_matrix.md`.
-
-### Pre-graph and preparation
-
-- `scraping` (`NLLM-ND`): fetches/crawls source pages and writes raw artifacts.
-- `ingest` (`NLLM-D`): normalizes source artifacts into canonical ingest state.
-- `extract_understand` (`NLLM-D`): produces structured job understanding.
-- `translate` (`NLLM-ND`): normalizes language using bounded external translation behavior.
-
-### Matching and context
-
-- `match` (`LLM`): maps requirements to evidence and proposes claims for review.
-- `review_match` (`NLLM-D`): deterministic parser gate for matching decisions.
-- `build_application_context` (`LLM`): composes approved strategy/context for downstream generation.
-- `review_application_context` (`NLLM-D`): deterministic parser gate for context decisions.
-
-### Generation and delivery
-
-- `generate_motivation_letter` (`LLM`): drafts motivation letter proposal.
-- `review_motivation_letter` (`NLLM-D`): deterministic parser gate for letter decisions.
-- `tailor_cv` (`LLM`): drafts CV proposal.
-- `review_cv` (`NLLM-D`): deterministic parser gate for CV decisions.
-- `draft_email` (`LLM`): drafts application email proposal.
-- `review_email` (`NLLM-D`): deterministic parser gate for email decisions.
-- `render` (`NLLM-D`): deterministic render of approved artifacts.
-- `package` (`NLLM-D`): produces final bundle and manifest.
-
-## Mermaid view
+### Mermaid (target architecture)
 
 ```mermaid
 flowchart TD
-    URL["URL / Listing"] --> Scrape
-    Profile[("Profile KB")] -.-> Match
+    Scrape[scrape] --> Translate[translate_if_needed]
+    Translate --> Extract[extract_understand]
+    Extract --> Match[match]
 
-    Scrape[["scraping (pre-graph)"]] --> Ingest
-
-    subgraph prep_subgraph ["1. Prep Subgraph"]
-        Ingest[ingest] --> Extract[extract_understand]
-        Extract --> Translate[translate]
-    end
-
-    Translate --> Match
-
-    subgraph match_cycle_subgraph ["2. Match Cycle"]
-        Match[match] --> ReviewMatch{review_match}
-        ReviewMatch -- request_regeneration --> Match
-    end
-
-    ReviewMatch -- approve --> Context
-
-    subgraph context_cycle_subgraph ["3. Context Cycle"]
-        Context[build_application_context] --> ReviewContext{review_application_context}
-        ReviewContext -- request_regeneration --> Context
-    end
-
-    ReviewContext -- approve --> Letter
-
-    subgraph motivation_cycle_subgraph ["4. Motivation Cycle"]
-        Letter[generate_motivation_letter] --> ReviewLetter{review_motivation_letter}
-        ReviewLetter -- request_regeneration --> Letter
-    end
-
-    ReviewContext -- approve --> CV
-    ReviewLetter -- approve --> CV
-
-    subgraph cv_cycle_subgraph ["5. CV Cycle"]
-        CV[tailor_cv] --> ReviewCV{review_cv}
-        ReviewCV -- request_regeneration --> CV
-    end
-
-    ReviewContext -- approve --> Email
-    ReviewLetter -- approve --> Email
-    ReviewCV -- approve --> Email
-
-    subgraph email_cycle_subgraph ["6. Email Cycle"]
-        Email[draft_email] --> ReviewEmail{review_email}
-        ReviewEmail -- request_regeneration --> Email
-    end
-
-    ReviewCV -- approve --> Render
-    ReviewLetter -- approve --> Render
-    ReviewEmail -- approve --> Render
-
-    subgraph delivery_subgraph ["7. Delivery Subgraph"]
-        Render[render] --> Package[package]
-    end
-
-    Package --> Done(((Done)))
-
+    Match --> ReviewMatch{review_match}
+    ReviewMatch -- request_regeneration --> Match
+    ReviewMatch -- approve --> Context[build_application_context]
     ReviewMatch -- reject --> Stop(((Stop)))
+
+    Context --> ReviewContext{review_application_context}
+    ReviewContext -- request_regeneration --> Context
+    ReviewContext -- approve --> Letter[generate_motivation_letter]
     ReviewContext -- reject --> Stop
+
+    Letter --> ReviewLetter{review_motivation_letter}
+    ReviewLetter -- request_regeneration --> Letter
+    ReviewLetter -- approve --> CV[tailor_cv]
     ReviewLetter -- reject --> Stop
+
+    CV --> ReviewCV{review_cv}
+    ReviewCV -- request_regeneration --> CV
+    ReviewCV -- approve --> Email[draft_email]
     ReviewCV -- reject --> Stop
+
+    Email --> ReviewEmail{review_email}
+    ReviewEmail -- request_regeneration --> Email
+    ReviewEmail -- approve --> Render[render]
     ReviewEmail -- reject --> Stop
+
+    Render --> Package[package]
+    Package --> Done(((Done)))
 ```
 
 ## Non-negotiable graph invariants
+
+### Current implemented path
+
+1. `match`/`review_match` fail closed on malformed review and regeneration inputs.
+2. Resume is gated by deterministic review parsing and source hash checks when present.
+3. No silent success fallback is allowed on invalid review state.
+
+### Target full path
 
 1. Downstream nodes read approved artifacts only.
 2. Review parsers fail closed on malformed or stale decisions.

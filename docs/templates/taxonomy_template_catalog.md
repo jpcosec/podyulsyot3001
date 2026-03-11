@@ -5,6 +5,7 @@ Related references:
 - `docs/philosophy/execution_taxonomy_abstract.md`
 - `docs/templates/node_template_discipline.md`
 - `docs/architecture/core_io_and_provenance_manager.md`
+- `docs/reference/contract_composition_framework.md`
 
 ## Purpose
 
@@ -25,6 +26,7 @@ All templates assume:
 - Data payloads are read/written through `src/core/io/`.
 - `logic.py` is pure behavior (no file I/O).
 - `node.py` orchestrates `read -> logic -> write -> route`.
+- `contract.py` uses envelope + primitive composition.
 
 Base package shape:
 

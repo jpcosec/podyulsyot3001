@@ -18,6 +18,7 @@ Any remaining references to old paths should be migrated to the canonical paths 
 - Canonical docs:
   - `docs/graph/nodes_summary.md`
   - `docs/graph/node_io_matrix.md`
+  - `docs/graph/match_review_cycle.md`
 
 ## Templates
 
@@ -25,6 +26,7 @@ Any remaining references to old paths should be migrated to the canonical paths 
   - `docs/templates/node_template_discipline.md`
   - `docs/templates/taxonomy_template_catalog.md`
   - `docs/templates/llm/README.md`
+  - `docs/templates/prompts/prompt_anatomy_standard.md`
   - `docs/templates/prompts/README.md`
 
 ## Business rules
@@ -37,9 +39,14 @@ Any remaining references to old paths should be migrated to the canonical paths 
 ## Reference
 
 - Canonical docs:
+  - `docs/reference/data_management_actual_state.md`
   - `docs/reference/artifact_schemas.md`
+  - `docs/reference/contract_composition_framework.md`
+  - `docs/reference/review_contract_case_decision_and_assistance.md`
   - `docs/reference/document_glossary.md`
   - `docs/architecture/core_io_and_provenance_manager.md`
+  - `docs/architecture/graph_reactivity_protocol.md`
+  - `docs/architecture/graph_state_contract.md`
   - `docs/architecture/core_io_manager.md`
 
 ## Operations
@@ -52,5 +59,7 @@ Any remaining references to old paths should be migrated to the canonical paths 
 
 - Canonical docs:
   - `plan/phd2_stepwise_plan.md`
+  - `plan/subplan/ui_review_cycle_adaptation_internal.md`
+  - `plan/subplan/ui_review_cycle_designer_handoff.md`
   - `plan/index_checklist.md`
   - `plan/template/README.md`

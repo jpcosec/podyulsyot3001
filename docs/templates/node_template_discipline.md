@@ -8,6 +8,8 @@ Related references:
 - `docs/philosophy/structure_and_rationale.md`
 - `docs/graph/nodes_summary.md`
 - `docs/architecture/core_io_and_provenance_manager.md`
+- `docs/reference/contract_composition_framework.md`
+- `docs/architecture/graph_state_contract.md`
 
 ## Purpose
 
@@ -23,6 +25,10 @@ By enforcing one GraphState contract, one error-routing pattern, and one package
 ## 1) GraphState contract (Control Plane)
 
 LangGraph state must carry only control metadata and routing signals. Heavy payloads stay on disk in the Data Plane.
+
+Canonical control-plane ledger reference:
+
+- `docs/architecture/graph_state_contract.md`
 
 Canonical GraphState:
 
@@ -99,6 +105,10 @@ src/<domain>/nodes/<node_name>/
 - `core` for non-LLM nodes.
 
 Node-local `reader.py` and `writer.py` are intentionally removed. I/O is centralized in `src/core/io/`.
+
+`contract.py` composition rule:
+
+- prefer envelope + primitive composition from `docs/reference/contract_composition_framework.md` over bespoke monolithic models.
 
 ## Standard `node.py` orchestration
 

@@ -32,7 +32,10 @@ Supporting index docs:
 
 1. `docs/graph/nodes_summary.md`
 2. `docs/graph/node_io_matrix.md`
-3. `docs/architecture/core_io_and_provenance_manager.md`
+3. `docs/graph/match_review_cycle.md`
+4. `docs/reference/data_management_actual_state.md`
+5. `docs/architecture/core_io_and_provenance_manager.md`
+6. `docs/architecture/graph_state_contract.md`
 
 ### 3) Implement nodes with consistent shape
 
@@ -40,12 +43,16 @@ Supporting index docs:
 2. `docs/templates/taxonomy_template_catalog.md`
 3. `docs/templates/llm/README.md`
 4. `docs/templates/prompts/README.md`
+5. `docs/templates/prompts/prompt_anatomy_standard.md`
+6. `docs/reference/contract_composition_framework.md`
+7. `docs/reference/review_contract_case_decision_and_assistance.md`
 
 ### 4) Validate policy and review gates
 
 1. `docs/business_rules/claim_admissibility_and_policy.md`
 2. `docs/business_rules/sync_json_md.md`
 3. `docs/business_rules/feedback_memory.md`
+4. `docs/architecture/graph_reactivity_protocol.md`
 
 ### 5) Run and troubleshoot
 
