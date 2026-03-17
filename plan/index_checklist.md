@@ -14,7 +14,7 @@ Reference docs:
 - `plan/template/README.md`
 - `docs/philosophy/structure_and_rationale.md`
 - `docs/operations/tool_interaction_and_known_issues.md`
-- `docs/architecture/adr_001_ui_first_knowledge_graph_langchain.md`
+- `plan/adr/adr_001_ui_first_knowledge_graph_langchain.md`
 
 ## Original Step Checklist (status as of 2026-03-16)
 
@@ -34,17 +34,19 @@ Reference docs:
 
 ## Architecture Migration (ADR-001)
 
-The remaining gaps above are now superseded by ADR-001, which redefines the architecture as UI-first with Neo4j knowledge graph and full LangChain migration. See `docs/architecture/adr_001_ui_first_knowledge_graph_langchain.md`.
+The remaining gaps above are now superseded by ADR-001, which redefines the architecture as UI-first with Neo4j knowledge graph and full LangChain migration. See `plan/adr/adr_001_ui_first_knowledge_graph_langchain.md`.
 
 New execution phases:
 
-- [ ] **Phase 0**: Foundation (Neo4j + FastAPI + React scaffold, data migration)
-- [ ] **Phase 1**: View 2 — Document-to-Graph (Scraping/Extraction Review)
-- [ ] **Phase 2**: View 1 — Graph Explorer (Match Review)
-- [ ] **Phase 3**: View 3 — Graph-to-Document (Generation Review)
-- [ ] **Phase 4**: Portfolio Dashboard + Navigation
-- [ ] **Phase 5**: LangChain Migration + Pipeline Adaptation
-- [ ] **Phase 6**: Multi-Source Scraping + Scale
+- [~] **Phase 0**: Foundation (Neo4j + FastAPI + React scaffold, data migration) — ~45%. Scaffold done (compose, API routers, React app builds). Data migration to Neo4j not started. pip deps missing.
+- [~] **Phase 1**: View 2 — Document-to-Graph (Scraping/Extraction Review) — ~40%. Read-only inspection works (source text + requirement highlighting). Node creation, editing, comments not started.
+- [~] **Phase 2**: View 1 — Graph Explorer (Match Review) — ~35%. Read-only graph + match inspection. Mutation, decision UI, comments not started.
+- [~] **Phase 3**: View 3 — Graph-to-Document (Generation Review) — ~20%. Display shell only. Slate editing, linking, feedback not started.
+- [~] **Phase 4**: Portfolio Dashboard + Navigation — ~25%. Job tree + status badges work. Profile view, filtering, gating not started.
+- [ ] **Phase 5**: LangChain Migration + Pipeline Adaptation — 0%.
+- [ ] **Phase 6**: Multi-Source Scraping + Scale — 0%.
+
+Detailed per-sub-objective tracking: `plan/adr_001_execution_tracker.md`
 
 ## Completion Rule
 

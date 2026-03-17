@@ -57,6 +57,7 @@ Start here:
 
 - Rebuild master plan: `plan/phd2_stepwise_plan.md`
 - Step index checklist: `plan/index_checklist.md`
+- Worktree planning protocol: `plan/worktree_planning_protocol.md`
 - Deterministic parity migration: `plan/subplan/deterministic_parity_migration_from_phd.md`
 - Review UI + flow observability: `plan/subplan/review_ui_and_flow_observability.md`
 - LangChain/LangGraph evaluation: `plan/subplan/langchain_langgraph_adoption_evaluation.md`
@@ -92,11 +93,41 @@ Start here:
 - Artifact JSON schemas: `docs/reference/artifact_schemas.md`
 - Document and artifact glossary: `docs/reference/document_glossary.md`
 - Core I/O and provenance data plane: `docs/architecture/core_io_and_provenance_manager.md`
+- Source dependency map for impact-based testing: `src/DEPENDENCY_GRAPH.md`
 
 ## Operate the tool
 
 - CLI workflow and troubleshooting: `docs/operations/tool_interaction_and_known_issues.md`
 - Non-LLM recovery demo (reviewable): `docs/operations/non_llm_recovery_demo.md`
+- UI workbench Phase 0 bootstrap: `docs/operations/ui_workbench_phase0_bootstrap.md`
+- Repo protocol check: `python -m src.cli.check_repo_protocol`
+
+## Local enforcement setup
+
+1. Install pre-commit hooks:
+   - `pip install pre-commit`
+   - `pre-commit install --hook-type pre-commit --hook-type pre-push`
+2. Optional git native hooks path:
+   - `git config core.hooksPath .githooks`
+
+`pre-push` enforces a clean working tree (`python -m src.cli.check_repo_protocol --require-clean-tree`), which blocks pushes when local changes are not committed.
+
+## Cross-project propagation
+
+To propagate the enforcement pack to sibling repositories:
+
+1. Dry run:
+   - `python -m src.cli.propagate_protocol_pack --discover`
+2. Apply to all discovered repos (excluding this one):
+   - `python -m src.cli.propagate_protocol_pack --discover --apply --overwrite`
+
+The propagation command installs:
+
+- `.pre-commit-config.yaml`
+- `.githooks/pre-commit`
+- `.githooks/pre-push`
+- `src/cli/check_repo_protocol.py` (baseline checker)
+- `.github/workflows/repo-protocol.yml` (unless `--skip-workflow`)
 
 ## Core principles
 

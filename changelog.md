@@ -1,5 +1,39 @@
 # Changelog
 
+## 2026-03-17
+
+- Started ADR-001 implementation with a Phase 0 UI-first foundation scaffold.
+- Added FastAPI review API under `src/interfaces/api/` with:
+  - portfolio summary endpoint (`/api/v1/portfolio/summary`),
+  - job timeline endpoint (`/api/v1/jobs/{source}/{job_id}/timeline`),
+  - match review payload endpoint (`/api/v1/jobs/{source}/{job_id}/review/match`),
+  - API health endpoint (`/health`),
+  - Neo4j connectivity check endpoint (`/api/v1/neo4j/health`).
+- Added filesystem read-model adapters for job timeline and review queue groundwork in `src/interfaces/api/read_models.py` and test coverage in `tests/interfaces/api/test_read_models.py`.
+- Added API runner CLI entrypoint `src/cli/run_review_api.py`.
+- Added React + TypeScript review workbench scaffold at `apps/review-workbench/` with:
+  - routing (`Portfolio` and per-job screens),
+  - ADR view shells (`View 1` Graph Explorer, `View 2` Document-to-Graph, `View 3` Graph-to-Document),
+  - Cytoscape integration and Slate editor integration,
+  - API client wiring to the new backend endpoints.
+- Added Neo4j local bootstrap via `docker-compose.neo4j.yml`.
+- Added `.env.example` with UI/API/Neo4j environment variables.
+- Added Phase 0 local setup runbook `docs/operations/ui_workbench_phase0_bootstrap.md` and indexed it in operations docs and root README.
+- Updated `.gitignore` for frontend artifacts (`node_modules/`, `apps/review-workbench/dist/`).
+- Added planning governance protocol `plan/worktree_planning_protocol.md` defining: docs=current-state only, plan=next-step tracking, worktree-per-plan policy, and mandatory start/end session continuity checklist.
+- Added code-adjacent dependency map `src/DEPENDENCY_GRAPH.md` to support impact analysis and test planning by module dependency.
+- Added code-local module docs `src/interfaces/api/README.md` and `apps/review-workbench/README.md` to reduce rediscovery overhead.
+- Expanded `.gitignore` for runtime artifacts (`artifacts/`) and TypeScript build metadata (`*.tsbuildinfo`).
+- Enforced data non-tracking policy by broadening `.gitignore` to `data/` and removing tracked profile data from git index.
+- Added protocol enforcement CLI `src/cli/check_repo_protocol.py` and wired command reference in root `README.md`.
+- Added enforcement automation: `.pre-commit-config.yaml`, native hooks in `.githooks/`, and CI workflow `.github/workflows/repo-protocol.yml`.
+- Added clean-tree pre-push gate (`--require-clean-tree`) to enforce that local code changes are committed before push.
+- Added cross-project rollout CLI `src/cli/propagate_protocol_pack.py` to propagate enforcement hooks/checker/workflow into other repositories (dry-run and apply modes).
+- Expanded code-adjacent documentation with `src/core/README.md`, `src/ai/README.md`, `src/nodes/README.md`, and `src/cli/README.md`.
+- Expanded `src/DEPENDENCY_GRAPH.md` with pipeline subgraph dependencies and impact-based test mapping for `src/core`, `src/ai`, and `src/nodes`.
+- Restructured graph/architecture docs to current-state-only surfaces and moved future-state specs to planning space (`plan/spec/`, `plan/adr/`).
+- Added unified dev startup script `scripts/dev.sh` to launch both UI and API in a single terminal with Ctrl+C cleanup.
+
 ## 2026-03-16
 
 - Updated `plan/index_checklist.md` to reflect actual implementation status: marked Pre-Step S through Step 6-13 (collapsed) as complete, added explicit gap items for missing review gates/core-io/sync_json_md, and added ADR-001 migration phases.

@@ -10,3 +10,4 @@ This folder is for runtime usage, operator workflow, and troubleshooting.
 - `available_jobs_recovery_runbook.md`
 - `reviewed_jobs_pipeline_diagnosis.md`
 - `match_review_rounds_current_state_and_migration.md`
+- `ui_workbench_phase0_bootstrap.md`

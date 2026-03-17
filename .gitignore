@@ -2,10 +2,12 @@
 .pytest_cache/
 __pycache__/
 *.py[cod]
-data/Archived/
-data/jobs/
-data/.obsidian/
+data/
 .claude/
 .ruff_cache/
 **/__pycache__/
 .wezterm-init.sh
+node_modules/
+apps/review-workbench/dist/
+artifacts/
+*.tsbuildinfo

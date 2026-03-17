@@ -58,7 +58,8 @@ Any remaining references to old paths should be migrated to the canonical paths 
 ## Architecture Decisions
 
 - Canonical docs:
-  - `docs/architecture/adr_001_ui_first_knowledge_graph_langchain.md` — supersedes `plan/subplan/langchain_langgraph_adoption_evaluation.md`
+  - `docs/architecture/adr_001_ui_first_knowledge_graph_langchain.md` — current implementation status snapshot
+  - `plan/adr/adr_001_ui_first_knowledge_graph_langchain.md` — planning record and future sequence
 
 ## Planning
 
