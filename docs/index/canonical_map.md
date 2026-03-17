@@ -55,11 +55,19 @@ Any remaining references to old paths should be migrated to the canonical paths 
   - `docs/operations/tool_interaction_and_known_issues.md`
   - `docs/operations/non_llm_recovery_demo.md`
 
+## Architecture Decisions
+
+- Canonical docs:
+  - `docs/architecture/adr_001_ui_first_knowledge_graph_langchain.md` — supersedes `plan/subplan/langchain_langgraph_adoption_evaluation.md`
+
 ## Planning
 
 - Canonical docs:
   - `plan/phd2_stepwise_plan.md`
   - `plan/subplan/ui_review_cycle_adaptation_internal.md`
   - `plan/subplan/ui_review_cycle_designer_handoff.md`
+  - `plan/subplan/deterministic_parity_migration_from_phd.md`
+  - `plan/subplan/review_ui_and_flow_observability.md`
+  - `plan/subplan/langchain_langgraph_adoption_evaluation.md` (superseded by ADR-001)
   - `plan/index_checklist.md`
   - `plan/template/README.md`

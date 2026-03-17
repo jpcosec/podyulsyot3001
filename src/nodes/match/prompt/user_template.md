@@ -32,7 +32,18 @@ Map each requirement against available evidence.
 Apply these required updates in the new matching output.
 {% endif %}
 
-# 5. Output Format
+{% if regeneration_scope is defined and regeneration_scope %}
+# 5. Regeneration Scope
+<regeneration_scope>
+{% for req_id in regeneration_scope %}
+- {{ req_id }}
+{% endfor %}
+</regeneration_scope>
+
+Focus this round on improving only these requirement IDs. Keep other requirements stable unless consistency requires a small correction.
+{% endif %}
+
+# 6. Output Format
 Return a `MatchEnvelope` object that includes:
 - `matches` list (`req_id`, `match_score`, `evidence_id`, `reasoning`).
 - `total_score` (weighted mean).

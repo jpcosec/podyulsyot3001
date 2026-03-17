@@ -167,6 +167,33 @@ def _normalize_profile_data(profile: Mapping[str, Any]) -> dict[str, Any]:
         normalized_experiences.append(copied)
 
     normalized["experience"] = normalized_experiences
+
+    publications_raw = (
+        profile.get("publications")
+        if isinstance(profile.get("publications"), list)
+        else []
+    )
+    normalized_publications: list[dict[str, Any]] = []
+    for item in publications_raw:
+        if not isinstance(item, Mapping):
+            continue
+        copied = dict(item)
+        copied.setdefault("url", "")
+        normalized_publications.append(copied)
+    normalized["publications"] = normalized_publications
+
+    languages_raw = (
+        profile.get("languages") if isinstance(profile.get("languages"), list) else []
+    )
+    normalized_languages: list[dict[str, Any]] = []
+    for item in languages_raw:
+        if not isinstance(item, Mapping):
+            continue
+        copied = dict(item)
+        copied.setdefault("note", "")
+        normalized_languages.append(copied)
+    normalized["languages"] = normalized_languages
+
     return normalized
 
 

@@ -1,5 +1,6 @@
 """LangGraph application assembly for PhD 2.0."""
-#TODO: IS THIS USING LANGRAPH?
+
+# TODO: IS THIS USING LANGRAPH?
 from __future__ import annotations
 
 from importlib import import_module
@@ -18,7 +19,10 @@ DEFAULT_LINEAR_EDGES: tuple[tuple[str, str], ...] = (
     ("translate_if_needed", "extract_understand"),
     ("extract_understand", "match"),
     ("match", "review_match"),
-    ("build_application_context", "review_application_context"),#TODO: what does this step do? please make the code more explicit here
+    (
+        "build_application_context",
+        "review_application_context",
+    ),  # TODO: what does this step do? please make the code more explicit here
     ("generate_documents", "generate_motivation_letter"),
     ("generate_motivation_letter", "review_motivation_letter"),
     ("tailor_cv", "review_cv"),
@@ -61,11 +65,12 @@ PREP_MATCH_LINEAR_EDGES: tuple[tuple[str, str], ...] = (
     ("translate_if_needed", "extract_understand"),
     ("extract_understand", "match"),
     ("match", "review_match"),
+    ("generate_documents", "package"),
 )
 
 PREP_MATCH_REVIEW_TRANSITIONS: dict[str, dict[str, str]] = {
     "review_match": {
-        "approve": "package",
+        "approve": "generate_documents",
         "request_regeneration": "match",
         "reject": END_NODE,
     }
@@ -119,7 +124,7 @@ def create_prep_match_app(
     checkpointer: Any | None = None,
     interrupt_before: Sequence[str] = ("review_match",),
 ):
-    """Build graph app for scrape -> translate -> extract -> match -> review_match."""
+    """Build graph app for scrape -> translate -> extract -> match -> review_match -> generate_documents."""
     return create_app(
         node_registry=build_prep_match_node_registry(),
         checkpointer=checkpointer,
@@ -147,7 +152,7 @@ def run_prep_match(
 
 
 def build_prep_match_node_registry() -> dict[str, NodeHandler]:
-    """Return node handlers for currently implemented prep and matching stages."""
+    """Return node handlers for prep-match and post-approval document generation."""
     from src.nodes.scrape.logic import run_logic as scrape_node
     from src.nodes.translate_if_needed.logic import (
         run_logic as translate_if_needed_node,
@@ -155,6 +160,7 @@ def build_prep_match_node_registry() -> dict[str, NodeHandler]:
     from src.nodes.extract_understand.logic import run_logic as extract_node
     from src.nodes.match.logic import run_logic as match_node
     from src.nodes.review_match.logic import run_logic as review_match_node
+    from src.nodes.generate_documents.logic import run_logic as generate_documents_node
 
     return {
         "scrape": scrape_node,
@@ -162,6 +168,7 @@ def build_prep_match_node_registry() -> dict[str, NodeHandler]:
         "extract_understand": extract_node,
         "match": match_node,
         "review_match": review_match_node,
+        "generate_documents": generate_documents_node,
         "package": _package_terminal_node,
     }
 

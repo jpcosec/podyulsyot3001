@@ -27,7 +27,7 @@ def run_logic(state: Mapping[str, Any]) -> dict[str, Any]:
         "match",
         input_data,
         required_xml_tags=("job_requirements", "profile_evidence"),
-        optional_xml_tags=("round_feedback",),
+        optional_xml_tags=("round_feedback", "regeneration_scope"),
     )
 
     match_result = runtime.generate_structured(
@@ -75,14 +75,36 @@ def _build_input_data(state: Mapping[str, Any]) -> dict[str, Any]:
         "profile_evidence": profile_evidence,
         "prev_round": None,
         "round_feedback": None,
+        "regeneration_scope": None,
     }
 
     feedback_context = _load_regeneration_feedback(state)
     if feedback_context is not None:
         out["prev_round"] = feedback_context["prev_round"]
         out["round_feedback"] = feedback_context["feedback"]
+        out["regeneration_scope"] = _collect_regeneration_scope(
+            feedback_context["feedback"]
+        )
 
     return out
+
+
+def _collect_regeneration_scope(round_feedback: Any) -> list[str]:
+    if not isinstance(round_feedback, list):
+        return []
+
+    scope: list[str] = []
+    seen: set[str] = set()
+    for item in round_feedback:
+        if not isinstance(item, Mapping):
+            continue
+        req_id = str(item.get("req_id", "")).strip()
+        action = str(item.get("action", "")).strip().lower()
+        if action != "patch" or not req_id or req_id in seen:
+            continue
+        scope.append(req_id)
+        seen.add(req_id)
+    return scope
 
 
 def _load_effective_evidence(
@@ -246,6 +268,11 @@ def _render_decision_markdown(
 ) -> str:
     requirement_lookup = _build_requirement_lookup(matched_data)
     evidence_lookup = _build_evidence_lookup(matched_data)
+    regeneration_scope = _collect_regeneration_scope(round_feedback)
+    review_matches, context_matches = _split_matches_for_review_scope(
+        matched_data,
+        regeneration_scope,
+    )
 
     lines = [
         "---",
@@ -281,32 +308,72 @@ def _render_decision_markdown(
                 lines.append(f"- [{req_id}] ({action}) {note}".strip())
         lines.append("")
 
+    if regeneration_scope and context_matches:
+        lines.extend(
+            [
+                "## Context (Outside Regeneration Scope)",
+                "",
+                "Rows below are kept for visibility and do not require revalidation in this round.",
+                "",
+                "| Req ID | Requirement | Evidence (from profile) | Score | Reasoning | Status |",
+                "|---|---|---|---:|---|---|",
+            ]
+        )
+        for item in context_matches:
+            if not isinstance(item, Mapping):
+                continue
+            req_id = _md_cell(str(item.get("req_id", "")))
+            requirement_text = _md_cell(
+                requirement_lookup.get(
+                    str(item.get("req_id", "")), "(requirement text unavailable)"
+                )
+            )
+            evidence_id = str(item.get("evidence_id") or "-")
+            evidence_text = _md_cell(
+                _render_evidence_text(evidence_id, evidence_lookup)
+            )
+            score_val = _safe_score(item.get("match_score"))
+            reasoning = _md_cell(
+                str(item.get("reasoning", "")).replace("\n", " ").strip()
+            )
+            lines.append(
+                f"| {req_id} | {requirement_text} | {evidence_text} | {score_val:.2f} | {reasoning} | carried forward |"
+            )
+        lines.append("")
+
+    if regeneration_scope:
+        lines.extend(
+            [
+                "## Regeneration Scope (Action Required)",
+                "",
+                "Only the rows in this section enter the revalidation loop.",
+                "",
+            ]
+        )
+
     lines.extend(
         [
-            "| Requirement | Evidence (from profile) | Score | Reasoning | Action | Comments |",
-            "|---|---|---:|---|---|---|",
+            "| Req ID | Requirement | Evidence (from profile) | Score | Reasoning | Action | Comments |",
+            "|---|---|---|---:|---|---|---|",
         ]
     )
 
-    for item in matched_data.get("matches", []):
+    for item in review_matches:
         if not isinstance(item, Mapping):
             continue
-        req_id = str(item.get("req_id", ""))
+        req_id_raw = str(item.get("req_id", ""))
+        req_id = _md_cell(req_id_raw)
         requirement_text = requirement_lookup.get(
-            req_id, "(requirement text unavailable)"
+            req_id_raw, "(requirement text unavailable)"
         )
         evidence_id = str(item.get("evidence_id") or "-")
         evidence_text = _render_evidence_text(evidence_id, evidence_lookup)
-        score = item.get("match_score", 0.0)
-        try:
-            score_val = float(score)
-        except (TypeError, ValueError):
-            score_val = 0.0
+        score_val = _safe_score(item.get("match_score"))
         reasoning = _md_cell(str(item.get("reasoning", "")).replace("\n", " ").strip())
         requirement_text = _md_cell(requirement_text)
         evidence_text = _md_cell(evidence_text)
         lines.append(
-            f"| {requirement_text} | {evidence_text} | {score_val:.2f} | {reasoning} | [ ] Proceed / [ ] Regen / [ ] Reject | - |"
+            f"| {req_id} | {requirement_text} | {evidence_text} | {score_val:.2f} | {reasoning} | [ ] Proceed / [ ] Regen / [ ] Reject | - |"
         )
 
     return "\n".join(lines)
@@ -314,6 +381,53 @@ def _render_decision_markdown(
 
 def _md_cell(text: str) -> str:
     return text.replace("|", "\\|").strip()
+
+
+def _safe_score(raw: Any) -> float:
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _split_matches_for_review_scope(
+    matched_data: Mapping[str, Any],
+    regeneration_scope: list[str],
+) -> tuple[list[Mapping[str, Any]], list[Mapping[str, Any]]]:
+    all_matches = [
+        item for item in matched_data.get("matches", []) if isinstance(item, Mapping)
+    ]
+    if not regeneration_scope:
+        return all_matches, []
+
+    match_by_req_id: dict[str, Mapping[str, Any]] = {}
+    for item in all_matches:
+        req_id = str(item.get("req_id", "")).strip()
+        if req_id and req_id not in match_by_req_id:
+            match_by_req_id[req_id] = item
+
+    scope_set = set(regeneration_scope)
+    review_matches: list[Mapping[str, Any]] = []
+    for req_id in regeneration_scope:
+        scoped_match = match_by_req_id.get(req_id)
+        if scoped_match is not None:
+            review_matches.append(scoped_match)
+            continue
+        review_matches.append(
+            {
+                "req_id": req_id,
+                "evidence_id": "-",
+                "match_score": 0.0,
+                "reasoning": "Requested regeneration item is missing from the latest model output.",
+            }
+        )
+
+    context_matches = [
+        item
+        for item in all_matches
+        if str(item.get("req_id", "")).strip() not in scope_set
+    ]
+    return review_matches, context_matches
 
 
 def _compute_source_hash(path: Path) -> str:

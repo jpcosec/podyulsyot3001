@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from typing import cast
+
+from src.core.graph.state import GraphState
 from src.graph import (
     PREP_MATCH_LINEAR_EDGES,
     PREP_MATCH_REVIEW_TRANSITIONS,
@@ -19,6 +22,7 @@ def test_build_prep_match_node_registry_contains_required_nodes() -> None:
         "extract_understand",
         "match",
         "review_match",
+        "generate_documents",
         "package",
     }
 
@@ -37,6 +41,10 @@ def test_create_prep_match_app_delegates_expected_topology(monkeypatch) -> None:
     assert captured["entry_point"] == "scrape"
     assert captured["linear_edges"] == PREP_MATCH_LINEAR_EDGES
     assert captured["review_transitions"] == PREP_MATCH_REVIEW_TRANSITIONS
+    assert (
+        captured["review_transitions"]["review_match"]["approve"]
+        == "generate_documents"
+    )
 
 
 def test_run_prep_match_uses_thread_id_and_resume_behavior(monkeypatch) -> None:
@@ -59,8 +67,9 @@ def test_run_prep_match_uses_thread_id_and_resume_behavior(monkeypatch) -> None:
         "status": "running",
     }
 
-    run_prep_match(state, resume=False)
-    run_prep_match(state, resume=True)
+    typed_state = cast(GraphState, state)
+    run_prep_match(typed_state, resume=False)
+    run_prep_match(typed_state, resume=True)
 
     first_payload, first_config = app.calls[0]
     second_payload, second_config = app.calls[1]

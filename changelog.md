@@ -1,5 +1,36 @@
 # Changelog
 
+## 2026-03-16
+
+- Updated `plan/index_checklist.md` to reflect actual implementation status: marked Pre-Step S through Step 6-13 (collapsed) as complete, added explicit gap items for missing review gates/core-io/sync_json_md, and added ADR-001 migration phases.
+- Added ADR-001 (`docs/architecture/adr_001_ui_first_knowledge_graph_langchain.md`): UI-first review workbench with Neo4j knowledge graph, full LangChain migration, and hybrid scraping architecture. Supersedes `plan/subplan/langchain_langgraph_adoption_evaluation.md` (Option B hybrid replaced by full migration). Defines three view modes (Graph Explorer, Document-to-Graph, Graph-to-Document), Neo4j schema with TextSpan provenance, comment/annotation model with feedback categorization, and 6-phase implementation sequence.
+- Updated `docs/architecture/README.md` to index ADR-001 under new Architecture Decision Records section.
+- Updated `docs/index/canonical_map.md` to add Architecture Decisions section and mark `langchain_langgraph_adoption_evaluation.md` as superseded.
+- Revised ADR-001 schema based on scraping gap analysis of 3 TU Berlin jobs (201637, 201601, 201578). Expanded Job domain from 4 node types to 12: added `OrganizationalUnit`, `Person`, `ResearchContext`, `ResearchProject`, `PositionTerms` (replacing flat `Constraint` bag), `TeachingDuty`, `ApplicationMethod`, `DomainTag`, `LegalNotice`, `SourceDocument`. Added `domain` enum to `Requirement` (education, language, technical, research, teaching, soft_skill, administrative). Added `TextSpan` provenance model for View 2 bidirectional highlighting.
+
+## 2026-03-13
+
+- Updated regeneration behavior in `src/nodes/match/logic.py` so review rounds focus only on `patch` requirements from prior feedback, while non-scoped requirements are rendered as context-only rows outside the revalidation loop.
+- Updated match review rendering to include explicit `Req ID` in actionable tables and to emit dedicated regeneration-scope sections during regeneration rounds.
+- Extended match prompt input in `src/nodes/match/prompt/user_template.md` to include optional `<regeneration_scope>` guidance so model updates stay centered on requested patch points.
+- Updated `src/nodes/review_match/logic.py` table parser to support `Req ID`-keyed scoped decisions (subset review) while preserving strict validation for unknown IDs and invalid checkbox markup.
+- Added/updated tests in `tests/nodes/match/test_match_logic.py` and `tests/nodes/review_match/test_review_match_logic.py` to cover scoped regeneration review behavior.
+- Wired post-approval document generation into prep flow by routing `review_match.approve` to `generate_documents` before terminal `package` in `src/graph.py`.
+- Updated prep graph helper tests (`tests/core/graph/test_prep_match_helpers.py`) for the new `generate_documents` node registration.
+- Updated graph docs (`docs/graph/nodes_summary.md`, `docs/graph/node_io_matrix.md`) to reflect the current runnable flow: `scrape -> translate_if_needed -> extract_understand -> match -> review_match -> generate_documents -> package`.
+- Fixed `generate_documents` prompt XML-tag validation drift in `src/nodes/generate_documents/prompt/user_template.md` by removing a stray literal `<candidate_base_cv>` mention from instructions that conflicted with strict tag counting.
+- Added prompt-path coverage test in `tests/nodes/generate_documents/test_generate_documents_logic.py` to ensure real template rendering passes XML boundary validation.
+- Hardened `src/nodes/generate_documents/contract.py` normalization to tolerate common Gemini structured-output drift (`cv_summary`/`email_body` lists, CV injection alias fields such as `achievements_to_inject` and `statements`, nested `email_deltas.email_body`, and partial `letter_deltas` payloads).
+- Extended profile normalization in `src/nodes/generate_documents/logic.py` to ensure template-safe optional fields (`publications[].url`, `languages[].note`) are always present under strict Jinja rendering.
+- Added contract tests in `tests/nodes/generate_documents/test_contract.py` for drift normalization paths used by live generation runs.
+
+## 2026-03-12
+
+- Added deterministic migration planning doc `plan/subplan/deterministic_parity_migration_from_phd.md`, defining scope, legacy-to-target deterministic inventory, phased work packages (`core/io`, review substrate, delivery chain, observability), risks, and acceptance gates.
+- Added product/operations planning doc `plan/subplan/review_ui_and_flow_observability.md`, defining review workbench scope plus per-job timeline and global portfolio dashboard requirements, rollout phases, and validation constraints.
+- Added architecture evaluation doc `plan/subplan/langchain_langgraph_adoption_evaluation.md`, including option matrix (custom, hybrid, full migration), non-negotiable safety constraints, required spikes, decision gate, and recommended incremental path.
+- Updated planning/documentation indexes to include new priority-track docs: `plan/index_checklist.md`, `docs/index/canonical_map.md`, `docs/index/README.md`, and root `README.md`.
+
 ## 2026-03-11
 
 - Added incident diagnosis document `docs/operations/reviewed_jobs_pipeline_diagnosis.md` for reviewed-job pipeline resume failures, including reproduction evidence, root-cause analysis (legacy review hash-lock mismatch, empty checkpoints, missing `langgraph` dependency), and a recovery/verification plan.

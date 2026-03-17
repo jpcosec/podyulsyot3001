@@ -38,10 +38,12 @@ Linear path:
 3. `extract_understand`
 4. `match`
 5. `review_match`
+6. `generate_documents`
+7. `package`
 
 Current review routing (`review_match`):
 
-- `approve` -> `package` (prep terminal node)
+- `approve` -> `generate_documents` -> `package` (prep terminal node)
 - `request_regeneration` -> `match`
 - `reject` -> end
 
@@ -61,12 +63,8 @@ Current review routing (`review_match`):
 - `extract_understand` (`LLM`): extracts structured job understanding into state.
 - `match` (`LLM`): generates requirement-evidence matching and persists round-based review artifacts.
 - `review_match` (`NLLM-D`): parses review markdown, validates routing decision, writes decision/feedback artifacts.
+- `generate_documents` (`LLM` + deterministic rendering): generates `DocumentDeltas` and writes CV/letter/email markdown proposals plus deterministic assist indicators.
 - `package` (`NLLM-D`, prep terminal): marks run completed for this subgraph.
-
-### Implemented-but-not-wired note
-
-- `src/nodes/generate_documents/` is implemented and tested, with deterministic assist artifacts.
-- It is not currently part of `build_prep_match_node_registry()`.
 
 ### Mermaid (current runtime)
 
@@ -78,8 +76,10 @@ flowchart TD
     Match --> ReviewMatch{review_match}
 
     ReviewMatch -- request_regeneration --> Match
-    ReviewMatch -- approve --> PrepPackage[package (prep terminal)]
+    ReviewMatch -- approve --> GenerateDocs[generate_documents]
     ReviewMatch -- reject --> Stop(((Stop)))
+
+    GenerateDocs --> PrepPackage[package (prep terminal)]
 
     PrepPackage --> Done(((Done)))
 ```

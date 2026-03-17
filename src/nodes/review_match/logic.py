@@ -226,23 +226,24 @@ def _render_decision_md(
         "",
         "# Match Review",
         "",
-        "| Requirement | Evidence (from profile) | Score | Reasoning | Action | Comments |",
-        "|---|---|---:|---|---|---|",
+        "| Req ID | Requirement | Evidence (from profile) | Score | Reasoning | Action | Comments |",
+        "|---|---|---|---:|---|---|---|",
     ]
 
     for item in matched_data.get("matches", []):
-        req_id = str(item.get("req_id", ""))
+        req_id_raw = str(item.get("req_id", ""))
+        req_id = _md_cell(req_id_raw)
         requirement_text = requirement_lookup.get(
-            req_id, "(requirement text unavailable)"
+            req_id_raw, "(requirement text unavailable)"
         )
         evidence_id = str(item.get("evidence_id") or "-")
         evidence_text = _render_evidence_text(evidence_id, evidence_lookup)
-        score = item.get("match_score", 0)
+        score = _safe_score(item.get("match_score", 0))
         reasoning = _md_cell(str(item.get("reasoning", "")).replace("\n", " ").strip())
         requirement_text = _md_cell(requirement_text)
         evidence_text = _md_cell(evidence_text)
         lines.append(
-            f"| {requirement_text} | {evidence_text} | {score:.2f} | {reasoning} | [ ] Proceed / [ ] Regen / [ ] Reject | - |"
+            f"| {req_id} | {requirement_text} | {evidence_text} | {score:.2f} | {reasoning} | [ ] Proceed / [ ] Regen / [ ] Reject | - |"
         )
 
     return "\n".join(lines)
@@ -250,6 +251,13 @@ def _render_decision_md(
 
 def _md_cell(text: str) -> str:
     return text.replace("|", "\\|").strip()
+
+
+def _safe_score(raw: Any) -> float:
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        return 0.0
 
 
 def _build_requirement_lookup(matched_data: Mapping[str, Any]) -> dict[str, str]:
@@ -352,6 +360,7 @@ def _parse_table_decisions(
 
     action_idx = _find_header_index(header_cells, "action")
     comments_idx = _find_header_index(header_cells, "comments")
+    req_id_idx = _find_header_index(header_cells, "req id")
     if action_idx is None or comments_idx is None:
         return None
 
@@ -393,9 +402,16 @@ def _parse_table_decisions(
             Literal["approve", "request_regeneration", "reject"], decision
         )
 
-        block_id = (
-            req_ids[row_index] if row_index < len(req_ids) else f"row_{row_index + 1}"
-        )
+        if req_id_idx is not None and req_id_idx < len(cells):
+            block_id = cells[req_id_idx].strip()
+            if not block_id:
+                raise ValueError(f"Line {line_number}: Req ID cell cannot be empty")
+        else:
+            block_id = (
+                req_ids[row_index]
+                if row_index < len(req_ids)
+                else f"row_{row_index + 1}"
+            )
         comments_raw = cells[comments_idx].strip()
         comments = "" if comments_raw in {"", "-"} else comments_raw
         decisions.append(
@@ -405,8 +421,21 @@ def _parse_table_decisions(
 
     if not decisions:
         return []
-    if req_ids and len(decisions) < len(req_ids):
+    if req_id_idx is None and req_ids and len(decisions) < len(req_ids):
         return []
+    if req_id_idx is not None and req_ids:
+        valid_req_ids = set(req_ids)
+        unknown = sorted(
+            {
+                decision.block_id
+                for decision in decisions
+                if decision.block_id not in valid_req_ids
+            }
+        )
+        if unknown:
+            raise ValueError(
+                "Decision table contains unknown Req ID values: " + ", ".join(unknown)
+            )
     return decisions
 
 

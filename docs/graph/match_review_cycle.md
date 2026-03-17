@@ -87,9 +87,11 @@ Then it persists:
 - `job_id`
 - `round`
 
-and a table with per-requirement action checkboxes:
+and a review table with per-requirement action checkboxes:
 
 `[ ] Proceed / [ ] Regen / [ ] Reject`
+
+The actionable table now includes a `Req ID` column so parser routing can remain stable even when only a subset of requirements is reviewed.
 
 If regeneration context exists, the markdown also includes a "Feedback Applied from Round X" section.
 
@@ -145,9 +147,17 @@ When route is `request_regeneration`, graph returns to `match`.
 
 1. loads latest round feedback,
 2. appends valid `patch_evidence` items to effective evidence set,
-3. includes normalized feedback in prompt context,
-4. generates a new match payload,
-5. creates next immutable round (`round_<NNN+1>`).
+3. derives regeneration scope from feedback entries with `action == "patch"`,
+4. includes normalized feedback plus scope in prompt context,
+5. generates a new match payload,
+6. creates next immutable round (`round_<NNN+1>`).
+
+During regeneration rounds, `decision.md` is split into:
+
+- context section (non-scoped requirements, read-only),
+- regeneration scope section (actionable rows only, revalidation loop input).
+
+This avoids revalidating already approved requirements while still keeping full visibility in the review file.
 
 ## Hash lock behavior
 

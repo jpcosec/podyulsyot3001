@@ -37,6 +37,36 @@ def _base_state() -> dict:
     }
 
 
+def _two_requirement_state() -> dict:
+    state = _base_state()
+    state["matched_data"] = {
+        "matches": [
+            {
+                "req_id": "R1",
+                "match_score": 0.9,
+                "evidence_id": "P1",
+                "reasoning": "Strong overlap",
+            },
+            {
+                "req_id": "R2",
+                "match_score": 0.3,
+                "evidence_id": None,
+                "reasoning": "Gap remains",
+            },
+        ],
+        "total_score": 0.6,
+        "decision_recommendation": "marginal",
+        "summary_notes": "Mixed fit",
+    }
+    state["extracted_data"] = {
+        "requirements": [
+            {"id": "R1", "text": "Python", "priority": "must"},
+            {"id": "R2", "text": "SQL", "priority": "must"},
+        ]
+    }
+    return state
+
+
 def test_run_logic_creates_decision_markdown_and_pauses_review(
     tmp_path: Path, monkeypatch
 ) -> None:
@@ -57,10 +87,10 @@ def test_run_logic_creates_decision_markdown_and_pauses_review(
     assert round_md_path.exists()
     content = md_path.read_text(encoding="utf-8")
     assert (
-        "Requirement | Evidence (from profile) | Score | Reasoning | Action | Comments"
+        "Req ID | Requirement | Evidence (from profile) | Score | Reasoning | Action | Comments"
         in content
     )
-    assert "| Python | Built Python pipelines |" in content
+    assert "| R1 | Python | Built Python pipelines |" in content
     assert "[ ] Proceed / [ ] Regen / [ ] Reject" in content
 
 
@@ -181,3 +211,40 @@ def test_run_logic_fails_on_invalid_checkbox_markup(
 
     with pytest.raises(ValueError, match="invalid Action markup"):
         run_logic(state)
+
+
+def test_run_logic_parses_scoped_regeneration_table_by_req_id(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+
+    state = _two_requirement_state()
+    run_logic(state)
+
+    md_path = tmp_path / "data/jobs/tu_berlin/job-1/nodes/match/review/decision.md"
+    original = md_path.read_text(encoding="utf-8")
+    front_matter, _sep, _rest = original.partition("\n# Match Review\n")
+    scoped_text = (
+        f"{front_matter}\n# Match Review\n\n"
+        "## Context (Outside Regeneration Scope)\n\n"
+        "| Req ID | Requirement | Evidence (from profile) | Score | Reasoning | Status |\n"
+        "|---|---|---|---:|---|---|\n"
+        "| R1 | Python | Built Python pipelines | 0.90 | Strong overlap | carried forward |\n\n"
+        "## Regeneration Scope (Action Required)\n\n"
+        "| Req ID | Requirement | Evidence (from profile) | Score | Reasoning | Action | Comments |\n"
+        "|---|---|---|---:|---|---|---|\n"
+        "| R2 | SQL | - | 0.30 | Gap remains | [ ] Proceed / [X] Regen / [ ] Reject | Please strengthen SQL evidence |\n"
+    )
+    md_path.write_text(scoped_text, encoding="utf-8")
+
+    out = run_logic(state)
+
+    assert out["review_decision"] == "request_regeneration"
+    assert out["status"] == "running"
+    assert out["active_feedback"] == [
+        {
+            "req_id": "R2",
+            "action": "patch",
+            "reviewer_note": "Please strengthen SQL evidence",
+        }
+    ]

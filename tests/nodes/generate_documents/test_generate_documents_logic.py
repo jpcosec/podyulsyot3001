@@ -217,3 +217,52 @@ def test_run_logic_rejects_unknown_experience_id(
 
     with pytest.raises(ValueError, match="unknown experience_id"):
         run_logic(_base_state())
+
+
+def test_run_logic_uses_real_prompt_template_xml_tags(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    repo_root = Path(__file__).resolve().parents[3]
+
+    from src.ai.prompt_manager import PromptManager as RealPromptManager
+
+    class PromptManagerWithRepoPath(RealPromptManager):
+        def __init__(self, base_path: str):
+            super().__init__(base_path=str(repo_root / "src/nodes"))
+
+    class FakeRuntime:
+        def __init__(self, model_name: str):
+            assert model_name == "gemini-2.5-flash"
+
+        def generate_structured(
+            self, system_prompt: str, user_prompt: str, output_schema
+        ):
+            assert "<candidate_base_cv>" in user_prompt
+            assert "<validated_matches>" in user_prompt
+            return output_schema(
+                cv_summary="Factual summary",
+                cv_injections=[
+                    {
+                        "experience_id": "EXP001",
+                        "new_bullets": ["Added deterministic bullet"],
+                    }
+                ],
+                letter_deltas={
+                    "subject_line": "Application",
+                    "intro_paragraph": "Intro",
+                    "core_argument_paragraph": "Core",
+                    "alignment_paragraph": "Align",
+                    "closing_paragraph": "Close",
+                },
+                email_body="Please find attachments.",
+            )
+
+    monkeypatch.setattr(
+        "src.nodes.generate_documents.logic.PromptManager", PromptManagerWithRepoPath
+    )
+    monkeypatch.setattr("src.nodes.generate_documents.logic.LLMRuntime", FakeRuntime)
+
+    out = run_logic(_base_state())
+    assert out["current_node"] == "generate_documents"

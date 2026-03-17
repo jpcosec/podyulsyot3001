@@ -24,7 +24,9 @@ Convert inline TODO notes into a clear implementation backlog before editing cod
    TODO: unclear `build_application_context -> review_application_context` step.  
    Diagnosis: implemented graph still contains target-architecture edges that are not currently in active prep-match runtime path.  
    Proposed action: document current active subgraph vs target edges directly near edge declarations and/or split constants into `ACTIVE_*` and `TARGET_*`.  
-   Priority: high.
+   Priority: high. 
+
+   <!-- Why are we not coordinating everything through langraph+langchain? -->
 
 ## 2) Extract-understand contract quality
 
@@ -38,7 +40,7 @@ Convert inline TODO notes into a clear implementation backlog before editing cod
    TODO: add missing base fields (topic/tags/description/contact/form metadata).  
    Diagnosis: schema may be too narrow for downstream generation/routing and traceability.  
    Proposed action: decide minimal required fields for current runtime; add optional fields first to preserve backward compatibility.  
-   Priority: high.
+   Priority: high. <!-- there might be cases where some info is dificult to extract, AND there are some things that might be structural. (in the sense of being explicitly stated. It might be of great interest to check this step once again) -->
 
 5. `src/nodes/extract_understand/contract.py:25`  
    TODO: non-English field description text.  
@@ -58,13 +60,13 @@ Convert inline TODO notes into a clear implementation backlog before editing cod
    TODO: explain `_normalize_evidence_id`.  
    Diagnosis: helper behavior is correct but not obvious (string/list normalization).  
    Proposed action: add docstring with accepted shapes and reason for normalization.  
-   Priority: low.
+   Priority: low. <!-- We might have to do this throughout all the document. -->
 
 8. `src/nodes/match/contract.py:30`  
    TODO: possible drift between `MatchEnvelope` and real logic usage.  
    Diagnosis: potential contract/runtime mismatch risk.  
    Proposed action: verify all producers/consumers of `matched_data`; either enforce `MatchEnvelope` at write/read boundaries or remove dead schema fields.  
-   Priority: high.
+   Priority: high. <!-- Maybe we are overcomplicating things here by not having a web ui AND using langraph. It's worth it's time to stop and think about that. -->
 
 ## 4) Review contract usage
 
@@ -72,17 +74,17 @@ Convert inline TODO notes into a clear implementation backlog before editing cod
    TODO: whether `ReviewDirective` is used.  
    Diagnosis: likely partially unused now; could be future-facing.  
    Proposed action: trace parser outputs and consumers; if unused, mark intentionally reserved or remove from envelope to reduce noise.  
-   Priority: medium.
+   Priority: medium.<!-- Maybe we are overcomplicating things here by not having a web ui AND using langraph. It's worth it's time to stop and think about that. --
 
 ## 5) Extract-understand logic completeness
 
 10. `src/nodes/extract_understand/logic.py:27`  
-    TODO: missing crucial prompt info (e.g., job description context).  
+    TODO: missing crucial prompt info (e.g., job description context). <!-- please review point 4 -->
     Diagnosis: prompt payload may omit useful context despite available ingested artifacts.  
     Proposed action: audit prompt template required tags vs provided node data and fill missing structured fields intentionally.  
     Priority: high.
 
-11. `src/nodes/extract_understand/logic.py:37`  
+11. `src/nodes/extract_understand/logic.py:37`  <!-- i'm not conviced yet of not moving everything to pydantic+langchain+langraph -->
     TODO: question about automatic Pydantic-driven mapping.  
     Diagnosis: explicit mapping is intentional for state safety/fail-closed validation.  
     Proposed action: keep explicit mapping, add short rationale comment/docstring, and remove misleading TODO.  
@@ -90,19 +92,19 @@ Convert inline TODO notes into a clear implementation backlog before editing cod
 
 ## 6) Rendering tooling notes
 
-12. `src/core/tools/render/docx.py:16`  
+12. `src/core/tools/render/docx.py:16` <!-- This was kind of already implemented on phd workspace, there seem to be an issue on migration --> 
     TODO: pydoc/template support.  
     Diagnosis: feature request mixed into code comment; not blocking runtime.  
     Proposed action: move to docs backlog; add concise module-level docs and defer template system until requirements are defined.  
     Priority: low.
 
-13. `src/core/tools/render/latex.py:13`  
+13. `src/core/tools/render/latex.py:13`  <!-- ok, recomendation received -->
     TODO: move escapes to templates.  
     Diagnosis: current escape map is centralized and deterministic; template-level escaping could fragment logic.  
     Proposed action: keep central escaping for now; document why and revisit only if per-template behavior is needed.  
     Priority: low.
 
-14. `src/cli/render_cv.py:23`  
+14. `src/cli/render_cv.py:23`  <!-- we seem to need a complete architecture redesign step -->
     TODO: deterministic order should belong in core.  
     Diagnosis: architectural boundary concern is valid; CLI currently carries transformation logic.  
     Proposed action: extract context-building to core rendering service module and keep CLI as thin orchestration.  

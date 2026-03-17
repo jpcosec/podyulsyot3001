@@ -59,6 +59,12 @@ Supporting index docs:
 1. `docs/operations/tool_interaction_and_known_issues.md`
 2. `docs/operations/non_llm_recovery_demo.md`
 
+### 6) Current priority tracks
+
+1. `plan/subplan/deterministic_parity_migration_from_phd.md`
+2. `plan/subplan/review_ui_and_flow_observability.md`
+3. `plan/subplan/langchain_langgraph_adoption_evaluation.md`
+
 ## Migration note
 
 Legacy compatibility stubs were removed.

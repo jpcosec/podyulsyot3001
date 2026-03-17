@@ -57,6 +57,9 @@ Start here:
 
 - Rebuild master plan: `plan/phd2_stepwise_plan.md`
 - Step index checklist: `plan/index_checklist.md`
+- Deterministic parity migration: `plan/subplan/deterministic_parity_migration_from_phd.md`
+- Review UI + flow observability: `plan/subplan/review_ui_and_flow_observability.md`
+- LangChain/LangGraph evaluation: `plan/subplan/langchain_langgraph_adoption_evaluation.md`
 
 ## Philosophy (why)
 

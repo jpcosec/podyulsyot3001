@@ -35,9 +35,9 @@ JSON artifacts are canonical. Markdown artifacts are human-facing review surface
 
 Current operational graph helper is `create_prep_match_app()` in `src/graph.py`:
 
-`scrape -> translate_if_needed -> extract_understand -> match -> review_match`
+`scrape -> translate_if_needed -> extract_understand -> match -> review_match -> generate_documents -> package`
 
-with `review_match.approve -> package` (terminal node in this subgraph).
+with `review_match.approve -> generate_documents`.
 
 | Node | Execution Class | Required Inputs (current code) | Outputs (current code) | Review Gate | Downstream Consumers | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -45,14 +45,9 @@ with `review_match.approve -> package` (terminal node in this subgraph).
 | `translate_if_needed` | `NLLM-ND` | `state.ingested_data.raw_text`, optional `state.target_language` | GraphState: updated `ingested_data` | No | `extract_understand` | State-only transformation in node logic. |
 | `extract_understand` | `LLM` | `state.job_id`, `state.ingested_data.raw_text`, optional `state.active_feedback` | GraphState: `extracted_data` | No | `match` | State-only output in node logic. |
 | `match` | `LLM` | `state.job_id`, `state.extracted_data.requirements`, `state.my_profile_evidence`; optional regeneration context | GraphState: `matched_data`; Data Plane: `nodes/match/approved/state.json`, `nodes/match/review/decision.md`, `nodes/match/review/rounds/round_<NNN>/decision.md` | Yes (`review_match`) | `review_match` | Uses `RoundManager`; regeneration requires actionable patch feedback. |
-| `review_match` | `NLLM-D` | `state.source`, `state.job_id`, `state.matched_data`, `nodes/match/review/decision.md` | GraphState: `review_decision`, `last_decision`, `active_feedback`, `artifact_refs`; Data Plane: `nodes/match/review/decision.json`, `rounds/round_<NNN>/decision.json`, `rounds/round_<NNN>/feedback.json` | Decision parser | `match` (regen), `package` (approve), `END` (reject) | Enforces stale-hash lock when `source_state_hash` is present; auto-regenerates unreviewed legacy markdown without hash. |
+| `review_match` | `NLLM-D` | `state.source`, `state.job_id`, `state.matched_data`, `nodes/match/review/decision.md` | GraphState: `review_decision`, `last_decision`, `active_feedback`, `artifact_refs`; Data Plane: `nodes/match/review/decision.json`, `rounds/round_<NNN>/decision.json`, `rounds/round_<NNN>/feedback.json` | Decision parser | `match` (regen), `generate_documents` (approve), `END` (reject) | Enforces stale-hash lock when `source_state_hash` is present; auto-regenerates unreviewed legacy markdown without hash. |
+| `generate_documents` | `LLM` + deterministic rendering | `state.matched_data`, latest match decision (`state.last_decision` or `nodes/match/review/decision.json`), profile base data | Data Plane: `nodes/generate_documents/approved/state.json`, `nodes/generate_documents/proposed/*.md`, `nodes/generate_documents/assist/proposed/{state.json,view.md}`; GraphState: `document_deltas`, `text_review_indicators` | No | `package` | Produces CV/letter/email draft markdown and deterministic text-review indicators after approved matching. |
 | `package` (prep terminal) | `NLLM-D` | GraphState only | GraphState: `status=completed` | No | End | Current prep terminal does not package final documents. |
-
-### Implemented but not wired in prep-match registry
-
-| Node | Execution Class | Required Inputs (current code) | Outputs (current code) | Review Gate | Notes |
-| --- | --- | --- | --- | --- | --- |
-| `generate_documents` | `LLM` + deterministic rendering | `state.matched_data`, latest match decision (`state.last_decision` or `nodes/match/review/decision.json`), profile base data | Data Plane: `nodes/generate_documents/approved/state.json`, `nodes/generate_documents/proposed/*.md`, `nodes/generate_documents/assist/proposed/{state.json,view.md}`; GraphState: `document_deltas`, `text_review_indicators` | No dedicated review node in current wiring | Node package exists and is tested, but it is not included in `build_prep_match_node_registry()`. |
 
 ## B) Target-state matrix (architectural contract)
 

@@ -26,6 +26,43 @@ class CVExperienceInjection(BaseModel):
             raise ValueError("experience_id must be non-empty")
         return cleaned
 
+    @model_validator(mode="before")
+    @classmethod
+    def _normalize_bullet_field_aliases(cls, value: object) -> object:
+        if not isinstance(value, dict):
+            return value
+        payload = dict(value)
+        if "new_bullets" in payload:
+            return payload
+
+        for alias in (
+            "achievements",
+            "achievements_to_inject",
+            "bullets",
+            "statements",
+            "description_additions",
+            "new_bullet",
+        ):
+            if alias not in payload:
+                continue
+            alias_value = payload.get(alias)
+            if isinstance(alias_value, list):
+                payload["new_bullets"] = alias_value
+                return payload
+            if isinstance(alias_value, str):
+                payload["new_bullets"] = [alias_value]
+                return payload
+
+        for key, candidate in payload.items():
+            if key == "experience_id":
+                continue
+            if not isinstance(candidate, list):
+                continue
+            if all(isinstance(item, str) for item in candidate):
+                payload["new_bullets"] = candidate
+                return payload
+        return payload
+
     @field_validator("new_bullets")
     @classmethod
     def _normalize_new_bullets(cls, value: list[str]) -> list[str]:
@@ -55,6 +92,22 @@ class MotivationLetterDeltas(BaseModel):
     )
     closing_paragraph: str
 
+    @model_validator(mode="before")
+    @classmethod
+    def _normalize_missing_fields(cls, value: object) -> object:
+        if not isinstance(value, dict):
+            return value
+        payload = dict(value)
+        core = str(payload.get("core_argument_paragraph", "")).strip()
+        payload.setdefault("subject_line", "Application")
+        payload.setdefault("intro_paragraph", "I am applying for this position.")
+        payload.setdefault(
+            "alignment_paragraph",
+            core if core else "My background aligns with the role requirements.",
+        )
+        payload.setdefault("closing_paragraph", "Thank you for your consideration.")
+        return payload
+
 
 class DocumentDeltas(BaseModel):
     cv_summary: str = Field(
@@ -67,6 +120,35 @@ class DocumentDeltas(BaseModel):
         ...,
         description="Max 2 lines, concise English email body",
     )
+
+    @model_validator(mode="before")
+    @classmethod
+    def _normalize_common_model_drift(cls, value: object) -> object:
+        if not isinstance(value, dict):
+            return value
+        payload = dict(value)
+
+        cv_summary = payload.get("cv_summary")
+        if isinstance(cv_summary, list):
+            payload["cv_summary"] = "\n".join(
+                " ".join(str(item).split()).strip()
+                for item in cv_summary
+                if str(item).strip()
+            )
+
+        email_body = payload.get("email_body")
+        if email_body is None and isinstance(payload.get("email_deltas"), dict):
+            email_body = payload["email_deltas"].get("email_body")
+        if isinstance(email_body, list):
+            email_body = "\n".join(
+                " ".join(str(item).split()).strip()
+                for item in email_body
+                if str(item).strip()
+            )
+        if isinstance(email_body, str):
+            payload["email_body"] = email_body
+
+        return payload
 
     @model_validator(mode="after")
     def _validate_line_limits(self) -> "DocumentDeltas":

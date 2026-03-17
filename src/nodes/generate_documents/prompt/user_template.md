@@ -27,6 +27,6 @@
 # 3. Execution Instructions
 Populate the JSON schema with these steps:
 1. Write a factual `cv_summary` (max 3 lines) using validated matches.
-2. Write `cv_injections` using only `experience_id` values that exist in `<candidate_base_cv>.experience`.
+2. Write `cv_injections` using only `experience_id` values that exist in candidate_base_cv.experience.
 3. Generate motivation letter deltas where `core_argument_paragraph` expands the same technical facts from `cv_injections`.
 4. Generate a concise `email_body` of max 2 lines.
