@@ -1,13 +1,67 @@
 .serena/
-.pytest_cache/
-__pycache__/
-*.py[cod]
-data/
 .claude/
 .ruff_cache/
-**/__pycache__/
 .wezterm-init.sh
-node_modules/
-apps/review-workbench/dist/
 artifacts/
 *.tsbuildinfo
+
+# --- Entorno y Secretos (CRITICO) ---
+.env
+.env.local
+.env.*.local
+*.secret
+*.pem
+*.key
+
+# --- Python / Backend ---
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+.venv
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# --- Node / Frontend (apps/review-workbench) ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.eslintcache
+.stylelintcache
+/apps/review-workbench/dist
+/apps/review-workbench/build
+
+# --- Bases de Datos y Docker ---
+data/
+logs/
+import/
+plugins/
+.neo4j/
+
+# --- Assets Personales (LaTeX/CV) ---
+src/core/tools/render/latex_assets/Abbildungen/profile.jpg
+src/core/tools/render/latex_assets/Abbildungen/signature.jpg
+*.pdf
+*.docx
+*.log
+*.aux
+*.out
+*.fls
+*.fdb_latexmk
+
+# --- IDEs y Sistema ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- Sisyphus / Evidence ---
+.sisyphus/evidence/

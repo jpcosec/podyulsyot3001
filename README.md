@@ -59,6 +59,7 @@ Start here:
 - Step index checklist: `plan/index_checklist.md`
 - Worktree planning protocol: `plan/worktree_planning_protocol.md`
 - Deterministic parity migration: `plan/subplan/deterministic_parity_migration_from_phd.md`
+- JSON-first scraping subsystem migration: `plan/subplan/json_first_scraping_subsystem_migration.md`
 - Review UI + flow observability: `plan/subplan/review_ui_and_flow_observability.md`
 - LangChain/LangGraph evaluation: `plan/subplan/langchain_langgraph_adoption_evaluation.md`
 
