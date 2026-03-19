@@ -58,6 +58,13 @@ interface EdgeDraft {
   properties: PropertyPair[];
 }
 
+interface ConnectMenuState {
+  open: boolean;
+  sourceNodeId: string;
+  x: number;
+  y: number;
+}
+
 const CATEGORY_COLORS: Record<string, string> = {
   person: "#e8d5b7",
   skill: "#d5e8b7",
@@ -314,8 +321,10 @@ function NodeEditorInner(): JSX.Element {
 
   const [nodeDraft, setNodeDraft] = useState<NodeDraft | null>(null);
   const [edgeDraft, setEdgeDraft] = useState<EdgeDraft | null>(null);
+  const [connectMenu, setConnectMenu] = useState<ConnectMenuState | null>(null);
+  const [pendingConnectSource, setPendingConnectSource] = useState<string | null>(null);
 
-  const { fitView } = useReactFlow();
+  const { fitView, screenToFlowPosition } = useReactFlow();
 
   const currentSnapshot = useMemo(() => serializeGraph(nodes, edges), [nodes, edges]);
   const dirty = currentSnapshot !== savedSnapshot;
@@ -337,6 +346,15 @@ function NodeEditorInner(): JSX.Element {
   const relationTypes = useMemo(() => {
     return [...new Set(edges.map((edge) => edge.data?.relationType ?? "linked"))];
   }, [edges]);
+
+  const connectCandidates = useMemo(() => {
+    if (!connectMenu) {
+      return [] as SimpleNode[];
+    }
+    return nodes
+      .filter((node) => node.id !== connectMenu.sourceNodeId)
+      .sort((a, b) => a.id.localeCompare(b.id));
+  }, [connectMenu, nodes]);
 
   const filteredNodeIds = useMemo(() => {
     const text = filterText.trim().toLowerCase();
@@ -500,6 +518,7 @@ function NodeEditorInner(): JSX.Element {
     if (editorState === "edit_node" || editorState === "edit_relation") {
       return;
     }
+    setConnectMenu(null);
     setFocusedNodeId(null);
     setSelectedEdgeId(null);
     setEditorState("browse");
@@ -521,9 +540,112 @@ function NodeEditorInner(): JSX.Element {
           prev,
         ) as SimpleEdge[],
       );
+      setConnectMenu(null);
+      setPendingConnectSource(null);
     },
     [setEdges],
   );
+
+  const onConnectStart = useCallback((_: unknown, params: { nodeId?: string | null }) => {
+    setConnectMenu(null);
+    setPendingConnectSource(params.nodeId ?? null);
+  }, []);
+
+  const onConnectEnd = useCallback(
+    (event: MouseEvent | TouchEvent) => {
+      const sourceNodeId = pendingConnectSource;
+      setPendingConnectSource(null);
+      if (!sourceNodeId) {
+        return;
+      }
+
+      const target = event.target as HTMLElement | null;
+      if (target?.closest(".react-flow__handle")) {
+        return;
+      }
+
+      const point = "changedTouches" in event ? event.changedTouches[0] : event;
+      setConnectMenu({
+        open: true,
+        sourceNodeId,
+        x: point.clientX,
+        y: point.clientY,
+      });
+    },
+    [pendingConnectSource],
+  );
+
+  const onConnectToExistingNode = useCallback(
+    (targetNodeId: string) => {
+      if (!connectMenu) {
+        return;
+      }
+      const edgeId = `e-${connectMenu.sourceNodeId}-${targetNodeId}-${Date.now()}`;
+      setEdges((prev) =>
+        addEdge(
+          {
+            id: edgeId,
+            source: connectMenu.sourceNodeId,
+            target: targetNodeId,
+            data: { relationType: "linked", properties: {} },
+          },
+          prev,
+        ) as SimpleEdge[],
+      );
+      setConnectMenu(null);
+      setFocusedNodeId(targetNodeId);
+      setEditorState("focus");
+    },
+    [connectMenu, setEdges],
+  );
+
+  const onCreateAndConnectNode = useCallback(() => {
+    if (!connectMenu) {
+      return;
+    }
+    const newNodeId = `n-new-${Date.now()}`;
+    const flowPoint = screenToFlowPosition({ x: connectMenu.x, y: connectMenu.y });
+
+    const newNodeData: SimpleNodeData = {
+      name: `New Node ${nodes.length + 1}`,
+      category: "concept",
+      properties: { note: "edit me" },
+    };
+
+    setNodes((prev) => [
+      ...prev,
+      {
+        id: newNodeId,
+        type: "simple",
+        position: flowPoint,
+        data: newNodeData,
+      },
+    ]);
+
+    const edgeId = `e-${connectMenu.sourceNodeId}-${newNodeId}-${Date.now()}`;
+    setEdges((prev) =>
+      addEdge(
+        {
+          id: edgeId,
+          source: connectMenu.sourceNodeId,
+          target: newNodeId,
+          data: { relationType: "linked", properties: {} },
+        },
+        prev,
+      ) as SimpleEdge[],
+    );
+
+    setConnectMenu(null);
+    setFocusedNodeId(newNodeId);
+    setSelectedEdgeId(null);
+    setNodeDraft({
+      id: newNodeId,
+      name: newNodeData.name,
+      category: newNodeData.category,
+      properties: pairsFromRecord(newNodeData.properties),
+    });
+    setEditorState("edit_node");
+  }, [connectMenu, nodes.length, screenToFlowPosition, setEdges, setNodes]);
 
   const onAddNode = useCallback(() => {
     const id = `n-new-${Date.now()}`;
@@ -825,6 +947,8 @@ function NodeEditorInner(): JSX.Element {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
+          onConnectStart={onConnectStart}
+          onConnectEnd={onConnectEnd}
           onNodeClick={onNodeClick}
           onNodeDoubleClick={onNodeDoubleClick}
           onEdgeClick={onEdgeClick}
@@ -856,6 +980,29 @@ function NodeEditorInner(): JSX.Element {
         >
           Mode: {stateLabel}
         </button>
+        {connectMenu?.open ? (
+          <div className="ne-connect-menu" style={{ left: connectMenu.x, top: connectMenu.y }}>
+            <h4>Connect from {connectMenu.sourceNodeId}</h4>
+            <button type="button" className="ne-btn ne-btn-small" onClick={onCreateAndConnectNode}>
+              + Create new and connect
+            </button>
+            <div className="ne-connect-list">
+              {connectCandidates.map((node) => (
+                <button
+                  key={node.id}
+                  type="button"
+                  className="ne-connect-item"
+                  onClick={() => onConnectToExistingNode(node.id)}
+                >
+                  {(node.data as SimpleNodeData).name}
+                </button>
+              ))}
+            </div>
+            <button type="button" className="ne-btn" onClick={() => setConnectMenu(null)}>
+              Cancel
+            </button>
+          </div>
+        ) : null}
       </div>
 
       {editorState === "edit_node" && nodeDraft ? (
