@@ -519,6 +519,8 @@ function NodeEditorInner(): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showLinkedEdges, setShowLinkedEdges] = useState(true);
   const [filterText, setFilterText] = useState("");
+  const [attributeFilterKey, setAttributeFilterKey] = useState("");
+  const [attributeFilterValue, setAttributeFilterValue] = useState("");
   const [hideNonNeighbors, setHideNonNeighbors] = useState(false);
 
   const [savedSnapshot, setSavedSnapshot] = useState(() => serializeGraph(initial.nodes, initial.edges));
@@ -552,6 +554,12 @@ function NodeEditorInner(): JSX.Element {
   const relationTypes = useMemo(() => {
     return [...new Set(edges.map((edge) => edge.data?.relationType ?? "linked"))];
   }, [edges]);
+
+  const filterablePropertyKeys = useMemo(() => {
+    return [...new Set(nodes.flatMap((node) => Object.keys((node.data as SimpleNodeData).properties)))].sort((a, b) =>
+      a.localeCompare(b),
+    );
+  }, [nodes]);
 
   const nodeNameById = useMemo(() => {
     return new Map<string, string>(
@@ -652,7 +660,7 @@ function NodeEditorInner(): JSX.Element {
       .sort((a, b) => a.id.localeCompare(b.id));
   }, [connectMenu, nodes]);
 
-  const filteredNodeIds = useMemo(() => {
+  const textFilteredNodeIds = useMemo(() => {
     const text = filterText.trim().toLowerCase();
     if (!text) {
       return new Set(nodes.map((node) => node.id));
@@ -664,18 +672,77 @@ function NodeEditorInner(): JSX.Element {
     );
   }, [nodes, filterText]);
 
-  const visibleEdges = useMemo(() => {
+  const attributeFilteredNodeIds = useMemo(() => {
+    const key = attributeFilterKey.trim();
+    const value = attributeFilterValue.trim().toLowerCase();
+    if (!key) {
+      return new Set(nodes.map((node) => node.id));
+    }
+    return new Set(
+      nodes
+        .filter((node) => {
+          const nodeData = node.data as SimpleNodeData;
+          const propertyValue = nodeData.properties[key];
+          if (propertyValue === undefined) {
+            return false;
+          }
+          if (!value) {
+            return true;
+          }
+          return propertyValue.toLowerCase().includes(value);
+        })
+        .map((node) => node.id),
+    );
+  }, [attributeFilterKey, attributeFilterValue, nodes]);
+
+  const activeEditNodeIds = useMemo(() => {
+    const active = new Set<string>();
+    if (nodeDraft) {
+      active.add(nodeDraft.id);
+    }
+    if (edgeDraft) {
+      const edge = edges.find((item) => item.id === edgeDraft.id);
+      if (edge) {
+        active.add(edge.source);
+        active.add(edge.target);
+      }
+    }
+    return active;
+  }, [edgeDraft, edges, nodeDraft]);
+
+  const filteredNodeIds = useMemo(() => {
+    const next = new Set<string>();
+    for (const node of nodes) {
+      if (!textFilteredNodeIds.has(node.id)) {
+        continue;
+      }
+      if (!attributeFilteredNodeIds.has(node.id)) {
+        continue;
+      }
+      next.add(node.id);
+    }
+    activeEditNodeIds.forEach((id) => next.add(id));
+    return next;
+  }, [activeEditNodeIds, attributeFilteredNodeIds, nodes, textFilteredNodeIds]);
+
+  const relationTypeFilteredEdges = useMemo(() => {
     return edges.filter((edge) => {
       const relationType = edge.data?.relationType ?? "linked";
       if (relationType === "linked" && !showLinkedEdges) {
         return false;
       }
+      return true;
+    });
+  }, [edges, showLinkedEdges]);
+
+  const visibleEdges = useMemo(() => {
+    return relationTypeFilteredEdges.filter((edge) => {
       if (!filteredNodeIds.has(edge.source) || !filteredNodeIds.has(edge.target)) {
         return false;
       }
       return true;
     });
-  }, [edges, showLinkedEdges, filteredNodeIds]);
+  }, [filteredNodeIds, relationTypeFilteredEdges]);
 
   const openNodeEditor = useCallback(
     (nodeId: string) => {
@@ -1344,6 +1411,37 @@ function NodeEditorInner(): JSX.Element {
                 value={filterText}
                 onChange={(event) => setFilterText(event.target.value)}
               />
+              <select
+                className="ne-input"
+                value={attributeFilterKey}
+                onChange={(event) => setAttributeFilterKey(event.target.value)}
+              >
+                <option value="">Any property key</option>
+                {filterablePropertyKeys.map((key) => (
+                  <option key={key} value={key}>
+                    {key}
+                  </option>
+                ))}
+              </select>
+              <input
+                className="ne-input"
+                placeholder="Property value contains"
+                value={attributeFilterValue}
+                onChange={(event) => setAttributeFilterValue(event.target.value)}
+                disabled={!attributeFilterKey}
+              />
+              <button
+                type="button"
+                className="ne-btn ne-btn-small"
+                onClick={() => {
+                  setFilterText("");
+                  setAttributeFilterKey("");
+                  setAttributeFilterValue("");
+                }}
+                disabled={!filterText && !attributeFilterKey && !attributeFilterValue}
+              >
+                Clear filters
+              </button>
             </div>
           </div>
         ) : null}

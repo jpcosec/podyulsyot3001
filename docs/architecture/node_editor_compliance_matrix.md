@@ -41,24 +41,22 @@ Scope is intentionally limited to simple nodes, node-to-node relations, and edit
 | CO-03 | Connections | Clicking relation opens inspection/editing | Pass | `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx:373` | Edge click opens relation modal |
 | SB-01 | Sidebar | Dirty, Save Workspace, Discard/Reset, Unfocus, Auto-Layout | Pass | `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx:699` | `Layout all` and `Layout focus` controls implemented |
 | SB-02 | Sidebar | Drag-and-drop creation palette | Pass | `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx:961` | Sidebar template chips are draggable and create nodes on canvas drop |
-| SB-03 | Sidebar | Relation toggles + text and attribute filters | Partial | `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx:633` | Relation toggle + text filter exist; attribute filter missing |
+| SB-03 | Sidebar | Relation toggles + text and attribute filters | Pass | `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx:662` | Sidebar supports relation toggle, name filter, property-key filter, and property-value matching |
 | SB-04 | Sidebar | Minimap for large graph navigation | Pass | `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx:675` | Minimap enabled |
 | PR-01 | Priority Rules | Edit mode precedence over all other visibility logic | Pass | `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx:380` | Guards block interactions in edit mode |
 | PR-02 | Priority Rules | Focus restrictions precede relation/node filter behavior | Pass | `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx:273` | Focus active set computed first |
-| PR-03 | Priority Rules | Relation-type filter precedes node-attribute filters | Partial | `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx:256` | Attribute filter step not present yet |
+| PR-03 | Priority Rules | Relation-type filter precedes node-attribute filters | Pass | `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx:733` | Edge visibility is computed by relation-type gate first, then node filter constraints |
 
 ## Coverage Summary
 
 - Total requirements: 23
-- Pass: 21
-- Partial: 2
+- Pass: 23
+- Partial: 0
 - Missing: 0
-- Weighted score: 95.7%
+- Weighted score: 100%
 
 Formula: `(Pass + 0.5 * Partial) / Total * 100`
 
 ## Next Priority Fixes
 
-1. Add attribute-level node filters in sidebar to complete `SB-03`
-2. Enforce explicit per-attribute type/value gating UX to harden `ED-04` semantics
-3. Validate and tune focus/filter precedence edge cases for full `PR-03` closure
+All tracked node-to-node requirements in this matrix are currently marked `Pass`.

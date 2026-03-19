@@ -1313,6 +1313,10 @@ p {
   color: var(--text-dim);
 }
 
+.ne-filter-section .ne-input {
+  margin-top: 6px;
+}
+
 .ne-template-list {
   display: flex;
   flex-wrap: wrap;
