@@ -12,11 +12,24 @@ Planning record for ADR-001 lives in `plan/adr/adr_001_ui_first_knowledge_graph_
 
 ## Contents
 
+### Backend (deterministic core)
+
 - `core_io_and_provenance_manager.md`
 - `graph_reactivity_protocol.md`
 - `graph_state_contract.md`
-- `node_editor_behavior_spec.md`
+
+### Frontend (UI architecture)
+
 - `node_editor_frontend_implementation_plan.md`
+
+### Frontend Sandbox (active sandbox development)
+
+- `node_editor_behavior_spec.md`
+- `node_editor_customization_and_architecture.md`
 - `node_editor_compliance_matrix.md`
 - `node_editor_feedback_doubts_and_gaps.md`
+- `node_editor_step1_on_node_edit_breakdown.md`
+
+### Compatibility
+
 - `core_io_manager.md` (compatibility alias)

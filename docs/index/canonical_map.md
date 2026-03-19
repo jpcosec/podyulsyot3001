@@ -39,6 +39,7 @@ Any remaining references to old paths should be migrated to the canonical paths 
 ## Reference
 
 - Canonical docs:
+  - Backend deterministic core:
   - `docs/reference/data_management_actual_state.md`
   - `docs/reference/artifact_schemas.md`
   - `docs/reference/contract_composition_framework.md`
@@ -47,6 +48,12 @@ Any remaining references to old paths should be migrated to the canonical paths 
   - `docs/architecture/core_io_and_provenance_manager.md`
   - `docs/architecture/graph_reactivity_protocol.md`
   - `docs/architecture/graph_state_contract.md`
+  - Frontend sandbox:
+  - `docs/architecture/node_editor_behavior_spec.md`
+  - `docs/architecture/node_editor_customization_and_architecture.md`
+  - `docs/architecture/node_editor_compliance_matrix.md`
+  - `docs/architecture/node_editor_feedback_doubts_and_gaps.md`
+  - `docs/architecture/node_editor_step1_on_node_edit_breakdown.md`
   - `docs/architecture/core_io_manager.md`
 
 ## Operations

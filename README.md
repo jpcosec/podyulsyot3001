@@ -87,6 +87,12 @@ Start here:
 - Feedback memory system: `docs/business_rules/feedback_memory.md`
 - `sync_json_md` service: `docs/business_rules/sync_json_md.md`
 
+## Node editor sandbox
+
+- Behavior specification: `docs/architecture/node_editor_behavior_spec.md`
+- Customization and architecture guide: `docs/architecture/node_editor_customization_and_architecture.md`
+- Compliance matrix: `docs/architecture/node_editor_compliance_matrix.md`
+
 ## Reference
 
 - Actual runtime data behavior (current codebase): `docs/reference/data_management_actual_state.md`
@@ -100,6 +106,8 @@ Start here:
 - CLI workflow and troubleshooting: `docs/operations/tool_interaction_and_known_issues.md`
 - Non-LLM recovery demo (reviewable): `docs/operations/non_llm_recovery_demo.md`
 - UI workbench Phase 0 bootstrap: `docs/operations/ui_workbench_phase0_bootstrap.md`
+- Start full local stack: `./scripts/dev-all.sh`
+- Start UI + API only: `./scripts/dev.sh`
 - Repo protocol check: `python -m src.cli.check_repo_protocol`
 
 ## Local enforcement setup

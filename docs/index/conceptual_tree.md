@@ -27,7 +27,16 @@ PhD 2.0 Docs
 │   ├── artifact_schemas
 │   └── document_glossary
 ├── Architecture technicals (cross-cutting)
-│   └── core_io_and_provenance_manager
+│   ├── backend deterministic core
+│   │   ├── core_io_and_provenance_manager
+│   │   ├── graph_state_contract
+│   │   └── graph_reactivity_protocol
+│   └── frontend sandbox
+│       ├── node_editor_behavior_spec
+│       ├── node_editor_customization_and_architecture
+│       ├── node_editor_compliance_matrix
+│       ├── node_editor_feedback_doubts_and_gaps
+│       └── node_editor_step1_on_node_edit_breakdown
 ├── Operations (how to run)
 │   ├── tool_interaction_and_known_issues
 │   └── non_llm_recovery_demo

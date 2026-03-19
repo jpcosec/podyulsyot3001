@@ -20,6 +20,26 @@ Supporting index docs:
 - Operations: `docs/operations/`
 - Implementation plan: `plan/`
 
+## Architecture split (current)
+
+### Backend (deterministic core)
+
+- `docs/architecture/core_io_and_provenance_manager.md`
+- `docs/architecture/graph_state_contract.md`
+- `docs/architecture/graph_reactivity_protocol.md`
+
+### Frontend (UI architecture)
+
+- `docs/architecture/node_editor_frontend_implementation_plan.md`
+
+### Frontend Sandbox (active sandbox development)
+
+- `docs/architecture/node_editor_behavior_spec.md`
+- `docs/architecture/node_editor_customization_and_architecture.md`
+- `docs/architecture/node_editor_compliance_matrix.md`
+- `docs/architecture/node_editor_feedback_doubts_and_gaps.md`
+- `docs/architecture/node_editor_step1_on_node_edit_breakdown.md`
+
 ## Quick reading paths
 
 ### 1) Understand why the system exists
@@ -54,12 +74,18 @@ Supporting index docs:
 3. `docs/business_rules/feedback_memory.md`
 4. `docs/architecture/graph_reactivity_protocol.md`
 
-### 5) Run and troubleshoot
+### 5) Understand the node editor sandbox
+
+1. `docs/architecture/node_editor_behavior_spec.md`
+2. `docs/architecture/node_editor_customization_and_architecture.md`
+3. `docs/architecture/node_editor_compliance_matrix.md`
+
+### 6) Run and troubleshoot
 
 1. `docs/operations/tool_interaction_and_known_issues.md`
 2. `docs/operations/non_llm_recovery_demo.md`
 
-### 6) Current priority tracks
+### 7) Current priority tracks
 
 1. `plan/subplan/deterministic_parity_migration_from_phd.md`
 2. `plan/subplan/review_ui_and_flow_observability.md`

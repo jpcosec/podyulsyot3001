@@ -17,6 +17,9 @@
 - Added `Vacant nodes` drawer section in `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx` that exposes focus-scoped candidate targets for new connections and supports one-click connect directly from the sidebar.
 - Updated `/sandbox/node_editor` focus UX in `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx`: `Hide non-neighbors` now defaults to enabled, vacant-drawer connect flow stays available under hidden-neighbor focus filtering, and `Layout custom` restores user ordering after `Layout all` / `Layout focus`.
 - Refreshed node editor compliance tracking in `docs/architecture/node_editor_compliance_matrix.md` to reflect current status and evidence references.
+- Added concise operator guide `docs/architecture/node_editor_customization_and_architecture.md` documenting node-editor runtime architecture, frontend customization points, and backend category/config behavior boundaries.
+- Reorganized review-workbench sandbox source structure under `apps/review-workbench/src/sandbox/` by moving sandbox pages (`SandboxPage`, `TextTaggerPage`, `CvGraphEditorPage`, `NodeEditorSandboxPage`, `NodeEditorPlanPage`) and sandbox-only UI modules (`RichTextPane`, `components/cv-graph/*`, `lib/mastery-scale`) out of general page/component folders; updated route imports in `apps/review-workbench/src/App.tsx` accordingly.
+- Reorganized docs navigation to mirror backend/frontend split and explicitly group sandbox docs in `docs/architecture/README.md`, `docs/index/README.md`, `docs/index/canonical_map.md`, and `docs/index/conceptual_tree.md`.
 - How to run and verify this slice: run `./scripts/dev-all.sh`, open `http://127.0.0.1:4173/sandbox/node_editor`, then (1) focus any node and verify `Hide non-neighbors` is enabled by default, (2) in focused mode connect one hidden candidate from `Vacant nodes` and confirm edge count increases, (3) click `Layout all`, then `Layout custom`, and confirm original ordering is restored.
 
 ## 2026-03-18

@@ -1,16 +1,16 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
-import { GraphCanvas } from "../components/GraphCanvas";
-import { JobTree } from "../components/JobTree";
-import { StageStatusBadge } from "../components/StageStatusBadge";
+import { GraphCanvas } from "../../components/GraphCanvas";
+import { JobTree } from "../../components/JobTree";
+import { StageStatusBadge } from "../../components/StageStatusBadge";
 import type {
   GraphEdge,
   GraphNode,
   JobListItem,
   RequirementItem,
   StageStatus,
-} from "../types/models";
+} from "../../types/models";
 
 type DocKey = "motivation_letter" | "cv" | "application_email";
 

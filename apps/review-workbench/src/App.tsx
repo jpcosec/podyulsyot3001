@@ -2,11 +2,11 @@ import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 
 import { JobStagePage } from "./pages/JobStagePage";
 import { PortfolioPage } from "./pages/PortfolioPage";
-import { CvGraphEditorPage } from "./pages/CvGraphEditorPage";
-import { NodeEditorPlanPage } from "./pages/NodeEditorPlanPage";
-import { NodeEditorSandboxPage } from "./pages/NodeEditorSandboxPage";
-import { SandboxPage } from "./pages/SandboxPage";
-import { TextTaggerPage } from "./pages/TextTaggerPage";
+import { CvGraphEditorPage } from "./sandbox/pages/CvGraphEditorPage";
+import { NodeEditorPlanPage } from "./sandbox/pages/NodeEditorPlanPage";
+import { NodeEditorSandboxPage } from "./sandbox/pages/NodeEditorSandboxPage";
+import { SandboxPage } from "./sandbox/pages/SandboxPage";
+import { TextTaggerPage } from "./sandbox/pages/TextTaggerPage";
 
 function AppRoutes(): JSX.Element {
   const location = useLocation();
