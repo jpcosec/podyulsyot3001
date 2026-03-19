@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 import { getPortfolioSummary } from "../api/client";
 import { JobTree } from "../components/JobTree";
@@ -16,6 +17,9 @@ export function PortfolioPage(): JSX.Element {
     <section className="panel">
       <h1>Application Portfolio</h1>
       <p>UI-first review queue backed by filesystem read models.</p>
+      <p>
+        Need isolated UI testing? Open the <Link to="/sandbox">component sandbox</Link>.
+      </p>
       {error ? <p className="error">{error}</p> : null}
       {summary ? (
         <div className="stats-grid">

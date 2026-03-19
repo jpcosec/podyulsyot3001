@@ -1,4 +1,6 @@
 import type {
+  CvProfileGraphPayload,
+  CvGraphPayload,
   JobTimeline,
   PortfolioSummary,
   ViewOnePayload,
@@ -58,4 +60,35 @@ export async function getViewThreePayload(
     throw new Error(`view3 payload failed: ${response.status}`);
   }
   return (await response.json()) as ViewThreePayload;
+}
+
+export async function getBaseCvGraphPayload(): Promise<CvGraphPayload> {
+  const response = await fetch(`${API_BASE}/api/v1/portfolio/base-cv-graph`);
+  if (!response.ok) {
+    throw new Error(`base cv graph payload failed: ${response.status}`);
+  }
+  return (await response.json()) as CvGraphPayload;
+}
+
+export async function getCvProfileGraphPayload(): Promise<CvProfileGraphPayload> {
+  const response = await fetch(`${API_BASE}/api/v1/portfolio/cv-profile-graph`);
+  if (!response.ok) {
+    throw new Error(`cv profile graph payload failed: ${response.status}`);
+  }
+  return (await response.json()) as CvProfileGraphPayload;
+}
+
+export async function saveCvProfileGraphPayload(
+  payload: CvProfileGraphPayload,
+): Promise<CvProfileGraphPayload> {
+  const response = await fetch(`${API_BASE}/api/v1/portfolio/cv-profile-graph`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    throw new Error(`save cv profile graph failed: ${response.status} ${detail}`);
+  }
+  return (await response.json()) as CvProfileGraphPayload;
 }
