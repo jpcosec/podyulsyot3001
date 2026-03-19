@@ -41,11 +41,11 @@ Scope is intentionally limited to simple nodes, node-to-node relations, and edit
 | CO-03 | Connections | Clicking relation opens inspection/editing | Pass | `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx:373` | Edge click opens relation modal |
 | SB-01 | Sidebar | Dirty, Save Workspace, Discard/Reset, Unfocus, Auto-Layout | Pass | `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx:699` | `Layout all` and `Layout focus` controls implemented |
 | SB-02 | Sidebar | Drag-and-drop creation palette | Pass | `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx:961` | Sidebar template chips are draggable and create nodes on canvas drop |
-| SB-03 | Sidebar | Relation toggles + text and attribute filters | Pass | `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx:662` | Sidebar supports relation toggle, name filter, property-key filter, and property-value matching |
+| SB-03 | Sidebar | Relation toggles + text and attribute filters | Pass | `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx:1375` | Sidebar supports per-relation-type toggles, name filter, property-key filter, and property-value matching |
 | SB-04 | Sidebar | Minimap for large graph navigation | Pass | `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx:675` | Minimap enabled |
 | PR-01 | Priority Rules | Edit mode precedence over all other visibility logic | Pass | `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx:380` | Guards block interactions in edit mode |
-| PR-02 | Priority Rules | Focus restrictions precede relation/node filter behavior | Pass | `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx:273` | Focus active set computed first |
-| PR-03 | Priority Rules | Relation-type filter precedes node-attribute filters | Pass | `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx:733` | Edge visibility is computed by relation-type gate first, then node filter constraints |
+| PR-02 | Priority Rules | Focus restrictions precede relation/node filter behavior | Pass | `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx:715` | Focus/edit modes bypass node filters first, then focus visibility rules apply |
+| PR-03 | Priority Rules | Relation-type filter precedes node-attribute filters | Pass | `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx:732` | Edge visibility is computed by relation-type gate first, then node filter constraints |
 
 ## Coverage Summary
 

@@ -514,10 +514,9 @@ function NodeEditorInner(): JSX.Element {
 
   const [editorState, setEditorState] = useState<EditorState>("browse");
   const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null);
-  const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [showLinkedEdges, setShowLinkedEdges] = useState(true);
+  const [hiddenRelationTypes, setHiddenRelationTypes] = useState<string[]>([]);
   const [filterText, setFilterText] = useState("");
   const [attributeFilterKey, setAttributeFilterKey] = useState("");
   const [attributeFilterValue, setAttributeFilterValue] = useState("");
@@ -554,6 +553,8 @@ function NodeEditorInner(): JSX.Element {
   const relationTypes = useMemo(() => {
     return [...new Set(edges.map((edge) => edge.data?.relationType ?? "linked"))];
   }, [edges]);
+
+  const inFocusModes = editorState === "focus" || editorState === "edit_node" || editorState === "edit_relation";
 
   const filterablePropertyKeys = useMemo(() => {
     return [...new Set(nodes.flatMap((node) => Object.keys((node.data as SimpleNodeData).properties)))].sort((a, b) =>
@@ -711,6 +712,9 @@ function NodeEditorInner(): JSX.Element {
   }, [edgeDraft, edges, nodeDraft]);
 
   const filteredNodeIds = useMemo(() => {
+    if (inFocusModes) {
+      return new Set(nodes.map((node) => node.id));
+    }
     const next = new Set<string>();
     for (const node of nodes) {
       if (!textFilteredNodeIds.has(node.id)) {
@@ -723,17 +727,17 @@ function NodeEditorInner(): JSX.Element {
     }
     activeEditNodeIds.forEach((id) => next.add(id));
     return next;
-  }, [activeEditNodeIds, attributeFilteredNodeIds, nodes, textFilteredNodeIds]);
+  }, [activeEditNodeIds, attributeFilteredNodeIds, inFocusModes, nodes, textFilteredNodeIds]);
 
   const relationTypeFilteredEdges = useMemo(() => {
     return edges.filter((edge) => {
       const relationType = edge.data?.relationType ?? "linked";
-      if (relationType === "linked" && !showLinkedEdges) {
+      if (hiddenRelationTypes.includes(relationType)) {
         return false;
       }
       return true;
     });
-  }, [edges, showLinkedEdges]);
+  }, [edges, hiddenRelationTypes]);
 
   const visibleEdges = useMemo(() => {
     return relationTypeFilteredEdges.filter((edge) => {
@@ -752,7 +756,6 @@ function NodeEditorInner(): JSX.Element {
       }
       const nodeData = node.data as SimpleNodeData;
       setFocusedNodeId(node.id);
-      setSelectedEdgeId(null);
       setNodeDraft({
         id: node.id,
         name: nodeData.name,
@@ -769,8 +772,6 @@ function NodeEditorInner(): JSX.Element {
     return nodes
       .filter((node) => filteredNodeIds.has(node.id))
       .filter((node) => {
-        const inFocusModes =
-          editorState === "focus" || editorState === "edit_node" || editorState === "edit_relation";
         if (!inFocusModes || !hideNonNeighbors) {
           return true;
         }
@@ -778,7 +779,7 @@ function NodeEditorInner(): JSX.Element {
       })
       .map((node) => {
         const nodeData = node.data as SimpleNodeData;
-        if (editorState === "focus" || editorState === "edit_node" || editorState === "edit_relation") {
+        if (inFocusModes) {
           const active = node.id === focusedNodeId || neighborIds.has(node.id);
           return {
             ...node,
@@ -804,7 +805,7 @@ function NodeEditorInner(): JSX.Element {
           selectable: true,
         };
       });
-  }, [nodes, filteredNodeIds, editorState, hideNonNeighbors, focusedNodeId, neighborIds, openNodeEditor]);
+  }, [nodes, filteredNodeIds, focusedNodeId, hideNonNeighbors, inFocusModes, neighborIds, openNodeEditor]);
 
   const displayEdges = useMemo(() => {
     return visibleEdges.map((edge) => {
@@ -816,8 +817,6 @@ function NodeEditorInner(): JSX.Element {
           color: "#334155",
         },
       };
-      const inFocusModes =
-        editorState === "focus" || editorState === "edit_node" || editorState === "edit_relation";
       if (!inFocusModes) {
         return baseEdge;
       }
@@ -831,7 +830,7 @@ function NodeEditorInner(): JSX.Element {
         animated: connected,
       };
     });
-  }, [visibleEdges, editorState, hideNonNeighbors, focusedNodeId]);
+  }, [visibleEdges, focusedNodeId, hideNonNeighbors, inFocusModes]);
 
   const openEdgeEditor = useCallback(
     (edgeId: string) => {
@@ -839,7 +838,6 @@ function NodeEditorInner(): JSX.Element {
       if (!edge) {
         return;
       }
-      setSelectedEdgeId(edge.id);
       setFocusedNodeId(edge.source);
       setNodeDraft(null);
       setEdgeDraft({
@@ -865,7 +863,6 @@ function NodeEditorInner(): JSX.Element {
         }
       }
       setFocusedNodeId(node.id);
-      setSelectedEdgeId(null);
       setEditorState("focus");
       setTimeout(() => fitView({ nodes: [{ id: node.id }], duration: 350, padding: 0.55 }), 50);
     },
@@ -892,7 +889,6 @@ function NodeEditorInner(): JSX.Element {
     }
     setConnectMenu(null);
     setFocusedNodeId(null);
-    setSelectedEdgeId(null);
     setEditorState("browse");
   }, [editorState]);
 
@@ -1014,7 +1010,6 @@ function NodeEditorInner(): JSX.Element {
 
     setConnectMenu(null);
     setFocusedNodeId(newNodeId);
-    setSelectedEdgeId(null);
     setNodeDraft({
       id: newNodeId,
       name: newNodeData.name,
@@ -1085,7 +1080,6 @@ function NodeEditorInner(): JSX.Element {
         },
       ]);
       setFocusedNodeId(id);
-      setSelectedEdgeId(null);
       setEditorState("focus");
     },
     [nodes.length, screenToFlowPosition, setNodes],
@@ -1114,7 +1108,6 @@ function NodeEditorInner(): JSX.Element {
     setEdges(parsed.edges);
     setEditorState("browse");
     setFocusedNodeId(null);
-    setSelectedEdgeId(null);
     setNodeDraft(null);
     setEdgeDraft(null);
   }, [savedSnapshot, setNodes, setEdges]);
@@ -1125,7 +1118,6 @@ function NodeEditorInner(): JSX.Element {
     }
     setEditorState("browse");
     setFocusedNodeId(null);
-    setSelectedEdgeId(null);
     setTimeout(() => fitView({ duration: 320, padding: 0.1 }), 40);
   }, [editorState, fitView]);
 
@@ -1381,14 +1373,31 @@ function NodeEditorInner(): JSX.Element {
 
             <div className="ne-filter-section">
               <h3>Relations</h3>
-              <label className="ne-checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={showLinkedEdges}
-                  onChange={(event) => setShowLinkedEdges(event.target.checked)}
-                />
-                linked
-              </label>
+              {relationTypes.length > 0 ? (
+                relationTypes.map((relationType) => (
+                  <label key={relationType} className="ne-checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={!hiddenRelationTypes.includes(relationType)}
+                      onChange={(event) => {
+                        const isChecked = event.target.checked;
+                        setHiddenRelationTypes((prev) => {
+                          if (isChecked) {
+                            return prev.filter((item) => item !== relationType);
+                          }
+                          if (prev.includes(relationType)) {
+                            return prev;
+                          }
+                          return [...prev, relationType];
+                        });
+                      }}
+                    />
+                    {relationType}
+                  </label>
+                ))
+              ) : (
+                <p className="ne-empty-note">No relation types available.</p>
+              )}
             </div>
 
             <div className="ne-filter-section">
