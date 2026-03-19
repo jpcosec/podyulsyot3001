@@ -22,13 +22,12 @@
     "slate-react": "^0.123.0"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.0.17",
     "@types/dagre": "^0.7.54",
     "@types/react": "^18.3.20",
     "@types/react-dom": "^18.3.6",
     "@vitejs/plugin-react": "^4.3.4",
-    "autoprefixer": "^10.4.21",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^3.4.17",
+    "tailwindcss": "^4.0.17",
     "typescript": "^5.8.2",
     "vite": "^5.4.14"
   }

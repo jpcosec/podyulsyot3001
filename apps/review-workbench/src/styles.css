@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 :root {
   --bg-1: #f1ece3;
@@ -809,6 +807,60 @@ p {
   min-height: 680px;
 }
 
+.cv-graph-editor-shell button:focus-visible,
+.cv-graph-editor-shell input:focus-visible,
+.cv-graph-editor-shell textarea:focus-visible,
+.cv-graph-editor-shell select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #0f766e, 0 0 0 4px rgba(15, 118, 110, 0.18);
+}
+
+.cv-graph-skeleton {
+  min-height: 680px;
+  padding: 18px;
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+}
+
+.cv-skeleton-title,
+.cv-skeleton-card,
+.cv-skeleton-chip {
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 37%, #e2e8f0 63%);
+  background-size: 400% 100%;
+  animation: cv-skeleton-shimmer 1.25s ease infinite;
+  border-radius: 10px;
+}
+
+.cv-skeleton-title {
+  height: 28px;
+  width: 46%;
+}
+
+.cv-skeleton-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.cv-skeleton-row-wide {
+  grid-template-columns: 1fr;
+}
+
+.cv-skeleton-card {
+  height: 134px;
+}
+
+.cv-side-skill-loading {
+  display: grid;
+  gap: 6px;
+}
+
+.cv-skeleton-chip {
+  height: 44px;
+}
+
 .cv-side-box {
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -942,6 +994,8 @@ p {
   z-index: 40;
   display: grid;
   gap: 8px;
+  transform-origin: left top;
+  animation: cv-entry-panel-in 180ms ease;
 }
 
 .cv-inline-field {
@@ -1007,6 +1061,10 @@ p {
 
 .cv-plus-button:hover {
   background: #ccfbf1;
+}
+
+.cv-plus-button:focus-visible {
+  border-style: solid;
 }
 
 .cv-group-node-wrap {
@@ -1075,6 +1133,10 @@ p {
   display: grid;
   place-items: center;
   cursor: pointer;
+}
+
+.cv-skill-node:focus-visible {
+  transform: scale(1.05);
 }
 
 .cv-skill-node-essential {
@@ -1154,6 +1216,26 @@ p {
 
 .cv-graph-meta p {
   margin: 4px 0;
+}
+
+@keyframes cv-entry-panel-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes cv-skeleton-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
 }
 
 @media (max-width: 900px) {

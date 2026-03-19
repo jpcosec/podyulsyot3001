@@ -5,7 +5,9 @@ import {
   Background,
   Controls,
   MiniMap,
+  ReactFlowProvider,
   ReactFlow,
+  useUpdateNodeInternals,
   type ReactFlowInstance,
   type Connection,
   type Edge,
@@ -17,6 +19,7 @@ import {
   useNodesState,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import dagre from "@dagrejs/dagre";
 
 import { getCvProfileGraphPayload, saveCvProfileGraphPayload } from "../../api/client";
 import { EntryNode } from "../components/cv-graph/EntryNode";
@@ -456,6 +459,74 @@ function buildGraphView(params: BuildGraphParams): {
   };
 }
 
+function asDimension(value: unknown, fallback: number): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
+function applyTopLevelDagreLayout(
+  nodes: FlowNode[],
+  graph: CvProfileGraphPayload | null,
+  focusedEntryId: string,
+): FlowNode[] {
+  const topLevelGroups = nodes.filter((node) => node.type === "group" && !node.parentId);
+  if (topLevelGroups.length <= 1) {
+    return nodes;
+  }
+
+  const focusedCategory = graph?.entries.find((entry) => entry.id === focusedEntryId)?.category ?? null;
+
+  const dagreGraph = new dagre.graphlib.Graph();
+  dagreGraph.setDefaultEdgeLabel(() => ({}));
+  dagreGraph.setGraph({
+    rankdir: "LR",
+    align: "UL",
+    ranksep: 78,
+    nodesep: 42,
+    marginx: 30,
+    marginy: 30,
+  });
+
+  topLevelGroups.forEach((node, index) => {
+    const style = node.style ?? {};
+    const baseWidth = asDimension(style.width, node.id === "group:related_skills" ? 360 : 340);
+    const baseHeight = asDimension(style.height, 160);
+    const expandedPanelWidth = focusedCategory && node.id === `group:${focusedCategory}` ? 280 : 0;
+    const widthForLayout = baseWidth + expandedPanelWidth;
+    dagreGraph.setNode(node.id, { width: widthForLayout, height: baseHeight });
+    if (index > 0) {
+      dagreGraph.setEdge(topLevelGroups[index - 1]?.id, node.id);
+    }
+  });
+
+  dagre.layout(dagreGraph);
+
+  const layoutById = new Map<string, { x: number; y: number }>();
+  topLevelGroups.forEach((node) => {
+    const layoutNode = dagreGraph.node(node.id);
+    if (!layoutNode) {
+      return;
+    }
+    const style = node.style ?? {};
+    const width = asDimension(style.width, node.id === "group:related_skills" ? 360 : 340);
+    const height = asDimension(style.height, 160);
+    layoutById.set(node.id, {
+      x: layoutNode.x - width / 2,
+      y: layoutNode.y - height / 2,
+    });
+  });
+
+  return nodes.map((node) => {
+    const layout = layoutById.get(node.id);
+    if (!layout) {
+      return node;
+    }
+    return {
+      ...node,
+      position: layout,
+    };
+  });
+}
+
 function updateEntry(entry: CvEntry, patch: Partial<CvEntry>): CvEntry {
   return {
     ...entry,
@@ -484,7 +555,7 @@ function resolveConnectionPair(
   return null;
 }
 
-export function CvGraphEditorPage(): JSX.Element {
+function CvGraphEditorInner(): JSX.Element {
   const { entryId } = useParams<{ entryId?: string }>();
   const [graph, setGraph] = useState<CvProfileGraphPayload | null>(null);
   const [error, setError] = useState("");
@@ -498,6 +569,7 @@ export function CvGraphEditorPage(): JSX.Element {
     FlowNode,
     FlowEdge
   > | null>(null);
+  const updateNodeInternals = useUpdateNodeInternals();
 
   const mutateGraph = useCallback(
     (updater: (previous: CvProfileGraphPayload | null) => CvProfileGraphPayload | null) => {
@@ -725,7 +797,7 @@ export function CvGraphEditorPage(): JSX.Element {
 
     return {
       ...built,
-      nodes: built.nodes,
+      nodes: applyTopLevelDagreLayout(built.nodes, graph, focusedEntryId),
     };
   }, [
     graph,
@@ -741,6 +813,8 @@ export function CvGraphEditorPage(): JSX.Element {
     onSelectSkill,
     onAddSkill,
   ]);
+
+  const isLoading = !graph && !error;
 
   const [nodes, setNodes, onNodesChange] = useNodesState<FlowNode>(mapped.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(mapped.edges);
@@ -761,6 +835,21 @@ export function CvGraphEditorPage(): JSX.Element {
       window.cancelAnimationFrame(rafId);
     };
   }, [reactFlowInstance, mapped.nodes.length, focusedEntryId]);
+
+  useEffect(() => {
+    if (!mapped.nodes.length) {
+      return;
+    }
+    const refreshTargets = mapped.nodes
+      .filter((node) => node.type === "entry" || node.type === "skill")
+      .map((node) => node.id);
+    const rafId = window.requestAnimationFrame(() => {
+      refreshTargets.forEach((nodeId) => updateNodeInternals(nodeId));
+    });
+    return () => {
+      window.cancelAnimationFrame(rafId);
+    };
+  }, [mapped.nodes, updateNodeInternals]);
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -894,24 +983,38 @@ export function CvGraphEditorPage(): JSX.Element {
 
       <div className="cv-graph-layout">
         <div className="cv-graph-canvas-wrap">
-          <ReactFlow<FlowNode, FlowEdge>
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            onConnect={onConnect}
-            onNodeClick={onNodeClick}
-            onEdgeClick={onEdgeClick}
-            onInit={setReactFlowInstance}
-            nodeTypes={nodeTypes}
-            minZoom={0.1}
-            fitView
-            attributionPosition="bottom-left"
-          >
-            <MiniMap pannable zoomable />
-            <Controls />
-            <Background gap={18} size={1} />
-          </ReactFlow>
+          {isLoading ? (
+            <div className="cv-graph-skeleton" role="status" aria-label="Loading CV graph editor">
+              <div className="cv-skeleton-title" />
+              <div className="cv-skeleton-row">
+                <div className="cv-skeleton-card" />
+                <div className="cv-skeleton-card" />
+                <div className="cv-skeleton-card" />
+              </div>
+              <div className="cv-skeleton-row cv-skeleton-row-wide">
+                <div className="cv-skeleton-card" />
+              </div>
+            </div>
+          ) : (
+            <ReactFlow<FlowNode, FlowEdge>
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              onNodeClick={onNodeClick}
+              onEdgeClick={onEdgeClick}
+              onInit={setReactFlowInstance}
+              nodeTypes={nodeTypes}
+              minZoom={0.1}
+              fitView
+              attributionPosition="bottom-left"
+            >
+              <MiniMap pannable zoomable />
+              <Controls />
+              <Background gap={18} size={1} />
+            </ReactFlow>
+          )}
         </div>
 
         <aside className="cv-graph-sidepanel shadow-sm">
@@ -925,25 +1028,33 @@ export function CvGraphEditorPage(): JSX.Element {
           <div className="cv-side-box">
             <h3>Unrelated Skills</h3>
             <div className="cv-side-skill-grid">
-              {mapped.unrelatedSkills.map((skill) => {
-                const mastery = resolveMasteryLevel(skill.level, toSkillMeta(skill.meta));
-                return (
-                  <button
-                    key={skill.id}
-                    type="button"
-                    className={`cv-side-skill-chip ${selectedSkillId === skill.id ? "cv-side-skill-chip-active" : ""}`}
-                    style={{
-                      borderColor: masteryColorForCategory(skill.category, mastery.tag),
-                    }}
-                    onClick={() => setSelectedSkillId(skill.id)}
-                  >
-                    <span>{skill.label}</span>
-                    <small>
-                      {mastery.label} ({mastery.value}/5)
-                    </small>
-                  </button>
-                );
-              })}
+              {isLoading ? (
+                <div className="cv-side-skill-loading" role="status" aria-label="Loading skill palette">
+                  <div className="cv-skeleton-chip" />
+                  <div className="cv-skeleton-chip" />
+                  <div className="cv-skeleton-chip" />
+                </div>
+              ) : (
+                mapped.unrelatedSkills.map((skill) => {
+                  const mastery = resolveMasteryLevel(skill.level, toSkillMeta(skill.meta));
+                  return (
+                    <button
+                      key={skill.id}
+                      type="button"
+                      className={`cv-side-skill-chip ${selectedSkillId === skill.id ? "cv-side-skill-chip-active" : ""}`}
+                      style={{
+                        borderColor: masteryColorForCategory(skill.category, mastery.tag),
+                      }}
+                      onClick={() => setSelectedSkillId(skill.id)}
+                    >
+                      <span>{skill.label}</span>
+                      <small>
+                        {mastery.label} ({mastery.value}/5)
+                      </small>
+                    </button>
+                  );
+                })
+              )}
             </div>
             <button type="button" className="cv-plus-button w-full" onClick={onAddSkill}>
               + Add skill
@@ -1042,5 +1153,13 @@ export function CvGraphEditorPage(): JSX.Element {
         </aside>
       </div>
     </section>
+  );
+}
+
+export function CvGraphEditorPage(): JSX.Element {
+  return (
+    <ReactFlowProvider>
+      <CvGraphEditorInner />
+    </ReactFlowProvider>
   );
 }
