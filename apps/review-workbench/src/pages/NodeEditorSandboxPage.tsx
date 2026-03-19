@@ -1,23 +1,30 @@
-import { memo, useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   addEdge,
+  BaseEdge,
   Background,
   ConnectionMode,
   Controls,
+  getBezierPath,
   Handle,
+  type InternalNode,
+  MarkerType,
   MiniMap,
   Position,
   ReactFlow,
   ReactFlowProvider,
+  useStore,
   useEdgesState,
   useNodesState,
   useReactFlow,
   type Connection,
   type Edge,
+  type EdgeProps,
   type Node,
   type NodeProps,
   type NodeTypes,
+  type XYPosition,
 } from "@xyflow/react";
 import dagre from "dagre";
 import "@xyflow/react/dist/style.css";
@@ -76,6 +83,12 @@ interface ConnectMenuState {
   y: number;
 }
 
+interface NodeTemplate {
+  name: string;
+  category: string;
+  defaults: Record<string, string>;
+}
+
 const CATEGORY_COLORS: Record<string, string> = {
   person: "#e8d5b7",
   skill: "#d5e8b7",
@@ -94,6 +107,14 @@ const ATTRIBUTE_TYPES: AttributeType[] = [
   "boolean",
   "enum",
   "enum_open",
+];
+
+const NODE_TEMPLATES: NodeTemplate[] = [
+  { name: "Person", category: "person", defaults: { role: "new" } },
+  { name: "Skill", category: "skill", defaults: { level: "basic" } },
+  { name: "Project", category: "project", defaults: { stage: "draft" } },
+  { name: "Publication", category: "publication", defaults: { year: "2026" } },
+  { name: "Concept", category: "concept", defaults: { note: "new" } },
 ];
 
 const DAGRE_NODE_WIDTH = 170;
@@ -313,6 +334,81 @@ const nodeTypes: NodeTypes = {
   simple: SimpleNodeCard,
 };
 
+function getNodeIntersection(sourceNode: InternalNode, targetNode: InternalNode): XYPosition {
+  const sourceWidth = sourceNode.measured.width ?? DAGRE_NODE_WIDTH;
+  const sourceHeight = sourceNode.measured.height ?? DAGRE_NODE_HEIGHT;
+  const targetWidth = targetNode.measured.width ?? DAGRE_NODE_WIDTH;
+  const targetHeight = targetNode.measured.height ?? DAGRE_NODE_HEIGHT;
+  const sourceCenterX = sourceNode.internals.positionAbsolute.x + sourceWidth / 2;
+  const sourceCenterY = sourceNode.internals.positionAbsolute.y + sourceHeight / 2;
+  const targetCenterX = targetNode.internals.positionAbsolute.x + targetWidth / 2;
+  const targetCenterY = targetNode.internals.positionAbsolute.y + targetHeight / 2;
+
+  const w = sourceWidth / 2;
+  const h = sourceHeight / 2;
+  const xx1 = (targetCenterX - sourceCenterX) / (2 * w) - (targetCenterY - sourceCenterY) / (2 * h);
+  const yy1 = (targetCenterX - sourceCenterX) / (2 * w) + (targetCenterY - sourceCenterY) / (2 * h);
+  const alpha = 1 / (Math.abs(xx1) + Math.abs(yy1));
+  const xx3 = alpha * xx1;
+  const yy3 = alpha * yy1;
+
+  return {
+    x: w * (xx3 + yy3) + sourceCenterX,
+    y: h * (-xx3 + yy3) + sourceCenterY,
+  };
+}
+
+function getEdgePosition(node: InternalNode, intersectionPoint: XYPosition): Position {
+  const nX = Math.round(node.internals.positionAbsolute.x);
+  const nY = Math.round(node.internals.positionAbsolute.y);
+  const pX = Math.round(intersectionPoint.x);
+  const pY = Math.round(intersectionPoint.y);
+
+  if (pX <= nX + 1) return Position.Left;
+  if (pX >= nX + (node.measured.width ?? 0) - 1) return Position.Right;
+  if (pY <= nY + 1) return Position.Top;
+  return Position.Bottom;
+}
+
+function getFloatingEdgeParams(source: InternalNode, target: InternalNode) {
+  const sourceIntersection = getNodeIntersection(source, target);
+  const targetIntersection = getNodeIntersection(target, source);
+
+  return {
+    sx: sourceIntersection.x,
+    sy: sourceIntersection.y,
+    tx: targetIntersection.x,
+    ty: targetIntersection.y,
+    sourcePosition: getEdgePosition(source, sourceIntersection),
+    targetPosition: getEdgePosition(target, targetIntersection),
+  };
+}
+
+const FloatingEdge = memo(function FloatingEdge({ id, source, target, style, markerEnd }: EdgeProps) {
+  const sourceNode = useStore((store) => store.nodeLookup.get(source));
+  const targetNode = useStore((store) => store.nodeLookup.get(target));
+
+  if (!sourceNode || !targetNode) {
+    return null;
+  }
+
+  const params = getFloatingEdgeParams(sourceNode, targetNode);
+  const [path] = getBezierPath({
+    sourceX: params.sx,
+    sourceY: params.sy,
+    sourcePosition: params.sourcePosition,
+    targetX: params.tx,
+    targetY: params.ty,
+    targetPosition: params.targetPosition,
+  });
+
+  return <BaseEdge id={id} path={path} style={style} markerEnd={markerEnd} />;
+});
+
+const edgeTypes = {
+  floating: FloatingEdge,
+};
+
 function neighborsForNode(nodeId: string, edges: SimpleEdge[]): Set<string> {
   const related = new Set<string>();
   for (const edge of edges) {
@@ -430,8 +526,11 @@ function NodeEditorInner(): JSX.Element {
   const [edgeDraft, setEdgeDraft] = useState<EdgeDraft | null>(null);
   const [connectMenu, setConnectMenu] = useState<ConnectMenuState | null>(null);
   const [pendingConnectSource, setPendingConnectSource] = useState<string | null>(null);
+  const canvasRef = useRef<HTMLDivElement | null>(null);
+  const connectPointerRef = useRef<{ x: number; y: number } | null>(null);
+  const connectingRef = useRef(false);
 
-  const { fitView, screenToFlowPosition } = useReactFlow();
+  const { fitView, screenToFlowPosition, getViewport, setViewport } = useReactFlow();
 
   const currentSnapshot = useMemo(() => serializeGraph(nodes, edges), [nodes, edges]);
   const dirty = currentSnapshot !== savedSnapshot;
@@ -453,6 +552,74 @@ function NodeEditorInner(): JSX.Element {
   const relationTypes = useMemo(() => {
     return [...new Set(edges.map((edge) => edge.data?.relationType ?? "linked"))];
   }, [edges]);
+
+  const nodeNameById = useMemo(() => {
+    return new Map<string, string>(
+      nodes.map((node) => {
+        const nodeData = node.data as SimpleNodeData;
+        return [node.id, nodeData.name];
+      }),
+    );
+  }, [nodes]);
+
+  const nodeRelationPills = useMemo(() => {
+    if (!nodeDraft) {
+      return [] as Array<{ id: string; text: string }>;
+    }
+    return edges
+      .filter((edge) => edge.source === nodeDraft.id || edge.target === nodeDraft.id)
+      .map((edge) => {
+        const relationType = edge.data?.relationType ?? "linked";
+        const sourceName = nodeNameById.get(edge.source) ?? edge.source;
+        const targetName = nodeNameById.get(edge.target) ?? edge.target;
+        return {
+          id: edge.id,
+          text: `${relationType}: ${sourceName} -> ${targetName}`,
+        };
+      });
+  }, [edges, nodeDraft, nodeNameById]);
+
+  useEffect(() => {
+    let raf = 0;
+
+    const tick = () => {
+      if (!connectingRef.current || !canvasRef.current || !connectPointerRef.current) {
+        raf = window.requestAnimationFrame(tick);
+        return;
+      }
+
+      const pointer = connectPointerRef.current;
+      const rect = canvasRef.current.getBoundingClientRect();
+      const threshold = 44;
+      const speed = 14;
+      let deltaX = 0;
+      let deltaY = 0;
+
+      if (pointer.x < rect.left + threshold) {
+        deltaX = speed;
+      } else if (pointer.x > rect.right - threshold) {
+        deltaX = -speed;
+      }
+
+      if (pointer.y < rect.top + threshold) {
+        deltaY = speed;
+      } else if (pointer.y > rect.bottom - threshold) {
+        deltaY = -speed;
+      }
+
+      if (deltaX !== 0 || deltaY !== 0) {
+        const viewport = getViewport();
+        setViewport({ x: viewport.x + deltaX, y: viewport.y + deltaY, zoom: viewport.zoom }, { duration: 0 });
+      }
+
+      raf = window.requestAnimationFrame(tick);
+    };
+
+    raf = window.requestAnimationFrame(tick);
+    return () => {
+      window.cancelAnimationFrame(raf);
+    };
+  }, [getViewport, setViewport]);
 
   const connectCandidates = useMemo(() => {
     if (!connectMenu) {
@@ -551,17 +718,25 @@ function NodeEditorInner(): JSX.Element {
 
   const displayEdges = useMemo(() => {
     return visibleEdges.map((edge) => {
+      const baseEdge: SimpleEdge = {
+        ...edge,
+        type: "floating",
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          color: "#334155",
+        },
+      };
       const inFocusModes =
         editorState === "focus" || editorState === "edit_node" || editorState === "edit_relation";
       if (!inFocusModes) {
-        return edge;
+        return baseEdge;
       }
       const connected = edge.source === focusedNodeId || edge.target === focusedNodeId;
       if (hideNonNeighbors && !connected) {
-        return { ...edge, hidden: true };
+        return { ...baseEdge, hidden: true };
       }
       return {
-        ...edge,
+        ...baseEdge,
         className: connected ? "" : "ne-edge-dimmed",
         animated: connected,
       };
@@ -642,6 +817,7 @@ function NodeEditorInner(): JSX.Element {
           {
             id: newId,
             ...connection,
+            type: "floating",
             data: { relationType: "linked", properties: {} },
           },
           prev,
@@ -654,6 +830,7 @@ function NodeEditorInner(): JSX.Element {
   );
 
   const onConnectStart = useCallback((_: unknown, params: { nodeId?: string | null }) => {
+    connectingRef.current = true;
     setConnectMenu(null);
     setPendingConnectSource(params.nodeId ?? null);
   }, []);
@@ -661,6 +838,8 @@ function NodeEditorInner(): JSX.Element {
   const onConnectEnd = useCallback(
     (event: MouseEvent | TouchEvent) => {
       const sourceNodeId = pendingConnectSource;
+      connectingRef.current = false;
+      connectPointerRef.current = null;
       setPendingConnectSource(null);
       if (!sourceNodeId) {
         return;
@@ -682,6 +861,10 @@ function NodeEditorInner(): JSX.Element {
     [pendingConnectSource],
   );
 
+  const onPaneMouseMove = useCallback((event: React.MouseEvent) => {
+    connectPointerRef.current = { x: event.clientX, y: event.clientY };
+  }, []);
+
   const onConnectToExistingNode = useCallback(
     (targetNodeId: string) => {
       if (!connectMenu) {
@@ -694,6 +877,7 @@ function NodeEditorInner(): JSX.Element {
             id: edgeId,
             source: connectMenu.sourceNodeId,
             target: targetNodeId,
+            type: "floating",
             data: { relationType: "linked", properties: {} },
           },
           prev,
@@ -733,12 +917,13 @@ function NodeEditorInner(): JSX.Element {
     setEdges((prev) =>
       addEdge(
         {
-          id: edgeId,
-          source: connectMenu.sourceNodeId,
-          target: newNodeId,
-          data: { relationType: "linked", properties: {} },
-        },
-        prev,
+            id: edgeId,
+            source: connectMenu.sourceNodeId,
+            target: newNodeId,
+            type: "floating",
+            data: { relationType: "linked", properties: {} },
+          },
+          prev,
       ) as SimpleEdge[],
     );
 
@@ -772,6 +957,53 @@ function NodeEditorInner(): JSX.Element {
     setFocusedNodeId(id);
     setEditorState("focus");
   }, [setNodes]);
+
+  const onTemplateDragStart = useCallback((event: React.DragEvent<HTMLButtonElement>, template: NodeTemplate) => {
+    event.dataTransfer.setData("application/node-template", JSON.stringify(template));
+    event.dataTransfer.effectAllowed = "copy";
+  }, []);
+
+  const onDragOverCanvas = useCallback((event: React.DragEvent) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+  }, []);
+
+  const onDropOnCanvas = useCallback(
+    (event: React.DragEvent) => {
+      event.preventDefault();
+      const templateRaw = event.dataTransfer.getData("application/node-template");
+      if (!templateRaw) {
+        return;
+      }
+      let template: NodeTemplate;
+      try {
+        template = JSON.parse(templateRaw) as NodeTemplate;
+      } catch (error) {
+        console.error("Invalid node template payload", error);
+        return;
+      }
+      const flowPoint = screenToFlowPosition({ x: event.clientX, y: event.clientY });
+      const id = `n-new-${Date.now()}`;
+      const nextName = `${template.name} ${nodes.length + 1}`;
+      setNodes((prev) => [
+        ...prev,
+        {
+          id,
+          type: "simple",
+          position: flowPoint,
+          data: {
+            name: nextName,
+            category: template.category,
+            properties: { ...template.defaults },
+          },
+        },
+      ]);
+      setFocusedNodeId(id);
+      setSelectedEdgeId(null);
+      setEditorState("focus");
+    },
+    [nodes.length, screenToFlowPosition, setNodes],
+  );
 
   const onLayoutAll = useCallback(() => {
     setNodes((prev) => layoutAllDeterministic(prev, edges));
@@ -943,6 +1175,16 @@ function NodeEditorInner(): JSX.Element {
     setEditorState("focus");
   }, []);
 
+  const onRemoveRelationFromNodeModal = useCallback(
+    (edgeId: string) => {
+      setEdges((prev) => prev.filter((edge) => edge.id !== edgeId));
+      if (selectedEdgeId === edgeId) {
+        setSelectedEdgeId(null);
+      }
+    },
+    [selectedEdgeId, setEdges],
+  );
+
   const stateLabel = useMemo(() => {
     if (editorState === "browse") {
       return "Browse";
@@ -996,6 +1238,24 @@ function NodeEditorInner(): JSX.Element {
               <button type="button" className="ne-btn" onClick={onAddNode}>
                 + Add node
               </button>
+            </div>
+
+            <div className="ne-filter-section">
+              <h3>Drag palette</h3>
+              <div className="ne-template-list">
+                {NODE_TEMPLATES.map((template) => (
+                  <button
+                    key={template.name}
+                    type="button"
+                    draggable
+                    className="ne-template-chip"
+                    onDragStart={(event) => onTemplateDragStart(event, template)}
+                  >
+                    + {template.name}
+                  </button>
+                ))}
+              </div>
+              <p className="ne-template-hint">Drag a template into the canvas to create a node.</p>
             </div>
 
             <div className="ne-control-row">
@@ -1061,8 +1321,11 @@ function NodeEditorInner(): JSX.Element {
         ) : null}
       </aside>
 
-      <div className="ne-canvas-wrap">
+      <div className="ne-canvas-wrap" ref={canvasRef}>
         <ReactFlow<SimpleNode, SimpleEdge>
+          onDrop={onDropOnCanvas}
+          onDragOver={onDragOverCanvas}
+          onPaneMouseMove={onPaneMouseMove}
           nodes={displayNodes}
           edges={displayEdges}
           onNodesChange={onNodesChange}
@@ -1075,8 +1338,10 @@ function NodeEditorInner(): JSX.Element {
           onEdgeClick={onEdgeClick}
           onPaneClick={onPaneClick}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           connectionMode={ConnectionMode.Loose}
           minZoom={0.1}
+          autoPanOnConnect
           fitView
           attributionPosition="bottom-left"
         >
@@ -1152,6 +1417,29 @@ function NodeEditorInner(): JSX.Element {
                 ))}
               </select>
             </label>
+
+            <div className="ne-field">
+              <span>Relations</span>
+              <div className="ne-relation-pill-list">
+                {nodeRelationPills.length > 0 ? (
+                  nodeRelationPills.map((pill) => (
+                    <div key={pill.id} className="ne-relation-pill-row">
+                      <span className="ne-relation-pill-text">{pill.text}</span>
+                      <button
+                        type="button"
+                        className="ne-remove-btn"
+                        title="Remove relation"
+                        onClick={() => onRemoveRelationFromNodeModal(pill.id)}
+                      >
+                        x
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <p className="ne-empty-note">No relations for this node yet.</p>
+                )}
+              </div>
+            </div>
 
             <div className="ne-field">
               <span>Properties</span>

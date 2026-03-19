@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-03-19
+
+- Advanced `/sandbox/node_editor` edge behavior in `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx` by fully wiring floating-edge rendering (`edgeTypes.floating` + shortest-angle intersection geometry), applying floating edge type to newly created edges, and adding consistent edge arrow markers.
+- Added explicit connect-drag viewport auto-pan behavior (`WS-03`) by tracking pointer movement during connection drag and nudging viewport near canvas borders, with `autoPanOnConnect` enabled for smoother edge linking at boundaries.
+- Added sidebar drag-and-drop creation palette (`SB-02`) in `/sandbox/node_editor` with draggable node templates (`Person`, `Skill`, `Project`, `Publication`, `Concept`) and canvas drop creation via React Flow `onDrop`.
+- Extended node edit modal with relation pills (`ED-05`) that list connected relations and provide remove actions directly in modal context.
+- Updated node editor fullscreen workspace sizing in `apps/review-workbench/src/styles.css` (`.ne-page`, `.ne-workspace`) and added supporting styles for template chips and relation pill rows.
+- Refreshed node editor compliance tracking in `docs/architecture/node_editor_compliance_matrix.md` to reflect current status and evidence references.
+- How to run and verify this slice: run `./scripts/dev-all.sh`, open `http://127.0.0.1:4173/sandbox/node_editor`, then (1) drag a palette item into canvas and confirm node count increments, (2) start an edge drag near canvas border and confirm viewport auto-pans, (3) open a node edit modal and remove a relation pill, and (4) create/connect edges and confirm floating shortest-angle edge anchoring.
+
 ## 2026-03-18
 
 - Added behavior-only node editor specification in `docs/architecture/node_editor_behavior_spec.md`, defining canonical rules for node properties, relation visibility, focus/edit modes, composition handling, visual mapping configurability, fullscreen workspace + collapsible sidebar behavior, and sandbox isolation requirement.

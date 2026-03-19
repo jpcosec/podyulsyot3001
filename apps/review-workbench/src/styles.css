@@ -1211,12 +1211,13 @@ p {
 /* ── Node Editor Sandbox ── */
 
 .ne-page {
-  margin: -24px;
+  margin: 0;
+  min-height: 100vh;
 }
 
 .ne-workspace {
   display: flex;
-  height: calc(100vh - 48px);
+  height: 100vh;
 }
 
 .ne-sidebar {
@@ -1309,6 +1310,33 @@ p {
 .ne-filter-section h3 {
   font-size: 0.82rem;
   margin: 0 0 6px;
+  color: var(--text-dim);
+}
+
+.ne-template-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ne-template-chip {
+  border: 1px dashed var(--accent-soft);
+  border-radius: 999px;
+  background: #f8fbff;
+  color: var(--accent);
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 5px 9px;
+  cursor: grab;
+}
+
+.ne-template-chip:active {
+  cursor: grabbing;
+}
+
+.ne-template-hint {
+  margin: 6px 0 0;
+  font-size: 0.75rem;
   color: var(--text-dim);
 }
 
@@ -1539,6 +1567,33 @@ p {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.ne-relation-pill-list {
+  display: grid;
+  gap: 8px;
+}
+
+.ne-relation-pill-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.ne-relation-pill-text {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--text-main);
+  font-size: 0.76rem;
+  padding: 6px 10px;
+}
+
+.ne-empty-note {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-dim);
 }
 
 .ne-property-row {
