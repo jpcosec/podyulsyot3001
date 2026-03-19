@@ -39,6 +39,8 @@ Supporting index docs:
 - `docs/architecture/node_editor_compliance_matrix.md`
 - `docs/architecture/node_editor_feedback_doubts_and_gaps.md`
 - `docs/architecture/node_editor_step1_on_node_edit_breakdown.md`
+- `docs/architecture/cv_graph_container_nodes_uiux_spec.md`
+- `docs/architecture/cv_graph_container_nodes_frontend_implementation_guide.md`
 
 ## Quick reading paths
 

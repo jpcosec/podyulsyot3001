@@ -29,6 +29,8 @@ Planning record for ADR-001 lives in `plan/adr/adr_001_ui_first_knowledge_graph_
 - `node_editor_compliance_matrix.md`
 - `node_editor_feedback_doubts_and_gaps.md`
 - `node_editor_step1_on_node_edit_breakdown.md`
+- `cv_graph_container_nodes_uiux_spec.md`
+- `cv_graph_container_nodes_frontend_implementation_guide.md`
 
 ### Compatibility
 

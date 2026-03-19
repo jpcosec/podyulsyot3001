@@ -5,7 +5,7 @@ import type { GroupNodeData } from "./types";
 export function GroupNode(props: NodeProps): JSX.Element {
   const data = props.data as unknown as GroupNodeData;
   return (
-    <div className="cv-group-node-wrap">
+    <div className={`cv-group-node-wrap ${data.isDropzoneActive ? "cv-group-dropzone-active" : ""}`}>
       <button
         type="button"
         className="cv-group-header transition duration-150 hover:brightness-110 nodrag nopan"
@@ -13,10 +13,35 @@ export function GroupNode(props: NodeProps): JSX.Element {
           event.stopPropagation();
           data.onToggleGroup(data.category);
         }}
+        onDoubleClick={(event) => {
+          event.stopPropagation();
+          data.onToggleGroup(data.category);
+        }}
       >
         <span className="cv-group-title">{data.label}</span>
         <span className="cv-group-meta">
-          <span className="cv-group-count">{data.count}</span>
+          <span
+            role="button"
+            tabIndex={0}
+            className="cv-group-manage nodrag nopan"
+            onClick={(event) => {
+              event.stopPropagation();
+              data.onSelectGroup?.(data.category);
+            }}
+            onKeyDown={(event) => {
+              if (event.key !== "Enter" && event.key !== " ") {
+                return;
+              }
+              event.preventDefault();
+              event.stopPropagation();
+              data.onSelectGroup?.(data.category);
+            }}
+          >
+            Edit
+          </span>
+          <span className="cv-group-count">
+            {data.count} {data.countLabel}
+          </span>
           <span className="cv-group-chevron">{data.expanded ? "▼" : "▶"}</span>
         </span>
       </button>

@@ -12,9 +12,11 @@ import {
   type Connection,
   type Edge,
   type EdgeMouseHandler,
+  type EdgeTypes,
   type Node,
   type NodeMouseHandler,
   type NodeTypes,
+  type XYPosition,
   useEdgesState,
   useNodesState,
 } from "@xyflow/react";
@@ -24,6 +26,7 @@ import dagre from "@dagrejs/dagre";
 import { getCvProfileGraphPayload, saveCvProfileGraphPayload } from "../../api/client";
 import { EntryNode } from "../components/cv-graph/EntryNode";
 import { GroupNode } from "../components/cv-graph/GroupNode";
+import { ProxyEdge } from "../components/cv-graph/ProxyEdge";
 import { SkillBallNode } from "../components/cv-graph/SkillBallNode";
 import type { EntryNodeData, GroupNodeData, SkillNodeData } from "../components/cv-graph/types";
 import {
@@ -42,7 +45,27 @@ import type {
 
 type FlowNodeData = (EntryNodeData | SkillNodeData | GroupNodeData) & Record<string, unknown>;
 type FlowNode = Node<FlowNodeData>;
-type FlowEdge = Edge<{ relation: "demonstrates" }>;
+type FlowEdge = Edge<{
+  relation: "demonstrates";
+  realSource: string;
+  realTarget: string;
+  proxy: boolean;
+}>;
+
+interface ContainerBounds {
+  id: string;
+  category: string;
+  expanded: boolean;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+const ENTRY_NODE_WIDTH = 300;
+const ENTRY_NODE_HEIGHT = 58;
+const ENTRY_ROW_START_Y = 50;
+const ENTRY_ROW_GAP = 78;
 
 const ENTRY_CATEGORY_ORDER = [
   "personal_data",
@@ -60,6 +83,10 @@ const nodeTypes: NodeTypes = {
   entry: EntryNode,
   skill: SkillBallNode,
   group: GroupNode,
+};
+
+const edgeTypes: EdgeTypes = {
+  proxy: ProxyEdge,
 };
 
 function asText(value: unknown): string {
@@ -123,6 +150,98 @@ function normalizeDescriptionKey(value: string): string {
   return normalized || "description";
 }
 
+function isEntryContainerCategory(category: string): boolean {
+  return category !== "skills" && category !== "skills_pool" && category !== "related_skills";
+}
+
+function categoryFromGroupId(groupId: string): string | null {
+  if (!groupId.startsWith("group:")) {
+    return null;
+  }
+  return groupId.slice("group:".length);
+}
+
+function clampIndex(value: number, max: number): number {
+  if (max <= 0) {
+    return 0;
+  }
+  return Math.min(Math.max(value, 0), max);
+}
+
+function reorderCategoryEntries(
+  entries: CvEntry[],
+  category: string,
+  movingEntryId: string,
+  targetIndex: number,
+): CvEntry[] {
+  const orderedIds = entries
+    .filter((entry) => entry.category === category)
+    .map((entry) => entry.id)
+    .filter((entryId) => entryId !== movingEntryId);
+  const boundedIndex = clampIndex(targetIndex, orderedIds.length);
+  orderedIds.splice(boundedIndex, 0, movingEntryId);
+
+  const orderRank = new Map<string, number>(orderedIds.map((id, index) => [id, index]));
+  const sortedCategory = entries
+    .filter((entry) => entry.category === category)
+    .slice()
+    .sort((left, right) => {
+      const leftRank = orderRank.get(left.id) ?? Number.MAX_SAFE_INTEGER;
+      const rightRank = orderRank.get(right.id) ?? Number.MAX_SAFE_INTEGER;
+      return leftRank - rightRank;
+    });
+  let cursor = 0;
+  return entries.map((entry) => {
+    if (entry.category !== category) {
+      return entry;
+    }
+    const nextEntry = sortedCategory[cursor];
+    cursor += 1;
+    return nextEntry ?? entry;
+  });
+}
+
+function resolveNodeAbsolutePosition(node: FlowNode, nodesById: Map<string, FlowNode>): XYPosition {
+  if (!node.parentId) {
+    return node.position;
+  }
+  const parent = nodesById.get(node.parentId);
+  if (!parent) {
+    return node.position;
+  }
+  const parentAbsolute = resolveNodeAbsolutePosition(parent, nodesById);
+  return {
+    x: parentAbsolute.x + node.position.x,
+    y: parentAbsolute.y + node.position.y,
+  };
+}
+
+function findContainerAtPoint(
+  containers: ContainerBounds[],
+  point: XYPosition,
+  excludedCategory: string | null,
+): ContainerBounds | null {
+  return (
+    containers.find((container) => {
+      if (!container.expanded) {
+        return false;
+      }
+      if (!isEntryContainerCategory(container.category)) {
+        return false;
+      }
+      if (excludedCategory && container.category === excludedCategory) {
+        return false;
+      }
+      return (
+        point.x >= container.x &&
+        point.x <= container.x + container.width &&
+        point.y >= container.y &&
+        point.y <= container.y + container.height
+      );
+    }) ?? null
+  );
+}
+
 function ensureUniqueDescriptionKey(descriptions: CvDescription[]): string {
   const base = normalizeDescriptionKey("new description");
   const used = new Set(descriptions.map((item) => item.key));
@@ -144,7 +263,11 @@ interface BuildGraphParams {
   graph: CvProfileGraphPayload;
   expandedGroups: Set<string>;
   focusedEntryId: string;
+  detachedEntries: Record<string, XYPosition>;
+  activeDropzoneCategory: string | null;
+  selectedGroupCategory: string | null;
   onToggleGroup: (category: string) => void;
+  onSelectGroup: (category: string) => void;
   onAddEntry: (category: string) => void;
   onToggleExpand: (entryId: string) => void;
   onUpdateCategory: (entryId: string, category: string) => void;
@@ -165,7 +288,11 @@ function buildGraphView(params: BuildGraphParams): {
     graph,
     expandedGroups,
     focusedEntryId,
+    detachedEntries,
+    activeDropzoneCategory,
+    selectedGroupCategory,
     onToggleGroup,
+    onSelectGroup,
     onAddEntry,
     onToggleExpand,
     onUpdateCategory,
@@ -178,6 +305,7 @@ function buildGraphView(params: BuildGraphParams): {
 
   const nodes: FlowNode[] = [];
   const edges: FlowEdge[] = [];
+  const collapsedProxyParentByChild = new Map<string, string>();
 
   const skillById = new Map(graph.skills.map((skill) => [skill.id, skill]));
   const relatedRelations = graph.demonstrates.filter((edge) => edge.source === focusedEntryId);
@@ -200,19 +328,23 @@ function buildGraphView(params: BuildGraphParams): {
 
   categories.forEach((category, idx) => {
     const categoryEntries = graph.entries.filter((entry) => entry.category === category);
+    const attachedCategoryEntries = categoryEntries.filter((entry) => !detachedEntries[entry.id]);
     const expanded = expandedGroups.has(category);
     const groupId = `group:${category}`;
-    const groupHeight = expanded ? Math.max(160, categoryEntries.length * 84 + 72) : 96;
+    const groupHeight = expanded ? Math.max(160, attachedCategoryEntries.length * 84 + 72) : 96;
 
     const groupData: GroupNodeData = {
       kind: "group",
       label: displayCategory(category),
       category,
-      count: categoryEntries.length,
+      count: attachedCategoryEntries.length,
+      countLabel: "Entries",
       expanded,
       addLabel: "Add entry",
+      isDropzoneActive: activeDropzoneCategory === category,
       onToggleGroup,
       onAddItem: onAddEntry,
+      onSelectGroup,
     };
 
     nodes.push({
@@ -221,6 +353,7 @@ function buildGraphView(params: BuildGraphParams): {
       data: groupData,
       position: { x: idx * 390, y: 30 },
       draggable: false,
+      selected: selectedGroupCategory === category,
       style: {
         width: 340,
         height: groupHeight,
@@ -228,10 +361,13 @@ function buildGraphView(params: BuildGraphParams): {
     });
 
     if (!expanded) {
+      attachedCategoryEntries.forEach((entry) => {
+        collapsedProxyParentByChild.set(entry.id, groupId);
+      });
       return;
     }
 
-    categoryEntries.forEach((entry, entryIndex) => {
+    attachedCategoryEntries.forEach((entry, entryIndex) => {
       const entryData: EntryNodeData = {
         kind: "entry",
         label: entryLabel(entry),
@@ -252,23 +388,53 @@ function buildGraphView(params: BuildGraphParams): {
         type: "entry",
         data: entryData,
         parentId: groupId,
-        extent: "parent",
         position: { x: 14, y: 50 + entryIndex * 78 },
         draggable: true,
         style: {
-          width: 300,
-          height: 58,
+          width: ENTRY_NODE_WIDTH,
+          height: ENTRY_NODE_HEIGHT,
           zIndex: focusedEntryId === entry.id ? 30 : 1,
         },
       });
     });
   });
 
+  graph.entries
+    .filter((entry) => detachedEntries[entry.id])
+    .forEach((entry) => {
+      const entryData: EntryNodeData = {
+        kind: "entry",
+        label: entryLabel(entry),
+        category: entry.category,
+        essential: entry.essential,
+        descriptions: entry.descriptions,
+        expanded: focusedEntryId === entry.id,
+        connectedSkillLabels: connectedSkillLabels.get(entry.id) ?? [],
+        onToggleExpand,
+        onUpdateCategory,
+        onToggleEssential,
+        onUpdateDescription,
+        onAddDescription,
+      };
+      nodes.push({
+        id: entry.id,
+        type: "entry",
+        data: entryData,
+        position: detachedEntries[entry.id],
+        draggable: true,
+        style: {
+          width: ENTRY_NODE_WIDTH,
+          height: ENTRY_NODE_HEIGHT,
+          zIndex: focusedEntryId === entry.id ? 32 : 2,
+        },
+      });
+    });
+
   const skillsStartX = categories.length * 390;
 
   if (focusedEntryId) {
     const relatedGroupId = "group:related_skills";
-    const relatedExpanded = true;
+    const relatedExpanded = expandedGroups.has("related_skills");
     const relatedHeight = Math.max(160, relatedSkills.length * 76 + 72);
     nodes.push({
       id: relatedGroupId,
@@ -278,12 +444,15 @@ function buildGraphView(params: BuildGraphParams): {
         label: "Related Skills",
         category: "related_skills",
         count: relatedSkills.length,
+        countLabel: "Skills",
         expanded: relatedExpanded,
         addLabel: "Add skill",
+        isDropzoneActive: false,
         onToggleGroup,
         onAddItem: () => {
           onAddSkill();
         },
+        onSelectGroup,
       } satisfies GroupNodeData,
       position: { x: skillsStartX + 30, y: 30 },
       draggable: false,
@@ -294,6 +463,10 @@ function buildGraphView(params: BuildGraphParams): {
     });
 
     relatedSkills.forEach((skill, index) => {
+      if (!relatedExpanded) {
+        collapsedProxyParentByChild.set(skill.id, relatedGroupId);
+        return;
+      }
       const mastery = resolveMasteryLevel(skill.level, toSkillMeta(skill.meta));
       const skillData: SkillNodeData = {
         kind: "skill",
@@ -325,7 +498,7 @@ function buildGraphView(params: BuildGraphParams): {
     });
 
     const poolGroupId = "group:skills_pool";
-    const poolExpanded = true;
+    const poolExpanded = expandedGroups.has("skills_pool");
     const poolHeight = Math.max(160, unrelatedSkills.length * 76 + 72);
     nodes.push({
       id: poolGroupId,
@@ -335,12 +508,15 @@ function buildGraphView(params: BuildGraphParams): {
         label: "Skill Pool",
         category: "skills_pool",
         count: unrelatedSkills.length,
+        countLabel: "Skills",
         expanded: poolExpanded,
         addLabel: "Add skill",
+        isDropzoneActive: false,
         onToggleGroup,
         onAddItem: () => {
           onAddSkill();
         },
+        onSelectGroup,
       } satisfies GroupNodeData,
       position: { x: skillsStartX + 430, y: 30 },
       draggable: false,
@@ -351,6 +527,10 @@ function buildGraphView(params: BuildGraphParams): {
     });
 
     unrelatedSkills.forEach((skill, index) => {
+      if (!poolExpanded) {
+        collapsedProxyParentByChild.set(skill.id, poolGroupId);
+        return;
+      }
       const mastery = resolveMasteryLevel(skill.level, toSkillMeta(skill.meta));
       nodes.push({
         id: skill.id,
@@ -381,14 +561,25 @@ function buildGraphView(params: BuildGraphParams): {
     });
 
     relatedRelations.forEach((relation) => {
+      const renderedSource = collapsedProxyParentByChild.get(relation.source) ?? relation.source;
+      const renderedTarget = collapsedProxyParentByChild.get(relation.target) ?? relation.target;
+      const isProxy = renderedSource !== relation.source || renderedTarget !== relation.target;
       edges.push({
         id: relation.id,
-        source: relation.source,
-        target: relation.target,
+        type: "proxy",
+        source: renderedSource,
+        target: renderedTarget,
         label: "demonstrates",
-        data: { relation: "demonstrates" },
+        data: {
+          relation: "demonstrates",
+          realSource: relation.source,
+          realTarget: relation.target,
+          proxy: isProxy,
+        },
         animated: true,
-        style: { stroke: "#0f766e", strokeWidth: 1.8 },
+        style: isProxy
+          ? { stroke: "#0f766e", strokeWidth: 1.8, strokeDasharray: "6 4", opacity: 0.72 }
+          : { stroke: "#0f766e", strokeWidth: 1.8 },
       });
     });
   } else {
@@ -403,12 +594,15 @@ function buildGraphView(params: BuildGraphParams): {
         label: "Skills",
         category: "skills",
         count: graph.skills.length,
+        countLabel: "Skills",
         expanded: skillsExpanded,
         addLabel: "Add skill",
+        isDropzoneActive: false,
         onToggleGroup,
         onAddItem: () => {
           onAddSkill();
         },
+        onSelectGroup,
       } satisfies GroupNodeData,
       position: { x: skillsStartX + 30, y: 30 },
       draggable: false,
@@ -447,6 +641,11 @@ function buildGraphView(params: BuildGraphParams): {
             height: 54,
           },
         });
+      });
+    }
+    if (!skillsExpanded) {
+      graph.skills.forEach((skill) => {
+        collapsedProxyParentByChild.set(skill.id, skillGroupId);
       });
     }
   }
@@ -565,6 +764,9 @@ function CvGraphEditorInner(): JSX.Element {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => new Set());
   const [focusedEntryId, setFocusedEntryId] = useState("");
   const [selectedSkillId, setSelectedSkillId] = useState("");
+  const [selectedGroupCategory, setSelectedGroupCategory] = useState<string | null>(null);
+  const [detachedEntries, setDetachedEntries] = useState<Record<string, XYPosition>>({});
+  const [activeDropzoneCategory, setActiveDropzoneCategory] = useState<string | null>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance<
     FlowNode,
     FlowEdge
@@ -622,6 +824,18 @@ function CvGraphEditorInner(): JSX.Element {
     }
   }, [entryId, graph]);
 
+  useEffect(() => {
+    if (!focusedEntryId) {
+      return;
+    }
+    setExpandedGroups((previous) => {
+      const next = new Set(previous);
+      next.add("related_skills");
+      next.add("skills_pool");
+      return next;
+    });
+  }, [focusedEntryId]);
+
   const onToggleGroup = useCallback((category: string) => {
     setExpandedGroups((previous) => {
       const next = new Set(previous);
@@ -632,6 +846,16 @@ function CvGraphEditorInner(): JSX.Element {
       }
       return next;
     });
+  }, []);
+
+  const onSelectGroup = useCallback((category: string) => {
+    if (!isEntryContainerCategory(category)) {
+      setSelectedGroupCategory(null);
+      return;
+    }
+    setSelectedGroupCategory(category);
+    setFocusedEntryId("");
+    setSelectedSkillId("");
   }, []);
 
   const onAddEntry = useCallback((category: string) => {
@@ -784,7 +1008,11 @@ function CvGraphEditorInner(): JSX.Element {
       graph,
       expandedGroups,
       focusedEntryId,
+      detachedEntries,
+      activeDropzoneCategory,
+      selectedGroupCategory,
       onToggleGroup,
+      onSelectGroup,
       onAddEntry,
       onToggleExpand,
       onUpdateCategory,
@@ -803,7 +1031,11 @@ function CvGraphEditorInner(): JSX.Element {
     graph,
     expandedGroups,
     focusedEntryId,
+    detachedEntries,
+    activeDropzoneCategory,
+    selectedGroupCategory,
     onToggleGroup,
+    onSelectGroup,
     onAddEntry,
     onToggleExpand,
     onUpdateCategory,
@@ -850,6 +1082,161 @@ function CvGraphEditorInner(): JSX.Element {
       window.cancelAnimationFrame(rafId);
     };
   }, [mapped.nodes, updateNodeInternals]);
+
+  const containerBounds = useMemo<ContainerBounds[]>(() => {
+    const nodesById = new Map(nodes.map((node) => [node.id, node]));
+    return nodes
+      .filter((node) => node.type === "group" && !node.parentId)
+      .map((node) => {
+        const category = categoryFromGroupId(node.id);
+        if (!category) {
+          return null;
+        }
+        const style = node.style ?? {};
+        const position = resolveNodeAbsolutePosition(node, nodesById);
+        return {
+          id: node.id,
+          category,
+          expanded: expandedGroups.has(category),
+          x: position.x,
+          y: position.y,
+          width: asDimension(style.width, 340),
+          height: asDimension(style.height, 160),
+        } satisfies ContainerBounds;
+      })
+      .filter((item): item is ContainerBounds => Boolean(item));
+  }, [expandedGroups, nodes]);
+
+  const onNodeDrag: NodeMouseHandler<FlowNode> = useCallback(
+    (_event, node) => {
+      const nodesById = new Map(nodes.map((item) => [item.id, item]));
+      if (node.type !== "entry") {
+        if (activeDropzoneCategory !== null) {
+          setActiveDropzoneCategory(null);
+        }
+        return;
+      }
+      const parentCategory = node.parentId ? categoryFromGroupId(node.parentId) : null;
+      const absolute = resolveNodeAbsolutePosition(node, nodesById);
+      const dropzone = findContainerAtPoint(containerBounds, absolute, parentCategory);
+      const nextCategory = dropzone?.category ?? null;
+      if (activeDropzoneCategory !== nextCategory) {
+        setActiveDropzoneCategory(nextCategory);
+      }
+    },
+    [activeDropzoneCategory, containerBounds, nodes],
+  );
+
+  const onNodeDragStop: NodeMouseHandler<FlowNode> = useCallback(
+    (_event, node) => {
+      const nodesById = new Map(nodes.map((item) => [item.id, item]));
+      if (activeDropzoneCategory !== null) {
+        setActiveDropzoneCategory(null);
+      }
+      if (node.type !== "entry" || !graph) {
+        return;
+      }
+      const entryId = node.id;
+      const absolute = resolveNodeAbsolutePosition(node, nodesById);
+      const parentCategory = node.parentId ? categoryFromGroupId(node.parentId) : null;
+      const parentBounds = parentCategory
+        ? containerBounds.find((container) => container.category === parentCategory) ?? null
+        : null;
+      const targetContainer = findContainerAtPoint(containerBounds, absolute, null);
+
+      if (!parentCategory) {
+        if (!targetContainer || !isEntryContainerCategory(targetContainer.category)) {
+          setDetachedEntries((previous) => ({
+            ...previous,
+            [entryId]: absolute,
+          }));
+          return;
+        }
+
+        setDetachedEntries((previous) => {
+          if (!(entryId in previous)) {
+            return previous;
+          }
+          const next = { ...previous };
+          delete next[entryId];
+          return next;
+        });
+
+        mutateGraph((previous) => {
+          if (!previous) {
+            return previous;
+          }
+          const existing = previous.entries.find((entry) => entry.id === entryId);
+          if (!existing) {
+            return previous;
+          }
+          const movedEntries = previous.entries.map((entry) =>
+            entry.id === entryId ? updateEntry(entry, { category: targetContainer.category }) : entry,
+          );
+          return {
+            ...previous,
+            entries: reorderCategoryEntries(
+              movedEntries,
+              targetContainer.category,
+              entryId,
+              Number.MAX_SAFE_INTEGER,
+            ),
+          };
+        });
+        setExpandedGroups((previous) => new Set(previous).add(targetContainer.category));
+        return;
+      }
+
+      if (
+        parentBounds &&
+        absolute.x >= parentBounds.x &&
+        absolute.x <= parentBounds.x + parentBounds.width &&
+        absolute.y >= parentBounds.y &&
+        absolute.y <= parentBounds.y + parentBounds.height
+      ) {
+        const relativeY = absolute.y - parentBounds.y - ENTRY_ROW_START_Y;
+        const targetIndex = Math.round(relativeY / ENTRY_ROW_GAP);
+        mutateGraph((previous) => {
+          if (!previous) {
+            return previous;
+          }
+          return {
+            ...previous,
+            entries: reorderCategoryEntries(previous.entries, parentCategory, entryId, targetIndex),
+          };
+        });
+        return;
+      }
+
+      if (targetContainer && isEntryContainerCategory(targetContainer.category)) {
+        mutateGraph((previous) => {
+          if (!previous) {
+            return previous;
+          }
+          const movedEntries = previous.entries.map((entry) =>
+            entry.id === entryId ? updateEntry(entry, { category: targetContainer.category }) : entry,
+          );
+          return {
+            ...previous,
+            entries: reorderCategoryEntries(
+              movedEntries,
+              targetContainer.category,
+              entryId,
+              Number.MAX_SAFE_INTEGER,
+            ),
+          };
+        });
+        setExpandedGroups((previous) => new Set(previous).add(targetContainer.category));
+        return;
+      }
+
+      setDetachedEntries((previous) => ({
+        ...previous,
+        [entryId]: absolute,
+      }));
+    },
+    [activeDropzoneCategory, containerBounds, graph, mutateGraph, nodes],
+  );
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -904,10 +1291,23 @@ function CvGraphEditorInner(): JSX.Element {
     if (node.data.kind === "entry") {
       setFocusedEntryId((previous) => (previous === node.id ? "" : node.id));
       setSelectedSkillId("");
+      setSelectedGroupCategory(null);
       return;
     }
     if (node.data.kind === "skill") {
       setSelectedSkillId(node.id);
+      setSelectedGroupCategory(null);
+      return;
+    }
+    if (node.data.kind === "group") {
+      const category = categoryFromGroupId(node.id);
+      if (!category || !isEntryContainerCategory(category)) {
+        setSelectedGroupCategory(null);
+        return;
+      }
+      setSelectedGroupCategory((previous) => (previous === category ? null : category));
+      setFocusedEntryId("");
+      setSelectedSkillId("");
     }
   }, []);
 
@@ -915,12 +1315,70 @@ function CvGraphEditorInner(): JSX.Element {
     if (edge.data?.relation !== "demonstrates") {
       return;
     }
-    setFocusedEntryId(edge.source);
-    setSelectedSkillId(edge.target);
+    setFocusedEntryId(edge.data.realSource ?? edge.source);
+    setSelectedSkillId(edge.data.realTarget ?? edge.target);
+  }, []);
+
+  const onPaneClick = useCallback(() => {
+    setSelectedGroupCategory(null);
   }, []);
 
   const focusedEntry = graph?.entries.find((entry) => entry.id === focusedEntryId) ?? null;
   const selectedSkill = graph?.skills.find((skill) => skill.id === selectedSkillId) ?? null;
+  const selectedGroupEntries = useMemo(() => {
+    if (!graph || !selectedGroupCategory) {
+      return [] as CvEntry[];
+    }
+    return graph.entries.filter(
+      (entry) => entry.category === selectedGroupCategory && !detachedEntries[entry.id],
+    );
+  }, [detachedEntries, graph, selectedGroupCategory]);
+
+  const moveEntryInsideSelectedGroup = useCallback(
+    (entryId: string, direction: "up" | "down") => {
+      if (!selectedGroupCategory || !graph) {
+        return;
+      }
+      const entriesInGroup = graph.entries.filter((entry) => entry.category === selectedGroupCategory);
+      const currentIndex = entriesInGroup.findIndex((entry) => entry.id === entryId);
+      if (currentIndex === -1) {
+        return;
+      }
+      const delta = direction === "up" ? -1 : 1;
+      const targetIndex = clampIndex(currentIndex + delta, entriesInGroup.length - 1);
+      mutateGraph((previous) => {
+        if (!previous) {
+          return previous;
+        }
+        return {
+          ...previous,
+          entries: reorderCategoryEntries(previous.entries, selectedGroupCategory, entryId, targetIndex),
+        };
+      });
+    },
+    [graph, mutateGraph, selectedGroupCategory],
+  );
+
+  const removeEntryFromContainer = useCallback(
+    (entryId: string) => {
+      if (!selectedGroupCategory) {
+        return;
+      }
+      const selectedBounds = containerBounds.find(
+        (container) => container.category === selectedGroupCategory,
+      );
+      const fallbackIndex = selectedGroupEntries.findIndex((entry) => entry.id === entryId);
+      const fallbackY = selectedBounds
+        ? selectedBounds.y + ENTRY_ROW_START_Y + Math.max(fallbackIndex, 0) * ENTRY_ROW_GAP
+        : 120;
+      const fallbackX = selectedBounds ? selectedBounds.x + selectedBounds.width + 48 : 140;
+      setDetachedEntries((previous) => ({
+        ...previous,
+        [entryId]: { x: fallbackX, y: fallbackY },
+      }));
+    },
+    [containerBounds, selectedGroupCategory, selectedGroupEntries],
+  );
 
   const updateSelectedSkill = (patch: Partial<CvSkill>) => {
     if (!selectedSkillId) {
@@ -1002,10 +1460,14 @@ function CvGraphEditorInner(): JSX.Element {
               onNodesChange={onNodesChange}
               onEdgesChange={onEdgesChange}
               onConnect={onConnect}
+              onNodeDrag={onNodeDrag}
+              onNodeDragStop={onNodeDragStop}
               onNodeClick={onNodeClick}
               onEdgeClick={onEdgeClick}
+              onPaneClick={onPaneClick}
               onInit={setReactFlowInstance}
               nodeTypes={nodeTypes}
+              edgeTypes={edgeTypes}
               minZoom={0.1}
               fitView
               attributionPosition="bottom-left"
@@ -1115,6 +1577,48 @@ function CvGraphEditorInner(): JSX.Element {
                 />
                 <span>Essential skill</span>
               </label>
+            </div>
+          ) : null}
+
+          {selectedGroupCategory ? (
+            <div className="cv-side-box">
+              <h3>Container Elements ({displayCategory(selectedGroupCategory)})</h3>
+              {selectedGroupEntries.length ? (
+                <div className="cv-container-elements-list">
+                  {selectedGroupEntries.map((entry, index) => (
+                    <div key={entry.id} className="cv-container-element-item">
+                      <span className="cv-container-element-label">{entryLabel(entry)}</span>
+                      <div className="cv-container-element-actions">
+                        <button
+                          type="button"
+                          className="cv-order-btn"
+                          disabled={index === 0}
+                          onClick={() => moveEntryInsideSelectedGroup(entry.id, "up")}
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          className="cv-order-btn"
+                          disabled={index === selectedGroupEntries.length - 1}
+                          onClick={() => moveEntryInsideSelectedGroup(entry.id, "down")}
+                        >
+                          ↓
+                        </button>
+                        <button
+                          type="button"
+                          className="cv-order-btn cv-order-btn-remove"
+                          onClick={() => removeEntryFromContainer(entry.id)}
+                        >
+                          Extract
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="cv-muted">This container has no attached entries.</p>
+              )}
             </div>
           ) : null}
 

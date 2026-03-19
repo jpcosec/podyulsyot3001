@@ -39,10 +39,13 @@ export interface GroupNodeData extends BaseGraphNodeData {
   kind: "group";
   category: string;
   count: number;
+  countLabel: string;
   expanded: boolean;
   addLabel: string;
+  isDropzoneActive: boolean;
   onToggleGroup: (category: string) => void;
   onAddItem: (category: string) => void;
+  onSelectGroup?: (category: string) => void;
 }
 
 export type CvGraphNodeData = EntryNodeData | SkillNodeData | GroupNodeData;
