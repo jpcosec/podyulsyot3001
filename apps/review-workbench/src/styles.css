@@ -1260,6 +1260,13 @@ p {
   background: #14b8a6;
 }
 
+.cv-group-handle {
+  width: 9px;
+  height: 9px;
+  border: 1px solid #0f172a;
+  background: #334155;
+}
+
 .cv-muted {
   margin: 0;
   font-size: 12px;

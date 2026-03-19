@@ -173,9 +173,11 @@ function reorderCategoryEntries(
   category: string,
   movingEntryId: string,
   targetIndex: number,
+  detachedEntries: Record<string, XYPosition>,
 ): CvEntry[] {
   const orderedIds = entries
     .filter((entry) => entry.category === category)
+    .filter((entry) => !detachedEntries[entry.id])
     .map((entry) => entry.id)
     .filter((entryId) => entryId !== movingEntryId);
   const boundedIndex = clampIndex(targetIndex, orderedIds.length);
@@ -184,6 +186,7 @@ function reorderCategoryEntries(
   const orderRank = new Map<string, number>(orderedIds.map((id, index) => [id, index]));
   const sortedCategory = entries
     .filter((entry) => entry.category === category)
+    .filter((entry) => !detachedEntries[entry.id])
     .slice()
     .sort((left, right) => {
       const leftRank = orderRank.get(left.id) ?? Number.MAX_SAFE_INTEGER;
@@ -192,7 +195,7 @@ function reorderCategoryEntries(
     });
   let cursor = 0;
   return entries.map((entry) => {
-    if (entry.category !== category) {
+    if (entry.category !== category || detachedEntries[entry.id]) {
       return entry;
     }
     const nextEntry = sortedCategory[cursor];
@@ -240,6 +243,17 @@ function findContainerAtPoint(
       );
     }) ?? null
   );
+}
+
+function nodeCenterPoint(node: FlowNode, nodesById: Map<string, FlowNode>): XYPosition {
+  const absolute = resolveNodeAbsolutePosition(node, nodesById);
+  const style = node.style ?? {};
+  const width = asDimension(style.width, ENTRY_NODE_WIDTH);
+  const height = asDimension(style.height, ENTRY_NODE_HEIGHT);
+  return {
+    x: absolute.x + width / 2,
+    y: absolute.y + height / 2,
+  };
 }
 
 function ensureUniqueDescriptionKey(descriptions: CvDescription[]): string {
@@ -560,10 +574,16 @@ function buildGraphView(params: BuildGraphParams): {
       });
     });
 
+    const renderedEdgeKeys = new Set<string>();
     relatedRelations.forEach((relation) => {
       const renderedSource = collapsedProxyParentByChild.get(relation.source) ?? relation.source;
       const renderedTarget = collapsedProxyParentByChild.get(relation.target) ?? relation.target;
       const isProxy = renderedSource !== relation.source || renderedTarget !== relation.target;
+      const renderedKey = `${renderedSource}::${renderedTarget}`;
+      if (renderedEdgeKeys.has(renderedKey)) {
+        return;
+      }
+      renderedEdgeKeys.add(renderedKey);
       edges.push({
         id: relation.id,
         type: "proxy",
@@ -846,7 +866,10 @@ function CvGraphEditorInner(): JSX.Element {
       }
       return next;
     });
-  }, []);
+    if (selectedGroupCategory === category) {
+      setSelectedGroupCategory(null);
+    }
+  }, [selectedGroupCategory]);
 
   const onSelectGroup = useCallback((category: string) => {
     if (!isEntryContainerCategory(category)) {
@@ -1117,8 +1140,8 @@ function CvGraphEditorInner(): JSX.Element {
         return;
       }
       const parentCategory = node.parentId ? categoryFromGroupId(node.parentId) : null;
-      const absolute = resolveNodeAbsolutePosition(node, nodesById);
-      const dropzone = findContainerAtPoint(containerBounds, absolute, parentCategory);
+      const center = nodeCenterPoint(node, nodesById);
+      const dropzone = findContainerAtPoint(containerBounds, center, parentCategory);
       const nextCategory = dropzone?.category ?? null;
       if (activeDropzoneCategory !== nextCategory) {
         setActiveDropzoneCategory(nextCategory);
@@ -1138,11 +1161,12 @@ function CvGraphEditorInner(): JSX.Element {
       }
       const entryId = node.id;
       const absolute = resolveNodeAbsolutePosition(node, nodesById);
+      const center = nodeCenterPoint(node, nodesById);
       const parentCategory = node.parentId ? categoryFromGroupId(node.parentId) : null;
       const parentBounds = parentCategory
         ? containerBounds.find((container) => container.category === parentCategory) ?? null
         : null;
-      const targetContainer = findContainerAtPoint(containerBounds, absolute, null);
+      const targetContainer = findContainerAtPoint(containerBounds, center, null);
 
       if (!parentCategory) {
         if (!targetContainer || !isEntryContainerCategory(targetContainer.category)) {
@@ -1180,6 +1204,7 @@ function CvGraphEditorInner(): JSX.Element {
               targetContainer.category,
               entryId,
               Number.MAX_SAFE_INTEGER,
+              detachedEntries,
             ),
           };
         });
@@ -1202,7 +1227,13 @@ function CvGraphEditorInner(): JSX.Element {
           }
           return {
             ...previous,
-            entries: reorderCategoryEntries(previous.entries, parentCategory, entryId, targetIndex),
+            entries: reorderCategoryEntries(
+              previous.entries,
+              parentCategory,
+              entryId,
+              targetIndex,
+              detachedEntries,
+            ),
           };
         });
         return;
@@ -1223,6 +1254,7 @@ function CvGraphEditorInner(): JSX.Element {
               targetContainer.category,
               entryId,
               Number.MAX_SAFE_INTEGER,
+              detachedEntries,
             ),
           };
         });
@@ -1235,7 +1267,7 @@ function CvGraphEditorInner(): JSX.Element {
         [entryId]: absolute,
       }));
     },
-    [activeDropzoneCategory, containerBounds, graph, mutateGraph, nodes],
+    [activeDropzoneCategory, containerBounds, detachedEntries, graph, mutateGraph, nodes],
   );
 
   const onConnect = useCallback(
@@ -1352,11 +1384,17 @@ function CvGraphEditorInner(): JSX.Element {
         }
         return {
           ...previous,
-          entries: reorderCategoryEntries(previous.entries, selectedGroupCategory, entryId, targetIndex),
+          entries: reorderCategoryEntries(
+            previous.entries,
+            selectedGroupCategory,
+            entryId,
+            targetIndex,
+            detachedEntries,
+          ),
         };
       });
     },
-    [graph, mutateGraph, selectedGroupCategory],
+    [detachedEntries, graph, mutateGraph, selectedGroupCategory],
   );
 
   const removeEntryFromContainer = useCallback(
@@ -1486,6 +1524,11 @@ function CvGraphEditorInner(): JSX.Element {
               ? `Focused entry: ${entryLabel(focusedEntry)}`
               : "Select an entry to split related and unrelated skills."}
           </p>
+          {Object.keys(detachedEntries).length ? (
+            <p className="cv-muted">
+              Detached entries are a sandbox-only layout state and are not persisted by Save.
+            </p>
+          ) : null}
 
           <div className="cv-side-box">
             <h3>Unrelated Skills</h3>

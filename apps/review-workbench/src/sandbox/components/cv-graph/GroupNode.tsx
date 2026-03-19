@@ -1,4 +1,4 @@
-import type { NodeProps } from "@xyflow/react";
+import { Handle, Position, type NodeProps } from "@xyflow/react";
 
 import type { GroupNodeData } from "./types";
 
@@ -6,6 +6,7 @@ export function GroupNode(props: NodeProps): JSX.Element {
   const data = props.data as unknown as GroupNodeData;
   return (
     <div className={`cv-group-node-wrap ${data.isDropzoneActive ? "cv-group-dropzone-active" : ""}`}>
+      <Handle type="target" position={Position.Left} className="cv-group-handle" />
       <button
         type="button"
         className="cv-group-header transition duration-150 hover:brightness-110 nodrag nopan"
@@ -58,6 +59,7 @@ export function GroupNode(props: NodeProps): JSX.Element {
           + {data.addLabel}
         </button>
       ) : null}
+      <Handle type="source" position={Position.Right} className="cv-group-handle" />
     </div>
   );
 }
