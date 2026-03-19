@@ -15,8 +15,9 @@
 - Expanded relation filtering in `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx` from a single `linked` toggle to dynamic per-relation-type toggles, so selected relation types are independently shown/hidden in sidebar controls.
 - Corrected focus/filter precedence in `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx`: focus/edit modes now preserve focus visibility context before node text/attribute filters are applied.
 - Added `Vacant nodes` drawer section in `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx` that exposes focus-scoped candidate targets for new connections and supports one-click connect directly from the sidebar.
+- Updated `/sandbox/node_editor` focus UX in `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx`: `Hide non-neighbors` now defaults to enabled, vacant-drawer connect flow stays available under hidden-neighbor focus filtering, and `Layout custom` restores user ordering after `Layout all` / `Layout focus`.
 - Refreshed node editor compliance tracking in `docs/architecture/node_editor_compliance_matrix.md` to reflect current status and evidence references.
-- How to run and verify this slice: run `./scripts/dev-all.sh`, open `http://127.0.0.1:4173/sandbox/node_editor`, then (1) drag a palette item into canvas and confirm node count increments, (2) start an edge drag near canvas border and confirm viewport auto-pans, (3) open a node edit modal and verify relation removal is only applied on `Save node` (and reverted on `Discard`), (4) set node filters by name/property key/property value and verify canvas filtering, and (5) toggle relation visibility and confirm relation-type filtering is applied before node filter constraints.
+- How to run and verify this slice: run `./scripts/dev-all.sh`, open `http://127.0.0.1:4173/sandbox/node_editor`, then (1) focus any node and verify `Hide non-neighbors` is enabled by default, (2) in focused mode connect one hidden candidate from `Vacant nodes` and confirm edge count increases, (3) click `Layout all`, then `Layout custom`, and confirm original ordering is restored.
 
 ## 2026-03-18
 

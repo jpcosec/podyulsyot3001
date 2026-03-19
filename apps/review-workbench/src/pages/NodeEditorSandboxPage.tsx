@@ -507,6 +507,23 @@ function serializeGraph(nodes: SimpleNode[], edges: SimpleEdge[]): string {
   });
 }
 
+function snapshotNodePositions(nodes: SimpleNode[]): Record<string, XYPosition> {
+  return Object.fromEntries(nodes.map((node) => [node.id, node.position]));
+}
+
+function applySavedNodePositions(nodes: SimpleNode[], savedPositions: Record<string, XYPosition>): SimpleNode[] {
+  return nodes.map((node) => {
+    const saved = savedPositions[node.id];
+    if (!saved) {
+      return node;
+    }
+    return {
+      ...node,
+      position: saved,
+    };
+  });
+}
+
 function NodeEditorInner(): JSX.Element {
   const initial = useMemo(() => buildInitialGraph(), []);
   const [nodes, setNodes, onNodesChange] = useNodesState<SimpleNode>(initial.nodes);
@@ -520,7 +537,8 @@ function NodeEditorInner(): JSX.Element {
   const [filterText, setFilterText] = useState("");
   const [attributeFilterKey, setAttributeFilterKey] = useState("");
   const [attributeFilterValue, setAttributeFilterValue] = useState("");
-  const [hideNonNeighbors, setHideNonNeighbors] = useState(false);
+  const [hideNonNeighbors, setHideNonNeighbors] = useState(true);
+  const [customLayoutPositions, setCustomLayoutPositions] = useState<Record<string, XYPosition> | null>(null);
 
   const [savedSnapshot, setSavedSnapshot] = useState(() => serializeGraph(initial.nodes, initial.edges));
 
@@ -1152,17 +1170,27 @@ function NodeEditorInner(): JSX.Element {
   );
 
   const onLayoutAll = useCallback(() => {
+    setCustomLayoutPositions(snapshotNodePositions(nodes));
     setNodes((prev) => layoutAllDeterministic(prev, edges));
     setTimeout(() => fitView({ duration: 380, padding: 0.14 }), 40);
-  }, [edges, fitView, setNodes]);
+  }, [edges, fitView, nodes, setNodes]);
 
   const onLayoutFocusNeighborhood = useCallback(() => {
     if (!focusedNodeId) {
       return;
     }
+    setCustomLayoutPositions(snapshotNodePositions(nodes));
     setNodes((prev) => layoutFocusNeighborhood(prev, focusedNodeId, neighborsForNode(focusedNodeId, edges)));
     setTimeout(() => fitView({ nodes: [{ id: focusedNodeId }], duration: 420, padding: 0.55 }), 50);
-  }, [edges, fitView, focusedNodeId, setNodes]);
+  }, [edges, fitView, focusedNodeId, nodes, setNodes]);
+
+  const onLayoutCustom = useCallback(() => {
+    if (!customLayoutPositions) {
+      return;
+    }
+    setNodes((prev) => applySavedNodePositions(prev, customLayoutPositions));
+    setTimeout(() => fitView({ duration: 380, padding: 0.14 }), 40);
+  }, [customLayoutPositions, fitView, setNodes]);
 
   const onSaveWorkspace = useCallback(() => {
     setSavedSnapshot(currentSnapshot);
@@ -1423,6 +1451,9 @@ function NodeEditorInner(): JSX.Element {
               >
                 Layout focus
               </button>
+              <button type="button" className="ne-btn" onClick={onLayoutCustom} disabled={!customLayoutPositions}>
+                Layout custom
+              </button>
             </div>
 
             <div className="ne-stats">
@@ -1521,6 +1552,9 @@ function NodeEditorInner(): JSX.Element {
 
             <div className="ne-filter-section">
               <h3>Vacant nodes</h3>
+              {inFocusModes && hideNonNeighbors ? (
+                <p className="ne-empty-note">Hidden non-neighbors can still be linked from this drawer.</p>
+              ) : null}
               {!focusedNodeId ? (
                 <p className="ne-empty-note">Focus a node to see candidate connection targets.</p>
               ) : hiddenRelationTypes.includes("linked") ? (
