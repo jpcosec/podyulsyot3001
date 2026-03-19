@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import {
   addEdge,
   Background,
+  ConnectionMode,
   Controls,
   Handle,
   MiniMap,
@@ -174,9 +175,11 @@ const SimpleNodeCard = memo(function SimpleNodeCard({ data, selected }: NodeProp
       style={{ backgroundColor: bg }}
       title={tooltipFromProperties(nodeData.properties)}
     >
-      <Handle type="target" position={Position.Left} className="ne-node-handle" />
+      <Handle id="top" type="source" position={Position.Top} className="ne-node-handle" />
+      <Handle id="right" type="source" position={Position.Right} className="ne-node-handle" />
+      <Handle id="bottom" type="source" position={Position.Bottom} className="ne-node-handle" />
+      <Handle id="left" type="source" position={Position.Left} className="ne-node-handle" />
       <span>{nodeData.name}</span>
-      <Handle type="source" position={Position.Right} className="ne-node-handle" />
       <button
         type="button"
         className={`ne-node-edit-chip ${selected ? "ne-node-edit-chip-visible" : ""}`}
@@ -710,6 +713,13 @@ function NodeEditorInner(): JSX.Element {
     return "Edit Relation";
   }, [editorState, focusedNode]);
 
+  const onModeBadgeClick = useCallback(() => {
+    if (editorState === "edit_node" || editorState === "edit_relation") {
+      return;
+    }
+    onUnfocus();
+  }, [editorState, onUnfocus]);
+
   return (
     <div className="ne-workspace">
       <aside className={`ne-sidebar ${sidebarOpen ? "" : "ne-sidebar-collapsed"}`}>
@@ -820,6 +830,7 @@ function NodeEditorInner(): JSX.Element {
           onEdgeClick={onEdgeClick}
           onPaneClick={onPaneClick}
           nodeTypes={nodeTypes}
+          connectionMode={ConnectionMode.Loose}
           minZoom={0.1}
           fitView
           attributionPosition="bottom-left"
@@ -832,6 +843,19 @@ function NodeEditorInner(): JSX.Element {
           <Controls />
           <Background gap={20} size={1} />
         </ReactFlow>
+        <button
+          type="button"
+          className="ne-mode-badge"
+          onClick={onModeBadgeClick}
+          title={
+            editorState === "edit_node" || editorState === "edit_relation"
+              ? "Finish edit to return to Browse"
+              : "Return to Browse"
+          }
+          disabled={editorState === "edit_node" || editorState === "edit_relation"}
+        >
+          Mode: {stateLabel}
+        </button>
       </div>
 
       {editorState === "edit_node" && nodeDraft ? (

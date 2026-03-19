@@ -1589,3 +1589,29 @@ p {
   justify-content: flex-end;
   margin-top: 12px;
 }
+
+.ne-mode-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 20;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text-main);
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: border-color 0.14s, background 0.14s;
+}
+
+.ne-mode-badge:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: #fff;
+}
+
+.ne-mode-badge:disabled {
+  cursor: default;
+  opacity: 0.72;
+}
