@@ -1,5 +1,35 @@
 # Changelog
 
+## 2026-03-18
+
+- Added behavior-only node editor specification in `docs/architecture/node_editor_behavior_spec.md`, defining canonical rules for node properties, relation visibility, focus/edit modes, composition handling, visual mapping configurability, fullscreen workspace + collapsible sidebar behavior, and sandbox isolation requirement.
+- Refined `docs/architecture/node_editor_behavior_spec.md` with explicit editor state transitions, single-selection rules, save/discard lifecycle, deterministic relation/node lifecycle actions, collapsed-composition behavior, and filter conflict guarantees for active edit targets.
+- Updated `docs/architecture/node_editor_behavior_spec.md` edit-mode contract for the current node-to-node phase to use overlay modal editing (and aligned acceptance checklist AC-10 accordingly).
+- Added front-end implementation plan `docs/architecture/node_editor_frontend_implementation_plan.md` for the node-to-node phase, including architecture decisions, phased rollout, acceptance criteria, and risk mitigations based on React Flow patterns.
+- Added dedicated sandbox route `/sandbox/node_editor` (with compatibility alias `/sandbox/node_editor_plan`) via `apps/review-workbench/src/pages/NodeEditorPlanPage.tsx`, route wiring in `apps/review-workbench/src/App.tsx`, and discoverability card in `apps/review-workbench/src/pages/SandboxPage.tsx`.
+- Reworked `/sandbox/node_editor` into a simple node-only editor in `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx` (node focus mode, handle-based node-to-node connections, node property modal, relation property modal, dirty/save/discard workflow, relation toggle/filter). To run and view: `./scripts/dev-all.sh` then open `http://127.0.0.1:4173/sandbox/node_editor`.
+- Added deterministic base CV graph backend contract and payload builder in `src/interfaces/api/models.py` and `src/interfaces/api/read_models.py` using `data/reference_data/profile/base_profile/profile_base_data.json` as source.
+- Added new portfolio endpoint `GET /api/v1/portfolio/base-cv-graph` in `src/interfaces/api/routers/portfolio.py` and backend coverage in `tests/interfaces/api/test_read_models.py`.
+- Added frontend contracts and API client support for CV graph payload in `apps/review-workbench/src/types/models.ts` and `apps/review-workbench/src/api/client.ts`.
+- Added React Flow-based CV graph editor page `apps/review-workbench/src/pages/CvGraphEditorPage.tsx` with single-canvas graph view, minimap/controls/background, and node side-panel editing.
+- Added sandbox and alias routes for CV graph editor (`/sandbox/cv_graph`, `/cv-graph`) in `apps/review-workbench/src/App.tsx` and sandbox navigation entry in `apps/review-workbench/src/pages/SandboxPage.tsx`.
+- Added CV graph editor styling in `apps/review-workbench/src/styles.css`.
+- Relaxed local development CORS handling in `src/interfaces/api/app.py` with localhost/127.0.0.1 port regex support to keep sandbox UI working when Vite auto-selects a non-default port.
+- Added new CV profile domain schema in API models (`CvEntry`, `CvSkill`, `CvDescription`, `CvDemonstratesEdge`, `CvProfileGraphPayload`) and exposed it through `GET /api/v1/portfolio/cv-profile-graph` while preserving the legacy `base-cv-graph` endpoint.
+- Added deterministic Entry/Skill graph builder `build_cv_profile_graph_payload` in `src/interfaces/api/read_models.py` with content-slugged description keys, optional skill mastery levels, and explicit Entry->Skill demonstrates edges with description key tracing.
+- Expanded backend coverage in `tests/interfaces/api/test_read_models.py` for the new Entry/Skill payload.
+- Rebuilt `CvGraphEditorPage` as a three-view React Flow editor (document logic, entry-focused, skill-focused) with node/edge transitions, group expand/collapse, editable Entry/Skill side panels, and link toggling between entries and skills.
+- Added `@dagrejs/dagre` for deterministic layouting in focused CV graph views and updated CV graph styling for the new editor controls/forms.
+- Extended frontend routes with deep links (`/cv-graph/entry/:entryId`, `/cv-graph/skill/:skillId`) and updated review-workbench docs to reflect the new CV graph architecture.
+- Redesigned CV graph editor UI to preserve box-in-box group/entry nesting while adding entry click-to-expand right-side inline editing panels, in-node description editing with add controls, and repurposed side panel skill palette behavior.
+- Added skill mastery scale support in `apps/review-workbench/src/lib/mastery-scale.ts` (name + numeric level + intensity), and applied mastery-intensity category coloring plus always-visible labels to skill ball nodes.
+- Added custom React Flow node components (`EntryNode`, `SkillBallNode`, `GroupNode`) under `apps/review-workbench/src/components/cv-graph/` and switched matching interactions to handle-based `onConnect` linking.
+- Integrated Tailwind CSS in `apps/review-workbench` (Tailwind + PostCSS + Autoprefixer) while preserving existing CSS variable theme and module-level styles.
+- Fixed CV graph interaction bubbling in node buttons (`EntryNode`, `SkillBallNode`) so entry focus/expand and skill selection no longer double-toggle through overlapping React Flow node click handlers.
+- Hardened graph matching behavior in `CvGraphEditorPage` by centralizing entry/skill connection-pair validation, rejecting non entry-skill pairs, and auto-focusing the connected entry/skill after successful `onConnect`.
+- Removed top-level Dagre auto-layout from `CvGraphEditorPage` and restored deterministic horizontal group placement to preserve the intended box-in-box document structure visibility.
+- Improved initial graph usability by default-collapsing the large skills group, reducing initial fit complexity, and adding React Flow `minZoom` tuning plus instance-driven fit refresh when node topology changes.
+
 ## 2026-03-17
 
 - Started ADR-001 implementation with a Phase 0 UI-first foundation scaffold.
@@ -33,6 +63,22 @@
 - Expanded `src/DEPENDENCY_GRAPH.md` with pipeline subgraph dependencies and impact-based test mapping for `src/core`, `src/ai`, and `src/nodes`.
 - Restructured graph/architecture docs to current-state-only surfaces and moved future-state specs to planning space (`plan/spec/`, `plan/adr/`).
 - Added unified dev startup script `scripts/dev.sh` to launch both UI and API in a single terminal with Ctrl+C cleanup.
+- Added full-stack startup script `scripts/dev-all.sh` to launch Neo4j + API + UI together and bootstrap Neo4j schema constraints.
+- Improved `scripts/dev-all.sh` to auto-select the next free API/UI ports when defaults are occupied.
+- Added `plan/adr_001_next_actions.md` — forward-looking action plan with critical path analysis, concrete per-action tasks for completing Phases 0-3 (install deps, start Neo4j, profile migration script, job migration script, dual-read API, comment model, node editor, text-to-node creation, review decision UI, Slate.js integration), testing strategy, and environment dependencies.
+- Restored full ADR-001 content to `plan/adr/adr_001_ui_first_knowledge_graph_langchain.md` — previous session had reduced it to a 31-line stub during docs/plan boundary enforcement. Full decision record now restored: context, decisions, Neo4j schema (5 domains, ~20 node types), three view modes, LangChain migration table, consequences, risks, alternatives, deployment.
+- Added frontend component sandbox route `/sandbox` with fake data in `apps/review-workbench/src/pages/SandboxPage.tsx`, including isolated previews for `StageStatusBadge`, `JobTree`, `GraphCanvas`, and `RichTextPane`, plus mock View 2 and View 3 shells for quick UI validation without backend/API dependencies.
+- Switched graph rendering preference from Cytoscape to Diagrammatic-UI in the frontend: `GraphCanvas.tsx` now uses `diagrammatic-ui` `Graph`, removed `cytoscape`/`react-cytoscapejs` dependencies and `src/react-cytoscapejs.d.ts`, and updated ADR/tracker/docs references to reflect Diagrammatic-UI as the preferred graph layer.
+- Replaced `RichTextPane` placeholder with a functional highlight-based text editor in `apps/review-workbench/src/components/RichTextPane.tsx`: select text spans, assign relation categories (`requirement`, `deadline`, `payment`, `contact`, `institution`, `other`), create color-coded highlights, and manage corresponding node cards in a sidebar with matching colors and remove actions.
+- Added highlight editor styling in `apps/review-workbench/src/styles.css` (`highlight-editor`, toolbar, canvas, sidebar, cards) including responsive layout and active-selection visuals.
+- Added a graph error boundary in `apps/review-workbench/src/components/GraphCanvas.tsx` so Diagrammatic-UI runtime failures no longer blank the page; when graph render fails, views fall back to a node/edge summary panel and keep the text editor and review UI usable.
+- Split routes so text tagging is isolated from sandbox noise: added dedicated `TextTaggerPage` at `/sandbox/text_tagger` (and alias `/text-tagger`), removed embedded `RichTextPane` from `SandboxPage`, and linked sandbox to the dedicated text tagger route.
+- Rebuilt `RichTextPane` as a drag-to-category text tagger using `@dnd-kit/core`: select text on the left, drag selection chip into responsive category boxes on the right, create color-coded highlights, store exact captured text per note, show category summary as first occurrence + total count, and support inline double-click editing for card fields (node label/details) plus subcategory editing for `other` notes.
+- Improved text tagger UX for faster categorization: when text is selected, category boxes now show numbered quick-add hints (`Click or press 1-6 to add`), clicking a category box adds the selected text without dragging, and note cards are draggable (Move handle) so existing notes can be re-categorized by dropping into another category box.
+- Refactored text tagger node model to two editable main categories (`requirement`, `info`) with editable subcategories for both. Added collapsible note cards (Expand/Collapse), searchable note list, and scrollable notes container in the sidebar; updated quick-add shortcuts to `1` (Requirement) and `2` (Info).
+- Upgraded note cards into full form cards: whole-card draggable recategorization, always-expanded on creation, subcategory dropdowns driven by code parameters (`SUBCATEGORY_OPTIONS`) with `other` custom input support, and red clickable basket removal control.
+- Restructured categorization UI into explicit two levels (main tabs + subcategory tabs), updated visual semantics (requirement uses red intensity levels; info subcategories use distinct non-red colors), removed dedicated collapse/expand button, and switched collapse/expand to card-body click behavior (remove basket remains isolated).
+- Refined category hierarchy behavior: level 1 now renders as tab-style main categories only (no "All categories" tab), level 2 remains subcategory boxes with clear visual separation; requirement main/sub levels use red spectrum and info subcategories use mixed palette.
 
 ## 2026-03-16
 
