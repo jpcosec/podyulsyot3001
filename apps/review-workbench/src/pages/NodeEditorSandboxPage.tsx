@@ -18,6 +18,7 @@ import {
   type NodeProps,
   type NodeTypes,
 } from "@xyflow/react";
+import dagre from "dagre";
 import "@xyflow/react/dist/style.css";
 
 type EditorState = "browse" | "focus" | "edit_node" | "edit_relation";
@@ -65,6 +66,9 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 const CATEGORY_OPTIONS = ["person", "skill", "project", "publication", "concept"];
+
+const DAGRE_NODE_WIDTH = 170;
+const DAGRE_NODE_HEIGHT = 68;
 
 function buildInitialGraph(): { nodes: SimpleNode[]; edges: SimpleEdge[] } {
   const nodes: SimpleNode[] = [
@@ -203,6 +207,73 @@ function neighborsForNode(nodeId: string, edges: SimpleEdge[]): Set<string> {
     }
   }
   return related;
+}
+
+function layoutAllDeterministic(nodes: SimpleNode[], edges: SimpleEdge[]): SimpleNode[] {
+  const graph = new dagre.graphlib.Graph();
+  graph.setDefaultEdgeLabel(() => ({}));
+  graph.setGraph({ rankdir: "LR", nodesep: 52, ranksep: 120, marginx: 24, marginy: 24 });
+
+  [...nodes]
+    .sort((a, b) => a.id.localeCompare(b.id))
+    .forEach((node) => {
+      graph.setNode(node.id, { width: DAGRE_NODE_WIDTH, height: DAGRE_NODE_HEIGHT });
+    });
+
+  [...edges]
+    .sort((a, b) => a.id.localeCompare(b.id))
+    .forEach((edge) => {
+      graph.setEdge(edge.source, edge.target);
+    });
+
+  dagre.layout(graph);
+
+  return nodes.map((node) => {
+    const positioned = graph.node(node.id) as { x: number; y: number } | undefined;
+    if (!positioned) {
+      return node;
+    }
+    return {
+      ...node,
+      position: {
+        x: positioned.x - DAGRE_NODE_WIDTH / 2,
+        y: positioned.y - DAGRE_NODE_HEIGHT / 2,
+      },
+    };
+  });
+}
+
+function layoutFocusNeighborhood(
+  nodes: SimpleNode[],
+  focusedNodeId: string,
+  neighbors: Set<string>,
+): SimpleNode[] {
+  const center = { x: 420, y: 220 };
+  const sortedNeighbors = [...neighbors].sort((a, b) => a.localeCompare(b));
+  const baseRadius = 220;
+  const radius = Math.max(baseRadius, sortedNeighbors.length * 36);
+
+  const positions = new Map<string, { x: number; y: number }>();
+  positions.set(focusedNodeId, center);
+
+  sortedNeighbors.forEach((id, index) => {
+    const angle = (index / Math.max(sortedNeighbors.length, 1)) * 2 * Math.PI - Math.PI / 2;
+    positions.set(id, {
+      x: center.x + radius * Math.cos(angle),
+      y: center.y + radius * Math.sin(angle),
+    });
+  });
+
+  return nodes.map((node) => {
+    const next = positions.get(node.id);
+    if (!next) {
+      return node;
+    }
+    return {
+      ...node,
+      position: next,
+    };
+  });
 }
 
 function serializeGraph(nodes: SimpleNode[], edges: SimpleEdge[]): string {
@@ -470,6 +541,19 @@ function NodeEditorInner(): JSX.Element {
     setEditorState("focus");
   }, [setNodes]);
 
+  const onLayoutAll = useCallback(() => {
+    setNodes((prev) => layoutAllDeterministic(prev, edges));
+    setTimeout(() => fitView({ duration: 380, padding: 0.14 }), 40);
+  }, [edges, fitView, setNodes]);
+
+  const onLayoutFocusNeighborhood = useCallback(() => {
+    if (!focusedNodeId) {
+      return;
+    }
+    setNodes((prev) => layoutFocusNeighborhood(prev, focusedNodeId, neighborsForNode(focusedNodeId, edges)));
+    setTimeout(() => fitView({ nodes: [{ id: focusedNodeId }], duration: 420, padding: 0.55 }), 50);
+  }, [edges, fitView, focusedNodeId, setNodes]);
+
   const onSaveWorkspace = useCallback(() => {
     setSavedSnapshot(currentSnapshot);
   }, [currentSnapshot]);
@@ -658,6 +742,20 @@ function NodeEditorInner(): JSX.Element {
             <div className="ne-control-row ne-control-row-single">
               <button type="button" className="ne-btn" onClick={onAddNode}>
                 + Add node
+              </button>
+            </div>
+
+            <div className="ne-control-row">
+              <button type="button" className="ne-btn" onClick={onLayoutAll}>
+                Layout all
+              </button>
+              <button
+                type="button"
+                className="ne-btn"
+                onClick={onLayoutFocusNeighborhood}
+                disabled={!focusedNodeId}
+              >
+                Layout focus
               </button>
             </div>
 
