@@ -127,3 +127,128 @@ Rationale:
 1. All deterministic target services listed in this document exist under `src/core/` and are test-covered.
 2. Full-path deterministic nodes (`render`, `package`, review parsers) are contract-driven and fail closed.
 3. Active runtime and target runtime docs are both updated and aligned with implemented behavior.
+
+---
+
+## Execution Annex (added 2026-03-19)
+
+### A. File-Level Migration Matrix
+
+#### Already migrated (no action needed)
+
+| Legacy file | Rebuild target | Status |
+|---|---|---|
+| `src/render/docx.py` | `src/core/tools/render/docx.py` | Identical copy |
+| `src/render/styles.py` | `src/core/tools/render/styles.py` | Identical copy |
+| `src/render/latex.py` | `src/core/tools/render/latex.py` | Compatible refactor (`compile_cv_pdf` added, `_latex_safe` improved) |
+| `src/render/pdf.py` | `src/core/tools/render/pdf.py` | Compatible refactor (better fallback chain) |
+| — | `src/core/tools/render/letter.py` | New in rebuild (motivation letter renderer) |
+
+#### Pending migration (WP3 scope)
+
+| Legacy file | Rebuild target | Strategy |
+|---|---|---|
+| `src/steps/rendering.py` (444 lines) | `src/nodes/render/logic.py` + `src/nodes/render/contract.py` | Decompose into node contract + logic; extract `_render_cv`, `_render_motivation_letter`, `validate_ats` |
+| `src/steps/packaging.py` (250 lines) | `src/nodes/package/logic.py` + `src/nodes/package/contract.py` | Decompose into node contract + logic; extract `_merge_pdfs`, `_compress_pdf` |
+| `src/utils/pdf_merger.py` (74 lines) | `src/core/tools/pdf.py` | Refactor `merge_pdfs`, `compress_pdf` as deterministic service functions |
+| `src/utils/cv_rendering.py` (837 lines) | Split across: `src/core/io/` (path resolution), `src/nodes/render/logic.py` (orchestration), `src/core/tools/render/` (render calls), `src/cli/` (CLI entry) | Largest file; needs decomposition — port behavior only, not coupling |
+
+#### Pending implementation (WP1 scope — no legacy equivalent)
+
+| Rebuild target | Source reference |
+|---|---|
+| `src/core/io/workspace_manager.py` | `docs/architecture/core_io_and_provenance_manager.md` spec |
+| `src/core/io/artifact_reader.py` | Same spec |
+| `src/core/io/artifact_writer.py` | Same spec |
+| `src/core/io/provenance_service.py` | Same spec |
+
+#### Legacy tests to port
+
+| Legacy test | Rebuild target | WP |
+|---|---|---|
+| `tests/render/test_docx.py` | `tests/core/tools/render/test_docx.py` | WP3 |
+| `tests/render/test_pdf.py` | `tests/core/tools/render/test_pdf.py` | WP3 |
+| `tests/steps/test_matching.py` | Consolidate into `tests/nodes/match/` (partial overlap) | WP2 |
+| `tests/steps/test_motivation.py` | `tests/nodes/generate_documents/` (partial overlap) | WP3 |
+| `tests/steps/test_cv_tailoring.py` | `tests/nodes/generate_documents/` (partial overlap) | WP3 |
+| `tests/cv_generator/test_model.py` | `tests/nodes/generate_documents/test_contract.py` (partial overlap) | WP3 |
+
+### B. Test Gates per Work Package
+
+Each WP has a mandatory gate command. The WP is not done until the gate passes.
+
+#### WP1 — Core I/O and Provenance Foundation
+
+```bash
+# Gate: new core/io tests + existing prep-match regression
+python -m pytest tests/core/io/ -q
+python -m pytest tests/core/ tests/nodes/match/ tests/nodes/review_match/ tests/cli/test_run_prep_match.py -q
+```
+
+Pilot node: `match` or `review_match` — must run exclusively through `core/io` adapters.
+
+#### WP2 — Deterministic Review Substrate
+
+```bash
+# Gate: shared review utilities pass all three outcomes
+python -m pytest tests/core/review/ -q
+# Gate: existing review_match regression
+python -m pytest tests/nodes/review_match/ -q
+```
+
+#### WP3 — Deterministic Delivery Chain
+
+```bash
+# Gate: render/package nodes + ported legacy tests
+python -m pytest tests/core/tools/render/ tests/nodes/render/ tests/nodes/package/ -q
+# Gate: full suite still green
+python -m pytest tests/ -q
+```
+
+#### WP4 — Observability and Quality Gates
+
+```bash
+# Gate: metadata/provenance service tests
+python -m pytest tests/core/io/ tests/core/observability/ -q
+# Gate: full suite still green
+python -m pytest tests/ -q
+```
+
+### C. Rollback Protocol
+
+1. **Before each WP slice**: tag the current state: `git tag pre-wp{N}-{slice_name}`.
+2. **After each slice commit**: run the WP gate command. If it fails:
+   - Do NOT proceed to the next slice.
+   - Fix in the same branch. If the fix is non-trivial (>30 min), revert to the tag: `git reset --hard pre-wp{N}-{slice_name}`.
+3. **Cross-WP regression**: if a later WP breaks an earlier WP gate, the later WP is rolled back first.
+4. **Full-suite regression**: `python -m pytest tests/ -q` is the final gate before any WP is considered done. No exceptions.
+
+### D. Commit Slicing Policy
+
+1. **One commit per logical migration unit** (single file or tightly coupled pair).
+2. **Maximum 4 files per commit** unless all files are in the same module and inseparable.
+3. **Test file always in the same commit** as its implementation.
+4. **Never commit a migration slice without running its WP gate first.**
+5. **Changelog entry per WP completion** (not per commit) with exact verification steps.
+
+### E. Execution Checklist
+
+- [ ] **WP1-1**: Implement `src/core/io/__init__.py`, `workspace_manager.py`, `artifact_reader.py`, `artifact_writer.py`
+- [ ] **WP1-2**: Implement `provenance_service.py`
+- [ ] **WP1-3**: Convert `match` node to use `core/io` adapters
+- [ ] **WP1-4**: Convert `review_match` node to use `core/io` adapters
+- [ ] **WP1-gate**: Run WP1 test gate — must pass
+- [ ] **WP2-1**: Extract shared review utilities from `review_match` into `src/core/review/`
+- [ ] **WP2-2**: Add unit tests for approve/reject/request_regeneration paths
+- [ ] **WP2-3**: Wire `review_application_context`, `review_motivation_letter`, `review_cv`, `review_email` stubs
+- [ ] **WP2-gate**: Run WP2 test gate — must pass
+- [ ] **WP3-1**: Port `src/utils/pdf_merger.py` → `src/core/tools/pdf.py`
+- [ ] **WP3-2**: Port legacy render tests → `tests/core/tools/render/`
+- [ ] **WP3-3**: Implement `src/nodes/render/contract.py` + `logic.py`
+- [ ] **WP3-4**: Implement `src/nodes/package/contract.py` + `logic.py`
+- [ ] **WP3-5**: Decompose `src/utils/cv_rendering.py` into node logic + core tools
+- [ ] **WP3-gate**: Run WP3 test gate — must pass
+- [ ] **WP4-1**: Add per-node execution metadata to `meta/` artifacts
+- [ ] **WP4-2**: Add operator-facing run summary artifact
+- [ ] **WP4-gate**: Run WP4 test gate — must pass
+- [ ] **Final gate**: `python -m pytest tests/ -q` — all green
