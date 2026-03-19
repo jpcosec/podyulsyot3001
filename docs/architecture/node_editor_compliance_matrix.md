@@ -43,14 +43,15 @@ Scope is intentionally limited to simple nodes, node-to-node relations, and edit
 | SB-02 | Sidebar | Drag-and-drop creation palette | Pass | `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx:961` | Sidebar template chips are draggable and create nodes on canvas drop |
 | SB-03 | Sidebar | Relation toggles + text and attribute filters | Pass | `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx:1375` | Sidebar supports per-relation-type toggles, name filter, property-key filter, and property-value matching |
 | SB-04 | Sidebar | Minimap for large graph navigation | Pass | `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx:675` | Minimap enabled |
+| SB-05 | Sidebar | Vacant nodes drawer for candidate connection targets | Pass | `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx:1480` | Sidebar exposes focus-scoped vacant candidates and supports one-click connect |
 | PR-01 | Priority Rules | Edit mode precedence over all other visibility logic | Pass | `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx:380` | Guards block interactions in edit mode |
 | PR-02 | Priority Rules | Focus restrictions precede relation/node filter behavior | Pass | `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx:715` | Focus/edit modes bypass node filters first, then focus visibility rules apply |
 | PR-03 | Priority Rules | Relation-type filter precedes node-attribute filters | Pass | `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx:732` | Edge visibility is computed by relation-type gate first, then node filter constraints |
 
 ## Coverage Summary
 
-- Total requirements: 23
-- Pass: 23
+- Total requirements: 24
+- Pass: 24
 - Partial: 0
 - Missing: 0
 - Weighted score: 100%

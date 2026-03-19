@@ -739,6 +739,20 @@ function NodeEditorInner(): JSX.Element {
     });
   }, [edges, hiddenRelationTypes]);
 
+  const constraintFilteredNodeIds = useMemo(() => {
+    const next = new Set<string>();
+    for (const node of nodes) {
+      if (!textFilteredNodeIds.has(node.id)) {
+        continue;
+      }
+      if (!attributeFilteredNodeIds.has(node.id)) {
+        continue;
+      }
+      next.add(node.id);
+    }
+    return next;
+  }, [attributeFilteredNodeIds, nodes, textFilteredNodeIds]);
+
   const visibleEdges = useMemo(() => {
     return relationTypeFilteredEdges.filter((edge) => {
       if (!filteredNodeIds.has(edge.source) || !filteredNodeIds.has(edge.target)) {
@@ -747,6 +761,35 @@ function NodeEditorInner(): JSX.Element {
       return true;
     });
   }, [filteredNodeIds, relationTypeFilteredEdges]);
+
+  const vacantCandidateNodes = useMemo(() => {
+    if (!focusedNodeId) {
+      return [] as SimpleNode[];
+    }
+    if (hiddenRelationTypes.includes("linked")) {
+      return [] as SimpleNode[];
+    }
+
+    const connectedNodeIds = new Set<string>();
+    for (const edge of edges) {
+      if (edge.source === focusedNodeId) {
+        connectedNodeIds.add(edge.target);
+      }
+      if (edge.target === focusedNodeId) {
+        connectedNodeIds.add(edge.source);
+      }
+    }
+
+    return nodes
+      .filter((node) => node.id !== focusedNodeId)
+      .filter((node) => !connectedNodeIds.has(node.id))
+      .filter((node) => constraintFilteredNodeIds.has(node.id))
+      .sort((a, b) => {
+        const aName = (a.data as SimpleNodeData).name;
+        const bName = (b.data as SimpleNodeData).name;
+        return aName.localeCompare(bName);
+      });
+  }, [constraintFilteredNodeIds, edges, focusedNodeId, hiddenRelationTypes, nodes]);
 
   const openNodeEditor = useCallback(
     (nodeId: string) => {
@@ -969,6 +1012,29 @@ function NodeEditorInner(): JSX.Element {
       setEditorState("focus");
     },
     [connectMenu, setEdges],
+  );
+
+  const onConnectFromVacantDrawer = useCallback(
+    (targetNodeId: string) => {
+      if (!focusedNodeId) {
+        return;
+      }
+      const edgeId = `e-${focusedNodeId}-${targetNodeId}-${Date.now()}`;
+      setEdges((prev) =>
+        addEdge(
+          {
+            id: edgeId,
+            source: focusedNodeId,
+            target: targetNodeId,
+            type: "floating",
+            data: { relationType: "linked", properties: {} },
+          },
+          prev,
+        ) as SimpleEdge[],
+      );
+      setEditorState("focus");
+    },
+    [focusedNodeId, setEdges],
   );
 
   const onCreateAndConnectNode = useCallback(() => {
@@ -1451,6 +1517,30 @@ function NodeEditorInner(): JSX.Element {
               >
                 Clear filters
               </button>
+            </div>
+
+            <div className="ne-filter-section">
+              <h3>Vacant nodes</h3>
+              {!focusedNodeId ? (
+                <p className="ne-empty-note">Focus a node to see candidate connection targets.</p>
+              ) : hiddenRelationTypes.includes("linked") ? (
+                <p className="ne-empty-note">Enable relation type `linked` to create new node-to-node links.</p>
+              ) : vacantCandidateNodes.length === 0 ? (
+                <p className="ne-empty-note">No vacant candidates under current filters.</p>
+              ) : (
+                <div className="ne-connect-list">
+                  {vacantCandidateNodes.map((node) => (
+                    <button
+                      key={node.id}
+                      type="button"
+                      className="ne-connect-item"
+                      onClick={() => onConnectFromVacantDrawer(node.id)}
+                    >
+                      {(node.data as SimpleNodeData).name}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         ) : null}
