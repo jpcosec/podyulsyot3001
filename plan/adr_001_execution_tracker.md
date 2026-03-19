@@ -2,6 +2,7 @@
 
 Source of truth for ADR-001 implementation progress.
 Reference: `plan/adr/adr_001_ui_first_knowledge_graph_langchain.md`
+Next actions: `plan/adr_001_next_actions.md`
 
 Status key: `[x]` done, `[~]` partial, `[ ]` not started.
 
@@ -19,7 +20,7 @@ Status key: `[x]` done, `[~]` partial, `[ ]` not started.
 | 0.2 | Neo4j schema bootstrap (CLI + API) | [~] | CLI `src/cli/bootstrap_neo4j_schema.py` and API endpoint `POST /api/v1/neo4j/bootstrap-schema` exist. Gracefully handles missing driver. Not end-to-end tested against a live Neo4j instance. |
 | 0.3 | FastAPI backend with Neo4j driver + CRUD | [~] | App factory in `src/interfaces/api/app.py` with CORS, 4 routers (health, portfolio, jobs, neo4j). Read-only filesystem endpoints work (5 tests pass). No Neo4j CRUD — all read models are filesystem-based. `fastapi` not installed in current conda env. |
 | 0.4 | React app scaffold with routing | [x] | `apps/review-workbench/` — Vite + React 18 + TypeScript. Routes: `/` (Portfolio), `/jobs/:source/:jobId` (Job). Builds clean (`tsc -b && vite build` passes, 51 modules). |
-| 0.5 | Cytoscape.js integration | [x] | `GraphCanvas.tsx` renders nodes/edges via `react-cytoscapejs`. Used in all three views. Circle layout, active-node highlighting, edge labels. |
+| 0.5 | Graph visualization integration | [x] | `GraphCanvas.tsx` renders nodes/edges via `diagrammatic-ui` (`Graph` component). Used in all three views with active-node styling and tree auto-layout. |
 | 0.6 | Slate.js integration | [~] | `RichTextPane.tsx` exists with basic Slate editor instance. Not wired into any view (placeholder only). |
 | 0.7 | Import profile data into Neo4j | [ ] | `data/profile/base_profile/profile_base_data.json` exists on disk. No migration script to load it into Neo4j. |
 | 0.8 | Import one job artifact chain into Neo4j | [ ] | Job artifacts exist under `data/jobs/tu_berlin/`. No migration script to import into Neo4j nodes/edges. |
@@ -41,7 +42,7 @@ Status key: `[x]` done, `[~]` partial, `[ ]` not started.
 
 | # | Item | Status | Evidence |
 |---|------|--------|----------|
-| 1.1 | Split-pane: source document + graph panel | [x] | `ViewTwoDocToGraph.tsx` — left: source lines, right: requirement list + Cytoscape graph. CSS grid layout in `styles.css`. |
+| 1.1 | Split-pane: source document + graph panel | [x] | `ViewTwoDocToGraph.tsx` — left: source lines, right: requirement list + Diagrammatic-UI graph. CSS grid layout in `styles.css`. |
 | 1.2 | Bidirectional highlighting (text <-> node) | [~] | Click requirement -> source lines highlight (yellow). Click source line -> linked requirement selects (blue). Spans derived from heuristic text matching (`_derive_spans` in `read_models.py`), NOT from Neo4j `TextSpan` nodes. |
 | 1.3 | Text selection to node creation dialog | [ ] | Not implemented. No selection handler, no dialog component. |
 | 1.4 | Node property editor | [ ] | Not implemented. Requirements are read-only display. |
@@ -58,7 +59,7 @@ Status key: `[x]` done, `[~]` partial, `[ ]` not started.
 
 ## Phase 2: View 1 — Graph Explorer (Match Review)
 
-**Objective**: Interactive Cytoscape graph showing profile-job-match relationships, edge inspection with scores/reasoning, node/edge editing, review decision UI (approve/regen/reject), comment system.
+**Objective**: Interactive graph showing profile-job-match relationships, edge inspection with scores/reasoning, node/edge editing, review decision UI (approve/regen/reject), comment system.
 
 ### Sub-objectives
 
@@ -86,7 +87,7 @@ Status key: `[x]` done, `[~]` partial, `[ ]` not started.
 
 | # | Item | Status | Evidence |
 |---|------|--------|----------|
-| 3.1 | Split-pane: generated document + graph nodes | [x] | `ViewThreeGraphToDoc.tsx` — left: document textarea with doc-type tabs (motivation/cv/email), right: Cytoscape graph. |
+| 3.1 | Split-pane: generated document + graph nodes | [x] | `ViewThreeGraphToDoc.tsx` — left: document textarea with doc-type tabs (motivation/cv/email), right: Diagrammatic-UI graph. |
 | 3.2 | Bidirectional linking (text <-> source nodes) | [ ] | Not implemented. Document text and graph are displayed side by side but not linked. |
 | 3.3 | Direct text editing with Slate.js | [ ] | Document is a read-only `<textarea>`. `RichTextPane` component exists but is not wired here. |
 | 3.4 | Comment categorization (profile/redaction/match/other) | [ ] | Not implemented. |
@@ -165,7 +166,7 @@ Status key: `[x]` done, `[~]` partial, `[ ]` not started.
 
 1. React app builds and serves (`npm run build` passes, `npm run dev` starts Vite).
 2. FastAPI API has 5 passing read-model tests (timeline, list jobs, view1/2/3 payloads).
-3. View 2 (Doc-to-Graph) read-only inspection: source text + requirement highlighting + Cytoscape graph, wired to filesystem artifacts via API.
+3. View 2 (Doc-to-Graph) read-only inspection: source text + requirement highlighting + Diagrammatic-UI graph, wired to filesystem artifacts via API.
 4. View 1 (Graph Explorer) read-only: match graph + score/reasoning table from match artifacts.
 5. View 3 (Graph-to-Doc) read-only: document tabs (CV/letter/email) + contributing graph from generation artifacts.
 6. Portfolio page: totals + job list navigating to per-job pages with stage status badges.

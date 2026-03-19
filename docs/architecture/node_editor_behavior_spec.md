@@ -110,11 +110,18 @@ When focusing a node, configurable behavior options include:
 - show only relations attached to focused node
 
 Focus behavior must be togglable and composable (multiple options can be active together).
-Default focus behavior:
+Default focus behavior for this phase:
 
 - center + zoom to focused node
-- fade non-focused nodes
-- keep non-focused nodes non-interactive until unfocus
+- keep 1-hop neighbors fully visible and interactive
+- keep non-neighbors visible but dimmed (target baseline: 20% opacity) and non-interactive
+- include a sidebar toggle `Hide non-neighbors` for full isolation when needed
+
+Spatial policy in focus mode:
+
+- focused node at center
+- direct neighbors arranged on a deterministic peripheral ring
+- transitions must be smoothly animated to preserve user mental map
 
 ### [C] Edit mode
 
@@ -123,6 +130,12 @@ Default focus behavior:
 - Node form supports existing properties and newly added attributes.
 - Selecting any relation line opens relation inspection.
 - If a relation is editable, relation type and relation attributes can be edited.
+
+Edit entrypoint contract (canonical order):
+
+1. Primary: contextual in-node edit affordance shown on hover/selection
+2. Secondary: double-click on node
+3. Sidebar edit action is not part of the canonical flow for this phase
 
 ## Edit and Save Lifecycle
 
@@ -170,6 +183,13 @@ Default focus behavior:
   - reposition free node
   - delete node (with explicit confirmation and relation impact warning)
 
+Handle and edge UX baseline for this phase:
+
+- handles are revealed on hover/selection to reduce visual clutter
+- handles support multiple anchor zones (top/right/bottom/left)
+- loose connection mode is acceptable for conceptual mapping phase
+- edge anchoring should prefer shortest-angle geometry between nodes (floating-edge style behavior)
+
 ## Workspace Layout
 
 - Fullscreen canvas workspace (neutral background; exact color is not constrained).
@@ -178,8 +198,14 @@ Default focus behavior:
   - show/hide relation types
   - save
   - unfocus/reset focus
+  - auto-layout controls (`Layout All`, `Layout Focus Neighborhood`)
   - filter nodes by selected fields
   - expose candidate nodes for new connections
+
+Layout policy:
+
+- Auto-layout must be deterministic (same graph state => same arrangement)
+- Prefer stable, non-jittery transitions over continuous physics simulation
 
 `candidate nodes` means nodes currently eligible to receive a new relation from the selected node under active type/filter constraints.
 
@@ -207,6 +233,11 @@ Additional guarantee:
 
 - An actively edited node or relation stays visible and interactive regardless of active filters until the edit session ends.
 
+Cross-cutting UI requirements:
+
+- Provide a dedicated `View Options` section in sidebar for focus opacity and line style behavior tuning.
+- Provide a visible mode badge on canvas (e.g., `Mode: Browse`, `Mode: Focus`, `Mode: Edit`) that also supports returning to browse.
+
 ## Out of Scope (Current Draft)
 
 - Backend schema details and persistence protocol
@@ -228,6 +259,7 @@ Each assertion must be independently verifiable in the sandbox using mock graph 
 
 - [ ] AC-01: Every node shows `name` at all times, regardless of zoom or state.
 - [ ] AC-02: Hovering a node reveals hover-tier properties; leaving hides them.
+- [ ] AC-02b: Node edit affordance appears contextually on hover/selection.
 - [ ] AC-03: A container node starts collapsed showing name + child count only.
 - [ ] AC-04: Expanding a container reveals its child nodes linked to the parent.
 
@@ -241,6 +273,8 @@ Each assertion must be independently verifiable in the sandbox using mock graph 
 - [ ] AC-07: Focusing a node centers + zooms to it, fades non-focused nodes, and makes them non-interactive.
 - [ ] AC-08: Sidebar unfocus/reset returns to browse with all nodes restored.
 - [ ] AC-09: Only relations attached to the focused node are visible; others are hidden or faded.
+- [ ] AC-09b: 1-hop neighbors stay fully visible and interactive in default focus policy.
+- [ ] AC-09c: Non-neighbors stay visible (dimmed) by default, with optional `Hide non-neighbors` toggle.
 
 ### Edit mode
 
@@ -258,6 +292,18 @@ Each assertion must be independently verifiable in the sandbox using mock graph 
 ### Visual mapping
 
 - [ ] AC-17: Changing a mapping rule (for example node category to fill color) updates the canvas immediately.
+- [ ] AC-17b: Handle visibility/mode and edge style options are configurable in `View Options`.
+
+### Layout and handles
+
+- [ ] AC-19: `Layout All` deterministically arranges the entire visible graph.
+- [ ] AC-20: `Layout Focus Neighborhood` deterministically arranges centered node + direct neighbors.
+- [ ] AC-21: Handle zones support top/right/bottom/left anchors.
+- [ ] AC-22: Floating-edge style anchoring picks shortest-angle attachment path.
+
+### Mode visibility
+
+- [ ] AC-23: A visible mode badge indicates current editor mode and allows returning to browse.
 
 ### Conflict resolution
 

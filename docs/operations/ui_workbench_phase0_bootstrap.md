@@ -1,18 +1,26 @@
 # UI Workbench Phase 0 Bootstrap
 
-## Start Neo4j
+## Start everything (Neo4j + API + UI)
 
 ```bash
-docker compose -f docker-compose.neo4j.yml up -d
+./scripts/dev-all.sh
 ```
 
-## Start everything (API + UI)
+Opens (or the next free ports if these are busy):
+
+- UI: `http://127.0.0.1:4173`
+- API: `http://127.0.0.1:8010`
+- Neo4j Browser: `http://127.0.0.1:7474`
+
+Ctrl+C stops UI/API. Set `STOP_NEO4J_ON_EXIT=1` if you also want Docker to stop when exiting.
+
+## Start only API + UI (keep Neo4j manual)
 
 ```bash
 ./scripts/dev.sh
 ```
 
-Opens UI at `http://127.0.0.1:4173` and API at `http://127.0.0.1:8010`. Ctrl+C stops both.
+Opens UI at `http://127.0.0.1:4173` and API at `http://127.0.0.1:8010`.
 
 ### Or start separately
 
