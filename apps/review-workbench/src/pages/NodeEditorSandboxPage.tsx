@@ -43,7 +43,18 @@ type SimpleEdge = Edge<SimpleEdgeData>;
 interface PropertyPair {
   key: string;
   value: string;
+  dataType: AttributeType;
 }
+
+type AttributeType =
+  | "string"
+  | "text_markdown"
+  | "number"
+  | "date"
+  | "datetime"
+  | "boolean"
+  | "enum"
+  | "enum_open";
 
 interface NodeDraft {
   id: string;
@@ -74,6 +85,16 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 const CATEGORY_OPTIONS = ["person", "skill", "project", "publication", "concept"];
+const ATTRIBUTE_TYPES: AttributeType[] = [
+  "string",
+  "text_markdown",
+  "number",
+  "date",
+  "datetime",
+  "boolean",
+  "enum",
+  "enum_open",
+];
 
 const DAGRE_NODE_WIDTH = 170;
 const DAGRE_NODE_HEIGHT = 68;
@@ -145,9 +166,9 @@ function buildInitialGraph(): { nodes: SimpleNode[]; edges: SimpleEdge[] } {
 function pairsFromRecord(values: Record<string, string>): PropertyPair[] {
   const entries = Object.entries(values);
   if (entries.length === 0) {
-    return [{ key: "", value: "" }];
+    return [{ key: "", value: "", dataType: "string" }];
   }
-  return entries.map(([key, value]) => ({ key, value }));
+  return entries.map(([key, value]) => ({ key, value, dataType: "string" }));
 }
 
 function recordFromPairs(values: PropertyPair[]): Record<string, string> {
@@ -166,6 +187,92 @@ function tooltipFromProperties(values: Record<string, string>): string {
   return Object.entries(values)
     .map(([key, value]) => `${key}: ${value}`)
     .join("\n");
+}
+
+function PropertyValueInput({
+  pair,
+  onChange,
+}: {
+  pair: PropertyPair;
+  onChange: (value: string) => void;
+}): JSX.Element {
+  if (pair.dataType === "text_markdown") {
+    return (
+      <textarea
+        className="ne-input ne-input-textarea"
+        placeholder="value"
+        value={pair.value}
+        onChange={(event) => onChange(event.target.value)}
+      />
+    );
+  }
+
+  if (pair.dataType === "number") {
+    return (
+      <input
+        className="ne-input"
+        type="number"
+        placeholder="value"
+        value={pair.value}
+        onChange={(event) => onChange(event.target.value)}
+      />
+    );
+  }
+
+  if (pair.dataType === "date") {
+    return (
+      <input
+        className="ne-input"
+        type="date"
+        value={pair.value}
+        onChange={(event) => onChange(event.target.value)}
+      />
+    );
+  }
+
+  if (pair.dataType === "datetime") {
+    return (
+      <input
+        className="ne-input"
+        type="datetime-local"
+        value={pair.value}
+        onChange={(event) => onChange(event.target.value)}
+      />
+    );
+  }
+
+  if (pair.dataType === "boolean") {
+    return (
+      <label className="ne-checkbox-inline">
+        <input
+          type="checkbox"
+          checked={pair.value === "true"}
+          onChange={(event) => onChange(event.target.checked ? "true" : "false")}
+        />
+        {pair.value === "true" ? "true" : "false"}
+      </label>
+    );
+  }
+
+  if (pair.dataType === "enum") {
+    return (
+      <select className="ne-input" value={pair.value} onChange={(event) => onChange(event.target.value)}>
+        <option value="">select...</option>
+        <option value="low">low</option>
+        <option value="medium">medium</option>
+        <option value="high">high</option>
+      </select>
+    );
+  }
+
+  return (
+    <input
+      className="ne-input"
+      placeholder={pair.dataType === "enum_open" ? "value (free enum)" : "value"}
+      value={pair.value}
+      onChange={(event) => onChange(event.target.value)}
+    />
+  );
 }
 
 const SimpleNodeCard = memo(function SimpleNodeCard({ data, selected }: NodeProps<SimpleNode>) {
@@ -704,7 +811,11 @@ function NodeEditorInner(): JSX.Element {
     setTimeout(() => fitView({ duration: 320, padding: 0.1 }), 40);
   }, [editorState, fitView]);
 
-  const onUpdateNodeDraftProperty = useCallback((index: number, field: "key" | "value", value: string) => {
+  const onUpdateNodeDraftProperty = useCallback((
+    index: number,
+    field: "key" | "value" | "dataType",
+    value: string,
+  ) => {
     setNodeDraft((prev) => {
       if (!prev) {
         return prev;
@@ -720,7 +831,7 @@ function NodeEditorInner(): JSX.Element {
       if (!prev) {
         return prev;
       }
-      return { ...prev, properties: [...prev.properties, { key: "", value: "" }] };
+      return { ...prev, properties: [...prev.properties, { key: "", value: "", dataType: "string" }] };
     });
   }, []);
 
@@ -730,7 +841,10 @@ function NodeEditorInner(): JSX.Element {
         return prev;
       }
       const remaining = prev.properties.filter((_, i) => i !== index);
-      return { ...prev, properties: remaining.length > 0 ? remaining : [{ key: "", value: "" }] };
+      return {
+        ...prev,
+        properties: remaining.length > 0 ? remaining : [{ key: "", value: "", dataType: "string" }],
+      };
     });
   }, []);
 
@@ -764,7 +878,11 @@ function NodeEditorInner(): JSX.Element {
     setEditorState("focus");
   }, []);
 
-  const onUpdateEdgeDraftProperty = useCallback((index: number, field: "key" | "value", value: string) => {
+  const onUpdateEdgeDraftProperty = useCallback((
+    index: number,
+    field: "key" | "value" | "dataType",
+    value: string,
+  ) => {
     setEdgeDraft((prev) => {
       if (!prev) {
         return prev;
@@ -780,7 +898,7 @@ function NodeEditorInner(): JSX.Element {
       if (!prev) {
         return prev;
       }
-      return { ...prev, properties: [...prev.properties, { key: "", value: "" }] };
+      return { ...prev, properties: [...prev.properties, { key: "", value: "", dataType: "string" }] };
     });
   }, []);
 
@@ -790,7 +908,10 @@ function NodeEditorInner(): JSX.Element {
         return prev;
       }
       const remaining = prev.properties.filter((_, i) => i !== index);
-      return { ...prev, properties: remaining.length > 0 ? remaining : [{ key: "", value: "" }] };
+      return {
+        ...prev,
+        properties: remaining.length > 0 ? remaining : [{ key: "", value: "", dataType: "string" }],
+      };
     });
   }, []);
 
@@ -1043,11 +1164,22 @@ function NodeEditorInner(): JSX.Element {
                       value={pair.key}
                       onChange={(event) => onUpdateNodeDraftProperty(index, "key", event.target.value)}
                     />
-                    <input
+                    <select
                       className="ne-input"
-                      placeholder="value"
-                      value={pair.value}
-                      onChange={(event) => onUpdateNodeDraftProperty(index, "value", event.target.value)}
+                      value={pair.dataType}
+                      onChange={(event) =>
+                        onUpdateNodeDraftProperty(index, "dataType", event.target.value as AttributeType)
+                      }
+                    >
+                      {ATTRIBUTE_TYPES.map((dataType) => (
+                        <option key={dataType} value={dataType}>
+                          {dataType}
+                        </option>
+                      ))}
+                    </select>
+                    <PropertyValueInput
+                      pair={pair}
+                      onChange={(value) => onUpdateNodeDraftProperty(index, "value", value)}
                     />
                     <button type="button" className="ne-remove-btn" onClick={() => onRemoveNodeDraftProperty(index)}>
                       x
@@ -1098,11 +1230,22 @@ function NodeEditorInner(): JSX.Element {
                       value={pair.key}
                       onChange={(event) => onUpdateEdgeDraftProperty(index, "key", event.target.value)}
                     />
-                    <input
+                    <select
                       className="ne-input"
-                      placeholder="value"
-                      value={pair.value}
-                      onChange={(event) => onUpdateEdgeDraftProperty(index, "value", event.target.value)}
+                      value={pair.dataType}
+                      onChange={(event) =>
+                        onUpdateEdgeDraftProperty(index, "dataType", event.target.value as AttributeType)
+                      }
+                    >
+                      {ATTRIBUTE_TYPES.map((dataType) => (
+                        <option key={dataType} value={dataType}>
+                          {dataType}
+                        </option>
+                      ))}
+                    </select>
+                    <PropertyValueInput
+                      pair={pair}
+                      onChange={(value) => onUpdateEdgeDraftProperty(index, "value", value)}
                     />
                     <button type="button" className="ne-remove-btn" onClick={() => onRemoveEdgeDraftProperty(index)}>
                       x

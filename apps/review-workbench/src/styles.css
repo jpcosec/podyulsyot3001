@@ -1543,8 +1543,21 @@ p {
 
 .ne-property-row {
   display: grid;
-  grid-template-columns: 1fr 1fr auto;
+  grid-template-columns: 1fr 0.9fr 1.2fr auto;
   gap: 8px;
+}
+
+.ne-input-textarea {
+  min-height: 64px;
+  resize: vertical;
+}
+
+.ne-checkbox-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--text-main);
 }
 
 .ne-remove-btn {
