@@ -17,4 +17,5 @@ Planning record for ADR-001 lives in `plan/adr/adr_001_ui_first_knowledge_graph_
 - `graph_state_contract.md`
 - `node_editor_behavior_spec.md`
 - `node_editor_frontend_implementation_plan.md`
+- `node_editor_compliance_matrix.md`
 - `core_io_manager.md` (compatibility alias)

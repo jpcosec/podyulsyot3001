@@ -250,7 +250,7 @@ export function SandboxPage(): JSX.Element {
             typed modal forms, and acceptance criteria.
           </p>
           <p>
-            <Link to="/sandbox/node_editor">Go to node editor plan</Link>
+            <Link to="/sandbox/node_editor_plan">Go to node editor plan</Link>
           </p>
         </article>
       </div>
