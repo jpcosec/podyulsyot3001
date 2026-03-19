@@ -68,6 +68,7 @@ interface NodeDraft {
   name: string;
   category: string;
   properties: PropertyPair[];
+  removedRelationIds: string[];
 }
 
 interface EdgeDraft {
@@ -527,8 +528,7 @@ function NodeEditorInner(): JSX.Element {
   const [connectMenu, setConnectMenu] = useState<ConnectMenuState | null>(null);
   const [pendingConnectSource, setPendingConnectSource] = useState<string | null>(null);
   const canvasRef = useRef<HTMLDivElement | null>(null);
-  const connectPointerRef = useRef<{ x: number; y: number } | null>(null);
-  const connectingRef = useRef(false);
+  const [isConnecting, setIsConnecting] = useState(false);
 
   const { fitView, screenToFlowPosition, getViewport, setViewport } = useReactFlow();
 
@@ -567,6 +567,7 @@ function NodeEditorInner(): JSX.Element {
       return [] as Array<{ id: string; text: string }>;
     }
     return edges
+      .filter((edge) => !nodeDraft.removedRelationIds.includes(edge.id))
       .filter((edge) => edge.source === nodeDraft.id || edge.target === nodeDraft.id)
       .map((edge) => {
         const relationType = edge.data?.relationType ?? "linked";
@@ -580,15 +581,31 @@ function NodeEditorInner(): JSX.Element {
   }, [edges, nodeDraft, nodeNameById]);
 
   useEffect(() => {
+    if (!isConnecting || !canvasRef.current) {
+      return undefined;
+    }
+
     let raf = 0;
+    let pointer: { x: number; y: number } | null = null;
+
+    const onMouseMove = (event: MouseEvent) => {
+      pointer = { x: event.clientX, y: event.clientY };
+    };
+
+    const onTouchMove = (event: TouchEvent) => {
+      const touch = event.touches[0];
+      if (!touch) {
+        return;
+      }
+      pointer = { x: touch.clientX, y: touch.clientY };
+    };
 
     const tick = () => {
-      if (!connectingRef.current || !canvasRef.current || !connectPointerRef.current) {
+      if (!canvasRef.current || !pointer) {
         raf = window.requestAnimationFrame(tick);
         return;
       }
 
-      const pointer = connectPointerRef.current;
       const rect = canvasRef.current.getBoundingClientRect();
       const threshold = 44;
       const speed = 14;
@@ -615,11 +632,16 @@ function NodeEditorInner(): JSX.Element {
       raf = window.requestAnimationFrame(tick);
     };
 
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("touchmove", onTouchMove);
     raf = window.requestAnimationFrame(tick);
+
     return () => {
       window.cancelAnimationFrame(raf);
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("touchmove", onTouchMove);
     };
-  }, [getViewport, setViewport]);
+  }, [getViewport, isConnecting, setViewport]);
 
   const connectCandidates = useMemo(() => {
     if (!connectMenu) {
@@ -669,6 +691,7 @@ function NodeEditorInner(): JSX.Element {
         name: nodeData.name,
         category: nodeData.category,
         properties: pairsFromRecord(nodeData.properties),
+        removedRelationIds: [],
       });
       setEditorState("edit_node");
     },
@@ -830,7 +853,7 @@ function NodeEditorInner(): JSX.Element {
   );
 
   const onConnectStart = useCallback((_: unknown, params: { nodeId?: string | null }) => {
-    connectingRef.current = true;
+    setIsConnecting(true);
     setConnectMenu(null);
     setPendingConnectSource(params.nodeId ?? null);
   }, []);
@@ -838,8 +861,7 @@ function NodeEditorInner(): JSX.Element {
   const onConnectEnd = useCallback(
     (event: MouseEvent | TouchEvent) => {
       const sourceNodeId = pendingConnectSource;
-      connectingRef.current = false;
-      connectPointerRef.current = null;
+      setIsConnecting(false);
       setPendingConnectSource(null);
       if (!sourceNodeId) {
         return;
@@ -860,10 +882,6 @@ function NodeEditorInner(): JSX.Element {
     },
     [pendingConnectSource],
   );
-
-  const onPaneMouseMove = useCallback((event: React.MouseEvent) => {
-    connectPointerRef.current = { x: event.clientX, y: event.clientY };
-  }, []);
 
   const onConnectToExistingNode = useCallback(
     (targetNodeId: string) => {
@@ -935,6 +953,7 @@ function NodeEditorInner(): JSX.Element {
       name: newNodeData.name,
       category: newNodeData.category,
       properties: pairsFromRecord(newNodeData.properties),
+      removedRelationIds: [],
     });
     setEditorState("edit_node");
   }, [connectMenu, nodes.length, screenToFlowPosition, setEdges, setNodes]);
@@ -1085,6 +1104,7 @@ function NodeEditorInner(): JSX.Element {
       return;
     }
     const nextProperties = recordFromPairs(nodeDraft.properties);
+    const removedRelationIds = new Set(nodeDraft.removedRelationIds);
     setNodes((prev) =>
       prev.map((node) => {
         if (node.id !== nodeDraft.id) {
@@ -1101,9 +1121,12 @@ function NodeEditorInner(): JSX.Element {
         };
       }),
     );
+    if (removedRelationIds.size > 0) {
+      setEdges((prev) => prev.filter((edge) => !removedRelationIds.has(edge.id)));
+    }
     setNodeDraft(null);
     setEditorState("focus");
-  }, [nodeDraft, setNodes]);
+  }, [nodeDraft, setEdges, setNodes]);
 
   const onDiscardNodeDraft = useCallback(() => {
     setNodeDraft(null);
@@ -1177,12 +1200,17 @@ function NodeEditorInner(): JSX.Element {
 
   const onRemoveRelationFromNodeModal = useCallback(
     (edgeId: string) => {
-      setEdges((prev) => prev.filter((edge) => edge.id !== edgeId));
-      if (selectedEdgeId === edgeId) {
-        setSelectedEdgeId(null);
-      }
+      setNodeDraft((prev) => {
+        if (!prev || prev.removedRelationIds.includes(edgeId)) {
+          return prev;
+        }
+        return {
+          ...prev,
+          removedRelationIds: [...prev.removedRelationIds, edgeId],
+        };
+      });
     },
-    [selectedEdgeId, setEdges],
+    [],
   );
 
   const stateLabel = useMemo(() => {
@@ -1325,7 +1353,6 @@ function NodeEditorInner(): JSX.Element {
         <ReactFlow<SimpleNode, SimpleEdge>
           onDrop={onDropOnCanvas}
           onDragOver={onDragOverCanvas}
-          onPaneMouseMove={onPaneMouseMove}
           nodes={displayNodes}
           edges={displayEdges}
           onNodesChange={onNodesChange}
@@ -1341,7 +1368,6 @@ function NodeEditorInner(): JSX.Element {
           edgeTypes={edgeTypes}
           connectionMode={ConnectionMode.Loose}
           minZoom={0.1}
-          autoPanOnConnect
           fitView
           attributionPosition="bottom-left"
         >

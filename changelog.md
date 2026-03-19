@@ -7,6 +7,9 @@
 - Added sidebar drag-and-drop creation palette (`SB-02`) in `/sandbox/node_editor` with draggable node templates (`Person`, `Skill`, `Project`, `Publication`, `Concept`) and canvas drop creation via React Flow `onDrop`.
 - Extended node edit modal with relation pills (`ED-05`) that list connected relations and provide remove actions directly in modal context.
 - Updated node editor fullscreen workspace sizing in `apps/review-workbench/src/styles.css` (`.ne-page`, `.ne-workspace`) and added supporting styles for template chips and relation pill rows.
+- Fixed node-editor fullscreen routing in `apps/review-workbench/src/App.tsx` by rendering `/sandbox/node_editor` outside the shared shell wrapper, so the workspace is truly viewport edge-to-edge.
+- Corrected relation-pill edit lifecycle in `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx`: relation removals are now staged in node draft and only applied on `Save node`; `Discard` restores pending relation removals.
+- Tightened connect auto-pan behavior in `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx` to run only while an active connection drag is in progress, and removed overlapping dual auto-pan behavior.
 - Refreshed node editor compliance tracking in `docs/architecture/node_editor_compliance_matrix.md` to reflect current status and evidence references.
 - How to run and verify this slice: run `./scripts/dev-all.sh`, open `http://127.0.0.1:4173/sandbox/node_editor`, then (1) drag a palette item into canvas and confirm node count increments, (2) start an edge drag near canvas border and confirm viewport auto-pans, (3) open a node edit modal and remove a relation pill, and (4) create/connect edges and confirm floating shortest-angle edge anchoring.
 
