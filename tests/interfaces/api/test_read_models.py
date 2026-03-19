@@ -4,11 +4,15 @@ import json
 from pathlib import Path
 
 from src.interfaces.api.read_models import (
+    build_cv_profile_graph_payload,
+    build_base_cv_graph_payload,
     build_job_timeline,
     build_view_one_payload,
     build_view_three_payload,
     build_view_two_payload,
     list_jobs,
+    load_cv_profile_graph_payload,
+    save_cv_profile_graph_payload,
 )
 
 
@@ -153,3 +157,294 @@ def test_build_view_three_payload_loads_documents(tmp_path: Path) -> None:
     assert payload.documents["cv"] == "cv content"
     assert payload.documents["motivation_letter"] == "motivation content"
     assert payload.documents["application_email"] == "email content"
+
+
+def test_build_base_cv_graph_payload_builds_deterministic_profile_graph(
+    tmp_path: Path,
+) -> None:
+    data_root = tmp_path / "jobs"
+    profile_path = (
+        data_root.parent
+        / "reference_data"
+        / "profile"
+        / "base_profile"
+        / "profile_base_data.json"
+    )
+    profile_path.parent.mkdir(parents=True, exist_ok=True)
+    profile_path.write_text(
+        json.dumps(
+            {
+                "snapshot_version": "1.0",
+                "captured_on": "2026-02-26",
+                "owner": {
+                    "full_name": "Test Person",
+                    "preferred_name": "Test",
+                    "contact": {"email": "test@example.com"},
+                    "legal_status": {
+                        "visa_type": "Chancenkarte",
+                        "work_permission_germany": True,
+                    },
+                },
+                "experience": [
+                    {
+                        "role": "Data Engineer",
+                        "organization": "ExampleOrg",
+                        "achievements": ["Built ETL pipelines"],
+                        "keywords": ["Python", "Airflow"],
+                    }
+                ],
+                "education": [
+                    {
+                        "degree": "Electrical Engineering",
+                        "institution": "Universidad de Chile",
+                    }
+                ],
+                "publications": [
+                    {
+                        "title": "Paper Title",
+                        "year": 2025,
+                    }
+                ],
+                "projects": [
+                    {
+                        "name": "Metadata Framework",
+                        "stack": ["FastAPI", "Docker"],
+                    }
+                ],
+                "languages": [{"name": "English", "level": "CEFR C1"}],
+                "skills": {
+                    "programming_languages": ["Python"],
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    payload = build_base_cv_graph_payload(data_root)
+
+    node_ids = {node.id for node in payload.nodes}
+    edge_ids = {edge.id for edge in payload.edges}
+
+    assert payload.profile_id == "profile:test_person"
+    assert payload.snapshot_version == "1.0"
+    assert payload.captured_on == "2026-02-26"
+    assert "group:experience" in node_ids
+    assert "exp:0" in node_ids
+    assert "exp:0:ach:0" in node_ids
+    assert "skill:python" in node_ids
+    assert any(edge_id.endswith(":contains") for edge_id in edge_ids)
+    assert any(edge_id.endswith(":references_skill") for edge_id in edge_ids)
+
+
+def test_build_cv_profile_graph_payload_uses_entry_skill_domain_model(
+    tmp_path: Path,
+) -> None:
+    data_root = tmp_path / "jobs"
+    profile_path = (
+        data_root.parent
+        / "reference_data"
+        / "profile"
+        / "base_profile"
+        / "profile_base_data.json"
+    )
+    profile_path.parent.mkdir(parents=True, exist_ok=True)
+    profile_path.write_text(
+        json.dumps(
+            {
+                "snapshot_version": "2.0",
+                "captured_on": "2026-03-18",
+                "owner": {
+                    "full_name": "Jane Doe",
+                    "preferred_name": "Jane",
+                    "contact": {
+                        "email": "jane@example.com",
+                    },
+                    "links": {"github": "https://github.com/jane"},
+                    "legal_status": {"work_permission_germany": True},
+                },
+                "experience": [
+                    {
+                        "role": "Data Engineer",
+                        "organization": "OrgX",
+                        "achievements": [
+                            "Built ETL pipelines in Python with Airflow",
+                            "Created CI automation for data jobs",
+                        ],
+                        "keywords": ["Python", "Airflow"],
+                    }
+                ],
+                "languages": [{"name": "English", "level": "C1", "note": "Daily use"}],
+                "skills": {
+                    "programming_languages": ["Python"],
+                    "orchestration_devops": ["Airflow", "CI/CD"],
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    payload = build_cv_profile_graph_payload(data_root)
+
+    assert payload.profile_id == "profile:jane_doe"
+    assert payload.snapshot_version == "2.0"
+    assert payload.captured_on == "2026-03-18"
+
+    entry_ids = {entry.id for entry in payload.entries}
+    skill_ids = {skill.id for skill in payload.skills}
+    edge_ids = {edge.id for edge in payload.demonstrates}
+
+    assert any(entry.category == "job_experience" for entry in payload.entries)
+    assert any(entry.category == "language_fact" for entry in payload.entries)
+    assert any(entry.category == "personal_data" for entry in payload.entries)
+    assert "skill:python" in skill_ids
+    assert "skill:airflow" in skill_ids
+    assert "skill:english" in skill_ids
+    assert any(edge_id.endswith(":demonstrates:skill:python") for edge_id in edge_ids)
+    assert any(edge_id.endswith(":demonstrates:skill:airflow") for edge_id in edge_ids)
+
+    english_skill = next(
+        skill for skill in payload.skills if skill.id == "skill:english"
+    )
+    assert english_skill.level == "C1"
+
+    experience_entry = next(
+        entry for entry in payload.entries if entry.category == "job_experience"
+    )
+    assert len(experience_entry.descriptions) == 2
+    assert all(description.key for description in experience_entry.descriptions)
+    assert all(
+        description.weight == "primary_detail"
+        for description in experience_entry.descriptions
+    )
+
+    assert any(
+        edge.source in entry_ids and edge.target in skill_ids
+        for edge in payload.demonstrates
+    )
+
+
+def test_save_load_cv_profile_graph_roundtrip(tmp_path: Path) -> None:
+    data_root = tmp_path / "jobs"
+    profile_path = (
+        data_root.parent
+        / "reference_data"
+        / "profile"
+        / "base_profile"
+        / "profile_base_data.json"
+    )
+    profile_path.parent.mkdir(parents=True, exist_ok=True)
+    profile_path.write_text(
+        json.dumps(
+            {
+                "snapshot_version": "3.0",
+                "captured_on": "2026-03-18",
+                "owner": {
+                    "full_name": "Save Test",
+                    "preferred_name": "Saver",
+                    "contact": {"email": "save@test.com"},
+                },
+                "experience": [
+                    {
+                        "role": "Engineer",
+                        "organization": "SaveCorp",
+                        "achievements": ["Built stuff"],
+                        "keywords": ["Python"],
+                    }
+                ],
+                "skills": {"programming_languages": ["Python"]},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    original = build_cv_profile_graph_payload(data_root)
+    assert len(original.entries) > 0
+    assert len(original.skills) > 0
+
+    save_cv_profile_graph_payload(data_root, original)
+    loaded = load_cv_profile_graph_payload(data_root)
+
+    assert loaded.profile_id == original.profile_id
+    assert loaded.snapshot_version == original.snapshot_version
+    assert loaded.captured_on == original.captured_on
+    assert len(loaded.entries) == len(original.entries)
+    assert len(loaded.skills) == len(original.skills)
+    assert len(loaded.demonstrates) == len(original.demonstrates)
+
+    for orig_entry, load_entry in zip(original.entries, loaded.entries):
+        assert load_entry.id == orig_entry.id
+        assert load_entry.category == orig_entry.category
+        assert load_entry.essential == orig_entry.essential
+        assert len(load_entry.descriptions) == len(orig_entry.descriptions)
+
+    for orig_skill, load_skill in zip(original.skills, loaded.skills):
+        assert load_skill.id == orig_skill.id
+        assert load_skill.label == orig_skill.label
+        assert load_skill.category == orig_skill.category
+
+    for orig_edge, load_edge in zip(original.demonstrates, loaded.demonstrates):
+        assert load_edge.id == orig_edge.id
+        assert load_edge.source == orig_edge.source
+        assert load_edge.target == orig_edge.target
+        assert load_edge.description_keys == orig_edge.description_keys
+
+
+def test_save_load_prefers_saved_over_base(tmp_path: Path) -> None:
+    data_root = tmp_path / "jobs"
+    profile_path = (
+        data_root.parent
+        / "reference_data"
+        / "profile"
+        / "base_profile"
+        / "profile_base_data.json"
+    )
+    profile_path.parent.mkdir(parents=True, exist_ok=True)
+    profile_path.write_text(
+        json.dumps(
+            {
+                "snapshot_version": "1.0",
+                "captured_on": "2026-01-01",
+                "owner": {"full_name": "Base Person"},
+                "skills": {"programming_languages": ["Java"]},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    from src.interfaces.api.models import CvProfileGraphPayload, CvEntry, CvSkill
+
+    custom_payload = CvProfileGraphPayload(
+        profile_id="profile:edited",
+        snapshot_version="99.0",
+        captured_on="2099-12-31",
+        entries=[
+            CvEntry(
+                id="entry:custom:test",
+                category="custom_category",
+                essential=True,
+                fields={"title": "Custom Entry"},
+                descriptions=[],
+            )
+        ],
+        skills=[
+            CvSkill(
+                id="skill:custom",
+                label="Custom Skill",
+                category="custom",
+                essential=True,
+                level="expert",
+                meta={},
+            )
+        ],
+        demonstrates=[],
+    )
+
+    save_cv_profile_graph_payload(data_root, custom_payload)
+    loaded = load_cv_profile_graph_payload(data_root)
+
+    assert loaded.profile_id == "profile:edited"
+    assert loaded.snapshot_version == "99.0"
+    assert len(loaded.entries) == 1
+    assert loaded.entries[0].id == "entry:custom:test"
+    assert len(loaded.skills) == 1
+    assert loaded.skills[0].id == "skill:custom"

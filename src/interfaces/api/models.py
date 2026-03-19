@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from typing import Literal
+from typing import Any, Literal
 
 
 StageStatus = Literal["pending", "running", "paused_review", "completed", "failed"]
@@ -94,8 +94,82 @@ class ViewThreePayload:
     edges: list[GraphEdge]
 
 
-def to_dict(
-    value: JobListItem
+@dataclass(frozen=True)
+class CvGraphNode:
+    id: str
+    label: str
+    node_type: str
+    depth: int
+    main_category: str
+    subcategory: str
+    source_path: str
+    source_index: int | None
+    meta: dict[str, str]
+
+
+@dataclass(frozen=True)
+class CvGraphEdge:
+    id: str
+    source: str
+    target: str
+    relation: str
+
+
+@dataclass(frozen=True)
+class CvGraphPayload:
+    profile_id: str
+    snapshot_version: str
+    captured_on: str
+    nodes: list[CvGraphNode]
+    edges: list[CvGraphEdge]
+
+
+@dataclass(frozen=True)
+class CvDescription:
+    key: str
+    text: str
+    weight: str
+
+
+@dataclass(frozen=True)
+class CvEntry:
+    id: str
+    category: str
+    essential: bool
+    fields: dict[str, Any]
+    descriptions: list[CvDescription]
+
+
+@dataclass(frozen=True)
+class CvSkill:
+    id: str
+    label: str
+    category: str
+    essential: bool
+    level: str | None
+    meta: dict[str, Any]
+
+
+@dataclass(frozen=True)
+class CvDemonstratesEdge:
+    id: str
+    source: str
+    target: str
+    description_keys: list[str]
+
+
+@dataclass(frozen=True)
+class CvProfileGraphPayload:
+    profile_id: str
+    snapshot_version: str
+    captured_on: str
+    entries: list[CvEntry]
+    skills: list[CvSkill]
+    demonstrates: list[CvDemonstratesEdge]
+
+
+ApiModel = (
+    JobListItem
     | JobTimeline
     | StageItem
     | TextSpanItem
@@ -104,6 +178,17 @@ def to_dict(
     | GraphNode
     | GraphEdge
     | ViewOnePayload
-    | ViewThreePayload,
-) -> dict:
+    | ViewThreePayload
+    | CvGraphNode
+    | CvGraphEdge
+    | CvGraphPayload
+    | CvDescription
+    | CvEntry
+    | CvSkill
+    | CvDemonstratesEdge
+    | CvProfileGraphPayload
+)
+
+
+def to_dict(value: ApiModel) -> dict:
     return asdict(value)
