@@ -26,6 +26,8 @@ interface SimpleNodeData extends Record<string, unknown> {
   name: string;
   category: string;
   properties: Record<string, string>;
+  nodeId?: string;
+  onEditNode?: (nodeId: string) => void;
 }
 
 interface SimpleEdgeData extends Record<string, unknown> {
@@ -154,14 +156,34 @@ function tooltipFromProperties(values: Record<string, string>): string {
     .join("\n");
 }
 
-const SimpleNodeCard = memo(function SimpleNodeCard({ data }: NodeProps<SimpleNode>) {
+const SimpleNodeCard = memo(function SimpleNodeCard({ data, selected }: NodeProps<SimpleNode>) {
   const nodeData = data as unknown as SimpleNodeData;
   const bg = CATEGORY_COLORS[nodeData.category] ?? "#e5e7eb";
+  const onEdit = () => {
+    if (nodeData.onEditNode && nodeData.nodeId) {
+      nodeData.onEditNode(nodeData.nodeId);
+    }
+  };
   return (
-    <div className="ne-node-simple" style={{ backgroundColor: bg }} title={tooltipFromProperties(nodeData.properties)}>
-      <Handle type="target" position={Position.Left} />
+    <div
+      className={`ne-node-simple ${selected ? "ne-node-simple-selected" : ""}`}
+      style={{ backgroundColor: bg }}
+      title={tooltipFromProperties(nodeData.properties)}
+    >
+      <Handle type="target" position={Position.Left} className="ne-node-handle" />
       <span>{nodeData.name}</span>
-      <Handle type="source" position={Position.Right} />
+      <Handle type="source" position={Position.Right} className="ne-node-handle" />
+      <button
+        type="button"
+        className={`ne-node-edit-chip ${selected ? "ne-node-edit-chip-visible" : ""}`}
+        onMouseDown={(event) => event.stopPropagation()}
+        onClick={(event) => {
+          event.stopPropagation();
+          onEdit();
+        }}
+      >
+        Edit
+      </button>
     </div>
   );
 });
@@ -212,6 +234,7 @@ function NodeEditorInner(): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showLinkedEdges, setShowLinkedEdges] = useState(true);
   const [filterText, setFilterText] = useState("");
+  const [hideNonNeighbors, setHideNonNeighbors] = useState(false);
 
   const [savedSnapshot, setSavedSnapshot] = useState(() => serializeGraph(initial.nodes, initial.edges));
 
@@ -266,44 +289,6 @@ function NodeEditorInner(): JSX.Element {
     });
   }, [edges, showLinkedEdges, filteredNodeIds]);
 
-  const displayNodes = useMemo(() => {
-    return nodes
-      .filter((node) => filteredNodeIds.has(node.id))
-      .map((node) => {
-        if (editorState === "focus" || editorState === "edit_node" || editorState === "edit_relation") {
-          const active = node.id === focusedNodeId || neighborIds.has(node.id);
-          return {
-            ...node,
-            className: active ? "ne-node-focused" : "ne-node-dimmed",
-            draggable: active,
-            selectable: active,
-          };
-        }
-        return {
-          ...node,
-          className: "",
-          draggable: true,
-          selectable: true,
-        };
-      });
-  }, [nodes, filteredNodeIds, editorState, focusedNodeId, neighborIds]);
-
-  const displayEdges = useMemo(() => {
-    return visibleEdges.map((edge) => {
-      const inFocusModes =
-        editorState === "focus" || editorState === "edit_node" || editorState === "edit_relation";
-      if (!inFocusModes) {
-        return edge;
-      }
-      const connected = edge.source === focusedNodeId || edge.target === focusedNodeId;
-      return {
-        ...edge,
-        className: connected ? "" : "ne-edge-dimmed",
-        animated: connected,
-      };
-    });
-  }, [visibleEdges, editorState, focusedNodeId]);
-
   const openNodeEditor = useCallback(
     (nodeId: string) => {
       const node = nodes.find((item) => item.id === nodeId);
@@ -323,6 +308,66 @@ function NodeEditorInner(): JSX.Element {
     },
     [nodes],
   );
+
+  const displayNodes = useMemo(() => {
+    return nodes
+      .filter((node) => filteredNodeIds.has(node.id))
+      .filter((node) => {
+        const inFocusModes =
+          editorState === "focus" || editorState === "edit_node" || editorState === "edit_relation";
+        if (!inFocusModes || !hideNonNeighbors) {
+          return true;
+        }
+        return node.id === focusedNodeId || neighborIds.has(node.id);
+      })
+      .map((node) => {
+        const nodeData = node.data as SimpleNodeData;
+        if (editorState === "focus" || editorState === "edit_node" || editorState === "edit_relation") {
+          const active = node.id === focusedNodeId || neighborIds.has(node.id);
+          return {
+            ...node,
+            data: {
+              ...nodeData,
+              nodeId: node.id,
+              onEditNode: openNodeEditor,
+            },
+            className: active ? "ne-node-focused" : "ne-node-dimmed",
+            draggable: active,
+            selectable: active,
+          };
+        }
+        return {
+          ...node,
+          data: {
+            ...nodeData,
+            nodeId: node.id,
+            onEditNode: openNodeEditor,
+          },
+          className: "",
+          draggable: true,
+          selectable: true,
+        };
+      });
+  }, [nodes, filteredNodeIds, editorState, hideNonNeighbors, focusedNodeId, neighborIds, openNodeEditor]);
+
+  const displayEdges = useMemo(() => {
+    return visibleEdges.map((edge) => {
+      const inFocusModes =
+        editorState === "focus" || editorState === "edit_node" || editorState === "edit_relation";
+      if (!inFocusModes) {
+        return edge;
+      }
+      const connected = edge.source === focusedNodeId || edge.target === focusedNodeId;
+      if (hideNonNeighbors && !connected) {
+        return { ...edge, hidden: true };
+      }
+      return {
+        ...edge,
+        className: connected ? "" : "ne-edge-dimmed",
+        animated: connected,
+      };
+    });
+  }, [visibleEdges, editorState, hideNonNeighbors, focusedNodeId]);
 
   const openEdgeEditor = useCallback(
     (edgeId: string) => {
@@ -598,9 +643,7 @@ function NodeEditorInner(): JSX.Element {
               <button type="button" className="ne-btn" disabled={editorState === "browse"} onClick={onUnfocus}>
                 Unfocus
               </button>
-              <button type="button" className="ne-btn" disabled={!focusedNode || editorState === "edit_node"} onClick={() => focusedNode && openNodeEditor(focusedNode.id)}>
-                Edit node
-              </button>
+              <span className="ne-inline-note">Edit is on-node</span>
             </div>
 
             <div className="ne-control-row">
@@ -639,6 +682,18 @@ function NodeEditorInner(): JSX.Element {
                   onChange={(event) => setShowLinkedEdges(event.target.checked)}
                 />
                 linked
+              </label>
+            </div>
+
+            <div className="ne-filter-section">
+              <h3>View options</h3>
+              <label className="ne-checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={hideNonNeighbors}
+                  onChange={(event) => setHideNonNeighbors(event.target.checked)}
+                />
+                Hide non-neighbors
               </label>
             </div>
 

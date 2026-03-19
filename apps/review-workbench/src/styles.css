@@ -1458,6 +1458,62 @@ p {
   font-weight: 500;
   text-align: center;
   min-width: 110px;
+  position: relative;
+}
+
+.ne-node-simple-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(15, 118, 110, 0.28);
+}
+
+.ne-node-handle {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.14s;
+}
+
+.ne-node-simple:hover .ne-node-handle,
+.ne-node-simple-selected .ne-node-handle {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ne-node-edit-chip {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--text-main);
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.14s, border-color 0.14s;
+}
+
+.ne-node-simple:hover .ne-node-edit-chip,
+.ne-node-edit-chip-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ne-node-edit-chip:hover {
+  border-color: var(--accent);
+}
+
+.ne-inline-note {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  color: var(--text-dim);
+  font-size: 0.76rem;
+  padding: 4px 8px;
 }
 
 .ne-input {
