@@ -1,5 +1,8 @@
 # Node Editor Step 1 Technical Breakdown
 
+> Status note (2026-03-20): this is a historical implementation-slice breakdown. The node editor has moved beyond this step, and some acceptance criteria below no longer reflect the current sandbox exactly.
+
+
 ## Scope
 
 Implement Step 1 only: **on-node edit affordance** as primary entrypoint for node editing in `/sandbox/node_editor`.

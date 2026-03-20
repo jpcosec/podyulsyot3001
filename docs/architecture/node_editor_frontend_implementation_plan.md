@@ -1,5 +1,8 @@
 # Plan de Implementacion Front-end: Node Editor (Nodo a Nodo)
 
+> Status note (2026-03-20): this is an implementation plan snapshot, not a current-status mirror. Parts of this plan are already implemented, and other assumptions may no longer match the active sandbox exactly.
+
+
 ## 1. Objetivo
 
 Implementar un editor de grafos en React Flow para mapeo nodo a nodo, siguiendo la especificacion de interaccion definida en `docs/architecture/node_editor_behavior_spec.md`, con una ruta de sandbox dedicada para validar UX antes de integrar datos reales.

@@ -1,12 +1,31 @@
 # Core I/O and Provenance Manager (Current Status)
 
-Current implementation status: not implemented as a centralized `src/core/io/` layer.
+## Status
 
-Current behavior in code:
+This is now partially implemented and should be treated as a current-state summary, not a "not implemented" placeholder.
 
-- Nodes still perform inline path construction and direct file reads/writes.
-- No shared `WorkspaceManager`, `ArtifactReader`, `ArtifactWriter`, or `ProvenanceService` module exists.
+Implemented modules under `src/core/io/`:
 
-Planning/spec details are maintained in:
+- `WorkspaceManager`
+- `ArtifactReader`
+- `ArtifactWriter`
+- `ProvenanceService`
+- `ObservabilityService` (in `provenance_service.py`)
 
-- `plan/spec/core_io_and_provenance_manager_spec.md`
+## What is true today
+
+- The shared I/O layer exists and is used by current runtime nodes such as `review_match`, `render`, `package`, and the prep-match CLI observability writes.
+- Path construction, guarded job-relative resolution, atomic writes, JSON/text helpers, and run/node execution snapshots are implemented.
+- The current runtime is still mixed: some older nodes continue to do inline file I/O while newer slices use `src/core/io/`.
+
+## What is still incomplete
+
+- The entire node set is not yet migrated to a single uniform I/O pattern.
+- Provenance is currently strongest around hashing/render/package/observability, but not every node writes a fully standardized `meta/provenance.json`.
+- Some target-state expectations in older docs remain broader than the code that exists today.
+
+## Primary references
+
+- Current code: `src/core/io/`
+- Current runtime semantics: `docs/reference/data_management_actual_state.md`
+- Target-state spec: `plan/spec/core_io_and_provenance_manager_spec.md`

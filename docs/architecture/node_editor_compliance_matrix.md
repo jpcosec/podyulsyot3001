@@ -1,5 +1,8 @@
 # Node Editor Compliance Matrix (Node-to-Node Phase)
 
+> Status note (2026-03-20): this matrix is a useful verification snapshot, but it should not be treated as permanently canonical. Source paths and some pass/partial assumptions can drift as the sandbox changes. Re-verify against the current sandbox before using it as an authoritative status document.
+
+
 ## Purpose
 
 This document compares the current `/sandbox/node_editor` behavior against the proposed UI/UX specification for the node-to-node phase.

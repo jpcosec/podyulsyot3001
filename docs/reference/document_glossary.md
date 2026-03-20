@@ -1,5 +1,8 @@
 # Document and Artifact Glossary
 
+> Status note (2026-03-20): this glossary mixes current and target-state artifact descriptions. Some entries below describe planned review, provenance, or finalization conventions that are not uniformly implemented across the current runtime. Use `docs/reference/data_management_actual_state.md` for current artifact behavior.
+
+
 ## Purpose
 
 This glossary explains what each documentation file and runtime artifact means.

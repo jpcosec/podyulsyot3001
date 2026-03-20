@@ -1,5 +1,8 @@
 # Graph Reactivity Protocol (Emergent Evidence vs Feedback Memory)
 
+> Status note (2026-03-20): this protocol is mostly target-state. Current runtime does support run-scoped regeneration feedback and `PATCH_EVIDENCE:` extraction through `review_match`, but it does not implement the full `sync_json_md`, `feedback_distill`, or `feedback/active_memory.yaml` protocol described below.
+
+
 Related references:
 
 - `docs/graph/nodes_summary.md`

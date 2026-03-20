@@ -1,5 +1,8 @@
 # Smart Template Discipline
 
+> Status note (2026-03-20): this is now a target-state implementation discipline document, not an exact description of how every node in the repo is currently structured. Some examples and package-shape rules below are ahead of current implementation. Use it as guidance, and cross-check current runtime patterns in `src/nodes/`, `src/core/io/`, and `docs/index/canonical_map.md`.
+
+
 Related references:
 
 - `docs/philosophy/template_problem_statement.md`

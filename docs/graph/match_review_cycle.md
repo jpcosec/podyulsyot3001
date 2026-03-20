@@ -20,11 +20,11 @@ It is implementation-first and describes the runtime behavior of the prep-match 
 
 Current wired path (`create_prep_match_app()`):
 
-`scrape -> translate_if_needed -> extract_understand -> match -> review_match`
+`scrape -> translate_if_needed -> extract_understand -> match -> review_match -> generate_documents -> render -> package`
 
 Review routing for this subgraph:
 
-- `approve` -> `package` (prep terminal)
+- `approve` -> `generate_documents` -> `render` -> `package`
 - `request_regeneration` -> `match`
 - `reject` -> end
 
@@ -211,5 +211,5 @@ Repeat until route is `approve` or `reject`.
 
 ## Current-state notes
 
-- In this prep graph, `approve` currently ends at prep `package` terminal node (state completion), not full final document packaging.
-- The full multi-stage pipeline remains the target architecture, but this cycle is fully operational today.
+- In the current prep graph, `review_match.approve` now continues into document generation and markdown delivery (`generate_documents -> render -> package`).
+- The larger multi-stage target architecture still exists in planning docs, but this match-review loop is the operational gate in the runnable CLI flow today.

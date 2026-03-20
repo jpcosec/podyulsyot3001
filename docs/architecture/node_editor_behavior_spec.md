@@ -1,5 +1,8 @@
 # Node Editor Behavior Specification
 
+> Status note (2026-03-20): this document should be treated as the intended sandbox behavior contract, not a perfect mirror of the current implementation. The sandbox has evolved, and some behavior details here may lag behind the actual runtime in `apps/review-workbench/src/sandbox/pages/NodeEditorSandboxPage.tsx`.
+
+
 ## Status
 
 - Drafted from operator requirements on 2026-03-18.

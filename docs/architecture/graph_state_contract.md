@@ -1,5 +1,8 @@
 # Graph State Contract (Control-Plane Ledger)
 
+> Status note (2026-03-20): this document is partially target-state. The current code still carries some transient semantic payloads in `GraphState`, and some examples below use patterns or signatures that no longer match the exact implementation. Treat it as architectural direction, not a line-by-line runtime contract. For actual current behavior, check `src/core/graph/state.py` and `docs/reference/data_management_actual_state.md`.
+
+
 Related references:
 
 - `docs/templates/node_template_discipline.md`

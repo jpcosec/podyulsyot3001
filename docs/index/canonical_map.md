@@ -1,81 +1,67 @@
 # Canonical Documentation Map
 
-This file defines the single source of truth for each concept area.
+This file defines which docs describe current runtime truth, which docs are target-state/design references, and which docs are historical or planning material.
 
-Legacy compatibility stubs were removed on 2026-03-05.
-Any remaining references to old paths should be migrated to the canonical paths below.
+## Current runtime truth
 
-## Philosophy
+Use these first when you need to know what actually runs today.
 
-- Canonical docs:
-  - `docs/philosophy/project_overview.md`
-  - `docs/philosophy/structure_and_rationale.md`
-  - `docs/philosophy/execution_taxonomy_abstract.md`
-  - `docs/philosophy/template_problem_statement.md`
+- `README.md`
+- `docs/graph/nodes_summary.md`
+- `docs/graph/node_io_matrix.md`
+- `docs/graph/match_review_cycle.md`
+- `docs/reference/data_management_actual_state.md`
+- `docs/operations/tool_interaction_and_known_issues.md`
+- `docs/architecture/core_io_and_provenance_manager.md`
 
-## Graph
+## Current repo navigation / status map
 
-- Canonical docs:
-  - `docs/graph/nodes_summary.md`
-  - `docs/graph/node_io_matrix.md`
-  - `docs/graph/match_review_cycle.md`
+- `docs/index/README.md`
+- `docs/index/canonical_map.md`
 
-## Templates
+## Current UI sandbox docs
 
-- Canonical docs:
-  - `docs/templates/node_template_discipline.md`
-  - `docs/templates/taxonomy_template_catalog.md`
-  - `docs/templates/llm/README.md`
-  - `docs/templates/prompts/prompt_anatomy_standard.md`
-  - `docs/templates/prompts/README.md`
+These are current for sandbox/workbench behavior, not for pipeline runtime truth.
 
-## Business rules
+- `docs/architecture/node_editor_behavior_spec.md`
+- `docs/architecture/node_editor_customization_and_architecture.md`
+- `docs/architecture/node_editor_compliance_matrix.md`
+- `docs/UI_plan/README.md`
 
-- Canonical docs:
-  - `docs/business_rules/claim_admissibility_and_policy.md`
-  - `docs/business_rules/sync_json_md.md`
-  - `docs/business_rules/feedback_memory.md`
+## Target-state / design references
 
-## Reference
+These are useful design-intent docs, but they should not be treated as exact current runtime behavior unless they explicitly say so.
 
-- Canonical docs:
-  - Backend deterministic core:
-  - `docs/reference/data_management_actual_state.md`
-  - `docs/reference/artifact_schemas.md`
-  - `docs/reference/contract_composition_framework.md`
-  - `docs/reference/review_contract_case_decision_and_assistance.md`
-  - `docs/reference/document_glossary.md`
-  - `docs/architecture/core_io_and_provenance_manager.md`
-  - `docs/architecture/graph_reactivity_protocol.md`
-  - `docs/architecture/graph_state_contract.md`
-  - Frontend sandbox:
-  - `docs/architecture/node_editor_behavior_spec.md`
-  - `docs/architecture/node_editor_customization_and_architecture.md`
-  - `docs/architecture/node_editor_compliance_matrix.md`
-  - `docs/architecture/node_editor_feedback_doubts_and_gaps.md`
-  - `docs/architecture/node_editor_step1_on_node_edit_breakdown.md`
-  - `docs/architecture/core_io_manager.md`
+- `docs/architecture/graph_state_contract.md`
+- `docs/reference/artifact_schemas.md`
+- `docs/templates/node_template_discipline.md`
+- `docs/templates/taxonomy_template_catalog.md`
+- `docs/business_rules/sync_json_md.md`
+- `docs/business_rules/feedback_memory.md`
+- `docs/philosophy/project_overview.md`
+- `docs/philosophy/structure_and_rationale.md`
 
-## Operations
+## Active planning / migration docs
 
-- Canonical docs:
-  - `docs/operations/tool_interaction_and_known_issues.md`
-  - `docs/operations/non_llm_recovery_demo.md`
+These are planning records, not runtime truth.
 
-## Architecture Decisions
+- `plan/subplan/deterministic_parity_migration_from_phd.md`
+- `plan/subplan/review_ui_and_flow_observability.md`
+- `plan/subplan/playwright_scraping_execution_blueprint.md`
+- `plan/subplan/langchain_runtime_migration_plan.md`
+- `plan/subplan/langchain_langgraph_adoption_evaluation.md`
+- `plan/adr/adr_001_ui_first_knowledge_graph_langchain.md`
+- `plan/adr_001_execution_tracker.md`
 
-- Canonical docs:
-  - `docs/architecture/adr_001_ui_first_knowledge_graph_langchain.md` — current implementation status snapshot
-  - `plan/adr/adr_001_ui_first_knowledge_graph_langchain.md` — planning record and future sequence
+## Historical / status-snapshot docs
 
-## Planning
+These should be read as dated snapshots unless updated explicitly.
 
-- Canonical docs:
-  - `plan/phd2_stepwise_plan.md`
-  - `plan/subplan/ui_review_cycle_adaptation_internal.md`
-  - `plan/subplan/ui_review_cycle_designer_handoff.md`
-  - `plan/subplan/deterministic_parity_migration_from_phd.md`
-  - `plan/subplan/review_ui_and_flow_observability.md`
-  - `plan/subplan/langchain_langgraph_adoption_evaluation.md` (superseded by ADR-001)
-  - `plan/index_checklist.md`
-  - `plan/template/README.md`
+- `plan/phd2_stepwise_plan.md`
+- `plan/index_checklist.md`
+- `plan/step6_13_delta_generation_and_text_reviewers.md`
+- `plan/step6_13_implementation_notes.md`
+
+## Rule
+
+If a document conflicts with the current runtime truth set above, trust the current runtime truth set and mark the conflicting doc as target-state, planning, or historical.

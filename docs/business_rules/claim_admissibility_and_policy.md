@@ -1,5 +1,8 @@
 # Claim Admissibility and Policy
 
+> Status note (2026-03-20): this document is primarily target-state policy guidance. The current runtime does not enforce all admissibility classes, coverage transitions, or downstream claim-governance rules described below. Use it as policy direction, not as an exact statement of implemented checks.
+
+
 Related references:
 
 - `docs/reference/artifact_schemas.md`

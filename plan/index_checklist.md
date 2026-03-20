@@ -1,5 +1,8 @@
 # PhD 2.0 Rebuild Index Checklist
 
+> Status note (2026-03-20): this file is a historical execution/status snapshot, not current runtime truth. Several status lines below are outdated after the scraping facade, `src/core/io/`, and `generate_documents -> render -> package` wiring landed. For what actually runs now, use `docs/graph/nodes_summary.md`, `docs/reference/data_management_actual_state.md`, and `docs/operations/tool_interaction_and_known_issues.md`.
+
+
 This is the execution index for the rebuild. Complete steps in order and do not advance without explicit human approval.
 
 Reference docs:

@@ -1,10 +1,13 @@
 # Node Editor Customization and Architecture
 
+> Status note (2026-03-20): this guide is mostly current, but some source-path references and UI details can drift as the sandbox evolves. Treat it as an operator-oriented architecture guide for the current sandbox, not a strict compliance source.
+
+
 This is a short operator-oriented guide for the sandbox node editor at `/sandbox/node_editor`.
 
 ## Scope at a glance
 
-- Frontend editor sandbox implementation: `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx`
+- Frontend editor sandbox implementation: `apps/review-workbench/src/sandbox/pages/NodeEditorSandboxPage.tsx`
 - Node editor behavior contract: `docs/architecture/node_editor_behavior_spec.md`
 - Review API endpoints for CV graph payloads: `src/interfaces/api/routers/portfolio.py`
 - CV graph read/write model builder: `src/interfaces/api/read_models.py`

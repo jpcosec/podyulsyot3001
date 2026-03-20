@@ -1,5 +1,8 @@
 # Artifact Schemas and Structure
 
+> Status note (2026-03-20): this document is now primarily target-state/schema-design guidance. It should not be treated as an exact description of current runtime artifacts. For current runtime artifact behavior, use `docs/reference/data_management_actual_state.md` and `docs/graph/node_io_matrix.md`.
+
+
 Related references:
 
 - `docs/graph/nodes_summary.md`

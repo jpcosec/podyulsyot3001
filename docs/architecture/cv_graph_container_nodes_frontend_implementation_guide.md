@@ -1,5 +1,8 @@
 # Guia de Implementacion Front-end: Nodos Contenedores (Sub-flows)
 
+> Status note (2026-03-20): this guide captures a useful frontend implementation strategy, but parts of it are now design-history relative to the current `CvGraphEditorPage` implementation. Treat it as a reference guide, not as the sole canonical description of the active sandbox.
+
+
 Este documento detalla la estrategia tecnica para implementar jerarquias, layouts internos y *edge proxying* utilizando **React Flow**, superando sus limitaciones de posicionamiento absoluto.
 
 ## 1. Conceptos Core en React Flow para Jerarquias

@@ -1,5 +1,8 @@
 # Project Overview and Working Model
 
+> Status note (2026-03-20): this overview is conceptually useful but not a precise mirror of the current runnable graph. It includes broader target-state phases and review loops beyond the operator-facing flow that runs today. For current runtime truth, use `README.md` and `docs/graph/nodes_summary.md`.
+
+
 ## What this project is
 
 PhD 2.0 is a graph-driven application pipeline designed to create high-quality PhD application artifacts from real job postings and candidate profile data.

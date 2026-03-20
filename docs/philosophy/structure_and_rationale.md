@@ -1,5 +1,8 @@
 # PhD 2.0 Structure and Rationale
 
+> Status note (2026-03-20): this document mixes durable architecture rationale with target-state structure assumptions. The rationale is still useful, but some concrete structure details below are outdated or ahead of implementation. Cross-check current runtime claims against `README.md`, `docs/index/canonical_map.md`, and `docs/reference/data_management_actual_state.md`.
+
+
 Related references:
 
 - `docs/graph/nodes_summary.md`

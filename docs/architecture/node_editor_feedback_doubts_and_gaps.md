@@ -1,5 +1,8 @@
 # Node Editor Feedback: Doubts and Gaps
 
+> Status note (2026-03-20): this is now a historical gap-tracking document. Several gaps described below have already been implemented in the sandbox, so read it as design-history/context rather than current status.
+
+
 ## Context
 
 This document captures open doubts and implementation gaps raised from operator feedback on the node-to-node sandbox.

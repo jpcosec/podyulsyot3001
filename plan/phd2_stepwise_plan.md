@@ -1,5 +1,8 @@
 # PhD 2.0 Rebuild Master Plan (HITL, Node-by-Node)
 
+> Status note (2026-03-20): this is a historical master-plan snapshot, not a current codebase mirror. It contains outdated paths, pre-migration assumptions, and target-state structures that no longer match the runnable repo exactly. Treat it as planning context only. For current runtime truth, use `README.md`, `docs/graph/nodes_summary.md`, `docs/reference/data_management_actual_state.md`, and `docs/index/canonical_map.md`.
+
+
 ## Purpose
 
 Rebuild PhD 2.0 from the current "wax model" into production-grade behavior, with strict human approval at every step.

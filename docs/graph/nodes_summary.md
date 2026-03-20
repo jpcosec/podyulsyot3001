@@ -4,7 +4,7 @@
 
 Describe only the runnable graph behavior in the current codebase.
 
-Forward-looking topology is tracked under `plan/spec/`.
+Forward-looking topology is tracked under `plan/spec/` and other planning docs.
 
 ## Executable entrypoints
 
@@ -21,15 +21,16 @@ Linear path:
 4. `match`
 5. `review_match`
 6. `generate_documents`
-7. `package`
+7. `render`
+8. `package`
 
 Review routing in `review_match`:
 
-- `approve` -> `generate_documents` -> `package`
+- `approve` -> `generate_documents` -> `render` -> `package`
 - `request_regeneration` -> `match`
 - `reject` -> stop
 
-`package` in this prep graph is a terminal status node, not the full delivery packager.
+`package` is now a real terminal delivery step for the current prep flow: it validates `render` output refs and writes final markdown deliverables plus `final/manifest.json`.
 
 ## Checkpoint/resume behavior
 
@@ -39,17 +40,15 @@ Review routing in `review_match`:
 
 ## Node roles
 
-- `scrape` (`NLLM-ND`): fetches URL and builds ingested payload in state.
+- `scrape` (`NLLM-ND`): fetches URL and produces canonical scrape artifacts plus compatible ingested payload in state.
 - `translate_if_needed` (`NLLM-ND`): conditionally normalizes language.
 - `extract_understand` (`LLM`): produces structured extraction output.
 - `match` (`LLM`): writes match proposal + review artifacts.
 - `review_match` (`NLLM-D`): deterministic decision parser and route switch.
 - `generate_documents` (`LLM` + deterministic rendering): writes CV/letter/email proposals and assist artifacts.
-- `package` (`NLLM-D`): marks prep run completed.
+- `render` (`NLLM-D`): copies generated markdown into `nodes/render/proposed/` and records approved render refs with hashes.
+- `package` (`NLLM-D`): validates rendered content hashes, writes `final/*.md` plus `final/manifest.json`, and marks run completed.
 
 ## Planning pointer
 
-Target full-graph topology and staged rollout are maintained in:
-
-- `plan/spec/node_io_target_matrix.md`
-- `plan/adr/adr_001_ui_first_knowledge_graph_langchain.md`
+Target full-graph topology and staged rollout are maintained in planning docs under `plan/`.
