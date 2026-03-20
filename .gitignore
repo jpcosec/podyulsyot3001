@@ -63,10 +63,8 @@ src/core/tools/render/latex_assets/Abbildungen/signature.jpg
 .DS_Store
 Thumbs.db
 
-# --- Sisyphus / Evidence ---
-.sisyphus/boulder.json
-.sisyphus/evidence/
-.sisyphus/drafts/
+# --- Sisyphus / Agent workspace ---
+.sisyphus/
 
 # --- Local AI tooling / scratch ---
 .superpowers/

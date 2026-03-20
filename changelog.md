@@ -1,5 +1,27 @@
 # Changelog
 
+## 2026-03-20
+
+- Removed the tracked `.sisyphus/` agent workspace from the repository, replaced its reusable planning/testing approach with `docs/operations/agent_planning_and_verification_pattern.md`, and updated `.gitignore` so local agent scratch artifacts stay untracked.
+- Added a dependency-graph UI roadmap under `docs/UI_plan/`, including a status matrix, per-step planning nodes, React Flow UI notes, plug-in library recommendations, impact-aware sequencing guidance, and `docs/UI_plan/AGENT_REVIEWER_ENTRYPOINT.md` for future review/planning agents.
+- Expanded `/sandbox/node_editor` with focus-scoped copy/paste, tracked undo/redo history for create/edit/delete/connect actions, relation focus-before-edit flow, keyboard/confirm-delete behavior, and reorganized collapsible sidebar sections with scrollable vacant-node actions in `apps/review-workbench/src/sandbox/pages/NodeEditorSandboxPage.tsx` and `apps/review-workbench/src/styles.css`.
+- Added execution-ready scraping architecture blueprint in `plan/subplan/playwright_scraping_execution_blueprint.md`, defining `src/core/scraping/` module skeleton, facade contracts (`scrape_detail` and `crawl_listing`), JSON-first artifact contract, thin-node rewiring strategy for `src/nodes/scrape/logic.py`, phased implementation plan, and safety-gated auto-postulation boundary.
+- Implemented Phase A/B scraping migration slice by adding `src/core/scraping/` facade + contracts + adapter registry + fetch policy + extraction/normalization/persistence scaffolding, wiring real HTTP fetch with optional Playwright fallback, writing scrape artifacts (`fetch_metadata.json`, `raw_snapshot.json`, `source_extraction.json`, `canonical_scrape.json`), and rewiring `src/nodes/scrape/logic.py` to consume `scrape_detail(...)` while preserving downstream `IngestedData` compatibility.
+- Added scrape-facade test coverage in `tests/core/scraping/test_scraping_facade.py` and updated scrape-node test boundary in `tests/nodes/scrape/test_scrape_logic.py` to patch the new core scraping facade instead of legacy direct fetch helpers.
+- Added source-aware StepStone listing discovery in `src/core/scraping/service.py` by extracting real detail links from listing HTML (`stellenangebote--...--<id>-inline.html`), normalizing discovered URLs, and using adapter URL builders as fallback; this replaces the previous crawl behavior that only discovered `/job-postings/<id>` patterns.
+- Added probe loop CLI `src/cli/run_scrape_probe.py` to run URL-driven `listing` or `detail` scrape checks and print where scraping ran (`src/core/scraping/service.py:crawl_listing` / `src/core/scraping/service.py:scrape_detail`) plus artifact refs for operator verification.
+- Extended scrape tests with StepStone link extraction and adapter URL behavior coverage in `tests/core/scraping/test_scraping_facade.py` and `tests/core/scraping/test_stepstone_adapter.py`.
+- Restored scrape markdown compatibility by writing `raw/source_text.md` during `scrape_detail` in `src/core/scraping/service.py` via `ScrapingArtifactStore.write_raw_source_markdown(...)`, preserving legacy TU-Berlin/operator-readable review surface while keeping JSON-first scrape artifacts.
+- Added pluggable StepStone-specific scraping strategy in `src/core/scraping/strategies/stepstone.py` (selector-driven listing/detail extraction inspired by Postulator patterns) and integrated it into `src/core/scraping/service.py` as an option-first path with safe fallback to generic extraction when structured output is too short.
+- Updated StepStone crawl/detail behavior to use strategy-specific URL extraction first and keep generic fallback as a secondary option, matching the "no single scraper for everything" design.
+- Added strategy tests in `tests/core/scraping/test_stepstone_strategy.py`.
+- Added TU Berlin listing support in the scraping registry via a dedicated `TuBerlinAdapter` path in `src/core/scraping/registry.py`, enabling `crawl_listing` for source `tu_berlin` with `/job-postings/<id>` extraction and detail URL construction.
+- Fixed long-input translation failures by chunking `translate_text` requests in `src/core/tools/translation/service.py` (default chunk size 4500 chars), preventing deep-translator `NotValidLength` crashes during prep-match runs on long postings.
+- Added translation chunking test coverage in `tests/core/tools/test_translation_service.py` and TU Berlin adapter tests in `tests/core/scraping/test_tu_berlin_adapter.py`.
+- Added follow-up operations runbook `docs/operations/post_key_validation_and_stepstone_autoapply_plan.md` covering post-credential full-run verification steps and selection-quality checks for TU Berlin + StepStone sample jobs.
+- Added StepStone autoapply prototype service in `src/core/application/stepstone_autoapply.py` with dry-run default, login/captcha/manual gating detection, and evidence artifact writing under `nodes/autoapply/`.
+- Added autoapply CLI entrypoint `src/cli/run_stepstone_autoapply.py` and tests `tests/core/application/test_stepstone_autoapply.py`, `tests/cli/test_run_stepstone_autoapply.py`.
+
 ## 2026-03-19
 
 - Advanced `/sandbox/node_editor` edge behavior in `apps/review-workbench/src/pages/NodeEditorSandboxPage.tsx` by fully wiring floating-edge rendering (`edgeTypes.floating` + shortest-angle intersection geometry), applying floating edge type to newly created edges, and adding consistent edge arrow markers.
