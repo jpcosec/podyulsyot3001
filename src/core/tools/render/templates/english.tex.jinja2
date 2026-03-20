@@ -44,12 +44,8 @@
     \section{\atswhite{\#\# }Work Experience}
     {% for job in experience %}
 
-        \cventry{\atswhite{\#\#\# }{{ job.start_date|replace('-', '/') }} -- {{ job.end_date|replace('-', '/') }} }
-                { {{ job.role }} }
-                { {{ job.organization }} }
-                { {{ job.location }} }
-                {}
-                {
+        \noindent\textbf{ {{ job.role }} } \hfill {{ job.start_date|replace('-', '/') }} -- {{ job.end_date|replace('-', '/') }} \par
+        \noindent\textit{ {{ job.organization }}{% if job.location %}, {{ job.location }}{% endif %} } \par
         {% if job.achievements %}
                 \begin{itemize}
             {% for item in job.achievements %}
@@ -57,7 +53,6 @@
             {% endfor %}
                 \end{itemize}
         {% endif %}
-                }
 
     {% if not loop.last %}
         \vspace{6pt}

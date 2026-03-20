@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 from typing import Any, Mapping, cast
 
+from src.core.io import ArtifactWriter, ObservabilityService, WorkspaceManager
 from src.core.graph.state import GraphState
 from src.graph import run_prep_match
 
@@ -60,11 +61,16 @@ def main() -> int:
     sqlite_module = __import__("langgraph.checkpoint.sqlite", fromlist=["SqliteSaver"])
     sqlite_saver_cls = getattr(sqlite_module, "SqliteSaver")
 
-    with sqlite_saver_cls.from_conn_string(str(checkpoint_path)) as checkpointer:
-        out = run_prep_match(
-            cast(GraphState, state), resume=args.resume, checkpointer=checkpointer
-        )
+    try:
+        with sqlite_saver_cls.from_conn_string(str(checkpoint_path)) as checkpointer:
+            out = run_prep_match(
+                cast(GraphState, state), resume=args.resume, checkpointer=checkpointer
+            )
+    except Exception as exc:
+        _write_run_summary_artifact(_failed_summary_state(state, exc))
+        raise
 
+    _write_run_summary_artifact(out)
     print(json.dumps(out, indent=2, ensure_ascii=False))
     return 0
 
@@ -182,6 +188,30 @@ def _profile_base_to_evidence(payload: Mapping[str, Any]) -> list[dict[str, Any]
 
 def _default_checkpoint_path(source: str, job_id: str) -> Path:
     return Path("data/jobs") / source / job_id / "graph" / "checkpoint.sqlite"
+
+
+def _write_run_summary_artifact(output_state: Any) -> None:
+    if not isinstance(output_state, Mapping):
+        return
+    workspace = WorkspaceManager()
+    writer = ArtifactWriter(workspace)
+    service = ObservabilityService(workspace, writer)
+    service.write_run_summary(output_state)
+
+
+def _failed_summary_state(
+    base_state: Mapping[str, Any],
+    error: Exception,
+) -> dict[str, Any]:
+    return {
+        **dict(base_state),
+        "status": "failed",
+        "error_state": {
+            "failure_type": "INTERNAL_ERROR",
+            "message": str(error),
+            "attempt_count": 1,
+        },
+    }
 
 
 if __name__ == "__main__":

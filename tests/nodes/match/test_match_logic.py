@@ -178,6 +178,11 @@ def test_run_logic_renders_review_markdown_with_requirement_and_evidence_text(
     assert "| R1 | Python | Built Python pipelines |" in content
     assert "[ ] Proceed / [ ] Regen / [ ] Reject" in content
 
+    meta_path = tmp_path / "data/jobs/tu_berlin/job-2/nodes/match/meta/execution.json"
+    meta_payload = json.loads(meta_path.read_text(encoding="utf-8"))
+    assert meta_payload["node"] == "match"
+    assert meta_payload["current_node"] == "match"
+
 
 def test_run_logic_regeneration_focuses_review_table_on_patch_requirements(
     tmp_path: Path,

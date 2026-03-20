@@ -93,6 +93,13 @@ def test_run_logic_creates_decision_markdown_and_pauses_review(
     assert "| R1 | Python | Built Python pipelines |" in content
     assert "[ ] Proceed / [ ] Regen / [ ] Reject" in content
 
+    meta_path = (
+        tmp_path / "data/jobs/tu_berlin/job-1/nodes/review_match/meta/execution.json"
+    )
+    meta_payload = json.loads(meta_path.read_text(encoding="utf-8"))
+    assert meta_payload["node"] == "review_match"
+    assert meta_payload["status"] == "pending_review"
+
 
 def test_run_logic_parses_regen_decision_and_writes_json(
     tmp_path: Path, monkeypatch
@@ -248,3 +255,51 @@ def test_run_logic_parses_scoped_regeneration_table_by_req_id(
             "reviewer_note": "Please strengthen SQL evidence",
         }
     ]
+
+
+def test_run_logic_rebuild_includes_patch_evidence_context(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+
+    state = _base_state()
+    state["job_id"] = "job-ctx"
+    state["matched_data"]["matches"][0]["evidence_id"] = "P2"
+    run_logic(state)
+
+    decision_md = (
+        tmp_path / "data/jobs/tu_berlin/job-ctx/nodes/match/review/decision.md"
+    )
+    decision_md.unlink()
+
+    feedback_path = (
+        tmp_path
+        / "data/jobs/tu_berlin/job-ctx/nodes/match/review/rounds/round_001/feedback.json"
+    )
+    feedback_path.parent.mkdir(parents=True, exist_ok=True)
+    feedback_path.write_text(
+        json.dumps(
+            {
+                "round_n": 1,
+                "feedback": [
+                    {
+                        "req_id": "R1",
+                        "action": "patch",
+                        "reviewer_note": "Add stronger evidence",
+                        "patch_evidence": {
+                            "id": "P2",
+                            "description": "Patched SQL dashboard evidence",
+                        },
+                    }
+                ],
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    out = run_logic(state)
+
+    assert out["status"] == "pending_review"
+    rebuilt = decision_md.read_text(encoding="utf-8")
+    assert "Patched SQL dashboard evidence" in rebuilt

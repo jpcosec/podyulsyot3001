@@ -65,7 +65,8 @@ PREP_MATCH_LINEAR_EDGES: tuple[tuple[str, str], ...] = (
     ("translate_if_needed", "extract_understand"),
     ("extract_understand", "match"),
     ("match", "review_match"),
-    ("generate_documents", "package"),
+    ("generate_documents", "render"),
+    ("render", "package"),
 )
 
 PREP_MATCH_REVIEW_TRANSITIONS: dict[str, dict[str, str]] = {
@@ -161,6 +162,8 @@ def build_prep_match_node_registry() -> dict[str, NodeHandler]:
     from src.nodes.match.logic import run_logic as match_node
     from src.nodes.review_match.logic import run_logic as review_match_node
     from src.nodes.generate_documents.logic import run_logic as generate_documents_node
+    from src.nodes.render.logic import run_logic as render_node
+    from src.nodes.package.logic import run_logic as package_node
 
     return {
         "scrape": scrape_node,
@@ -169,15 +172,8 @@ def build_prep_match_node_registry() -> dict[str, NodeHandler]:
         "match": match_node,
         "review_match": review_match_node,
         "generate_documents": generate_documents_node,
-        "package": _package_terminal_node,
-    }
-
-
-def _package_terminal_node(state: GraphState) -> Mapping[str, Any]:
-    return {
-        **dict(state),
-        "current_node": "package",
-        "status": "completed",
+        "render": render_node,
+        "package": package_node,
     }
 
 

@@ -9,6 +9,18 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal, Mapping, cast
 
+from src.core.io import (
+    ArtifactReader,
+    ArtifactWriter,
+    ObservabilityService,
+    WorkspaceManager,
+)
+from src.core.tools.review_decision_service import (
+    feedback_action_from_decision,
+    parse_checkbox_decision,
+    route_from_decision_values,
+    validate_feedback_payload_for_route,
+)
 from src.core.round_manager import RoundManager
 from src.nodes.review_match.contract import DecisionEnvelope, ParsedDecision
 
@@ -16,17 +28,38 @@ from src.nodes.review_match.contract import DecisionEnvelope, ParsedDecision
 def run_logic(state: Mapping[str, Any]) -> dict[str, Any]:
     """Ensure review markdown exists and parse decision when provided."""
     source, job_id, matched_data = _require_review_inputs(state)
-    job_root = Path("data/jobs") / source / job_id
+    workspace = WorkspaceManager()
+    reader = ArtifactReader(workspace)
+    writer = ArtifactWriter(workspace)
+    job_root = workspace.job_root(source, job_id)
     manager = RoundManager(job_root)
     review_dir = manager.review_dir
     review_dir.mkdir(parents=True, exist_ok=True)
 
-    proposed_ref = "nodes/match/approved/state.json"
-    proposed_path = job_root / proposed_ref
+    proposed_path = workspace.node_stage_artifact(
+        source=source,
+        job_id=job_id,
+        node_name="match",
+        stage="approved",
+        filename="state.json",
+    )
+    proposed_ref = str(proposed_path.relative_to(job_root))
     source_hash = _compute_source_hash(matched_data, proposed_path)
 
-    decision_md_path = review_dir / "decision.md"
-    decision_json_path = review_dir / "decision.json"
+    decision_md_path = workspace.node_stage_artifact(
+        source=source,
+        job_id=job_id,
+        node_name="match",
+        stage="review",
+        filename="decision.md",
+    )
+    decision_json_path = workspace.node_stage_artifact(
+        source=source,
+        job_id=job_id,
+        node_name="match",
+        stage="review",
+        filename="decision.json",
+    )
 
     if not decision_md_path.exists():
         fallback_round = manager.get_latest_round() or manager.create_next_round()
@@ -37,8 +70,7 @@ def run_logic(state: Mapping[str, Any]) -> dict[str, Any]:
             and isinstance(extracted.get("requirements"), list)
             else []
         )
-        profile_evidence = state.get("my_profile_evidence")
-        profile = profile_evidence if isinstance(profile_evidence, list) else []
+        profile = _effective_profile_evidence(state, manager)
 
         render_payload = {
             **dict(matched_data),
@@ -52,8 +84,8 @@ def run_logic(state: Mapping[str, Any]) -> dict[str, Any]:
             round_number=fallback_round,
         )
         manager.save_artifact(fallback_round, "decision.md", rendered)
-        decision_md_path.write_text(rendered, encoding="utf-8")
-        return {
+        writer.write_text(decision_md_path, rendered)
+        result = {
             **dict(state),
             "current_node": "review_match",
             "status": "pending_review",
@@ -64,8 +96,10 @@ def run_logic(state: Mapping[str, Any]) -> dict[str, Any]:
                 "last_decision_ref": str(decision_md_path.relative_to(job_root)),
             },
         }
+        _write_execution_metadata("review_match", result)
+        return result
 
-    decision_text = decision_md_path.read_text(encoding="utf-8")
+    decision_text = reader.read_text(decision_md_path)
     round_number = _extract_round_number_from_text(decision_text)
     if round_number is None:
         round_number = manager.get_latest_round() or 1
@@ -85,8 +119,7 @@ def run_logic(state: Mapping[str, Any]) -> dict[str, Any]:
             and isinstance(extracted.get("requirements"), list)
             else []
         )
-        profile_evidence = state.get("my_profile_evidence")
-        profile = profile_evidence if isinstance(profile_evidence, list) else []
+        profile = _effective_profile_evidence(state, manager)
         render_payload = {
             **dict(matched_data),
             "requirements": requirements,
@@ -99,8 +132,8 @@ def run_logic(state: Mapping[str, Any]) -> dict[str, Any]:
             round_number=round_number,
         )
         manager.save_artifact(round_number, "decision.md", rendered)
-        decision_md_path.write_text(rendered, encoding="utf-8")
-        return {
+        writer.write_text(decision_md_path, rendered)
+        result = {
             **dict(state),
             "current_node": "review_match",
             "status": "pending_review",
@@ -111,6 +144,8 @@ def run_logic(state: Mapping[str, Any]) -> dict[str, Any]:
                 "last_decision_ref": str(decision_md_path.relative_to(job_root)),
             },
         }
+        _write_execution_metadata("review_match", result)
+        return result
 
     if embedded_hash != expected_hash:
         raise ValueError(
@@ -123,13 +158,15 @@ def run_logic(state: Mapping[str, Any]) -> dict[str, Any]:
         matched_data,
     )
     if parsed_decisions is None or routing_decision is None:
-        return {
+        result = {
             **dict(state),
             "current_node": "review_match",
             "status": "pending_review",
             "pending_gate": "review_match",
             "review_decision": None,
         }
+        _write_execution_metadata("review_match", result)
+        return result
 
     envelope = DecisionEnvelope(
         node="review_match",
@@ -146,7 +183,7 @@ def run_logic(state: Mapping[str, Any]) -> dict[str, Any]:
         "decision.json",
         envelope.model_dump_json(indent=2),
     )
-    decision_json_path.write_text(envelope.model_dump_json(indent=2), encoding="utf-8")
+    writer.write_text(decision_json_path, envelope.model_dump_json(indent=2))
 
     feedback_payload = _build_feedback_payload(envelope)
     _validate_feedback_payload_for_route(feedback_payload, routing_decision)
@@ -156,7 +193,7 @@ def run_logic(state: Mapping[str, Any]) -> dict[str, Any]:
         json.dumps(feedback_payload, indent=2, ensure_ascii=False),
     )
 
-    return {
+    result = {
         **dict(state),
         "current_node": "review_match",
         "status": "running",
@@ -171,6 +208,8 @@ def run_logic(state: Mapping[str, Any]) -> dict[str, Any]:
             "last_proposed_state_ref": proposed_ref,
         },
     }
+    _write_execution_metadata("review_match", result)
+    return result
 
 
 def _require_review_inputs(
@@ -517,39 +556,7 @@ def _parse_checkbox_decision(
     Literal["approve", "request_regeneration", "reject"] | None,
     Literal["valid", "none", "invalid"],
 ]:
-    marks = {
-        "proceed": _parse_checkbox_mark(text, "proceed"),
-        "regen": _parse_checkbox_mark(text, "regen"),
-        "reject": _parse_checkbox_mark(text, "reject"),
-    }
-    if any(mark is None for mark in marks.values()):
-        return None, "invalid"
-
-    selected = [k for k, value in marks.items() if value]
-    if len(selected) == 0:
-        return None, "none"
-    if len(selected) != 1:
-        return None, "invalid"
-
-    if selected[0] == "proceed":
-        return "approve", "valid"
-    if selected[0] == "regen":
-        return "request_regeneration", "valid"
-    return "reject", "valid"
-
-
-def _parse_checkbox_mark(text: str, label: str) -> bool | None:
-    pattern = rf"\[(?P<mark>[^\]]*)\]\s*{re.escape(label)}\b"
-    match = re.search(pattern, text, flags=re.IGNORECASE)
-    if match is None:
-        return None
-
-    mark = match.group("mark").strip().lower()
-    if mark == "":
-        return False
-    if mark == "x":
-        return True
-    return None
+    return parse_checkbox_decision(text)
 
 
 def _extract_comments_for_block(
@@ -610,33 +617,16 @@ def _build_feedback_payload(envelope: DecisionEnvelope) -> dict[str, Any]:
 
 
 def _feedback_action_from_decision(decision: str) -> str:
-    if decision == "approve":
-        return "proceed"
-    if decision == "request_regeneration":
-        return "patch"
-    return "reject"
+    return feedback_action_from_decision(
+        cast(Literal["approve", "request_regeneration", "reject"], decision)
+    )
 
 
 def _validate_feedback_payload_for_route(
     payload: Mapping[str, Any],
     routing_decision: Literal["approve", "request_regeneration", "reject"],
 ) -> None:
-    feedback = payload.get("feedback")
-    if not isinstance(feedback, list):
-        raise ValueError("feedback payload must contain feedback list")
-
-    if routing_decision != "request_regeneration":
-        return
-
-    if not feedback:
-        raise ValueError("request_regeneration requires non-empty feedback payload")
-
-    has_patch_action = any(
-        isinstance(item, Mapping) and str(item.get("action", "")).lower() == "patch"
-        for item in feedback
-    )
-    if not has_patch_action:
-        raise ValueError("request_regeneration requires patch feedback entries")
+    validate_feedback_payload_for_route(payload, routing_decision)
 
 
 def _extract_patch_evidence(notes: str) -> dict[str, str] | None:
@@ -676,17 +666,11 @@ def _strip_patch_marker(notes: str) -> str:
 def _route_from_parsed_decisions(
     decisions: list[ParsedDecision],
 ) -> Literal["approve", "request_regeneration", "reject"] | None:
-    if not decisions:
-        return None
-
-    values = [d.decision for d in decisions]
-    if any(v == "reject" for v in values):
-        return "reject"
-    if any(v == "request_regeneration" for v in values):
-        return "request_regeneration"
-    if all(v == "approve" for v in values):
-        return "approve"
-    return None
+    values = [
+        cast(Literal["approve", "request_regeneration", "reject"], decision.decision)
+        for decision in decisions
+    ]
+    return route_from_decision_values(values)
 
 
 def _extract_round_number_from_text(text: str) -> int | None:
@@ -718,3 +702,39 @@ def _has_any_checked_decision(text: str) -> bool:
         or re.search(r"\[\s*x\s*\]\s*regen\b", text, flags=re.IGNORECASE) is not None
         or re.search(r"\[\s*x\s*\]\s*reject\b", text, flags=re.IGNORECASE) is not None
     )
+
+
+def _effective_profile_evidence(
+    state: Mapping[str, Any],
+    manager: RoundManager,
+) -> list[dict[str, Any]]:
+    profile_evidence = state.get("my_profile_evidence")
+    base = (
+        [dict(item) for item in profile_evidence if isinstance(item, Mapping)]
+        if isinstance(profile_evidence, list)
+        else []
+    )
+    patches = manager.get_all_feedback_patches()
+    if not patches:
+        return base
+
+    seen_ids = {
+        str(item.get("id", "")).strip()
+        for item in base
+        if str(item.get("id", "")).strip()
+    }
+    for patch in patches:
+        patch_id = str(patch.get("id", "")).strip()
+        description = str(patch.get("description", "")).strip()
+        if not patch_id or not description or patch_id in seen_ids:
+            continue
+        base.append({"id": patch_id, "description": description})
+        seen_ids.add(patch_id)
+    return base
+
+
+def _write_execution_metadata(node_name: str, state: Mapping[str, Any]) -> None:
+    workspace = WorkspaceManager()
+    writer = ArtifactWriter(workspace)
+    service = ObservabilityService(workspace, writer)
+    service.write_node_execution_snapshot(node_name=node_name, state=state)

@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
-import json
 import os
-import shutil
-import hashlib
-from pathlib import Path
 from typing import Any, Mapping
 
 from src.ai.prompt_manager import PromptManager
 from src.ai.runtime import LLMRuntime
+from src.core.io import (
+    ArtifactWriter,
+    ObservabilityService,
+    ProvenanceService,
+    WorkspaceManager,
+)
 from src.core.round_manager import RoundManager
 from src.nodes.match.contract import MatchEnvelope
 
@@ -41,7 +43,7 @@ def run_logic(state: Mapping[str, Any]) -> dict[str, Any]:
 
     next_status = "pending_review" if _has_job_scope(state) else "running"
 
-    return {
+    result = {
         **dict(state),
         "current_node": "match",
         "status": next_status,
@@ -50,6 +52,8 @@ def run_logic(state: Mapping[str, Any]) -> dict[str, Any]:
         else state.get("pending_gate"),
         "matched_data": matched_payload,
     }
+    _write_execution_metadata("match", result)
+    return result
 
 
 def _build_input_data(state: Mapping[str, Any]) -> dict[str, Any]:
@@ -224,16 +228,19 @@ def _persist_match_artifacts(
 
     source = str(state["source"]).strip()
     job_id = str(state["job_id"]).strip()
-    job_root = Path("data/jobs") / source / job_id
+    workspace = WorkspaceManager()
+    writer = ArtifactWriter(workspace)
+    job_root = workspace.job_root(source, job_id)
 
-    proposed_dir = job_root / "nodes" / "match" / "approved"
-    proposed_dir.mkdir(parents=True, exist_ok=True)
-    proposed_path = proposed_dir / "state.json"
-    proposed_path.write_text(
-        json.dumps(matched_data, indent=2, ensure_ascii=False),
-        encoding="utf-8",
+    proposed_path = writer.write_node_stage_json(
+        source=source,
+        job_id=job_id,
+        node_name="match",
+        stage="approved",
+        filename="state.json",
+        payload=matched_data,
     )
-    source_hash = _compute_source_hash(proposed_path)
+    source_hash = ProvenanceService.sha256_file(proposed_path)
 
     manager = RoundManager(job_root)
     round_number = manager.create_next_round()
@@ -252,10 +259,14 @@ def _persist_match_artifacts(
         round_feedback=input_data.get("round_feedback"),
     )
     round_md_path = manager.save_artifact(round_number, "decision.md", rendered)
-
-    manager.review_dir.mkdir(parents=True, exist_ok=True)
-    active_md_path = manager.review_dir / "decision.md"
-    shutil.copy2(round_md_path, active_md_path)
+    active_md_path = workspace.node_stage_artifact(
+        source=source,
+        job_id=job_id,
+        node_name="match",
+        stage="review",
+        filename="decision.md",
+    )
+    writer.write_text(active_md_path, round_md_path.read_text(encoding="utf-8"))
 
 
 def _render_decision_markdown(
@@ -430,14 +441,11 @@ def _split_matches_for_review_scope(
     return review_matches, context_matches
 
 
-def _compute_source_hash(path: Path) -> str:
-    return f"sha256:{hashlib.sha256(path.read_bytes()).hexdigest()}"
-
-
 def _round_manager_for_state(state: Mapping[str, Any]) -> RoundManager:
     source = str(state["source"]).strip()
     job_id = str(state["job_id"]).strip()
-    job_root = Path("data/jobs") / source / job_id
+    workspace = WorkspaceManager()
+    job_root = workspace.job_root(source, job_id)
     return RoundManager(job_root)
 
 
@@ -485,3 +493,10 @@ def _render_evidence_text(evidence_id: str, evidence_lookup: Mapping[str, str]) 
         evidence_lookup.get(pid, "(description unavailable)") for pid in parts
     ]
     return " ; ".join(descriptions)
+
+
+def _write_execution_metadata(node_name: str, state: Mapping[str, Any]) -> None:
+    workspace = WorkspaceManager()
+    writer = ArtifactWriter(workspace)
+    service = ObservabilityService(workspace, writer)
+    service.write_node_execution_snapshot(node_name=node_name, state=state)

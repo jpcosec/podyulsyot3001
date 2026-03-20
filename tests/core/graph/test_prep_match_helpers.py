@@ -23,6 +23,7 @@ def test_build_prep_match_node_registry_contains_required_nodes() -> None:
         "match",
         "review_match",
         "generate_documents",
+        "render",
         "package",
     }
 
