@@ -2,7 +2,7 @@
 
 ## Goal
 
-Introduce a typed registry for node families so all future node widgets share a stable contract.
+Introduce a typed node-type system and extension lifecycle so all future node widgets share a stable contract without growing a large custom registry framework.
 
 ## Status
 
@@ -37,6 +37,22 @@ Each node type should define:
 - `supported_anchors`
 - `default_size`
 - `allowed_relations`
+
+## Extension Model Decision
+
+- use `Tapable` from the start for extension lifecycle hooks
+- keep built-in node features as first-party taps on the same hook surface
+- do not introduce `InversifyJS` or a general IoC container
+- keep custom code limited to typed lookup tables and adapter glue around Tapable hooks
+
+Expected hook families:
+
+- `onSchemaLoad`
+- `onRegistryCompile`
+- `onNodeFocus`
+- `onModeChange`
+- `onInspectorBuild`
+- `onContextActionsResolve`
 
 ## Initial Node Families
 
@@ -74,3 +90,4 @@ These should be treated as implementation templates, not the architecture.
 - all nodes are rendered through a registry lookup
 - each node type supports at least minimized + focus + editor contracts
 - icons and affordances are consistent across the app
+- extension lifecycle is powered by `Tapable`, not a large custom registry implementation

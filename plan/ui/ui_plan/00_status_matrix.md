@@ -35,6 +35,8 @@ Provide a compact map of requested UI capabilities: done, partial, missing, and 
 - node content types before registry stabilization
 - external data integration before defining persistence boundaries
 - image/code annotation before defining anchor identity rules
+- schema-to-neo4j drift before load-time health checks exist
+- stale `graph_view` references after content mutations
 
 ## Immediate Recommendation
 
@@ -43,4 +45,5 @@ Implement foundations first, not widgets first.
 - define node types
 - define layout/view presets
 - define editor persistence boundary
+- define schema health and referential-integrity invariants
 - then add richer node payloads

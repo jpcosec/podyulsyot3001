@@ -55,6 +55,15 @@ Likely impacts:
 - persistence compatibility
 - existing saved data
 
+### Editing representation schema / schema loaders
+
+Likely impacts:
+
+- inspector fields and layouts
+- node type availability
+- schema health warnings
+- neo4j/projection compatibility at load time
+
 ## Verification Strategy By Feature Class
 
 - layout/view preset changes
@@ -64,6 +73,10 @@ Likely impacts:
   - verify all node renderers still mount
 - annotation changes
   - verify anchor persistence after edit/save/reload
+- schema loader / schema contract changes
+  - verify schema health checks and visible drift warnings
+- state contract changes
+  - verify deleted IDs are pruned from view state and saved presets
 - explorer changes
   - verify selection sync with graph and document panes
 

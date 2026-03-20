@@ -8,7 +8,7 @@ Support ordering nodes by meaning, not just by graph topology, and persist named
 
 Partial.
 
-- `dagre` layout exists
+- ad hoc layout exists
 - focus-centered layout exists
 - manual custom positions can be restored locally
 - there are no named presets or property-driven ordering modes
@@ -46,14 +46,22 @@ Each saved view preset should store:
 
 ## Candidate Libraries
 
-- keep `dagre` for MVP presets
-- add `elkjs` only when compound layouts, multiple handles, or tree/document layouts become hard to manage with `dagre`
+- commit to `elkjs` from the start
+- run layout in a worker where practical
+- define a benchmark gate before container-heavy defaults or very large graphs become part of the main workflow
 
-## Why Not Jump Straight To `elkjs`
+## Benchmark Gate
 
-- more power, more tuning cost
-- current graph sizes do not yet require it everywhere
-- property-based ordering is mostly product logic, not library logic
+Before treating nested/container-heavy layouts as stable, measure:
+
+- 1000 nodes
+- 20 nested containers
+- representative edge density for the editor
+
+Success target:
+
+- layout stays interactive enough for explicit user-triggered relayout
+- no main-thread lock severe enough to break editing UX
 
 ## What Breaks If Edited
 
@@ -67,3 +75,4 @@ Each saved view preset should store:
 - user can choose a preset type
 - preset can be named and saved
 - reloading restores viewport + filters + collapsed state + ordering
+- `elkjs` is the only committed layout engine in the plan

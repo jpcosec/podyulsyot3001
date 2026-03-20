@@ -99,13 +99,16 @@ All nodes
 
 ## Library Summary
 
-- layout / compound graphs: `dagre` now, `elkjs` later
+- layout / compound graphs: `elkjs` from the start, with benchmark gate before container-heavy rollout
 - explorer trees: `react-arborist`
 - rich text / markdown: `Lexical` or `@tiptap/react`
 - code editor: `CodeMirror 6` first, `monaco-editor` only if IDE-grade features are needed
 - json tree: `@uiw/react-json-view`
 - yaml editor: `CodeMirror 6` + yaml mode or `monaco-yaml`
 - tables: `TanStack Table` first, `AG Grid` only if spreadsheet-grade workflows become mandatory
+- schema-driven forms: `JSON Forms` (data schema + UI schema), not `RJSF`
+- text annotations: `@recogito/text-annotator`
+- extension lifecycle: `Tapable` from the start; avoid a larger custom registry or IoC container
 - image annotation: `Annotorious` or `react-image-annotate`
 
 ## Planning Rule
@@ -116,3 +119,10 @@ Do not implement rich node content or explorer surfaces before stabilizing:
 - editor state model
 - layout/view preset contract
 - persistence boundary
+
+Also treat these as mandatory gates:
+
+- schema health check at load time
+- referential integrity cleanup between `graph_content` and `graph_view`
+- smoke/integration tests before higher-order container behavior
+- `elkjs` benchmark gate before committing nested/container-heavy default flows

@@ -38,9 +38,9 @@ Implementar un editor de grafos en React Flow para mapeo nodo a nodo, siguiendo 
 
 ### 3.3 Formularios tipados
 
-- `react-hook-form` + `zod` con `discriminatedUnion` por tipo de nodo.
-- `reset()` al abrir modal para sincronizar datos del nodo seleccionado.
-- `useWatch` en subcomponentes para campos condicionales y evitar re-renders globales.
+- `JSON Forms` como base de formularios tipados.
+- Representation schema compila a `data schema` + `ui schema`.
+- `react-hook-form`/`zod` quedan como apoyo puntual solo si aparece un flujo local que `JSON Forms` no cubra bien.
 
 ### 3.4 Overlays
 
@@ -115,9 +115,9 @@ Todo cambio de mapeo debe reflejarse en canvas inmediatamente.
 
 ## 9. Auto-layout
 
-- Estrategia inicial:
-  - `dagre` para fase MVP (rapido, simple)
-  - opcion futura a `elkjs` para casos complejos
+- Estrategia comprometida:
+  - `elkjs` desde el inicio
+  - benchmark obligatorio antes de tratar layouts anidados como estables
 - Auto-layout solo por accion explicita del usuario (`Auto-Layout`), no en cada render.
 
 ## 10. Plan de implementacion por iteraciones
@@ -173,7 +173,11 @@ Todo cambio de mapeo debe reflejarse en canvas inmediatamente.
 - Estado duplicado nodes/edges:
   - Mantener fuente unica en store.
 - Complejidad de esquema dinamico:
-  - Discriminated unions por tipo + normalizacion de datos de entrada.
+  - Compilar primero desde schema en codigo; externalizar a YAML/JSON despues de estabilizar el load path.
+- Drift entre schema y Neo4j:
+  - Health check visible al cargar; nunca fallo silencioso.
+- Fatiga de estado en Zustand/store:
+  - Invariante de integridad referencial para limpiar IDs muertos en `graph_view`.
 
 ## 13. Sandbox route obligatoria
 

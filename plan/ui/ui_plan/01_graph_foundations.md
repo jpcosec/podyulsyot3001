@@ -36,6 +36,7 @@ Partial.
 2. Separate domain graph from UI view state.
 3. Track viewport, filters, collapsed state, and layout preset independently from node content.
 4. Keep annotation anchors as references, not inline ad hoc UI-only blobs.
+5. Enforce referential integrity so `graph_view` never keeps dead node/edge/container IDs after `graph_content` mutations.
 
 ## Proposed State Layers
 
@@ -70,8 +71,16 @@ Partial.
 - likely next: `zustand` for shared editor store if multiple surfaces need synchronized state
 - React Flow UI patterns can help for node chrome, controls, and search, but not for the state model itself
 
+## State Invariants
+
+- `graph_content` is the durable editor truth.
+- `graph_view` is ephemeral and must be pruned whenever `graph_content` deletes or rewrites referenced IDs.
+- saved presets must be sanitized on load so missing IDs do not crash rendering.
+- Zustand selectors must stay slice-specific to avoid broad re-renders.
+
 ## Acceptance
 
 - one written graph state contract exists
 - sandbox and CV editor can map into it without ambiguity
 - layout presets and rich content nodes can be added without redefining the storage model
+- deleting content automatically prunes stale selection, focus, collapsed-state, and saved-preset references

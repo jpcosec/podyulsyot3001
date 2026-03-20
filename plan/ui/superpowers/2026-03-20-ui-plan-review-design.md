@@ -8,13 +8,15 @@ Single document that serves as both **build manual** (architecture, objectives, 
 
 - **CvGraphEditor is eliminated.** Its capabilities are requirements for the NodeEditor. Step 00b maps every feature to its new home.
 - **elkjs from the start.** No dagre. Compound/nested layout natively.
-- **Library-first, no speculative abstraction.** Use React Flow, elkjs, zustand, FlexLayout, RJSF directly. No wrapper modules for hypothetical portability.
+- **Library-first, no speculative abstraction.** Use React Flow, elkjs, zustand, FlexLayout, JSON Forms, Recogito, and Tapable directly. No wrapper modules for hypothetical portability.
 - **Representation Schema** — per-project YAML/JSON config that maps neo4j graph structure to editor behavior (node types, containment, relations, visual mappings, views). The editor is domain-agnostic by configuration.
 - **CSS Theme** — Obsidian-style overridable CSS. Schema sets `data-*` attributes, CSS targets them. MD3 token system as default theme (Manrope + Inter, glass panels, dot grid).
 - **Color scales** — schema declares scales as defaults, CSS overrides win.
-- **Extension Model** — one `registry.register()` pattern for every extension type. Built-in features use the same API. 10 extension types.
+- **Extension Model** — `Tapable` from the start. Built-in features and later extensions use the same lifecycle hooks. Keep custom code limited to typed lookup tables and adapters.
 - **Panel docking** — user-configurable via FlexLayout-react. Left/right/float, saved per view preset.
-- **Schema-driven inspector** — RJSF renders forms from representation schema attributes compiled to JSON Schema.
+- **Schema-driven inspector** — JSON Forms renders forms from representation schema attributes compiled to data schema + UI schema.
+- **Schema health** — validate declared attributes against load-time sample data; warnings must be visible and never silent.
+- **State integrity** — `graph_view` references must be pruned automatically when `graph_content` deletes IDs.
 - **Performance** — render tiers (only focused node gets expensive renderer), prerender cache, background precomputation, compiled registry lookup tables (O(1) at render time).
 - **Testing** — ideal approach: Vitest (unit), @testing-library/react (component), Playwright (integration). Bootstrap from scratch.
 - **Gap analysis** — inline per step + consolidated gap matrix.
@@ -103,8 +105,8 @@ Every step file follows this structure:
 | Layout engine | elkjs | Committed, replaces dagre |
 | State management | zustand | Committed |
 | Dockable panels | flexlayout-react | Committed |
-| Schema-driven forms | @rjsf/core + @rjsf/utils + custom theme | Committed |
-| Extension registry | Custom (~300 lines) | To build |
+| Schema-driven forms | JSON Forms | Committed |
+| Extension lifecycle | Tapable + typed lookup tables | Committed |
 | Explorer tree | react-arborist | Committed |
 | Icons | Material Symbols Outlined | In mockups |
 | CSS framework | Tailwind CSS + MD3 tokens as CSS vars | In use |
@@ -117,6 +119,7 @@ Every step file follows this structure:
 | Code editor | CodeMirror 6 (recommended, matrix in 03e) | Deferred |
 | JSON/YAML inspector | TBD (decision matrix in 03c) | Deferred |
 | Table editor | TanStack Table (recommended, matrix in 03d) | Deferred |
+| Text annotation | @recogito/text-annotator | Committed |
 | Image annotation | TBD (decision matrix in 03f) | Deferred |
 
 ---
@@ -289,7 +292,7 @@ views:
 - The schema is a projection — declares which attributes matter for rendering. The graph can have many more.
 - Some attributes are lazy-loaded (e.g., `content_path` resolves a file at runtime).
 - Multiple views within one schema: some are filters (same graph, different visibility), some are subgraphs (different Cypher query).
-- Schema compiles to JSON Schema at load time for RJSF inspector forms.
+- Schema compiles at load time into JSON Forms `data schema` + `ui schema` for inspector forms.
 
 **Color scale system:**
 - Schema declares `color_scale` with attribute, palette name, min/max.
@@ -301,7 +304,7 @@ views:
 1. Schema format is defined and documented with examples
 2. Schema validates at load time (missing required fields, invalid references)
 3. At least two example schemas exist: CV Profile, Scraping Knowledge Graph
-4. Schema compiles node_type attributes to JSON Schema for RJSF
+4. Schema compiles node_type attributes to JSON Forms `data schema` + `ui schema`
 5. Color scales compute CSS variables, CSS overrides work
 6. Views of type `subgraph` declare valid Cypher queries
 7. Views of type `filter` declare valid node/relation type references
@@ -322,8 +325,8 @@ views:
 ### 5. Library Decision Matrix
 
 - **YAML parsing**: `js-yaml` (lightweight, well-maintained) or `yaml` package (spec-complete, heavier). Recommendation: `js-yaml` — sufficient for config files.
-- **JSON Schema compilation**: Built into RJSF pipeline. Representation schema attributes → JSON Schema objects via a compile step we write.
-- **Schema validation**: `ajv` (already a dependency via RJSF) for validating schema files against a meta-schema.
+- **Schema compilation**: Representation schema attributes compile into JSON Forms `data schema` + `ui schema` through a narrow compile step we own.
+- **Schema validation**: `ajv` validates external schema files against a meta-schema, plus a load-time health check validates declared attributes against sample query/load data.
 
 ### 6. Test Plan
 
@@ -336,7 +339,7 @@ views:
 - [ ] Schema format documented with full reference
 - [ ] Two example schemas exist and parse correctly
 - [ ] Schema validates at load time with clear error messages
-- [ ] Attributes compile to JSON Schema for RJSF
+- [ ] Attributes compile to JSON Forms `data schema` + `ui schema`
 - [ ] Color scales compute and CSS overrides work
 - [ ] View queries are schema-declared, not user-composed
 
@@ -445,17 +448,17 @@ Extensions can activate on either EditorState (the 5-state machine from graph_vi
 
 **Panel docking:** FlexLayout-react handles all docking. Panels are sidebar_panel extensions. User drags to reposition. Layout serialized as part of view presets.
 
-**Schema-driven inspector:** RJSF renders forms from representation schema's attributes compiled to JSON Schema. Custom renderers (relation pills, mastery scale, tags) are registered as RJSF custom widgets AND as inspector_section extensions.
+**Schema-driven inspector:** JSON Forms renders forms from representation schema attributes compiled to `data schema` + `ui schema`. Custom renderers (relation pills, mastery scale, tags) integrate through JSON Forms renderers and inspector-section extension hooks.
 
 **HTML snippets:** `html_safe` content type renders sanitized HTML via DOMPurify (see html_safe section after 03f for sanitization rules).
 
 ### 2. Objectives
 
-1. All built-in features are registered through `registry.register()` — same API as project extensions
+1. All built-in features participate through the same Tapable hook lifecycle as project extensions
 2. Adding a new extension type requires: one interface definition + one mount slot in the host
 3. Activation rules evaluated at compile time (schema load), not per-frame
 4. FlexLayout integration: panels dock left/right/float, layout serialized
-5. RJSF integration: inspector forms render from schema attributes
+5. JSON Forms integration: inspector forms render from schema attributes
 6. Prerender cache works for declared cacheable modes
 7. Extension developer guide exists with "I want to... → Create this → Register it" table
 
@@ -474,22 +477,22 @@ Extensions can activate on either EditorState (the 5-state machine from graph_vi
 ### 5. Library Decision Matrix
 
 - **Dockable panels**: FlexLayout-react — committed. See LIB-DOCK-01.
-- **Schema-driven forms**: RJSF — committed. See LIB-FORMS-01.
-- **Extension registry**: Custom (~300 lines).
+- **Schema-driven forms**: JSON Forms — committed. See LIB-FORMS-01.
+- **Extension lifecycle**: Tapable + typed lookup tables — committed.
 
 ### 6. Test Plan
 
-- **Unit**: registry.register() stores extension. registry.compile() builds correct lookup tables. Activation rules evaluate correctly for all operators (schema, nodeType, mode, all, any).
-- **Component**: sidebar_panel extension mounts in FlexLayout. inspector_section extension renders as RJSF custom widget. context_action appears in right-click menu for matching node type.
+- **Unit**: Tapable hooks register and trigger correctly. Compiled lookup tables resolve the expected extension sets. Activation rules evaluate correctly for all operators (schema, nodeType, mode, all, any).
+- **Component**: sidebar panel extension mounts in FlexLayout. inspector-section extension renders through JSON Forms-compatible inspector renderers. context actions appear in right-click menus for matching node types.
 - **Integration**: Register custom node_renderer → create node of that type → correct renderer mounts in all modes.
 
 ### 7. Review Checklist
 
-- [ ] All built-in features registered via registry.register()
+- [ ] All built-in features participate via the Tapable hook lifecycle
 - [ ] Lookup tables are O(1)
 - [ ] Activation rules compile at schema load
 - [ ] FlexLayout panels dock/float/serialize
-- [ ] RJSF forms render from schema attributes
+- [ ] JSON Forms renders inspector forms from schema attributes
 - [ ] Prerender cache works for declared modes
 - [ ] Developer guide table exists
 
@@ -1177,7 +1180,7 @@ N/A — uses Vitest + @testing-library/react + Playwright (all committed).
 | LIB-STATE-01 | State management | zustand | N/A — committed |
 | LIB-LAYOUT-01 | Layout engine | elkjs | N/A — committed, replaces dagre |
 | LIB-DOCK-01 | Dockable panels | FlexLayout-react | CSS impossible to align with MD3 |
-| LIB-FORMS-01 | Schema-driven forms | RJSF (@rjsf/core) | Custom widget API too limited |
+| LIB-FORMS-01 | Schema-driven forms | JSON Forms | Better fit via separate data schema + UI schema |
 | LIB-TREE-01 | Explorer tree | react-arborist | Sync contract impossible |
 | LIB-NEO4J-01 | Graph database driver | neo4j-driver | N/A — official driver |
 | LIB-TEST-01 | Unit/component testing | Vitest + @testing-library/react | N/A — committed |

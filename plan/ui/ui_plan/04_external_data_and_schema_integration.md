@@ -34,6 +34,8 @@ Partial in docs, weak in UI.
 
 Neo4j should be treated as a projection/integration target, not the only source of UI truth.
 
+Schema drift is primarily a load-time risk, not an edit-save risk. Manual saves help isolate local edits, but they do not protect against a representation schema that no longer matches incoming Neo4j data.
+
 ## Needed Contracts
 
 - datasource registry
@@ -43,6 +45,15 @@ Neo4j should be treated as a projection/integration target, not the only source 
   - import only
   - export only
   - bidirectional
+- schema health check contract
+  - validate declared attributes against a sample query/load payload
+  - warn visibly on missing or mismatched attributes
+  - never fail silently
+
+## Initial De-Risking Rule
+
+- start with a hardcoded schema in code
+- extract to external YAML/JSON only after the load/validation path is stable
 
 ## What Breaks If Edited
 
@@ -54,3 +65,4 @@ Neo4j should be treated as a projection/integration target, not the only source 
 
 - every node/reference type can state where its source of truth lives
 - UI can persist without hard-binding all logic to Neo4j
+- loading a schema runs a health check and reports drift explicitly
