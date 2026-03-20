@@ -3,6 +3,7 @@
 ## 2026-03-20
 
 - Audited `README.md`, `docs/`, and `plan/` against the current codebase; rewrote the main runtime-truth docs (`README.md`, `docs/graph/*`, `docs/reference/data_management_actual_state.md`, `docs/operations/tool_interaction_and_known_issues.md`, `docs/index/*`, `docs/architecture/core_io_and_provenance_manager.md`) to reflect the actual runnable prep-match flow and marked several architecture/plan/schema/business-rule docs as target-state, sandbox-only, or historical where they no longer mirror runtime.
+- Reorganized the documentation tree so `docs/` now holds current runtime/operator/UI truth, `plan/` holds planning/ADR/archive material, heavy subsystem docs live near code (`src/**/README.md`, `apps/**/README.md`), UI planning moved under `plan/ui/`, target-state runtime design moved under `plan/runtime/`, and clear legacy docs were deleted instead of kept as active references.
 
 - Removed the tracked `.sisyphus/` agent workspace from the repository, replaced its reusable planning/testing approach with `docs/operations/agent_planning_and_verification_pattern.md`, and updated `.gitignore` so local agent scratch artifacts stay untracked.
 - Added a dependency-graph UI roadmap under `docs/UI_plan/`, including a status matrix, per-step planning nodes, React Flow UI notes, plug-in library recommendations, impact-aware sequencing guidance, and `docs/UI_plan/AGENT_REVIEWER_ENTRYPOINT.md` for future review/planning agents.

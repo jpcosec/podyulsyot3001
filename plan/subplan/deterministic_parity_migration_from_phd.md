@@ -57,7 +57,7 @@ Migration rule:
 
 Deliverables:
 
-1. Implement `src/core/io/` service layer per `docs/architecture/core_io_and_provenance_manager.md`.
+1. Implement `src/core/io/` service layer per `docs/runtime/core_io_and_provenance.md`.
 2. Replace inline artifact path handling in active nodes with reader/writer abstractions.
 3. Enforce deterministic read/write contracts (no silent defaults for required inputs).
 
@@ -157,7 +157,7 @@ Rationale:
 
 | Rebuild target | Source reference |
 |---|---|
-| `src/core/io/workspace_manager.py` | `docs/architecture/core_io_and_provenance_manager.md` spec |
+| `src/core/io/workspace_manager.py` | `docs/runtime/core_io_and_provenance.md` spec |
 | `src/core/io/artifact_reader.py` | Same spec |
 | `src/core/io/artifact_writer.py` | Same spec |
 | `src/core/io/provenance_service.py` | Same spec |

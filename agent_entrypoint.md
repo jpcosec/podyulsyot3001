@@ -138,15 +138,15 @@ When adding a new step/node:
    - same `thread_id` convention
    - decisions parsed from artifacts, not injected ad hoc
 6. Update docs to reflect runtime truth:
-   - `docs/graph/nodes_summary.md`
+   - `docs/runtime/graph_flow.md`
    - `docs/operations/tool_interaction_and_known_issues.md`
    - `README.md` if user-facing behavior changed
 
 ## 8) Known Reality: Implemented vs Target Graph
 
-Implemented runtime graph is prep+match only.
+Implemented runtime graph is the prep-match flow through delivery: `scrape -> translate_if_needed -> extract_understand -> match -> review_match -> generate_documents -> render -> package`.
 
-Target architecture docs describe additional phases (`build_application_context`, motivation letter/CV/email review cycles, render/package). Treat those as target unless explicitly wired in `src/graph.py`.
+Target architecture docs still describe additional phases (`build_application_context`, motivation letter/CV/email review cycles, etc.). Treat those as target unless explicitly wired in `src/graph.py`.
 
 ## 9) First Commands A New Agent Should Run
 

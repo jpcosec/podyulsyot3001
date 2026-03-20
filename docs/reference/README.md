@@ -1,18 +1,15 @@
 # Reference Docs
 
-This folder contains canonical schemas and glossary material.
+This folder is intentionally lightweight.
 
-Use these docs when you need exact artifact contracts or terminology.
+Use it for stable current reference material or pointers to code-local docs.
 
-## Contents
+## Current reference entrypoints
 
-- `data_management_actual_state.md`
-- `artifact_schemas.md`
-- `contract_composition_framework.md`
-- `extracting_contract_case_job_understanding.md`
-- `matching_contract_case_matrix_and_escape_hatch.md`
-- `redacting_contract_case_traceable_dual_output.md`
-- `review_contract_case_decision_and_assistance.md`
-- `document_glossary.md`
-- `comments_inventory.md`
-- `../architecture/core_io_and_provenance_manager.md`
+- `docs/runtime/data_management.md`
+- `docs/runtime/core_io_and_provenance.md`
+- `src/core/scraping/README.md`
+- `src/core/io/README.md`
+- `src/nodes/review_match/README.md`
+- `src/nodes/render/README.md`
+- `src/nodes/package/README.md`

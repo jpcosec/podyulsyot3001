@@ -25,6 +25,6 @@ This directory contains the current scraping runtime.
 
 ## Central references
 
-- `docs/reference/data_management_actual_state.md`
-- `docs/graph/node_io_matrix.md`
+- `docs/runtime/data_management.md`
+- `docs/runtime/node_io_matrix.md`
 - `plan/subplan/playwright_scraping_execution_blueprint.md`

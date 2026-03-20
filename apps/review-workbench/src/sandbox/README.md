@@ -16,6 +16,6 @@ This directory contains the active frontend sandbox surfaces.
 
 ## Central references
 
-- `docs/architecture/node_editor_behavior_spec.md`
-- `docs/architecture/node_editor_customization_and_architecture.md`
-- `docs/UI_plan/README.md`
+- `docs/ui/node_editor_behavior_spec.md`
+- `docs/ui/node_editor_customization_and_architecture.md`
+- `plan/ui/ui_plan/README.md`

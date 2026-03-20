@@ -23,14 +23,14 @@ This protocol defines how planning and continuity are managed in this repository
 Start of session (fixed order):
 
 1. Read `plan/adr_001_execution_tracker.md`.
-2. Read `plan/index_checklist.md`.
+2. Read `plan/archive/index_checklist.md`.
 3. Read `changelog.md` (latest date block only).
 4. Read code-local dependency docs in touched modules.
 
 End of session (required):
 
 1. Update tracker progress in `plan/adr_001_execution_tracker.md`.
-2. Update `plan/index_checklist.md` if phase/state changed.
+2. Update `plan/archive/index_checklist.md` if phase/state changed.
 3. Append major changes to `changelog.md`.
 4. Produce a structured handoff containing next task and blockers.
 5. Run protocol gate: `python -m src.cli.check_repo_protocol`.

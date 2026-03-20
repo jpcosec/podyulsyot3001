@@ -58,12 +58,13 @@ Helpful support CLIs:
 ## What is current vs planned
 
 - Current runtime truth lives primarily in:
-  - `docs/graph/nodes_summary.md`
-  - `docs/graph/node_io_matrix.md`
-  - `docs/reference/data_management_actual_state.md`
+  - `docs/runtime/graph_flow.md`
+  - `docs/runtime/node_io_matrix.md`
+  - `docs/runtime/data_management.md`
   - `docs/operations/tool_interaction_and_known_issues.md`
   - `docs/index/canonical_map.md`
-- Target-state specs and migration plans live under `plan/` and some docs in `docs/architecture/`, `docs/templates/`, and `docs/reference/`
+- Planning, migration, ADR, and target-state design docs live under `plan/`
+- Heavy subsystem implementation docs live close to code under `src/**/README.md` and `apps/**/README.md`
 
 Do not assume every architecture or plan doc describes current runtime behavior.
 

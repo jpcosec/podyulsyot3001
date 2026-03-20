@@ -16,5 +16,5 @@ This directory contains the shared job-workspace I/O layer currently used by new
 
 ## Central references
 
-- `docs/architecture/core_io_and_provenance_manager.md`
-- `docs/reference/data_management_actual_state.md`
+- `docs/runtime/core_io_and_provenance.md`
+- `docs/runtime/data_management.md`

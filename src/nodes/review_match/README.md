@@ -18,6 +18,6 @@ This node is the current active semantic review gate in the runnable prep-match 
 
 ## Central references
 
-- `docs/graph/match_review_cycle.md`
-- `docs/reference/data_management_actual_state.md`
+- `docs/runtime/match_review_cycle.md`
+- `docs/runtime/data_management.md`
 - `docs/operations/tool_interaction_and_known_issues.md`

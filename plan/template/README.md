@@ -1,9 +1,9 @@
 # Node Folder Templates (Plan View)
 
-This plan-level template guide is aligned with the canonical architecture discipline in:
+This plan-level template guide is aligned with:
 
-- `docs/templates/node_template_discipline.md`
-- `docs/architecture/core_io_and_provenance_manager.md`
+- `plan/runtime/node_template_discipline.md`
+- `docs/runtime/core_io_and_provenance.md`
 
 ## Canonical node package shape
 

@@ -175,7 +175,7 @@ For each phase:
 
 1. Build check: `npm --prefix apps/review-workbench run build`
 2. Playwright sanity on `/sandbox/node_editor`
-3. Update `docs/architecture/node_editor_compliance_matrix.md`
+3. Update `docs/ui/node_editor_compliance_matrix.md`
 4. Commit with phase identifier in message
 5. Changelog entry with exact run/view instructions
 

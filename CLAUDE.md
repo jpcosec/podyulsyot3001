@@ -92,16 +92,16 @@ Nodes must fail closed — no silent fallback-to-success. Failure types are defi
 
 ## Key documentation
 
-- Graph topology and node roles: `docs/graph/nodes_summary.md`
-- Node I/O contracts and artifact schemas: `docs/graph/node_io_matrix.md`, `docs/reference/artifact_schemas.md`
-- Node template discipline: `docs/templates/node_template_discipline.md`
-- Core I/O layer spec (target): `docs/architecture/core_io_and_provenance_manager.md`
-- `sync_json_md` review surface service spec: `docs/business_rules/sync_json_md.md`
-- Business rules: `docs/business_rules/claim_admissibility_and_policy.md`
-- Step-by-step rebuild plan: `plan/phd2_stepwise_plan.md`
+- Graph topology and node roles: `docs/runtime/graph_flow.md`
+- Node I/O contracts and artifact schemas: `docs/runtime/node_io_matrix.md`, `plan/runtime/artifact_schemas.md`
+- Node template discipline: `plan/runtime/node_template_discipline.md`
+- Core I/O layer spec (target): `docs/runtime/core_io_and_provenance.md`
+- `sync_json_md` review surface service spec: `plan/runtime/sync_json_md.md`
+- Business rules: `plan/runtime/claim_admissibility_and_policy.md`
+- Step-by-step rebuild plan: `plan/archive/phd2_stepwise_plan.md`
 
 ## Implementation status
 
-The `core/io/` layer (`WorkspaceManager`, `ArtifactReader`, `ArtifactWriter`, `ProvenanceService`) is specified in docs but not yet implemented. Current nodes do inline path construction. When implementing new nodes, follow the target pattern from `docs/architecture/core_io_and_provenance_manager.md`.
+The `core/io/` layer (`WorkspaceManager`, `ArtifactReader`, `ArtifactWriter`, `ProvenanceService`) now exists and is partially adopted. Some nodes still do inline path construction. When implementing new nodes, follow the target/shared pattern from `docs/runtime/core_io_and_provenance.md`.
 
-The currently implemented subgraph is `prep_match`: scrape, translate_if_needed, extract_understand, match, review_match.
+The currently implemented runnable flow is `prep_match`: scrape, translate_if_needed, extract_understand, match, review_match, generate_documents, render, package.

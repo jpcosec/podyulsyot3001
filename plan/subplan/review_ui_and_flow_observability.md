@@ -17,8 +17,8 @@ Related docs:
 
 - `plan/subplan/ui_review_cycle_adaptation_internal.md`
 - `plan/subplan/ui_review_cycle_designer_handoff.md`
-- `docs/graph/nodes_summary.md`
-- `docs/reference/data_management_actual_state.md`
+- `docs/runtime/graph_flow.md`
+- `docs/runtime/data_management.md`
 
 ## Product Surfaces
 

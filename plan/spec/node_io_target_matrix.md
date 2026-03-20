@@ -24,6 +24,6 @@ It is intentionally in `plan/spec/` because parts are not implemented yet.
 
 ## Detailed source
 
-The historical full target table is preserved in git history from pre-protocol `docs/graph/node_io_matrix.md` revisions.
+The historical full target table is preserved in git history from pre-protocol `docs/runtime/node_io_matrix.md` revisions.
 
 Use this file as the planning anchor and expand row-by-row only when implementation work is actively scheduled.

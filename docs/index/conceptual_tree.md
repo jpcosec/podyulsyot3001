@@ -82,12 +82,12 @@ Examples:
 ### Current runtime truth set
 
 - `README.md`
-- `docs/graph/nodes_summary.md`
-- `docs/graph/node_io_matrix.md`
-- `docs/graph/match_review_cycle.md`
-- `docs/reference/data_management_actual_state.md`
+- `docs/runtime/graph_flow.md`
+- `docs/runtime/node_io_matrix.md`
+- `docs/runtime/match_review_cycle.md`
+- `docs/runtime/data_management.md`
 - `docs/operations/tool_interaction_and_known_issues.md`
-- `docs/architecture/core_io_and_provenance_manager.md`
+- `docs/runtime/core_io_and_provenance.md`
 
 ### Current docs that should gradually move/re-bucket
 

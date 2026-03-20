@@ -12,6 +12,6 @@ This node is the final delivery step in the current prep-match flow.
 
 ## Central references
 
-- `docs/graph/nodes_summary.md`
-- `docs/graph/node_io_matrix.md`
-- `docs/reference/data_management_actual_state.md`
+- `docs/runtime/graph_flow.md`
+- `docs/runtime/node_io_matrix.md`
+- `docs/runtime/data_management.md`
