@@ -33,6 +33,7 @@ def translate_text(
     translator_factory: TranslatorFactory | None = None,
     max_attempts: int = 2,
     retry_delay_seconds: float = 0.0,
+    max_chunk_chars: int = 4500,
 ) -> str:
     """Translate text with bounded retries and explicit failures."""
     if not text.strip():
@@ -43,24 +44,71 @@ def translate_text(
 
     if max_attempts < 1:
         raise ValueError("max_attempts must be >= 1")
+    if max_chunk_chars < 50:
+        raise ValueError("max_chunk_chars must be >= 50")
 
     factory = translator_factory or _default_translator_factory
     last_error: Exception | None = None
 
-    for attempt in range(1, max_attempts + 1):
-        try:
-            translator = factory(source_lang, target_lang)
-            translated = translator.translate(text)
-            return str(translated)
-        except Exception as exc:  # noqa: BLE001
-            last_error = exc
-            if attempt < max_attempts and retry_delay_seconds > 0:
-                time.sleep(retry_delay_seconds)
+    chunks = _chunk_text(text, max_chars=max_chunk_chars)
+    translated_chunks: list[str] = []
+    for chunk in chunks:
+        for attempt in range(1, max_attempts + 1):
+            try:
+                translator = factory(source_lang, target_lang)
+                translated = translator.translate(chunk)
+                translated_chunks.append(str(translated))
+                break
+            except Exception as exc:  # noqa: BLE001
+                last_error = exc
+                if attempt < max_attempts and retry_delay_seconds > 0:
+                    time.sleep(retry_delay_seconds)
+        else:
+            break
+
+    if translated_chunks and len(translated_chunks) == len(chunks):
+        return "\n".join(translated_chunks)
 
     assert last_error is not None
     raise ToolFailureError(
         f"translation failed after {max_attempts} attempts"
     ) from last_error
+
+
+def _chunk_text(text: str, *, max_chars: int) -> list[str]:
+    if len(text) <= max_chars:
+        return [text]
+
+    chunks: list[str] = []
+    current: list[str] = []
+    current_len = 0
+
+    for line in text.splitlines():
+        line_len = len(line) + 1
+        if line_len > max_chars:
+            if current:
+                chunks.append("\n".join(current))
+                current = []
+                current_len = 0
+            start = 0
+            while start < len(line):
+                end = min(start + max_chars, len(line))
+                chunks.append(line[start:end])
+                start = end
+            continue
+
+        if current_len + line_len > max_chars and current:
+            chunks.append("\n".join(current))
+            current = [line]
+            current_len = line_len
+        else:
+            current.append(line)
+            current_len += line_len
+
+    if current:
+        chunks.append("\n".join(current))
+
+    return chunks
 
 
 def translate_fields(

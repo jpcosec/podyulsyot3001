@@ -1,35 +1,32 @@
-"""Scraping and preprocessing logic for ingestion stage."""
-
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from typing import Any, Mapping
 
+from src.core.scraping.contracts import ScrapeDetailRequest
+from src.core.scraping.service import scrape_detail
 from src.nodes.scrape.contract import IngestedData
-from src.core.tools.scraping.service import (
-    detect_english_status,
-    extract_source_text_markdown,
-    fetch_html,
-)
 
 
 def run_logic(state: Mapping[str, Any]) -> dict[str, Any]:
-    """Fetch source URL and produce cleaned markdown for downstream nodes."""
     source_url = _require_source_url(state)
-
-    html = fetch_html(source_url)
-    markdown_text = extract_source_text_markdown(html, url=source_url)
-    lang_status = detect_english_status(markdown_text)
+    source = _read_source(state)
+    detail = scrape_detail(
+        ScrapeDetailRequest(
+            source=source,
+            source_url=source_url,
+            job_id=_read_optional_job_id(state),
+        )
+    )
+    canonical = detail.canonical_scrape
+    metadata = _read_metadata(canonical)
+    metadata["artifact_refs"] = detail.artifact_refs
+    metadata["scraping_warnings"] = detail.warnings
 
     ingested = IngestedData(
         source_url=source_url,
-        original_language="en" if bool(lang_status.get("is_english")) else "non_en",
-        raw_text=markdown_text,
-        metadata={
-            "retrieved_utc": datetime.now(timezone.utc).isoformat(),
-            "marker_hits": int(lang_status.get("marker_hits", 0)),
-            "has_umlaut": bool(lang_status.get("has_umlaut", False)),
-        },
+        original_language=str(canonical.get("original_language") or "non_en"),
+        raw_text=str(canonical.get("raw_text") or ""),
+        metadata=metadata,
     )
 
     return {
@@ -45,3 +42,24 @@ def _require_source_url(state: Mapping[str, Any]) -> str:
     if not isinstance(source_url, str) or not source_url.strip():
         raise ValueError("state.source_url is required")
     return source_url
+
+
+def _read_source(state: Mapping[str, Any]) -> str:
+    source = state.get("source")
+    if isinstance(source, str) and source.strip():
+        return source
+    return "unknown"
+
+
+def _read_optional_job_id(state: Mapping[str, Any]) -> str | None:
+    job_id = state.get("job_id")
+    if isinstance(job_id, str) and job_id.strip():
+        return job_id
+    return None
+
+
+def _read_metadata(canonical: Mapping[str, Any]) -> dict[str, Any]:
+    payload = canonical.get("metadata")
+    if isinstance(payload, dict):
+        return dict(payload)
+    return {}

@@ -57,7 +57,8 @@ def test_translate_text_retries_then_succeeds() -> None:
 
 def test_translate_text_raises_after_max_attempts() -> None:
     class _Broken:
-        def translate(self, _text: str) -> str:
+        def translate(self, text: str) -> str:
+            _ = text
             raise RuntimeError("down")
 
     def factory(_source: str, _target: str) -> _Broken:
@@ -89,3 +90,29 @@ def test_translate_fields_only_translates_selected_string_fields() -> None:
     assert out["title"] == "en:Hallo"
     assert out["description"] == "Text"
     assert out["count"] == 3
+
+
+def test_translate_text_chunks_long_input() -> None:
+    seen: list[str] = []
+
+    class _Capture:
+        def translate(self, text: str) -> str:
+            seen.append(text)
+            return f"en:{text}"
+
+    def factory(_source: str, _target: str) -> _Capture:
+        return _Capture()
+
+    text = "A" * 6000
+    out = translate_text(
+        text,
+        source_lang="de",
+        target_lang="en",
+        translator_factory=factory,
+        max_chunk_chars=4500,
+    )
+
+    assert len(seen) == 2
+    assert len(seen[0]) == 4500
+    assert len(seen[1]) == 1500
+    assert out.startswith("en:")
