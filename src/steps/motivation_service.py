@@ -303,7 +303,7 @@ class MotivationLetterService:
         self, job_id: str, source: str = "tu_berlin"
     ) -> MotivationGenerationResult:
         context = self.build_context(job_id=job_id, source=source)
-        
+
         # Check if reviewed mapping exists but is not approved
         reviewed = context.get("reviewed_mapping")
         if reviewed is not None and reviewed.get("status") != "approved":
@@ -311,7 +311,7 @@ class MotivationLetterService:
                 "Match proposal exists but is not approved. "
                 "Run 'match-approve' to lock the reviewed mapping before generating the letter."
             )
-        
+
         prompt = load_prompt_with_context(
             "motivation_letter",
             json.dumps(context, indent=2, ensure_ascii=True),

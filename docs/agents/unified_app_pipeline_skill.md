@@ -90,7 +90,7 @@ Final motivation outputs:
 - `output/final/motivation/motivation_letter.pdf`
 - `output/final/motivation/application_email.md`
 
-Supporting prep assets include synthetic pre-letter and evidence-backed planning.
+Supporting prep assets include evidence-backed planning.
 
 ## CV Deliverables
 

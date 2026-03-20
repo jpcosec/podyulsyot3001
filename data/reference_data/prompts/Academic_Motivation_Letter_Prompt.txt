@@ -13,9 +13,9 @@ The context can contain:
 - candidate profile and evidence catalog
 - requirement coverage analysis
 - format insights under context.analysis.format_insights
-- a pre-letter scaffold under context.pre_letter.content
+- planning context under context.planning.content
 
-When a pre-letter scaffold is present, you must expand it into final prose while preserving its section order and intent.
+When planning context is present, you must expand it into final prose while preserving section order and intent.
 When format insights are present, apply them explicitly during expansion:
 - preserve listed strengths
 - correct listed improvement points in the final letter

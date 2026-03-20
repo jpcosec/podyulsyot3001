@@ -110,7 +110,7 @@ This file is simultaneously:
 | Command | What it does |
 |---------|-------------|
 | `motivation-build` | Generate final motivation letter + PDF + email |
-| `motivation-pre` | **BROKEN** — referenced in main() routing but function doesn't exist, parser not defined |
+| legacy motivation command | **BROKEN** — referenced in main() routing but function doesn't exist, parser not defined |
 
 **Application Lifecycle (single-job)**
 | Command | What it does |
@@ -202,7 +202,7 @@ src/cv_generator/__main__.py
 
 | Item | Status | Evidence |
 |------|--------|---------|
-| `motivation-pre` command | **Broken** | Referenced in `main()` routing at line 1980 but `run_motivation_pre` function doesn't exist and parser not defined |
+| legacy motivation command | **Broken** | Referenced in `main()` routing but missing function and parser wiring |
 | `translate` command | **Dead no-op** | Prints deprecation warning, does nothing |
 | `src/cv_generator/renderer.py` | **Legacy** | Table-based header, not ATS-safe. Superseded by `src/render/docx.py` |
 | `src/cv_generator/styles.py` | **Legacy** | Duplicate of `src/render/styles.py` |

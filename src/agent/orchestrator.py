@@ -117,12 +117,6 @@ class ApplicationAgent:
         )
         results["cv_pdf"] = str(cv_path)
 
-        # 3. Plan motivation letter
-        logger.info(f"Planning motivation letter for {job_id}...")
-        letter_plan = tools.plan_motivation_letter(
-            job_id=job_id, source=source, config=self.config
-        )
-        results["letter_plan_gaps"] = len(letter_plan.get("gaps", []))
 
         # 4. Write motivation letter
         logger.info(f"Writing motivation letter for {job_id}...")

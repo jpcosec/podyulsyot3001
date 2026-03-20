@@ -776,7 +776,7 @@ Review each file under `docs/` and decide:
 | File | Action | Reason |
 |------|--------|--------|
 | `docs/pipeline/end_to_end_pipeline_deep_dive.md` | **Rewrite** | Describes old 27-command CLI, replace with new step-based architecture |
-| `docs/pipeline/motivation_letter_system_deep_dive.md` | **Rewrite** | Describes old MotivationLetterService with pre-letter flow (deleted) |
+| `docs/pipeline/motivation_letter_system_deep_dive.md` | **Rewrite** | Describes old MotivationLetterService two-stage flow (deleted) |
 | `docs/pipeline/command_surface_and_mutation_audit.md` | **Delete** | Superseded by new CLI — audit was for the old surface |
 | `docs/pipeline/current_architecture_analysis.md` | **Keep** | Historical reference for why redesign happened |
 | `docs/agents/unified_app_pipeline_skill.md` | **Delete** | Describes old app-prepare/review/renderize flow |

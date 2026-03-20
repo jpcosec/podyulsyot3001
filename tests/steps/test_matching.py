@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import tempfile
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -16,6 +15,7 @@ from src.steps.matching import (
     approve,
     _extract_keywords_from_proposal,
 )
+from src.utils.pipeline import MatchProposalPipeline
 from src.utils.state import JobState
 
 
@@ -110,16 +110,16 @@ Notes:
 Generated summary based on approved claims.
 """
 
-        def mock_execute(self, job_id, source="tu_berlin"):
-            proposal_path = mock_job_state.artifact_path("planning/match_proposal.md")
-            proposal_path.parent.mkdir(parents=True, exist_ok=True)
-            proposal_path.write_text(proposal_content, encoding="utf-8")
-            return proposal_path
+        class StubPipeline:
+            def execute_proposal(self, job_id, source="tu_berlin"):
+                proposal_path = mock_job_state.artifact_path(
+                    "planning/match_proposal.md"
+                )
+                proposal_path.parent.mkdir(parents=True, exist_ok=True)
+                proposal_path.write_text(proposal_content, encoding="utf-8")
+                return proposal_path
 
-        monkeypatch.setattr(
-            "src.steps.matching.MatchProposalPipeline.execute_proposal",
-            mock_execute,
-        )
+        monkeypatch.setattr("src.steps.matching.MatchProposalPipeline", StubPipeline)
 
         result = run(mock_job_state)
 
@@ -161,16 +161,18 @@ Decision: [ ] approve
 
 ## Proposed Summary
 """
-        mock_job_state.write_artifact("planning/match_proposal.md", proposal_with_comment)
-
-        def mock_execute(self, job_id, source="tu_berlin"):
-            proposal_path = mock_job_state.artifact_path("planning/match_proposal.md")
-            return proposal_path
-
-        monkeypatch.setattr(
-            "src.steps.matching.MatchProposalPipeline.execute_proposal",
-            mock_execute,
+        mock_job_state.write_artifact(
+            "planning/match_proposal.md", proposal_with_comment
         )
+
+        class StubPipeline:
+            def execute_proposal(self, job_id, source="tu_berlin"):
+                proposal_path = mock_job_state.artifact_path(
+                    "planning/match_proposal.md"
+                )
+                return proposal_path
+
+        monkeypatch.setattr("src.steps.matching.MatchProposalPipeline", StubPipeline)
 
         result = run(mock_job_state, force=True)
 
@@ -178,12 +180,67 @@ Decision: [ ] approve
         assert result.status == "ok"
         assert result.comments_found >= 1
 
+    def test_run_removes_stale_reviewed_mapping_on_regeneration(
+        self,
+        mock_job_state,
+        monkeypatch,
+    ):
+        """Verify run() removes reviewed_mapping.json when proposal regenerates."""
+        mock_job_state.write_artifact("job.md", "# Job\n- [ ] Requirement")
+        mock_job_state.write_json_artifact(
+            "planning/reviewed_mapping.json",
+            {"job_id": "201084", "status": "reviewed", "claims": []},
+        )
+
+        proposal_content = """---
+status: proposed
+job_id: 201084
+---
+
+# Match Proposal
+
+## Requirements Mapping
+
+### R1: Requirement [FULL]
+Evidence IDs: E1
+Evidence: Evidence text
+Claim: Claim text
+Confidence: strong
+Decision: [ ] approve  [ ] edit  [ ] reject
+Edited Claim:
+Notes:
+
+## Gaps (no evidence found)
+
+## Proposed Summary
+"""
+
+        class StubPipeline:
+            def execute_proposal(self, job_id, source="tu_berlin"):
+                proposal_path = mock_job_state.artifact_path(
+                    "planning/match_proposal.md"
+                )
+                proposal_path.parent.mkdir(parents=True, exist_ok=True)
+                proposal_path.write_text(proposal_content, encoding="utf-8")
+                return proposal_path
+
+        monkeypatch.setattr("src.steps.matching.MatchProposalPipeline", StubPipeline)
+
+        result = run(mock_job_state, force=True)
+
+        assert result.status == "ok"
+        assert not mock_job_state.artifact_path(
+            "planning/reviewed_mapping.json"
+        ).exists()
+
     def test_run_error_when_pipeline_fails(self, mock_job_state, monkeypatch):
         """Verify run() returns error when pipeline fails."""
-        monkeypatch.setattr(
-            "src.steps.matching.MatchProposalPipeline.execute_proposal",
-            MagicMock(side_effect=Exception("Pipeline error")),
-        )
+
+        class FailingPipeline:
+            def execute_proposal(self, job_id, source="tu_berlin"):
+                raise Exception("Pipeline error")
+
+        monkeypatch.setattr("src.steps.matching.MatchProposalPipeline", FailingPipeline)
 
         result = run(mock_job_state)
 
@@ -239,13 +296,17 @@ Summary text here.
         assert "planning/reviewed_mapping.json" in result.produced
 
         # Verify the mapping was written and parsed correctly
-        mapping_data = mock_job_state.read_json_artifact("planning/reviewed_mapping.json")
+        mapping_data = mock_job_state.read_json_artifact(
+            "planning/reviewed_mapping.json"
+        )
         assert mapping_data["job_id"] == "201084"
         assert mapping_data["status"] == "reviewed"
         assert len(mapping_data["claims"]) == 2
         assert mapping_data["claims"][0]["decision"] == "approved"
         assert mapping_data["claims"][1]["decision"] == "edited"
-        assert mapping_data["claims"][1]["claim_text"] == "Edited version of second claim"
+        assert (
+            mapping_data["claims"][1]["claim_text"] == "Edited version of second claim"
+        )
 
     def test_approve_extracts_gaps_and_summary(self, mock_job_state):
         """Verify approve() correctly extracts gaps and summary."""
@@ -281,7 +342,9 @@ This is my proposal summary.
 
         assert result.status == "ok"
 
-        mapping_data = mock_job_state.read_json_artifact("planning/reviewed_mapping.json")
+        mapping_data = mock_job_state.read_json_artifact(
+            "planning/reviewed_mapping.json"
+        )
         assert len(mapping_data["gaps"]) == 2
         assert "Gap 1: Missing skill A" in mapping_data["gaps"]
         assert "This is my proposal summary." in mapping_data["summary"]
@@ -322,8 +385,97 @@ Notes:
 
         assert result.status == "ok"
 
-        mapping_data = mock_job_state.read_json_artifact("planning/reviewed_mapping.json")
+        mapping_data = mock_job_state.read_json_artifact(
+            "planning/reviewed_mapping.json"
+        )
         assert mapping_data["status"] == "reviewed"
+
+    def test_approve_accepts_flexible_checkbox_formats(self, mock_job_state):
+        """Verify approve() parses decisions with loose checkbox formatting."""
+        proposal_content = """---
+status: proposed
+job_id: 201084
+---
+
+# Match Proposal
+
+## Requirements Mapping
+
+### R1: Requirement one [FULL]
+Evidence IDs: E1
+Claim: Claim one
+Confidence: strong
+Decision: [ x] approve  [ ] edit  [ ] reject
+Edited Claim:
+Notes:
+
+### R2: Requirement two [PARTIAL]
+Evidence IDs: E2
+Claim: Claim two
+Confidence: moderate
+Decision: [ ] approve  [x ] edit  [ ] reject
+Edited Claim: Claim two edited
+Notes:
+
+### R3: Requirement three [NONE]
+Evidence IDs: None
+Claim: Claim three
+Confidence: weak
+Decision: [ ] approve  [ ] edit  x[ ] reject
+Edited Claim:
+Notes:
+
+## Gaps (no evidence found)
+
+## Proposed Summary
+"""
+        mock_job_state.write_artifact("planning/match_proposal.md", proposal_content)
+
+        result = approve(mock_job_state)
+
+        assert result.status == "ok"
+        mapping_data = mock_job_state.read_json_artifact(
+            "planning/reviewed_mapping.json"
+        )
+        assert len(mapping_data["claims"]) == 3
+        assert mapping_data["claims"][0]["decision"] == "approved"
+        assert mapping_data["claims"][1]["decision"] == "edited"
+        assert mapping_data["claims"][1]["claim_text"] == "Claim two edited"
+        assert mapping_data["claims"][2]["decision"] == "rejected"
+
+    def test_approve_logs_comments_from_proposal(self, mock_job_state):
+        """Verify approve() always logs extracted proposal comments."""
+        proposal_content = """---
+status: proposed
+job_id: 201084
+---
+
+# Match Proposal
+
+## Requirements Mapping
+
+### R1: Requirement [FULL]
+Evidence IDs: E1
+Claim: Claim
+Confidence: strong
+Decision: [x] approve
+Edited Claim:
+Notes: <!-- tighten wording -->
+
+## Gaps (no evidence found)
+
+## Proposed Summary
+"""
+        mock_job_state.write_artifact("planning/match_proposal.md", proposal_content)
+
+        result = approve(mock_job_state)
+
+        assert result.status == "ok"
+        assert result.comments_found == 1
+
+        log_path = mock_job_state.artifact_path(".metadata/comments.jsonl")
+        log_data = json.loads(log_path.read_text(encoding="utf-8"))
+        assert any(entry["step"] == "match_approve" for entry in log_data)
 
 
 class TestKeywordsExtraction:
@@ -474,3 +626,21 @@ Claim: Second claim
             # Should extract from both req_1 and R2
             assert "requirement" in keywords["keywords"]
             assert keywords["match_strength"] == 1.0
+
+
+class TestProposalRoundArchiving:
+    """Tests for match proposal round history handling."""
+
+    def test_archive_existing_proposal_to_next_round(self, tmp_path):
+        planning_dir = tmp_path
+        round1 = planning_dir / "match_proposal.round1.md"
+        proposal = planning_dir / "match_proposal.md"
+        round1.write_text("round1", encoding="utf-8")
+        proposal.write_text("current", encoding="utf-8")
+
+        MatchProposalPipeline._archive_existing_proposal(proposal)
+
+        round2 = planning_dir / "match_proposal.round2.md"
+        assert round1.read_text(encoding="utf-8") == "round1"
+        assert round2.read_text(encoding="utf-8") == "current"
+        assert not proposal.exists()

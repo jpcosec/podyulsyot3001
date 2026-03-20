@@ -57,7 +57,6 @@ def crawl_listing(
     listing_url: str,
     source: str = "tu_berlin",
     pipeline_root: Path | None = None,
-    strict_english: bool = False,
     delay: float = 0.5,
     max_pages: int = 100,
 ) -> dict[str, list[str]]:
@@ -108,7 +107,6 @@ def crawl_listing(
                 url=job_url,
                 source=source,
                 pipeline_root=pipeline_root,
-                strict_english=strict_english,
             )
             scraped.append(job_id)
             print(f"[scraped] {job_id}")

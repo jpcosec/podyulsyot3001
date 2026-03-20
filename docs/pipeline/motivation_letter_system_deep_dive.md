@@ -13,7 +13,7 @@ It covers:
 
 The motivation subsystem currently combines deterministic orchestration and LLM generation:
 
-- deterministic context assembly and pre-letter scaffolding,
+- deterministic context assembly and planning scaffolding,
 - one prompt-driven final letter expansion call,
 - deterministic PDF rendering and deterministic email draft generation.
 
@@ -25,7 +25,7 @@ Primary CLI: `src/cli/pipeline.py`
 
 Motivation-related commands:
 
-- `motivation-pre <job_id>`
+- `motivation-build <job_id>`
 - `motivation-build <job_id>`
 - `app-prepare <job_id> --target motivation|all`
 - `app-renderize <job_id> --target motivation|all`
@@ -39,17 +39,17 @@ Public service methods:
 
 - `build_context(...)`
 - `build_prompt(...)`
-- `create_pre_letter(...)`
+- `create_planning(...)`
 - `generate_for_job(...)`
 - `build_pdf_for_job(...)`
 - `generate_email_draft(...)`
 
 ## 3) End-to-End Execution Flows
 
-### 3.1 `motivation-pre`
+### 3.1 `motivation-build`
 
 1. Builds context from job + profile + evidence + format insights.
-2. Generates synthetic pre-letter scaffold (`motivation_letter.pre.md`).
+2. Generates synthetic planning scaffold (`motivation_letter.pre.md`).
 3. Updates evidence bank (`evidence_bank.json`).
 4. Writes pre-analysis JSON (`motivation_letter.pre.analysis.json`).
 
@@ -57,7 +57,7 @@ No LLM call happens in this command.
 
 ### 3.2 `motivation-build`
 
-1. Rebuilds context and pre-letter artifacts.
+1. Rebuilds context and planning artifacts.
 2. Builds final prompt from template + context JSON.
 3. Calls generator (default: Gemini client).
 4. Parses strict JSON response (`subject`, `salutation`, `letter_markdown`).
@@ -67,7 +67,7 @@ No LLM call happens in this command.
 
 ### 3.3 Unified app lifecycle integration
 
-- `app-prepare --target motivation` uses `create_pre_letter(...)` and writes staged prep artifacts under `output/prep/motivation/`.
+- `app-prepare --target motivation` uses `create_planning(...)` and writes staged prep artifacts under `output/prep/motivation/`.
 - `app-review` checks unresolved HTML comments only in `output/prep/**/*.md`.
 - `app-renderize --target motivation` uses `generate_for_job(...)`, builds PDF, writes email draft, and copies final files into `output/final/motivation/`.
 
@@ -179,7 +179,7 @@ Optional fields currently persisted when available:
 
 The following are currently deterministic and embedded in code:
 
-- Pre-letter scaffold structure and fixed section labels in `_render_pre_letter(...)`.
+- Pre-letter scaffold structure and fixed section labels in `_render_planning(...)`.
 - Section planning keyword logic in `_build_section_plan(...)`.
 - Format-insight fallback strengths/improvements in `_build_inspiration_insights(...)`.
 - Email draft content and phrasing in `generate_email_draft(...)`.
@@ -196,20 +196,20 @@ Conclusion: only the final letter expansion step is currently agentic.
 - `__init__`
 - `build_context`
 - `build_prompt`
-- `create_pre_letter`
+- `create_planning`
 - `generate_for_job`
 - `build_pdf_for_job`
 - `generate_email_draft`
 
 ### 7.2 Orchestration internals
 
-- `_write_pre_letter_artifacts`
+- `_write_planning_artifacts`
 - `_default_generator`
 
 ### 7.3 Planning and scaffold generation
 
 - `_build_section_plan`
-- `_render_pre_letter`
+- `_render_planning`
 - `_render_format_insights_lines`
 - `_render_evidence_lines`
 - `_render_evidence_cards`
@@ -267,7 +267,7 @@ Current tests: `tests/motivation_letter/test_service.py`
 Covered behavior:
 
 - context extraction,
-- pre-letter/evidence-bank write path,
+- planning/evidence-bank write path,
 - final generation output parsing and persistence,
 - deterministic email draft generation,
 - PDF build path with mocked `pdflatex`.
@@ -288,8 +288,8 @@ If the target is "pre-stage should not be hardcoded" and "whole system based on 
 
 1. **Planner agent**: turn context into a structured section plan (JSON schema).
 2. **Evidence-mapper agent**: map requirements to evidence IDs with confidence and gaps.
-3. **Writer agent**: draft pre-letter from structured plan (no hardcoded scaffold text).
-4. **Rewriter agent**: produce final letter from pre-letter + format insights + constraints.
+3. **Writer agent**: draft planning from structured plan (no hardcoded scaffold text).
+4. **Rewriter agent**: produce final letter from planning + format insights + constraints.
 5. **Critic/verifier agent**: check factual grounding and contract compliance before persistence.
 
 ### 10.2 Prompt files to externalize
@@ -316,7 +316,7 @@ Even with full agent interaction, keep deterministic checks for:
 ## 11) Operational Notes for Maintainers
 
 - `app-review` only reads comments in `output/prep/**/*.md`; comments in source files (for example `cv/to_render.md`) are not part of review gate.
-- `motivation-build` currently rebuilds pre-letter artifacts before final generation.
+- `motivation-build` currently rebuilds planning artifacts before final generation.
 - Prompt quality is bounded by context quality; stale or incomplete profile evidence propagates to outputs.
 
 ## 12) Related Docs

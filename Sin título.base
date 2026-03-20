@@ -1,0 +1,6 @@
+views:
+  - type: table
+    name: Tabla
+    filters:
+      and:
+        - category != "Student assistant"

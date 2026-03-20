@@ -132,24 +132,6 @@ class TestIngestRun:
         assert "Cannot ingest" in result.message
         assert "no raw/raw.html found" in result.message
 
-    def test_run_strict_english_passed_to_scraper(self, mock_job_state, monkeypatch):
-        """Verify strict_english argument is passed to run_for_url."""
-        url = "https://www.jobs.tu-berlin.de/en/job-postings/201084"
-
-        called_with_strict = {}
-
-        def mock_run_func(url, source, pipeline_root, strict_english):
-            called_with_strict['value'] = strict_english
-            for rel_path in mock_job_state.STEP_OUTPUTS["ingestion"]:
-                mock_job_state.write_artifact(rel_path, "test")
-            return {}
-
-        monkeypatch.setattr("src.steps.ingestion.run_for_url", mock_run_func)
-
-        run(mock_job_state, url=url, strict_english=False)
-
-        # Verify strict_english=False was passed
-        assert called_with_strict.get('value') is False
 
 
 class TestRunFromUrl:

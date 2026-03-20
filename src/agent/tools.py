@@ -12,8 +12,6 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
 
-from pydantic import BaseModel
-
 from src.utils.config import CVConfig
 from src.utils.loaders.profile_loader import load_base_profile
 from src.utils.model import CVModel
@@ -79,23 +77,6 @@ def _error_fit_analysis(error: str) -> FitAnalysis:
     )
 
 
-class _PlanSection(BaseModel):
-    evidence_ids: list[str]
-    planning_note: str
-
-
-class _PlanGap(BaseModel):
-    requirement: str
-    severity: str
-
-
-class _MotivationPlanOutput(BaseModel):
-    sections: dict[str, _PlanSection]
-    gaps: list[_PlanGap]
-    recommended_tone: str
-    word_target: int
-
-
 def scrape_job(url: str, config: CVConfig | None = None) -> JobPosting:
     """Scrape a job posting URL and return structured job data.
 
@@ -108,7 +89,6 @@ def scrape_job(url: str, config: CVConfig | None = None) -> JobPosting:
             url=url,
             source="tu_berlin",
             pipeline_root=cfg.pipeline_root,
-            strict_english=False,
         )
         extracted_json_path = Path(result["extracted_json"])
         summary = json.loads(extracted_json_path.read_text(encoding="utf-8"))
@@ -321,36 +301,6 @@ def score_ats(
         }
 
 
-def plan_motivation_letter(
-    job_id: str,
-    source: str = "tu_berlin",
-    config: CVConfig | None = None,
-) -> dict:
-    """Create a motivation letter section plan using the pre-letter agent.
-
-    Returns the section plan with evidence assignments and gaps.
-    """
-    cfg = _get_config(config)
-    try:
-        from src.motivation_letter.service import MotivationLetterService
-
-        service = MotivationLetterService(config=cfg)
-        context = service.build_context(job_id=job_id, source=source)
-        context_json = json.dumps(context, indent=2, ensure_ascii=True)
-        prompt = load_prompt_with_context("motivation_pre_letter", context_json)
-        response = _get_gemini().generate(prompt)
-        plan = _MotivationPlanOutput.model_validate_json(_extract_json_object(response))
-        return plan.model_dump()
-    except Exception as exc:
-        return {
-            "sections": {},
-            "gaps": [{"requirement": "", "severity": "critical"}],
-            "recommended_tone": "formal",
-            "word_target": 400,
-            "error": str(exc),
-        }
-
-
 def write_motivation_letter(
     job_id: str,
     source: str = "tu_berlin",
@@ -362,7 +312,7 @@ def write_motivation_letter(
     """
     cfg = _get_config(config)
     try:
-        from src.motivation_letter.service import MotivationLetterService
+        from src.steps.motivation_service import MotivationLetterService
 
         service = MotivationLetterService(config=cfg)
         context = service.build_context(job_id=job_id, source=source)
@@ -396,7 +346,7 @@ def build_motivation_pdf(
         cfg.pipeline_root / source / job_id / "output" / "motivation_letter.pdf"
     )
     try:
-        from src.motivation_letter.service import MotivationLetterService
+        from src.steps.motivation_service import MotivationLetterService
 
         result = MotivationLetterService(config=cfg).build_pdf_for_job(
             job_id=job_id,
@@ -418,7 +368,7 @@ def generate_email_draft(
     """
     cfg = _get_config(config)
     try:
-        from src.motivation_letter.service import MotivationLetterService
+        from src.steps.motivation_service import MotivationLetterService
 
         service = MotivationLetterService(config=cfg)
         context = service.build_context(job_id=job_id, source=source)
@@ -429,7 +379,7 @@ def generate_email_draft(
     except Exception:
         candidate = {"name": "", "contact": {"email": "", "phone": ""}}
         try:
-            from src.motivation_letter.service import MotivationLetterService
+            from src.steps.motivation_service import MotivationLetterService
 
             service = MotivationLetterService(config=cfg)
             context = service.build_context(job_id=job_id, source=source)

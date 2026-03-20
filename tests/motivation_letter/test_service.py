@@ -3,7 +3,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from src.utils.config import CVConfig
-from src.motivation_letter.service import MotivationLetterService
+from src.steps.motivation_service import MotivationLetterService
 
 
 class FakeGemini:
@@ -170,51 +170,6 @@ def test_build_context_extracts_job_requirements(tmp_path):
     assert "strengths" in context["analysis"]["format_insights"]
 
 
-def test_create_pre_letter_writes_plan_and_markdown(tmp_path):
-    service = _build_service(tmp_path)
-    service.gemini = FakeGemini(
-        {
-            "sections": {
-                "hook_alignment": {
-                    "evidence_ids": ["E1"],
-                    "planning_note": "Open with strongest alignment.",
-                },
-                "formal_eligibility": {
-                    "evidence_ids": ["E2"],
-                    "planning_note": "Show degree equivalency and mobility.",
-                },
-                "technical_match": {
-                    "evidence_ids": ["E3"],
-                    "planning_note": "Highlight Python and orchestration outcomes.",
-                },
-                "project_motivation": {
-                    "evidence_ids": ["E4"],
-                    "planning_note": "Connect profile to project scope.",
-                },
-                "closing": {
-                    "evidence_ids": ["E5"],
-                    "planning_note": "Close with communication fit.",
-                },
-            },
-            "gaps": [],
-            "recommended_tone": "professional",
-            "word_target": 400,
-        }
-    )
-
-    result = service.create_pre_letter(job_id="999999", source="tu_berlin")
-
-    assert result.pre_letter_path.exists()
-    assert result.analysis_path.exists()
-
-    plan_json = json.loads(result.analysis_path.read_text(encoding="utf-8"))
-    assert "sections" in plan_json
-    assert "hook_alignment" in plan_json["sections"]
-
-    pre_letter = result.pre_letter_path.read_text(encoding="utf-8")
-    assert "# Motivation Letter Plan" in pre_letter
-    assert "## Hook Alignment" in pre_letter
-
 
 def test_generate_for_job_writes_letter_and_analysis(tmp_path):
     def fake_generator(_: str) -> str:
@@ -285,9 +240,9 @@ def test_build_pdf_for_job_writes_output_pdf(tmp_path):
 
         return Result()
 
-    with patch("src.motivation_letter.service.which", return_value="/usr/bin/pdflatex"):
+    with patch("src.steps.motivation_service.which", return_value="/usr/bin/pdflatex"):
         with patch(
-            "src.motivation_letter.service.subprocess.run", side_effect=fake_run
+            "src.steps.motivation_service.subprocess.run", side_effect=fake_run
         ):
             pdf_result = service.build_pdf_for_job(job_id="999999", source="tu_berlin")
 

@@ -1,0 +1,16 @@
+repos:
+  - repo: local
+    hooks:
+      - id: repo-protocol
+        name: Repository protocol check
+        entry: python -m src.cli.check_repo_protocol
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
+      - id: clean-tree-before-push
+        name: Require clean tree before push
+        entry: python -m src.cli.check_repo_protocol --require-clean-tree
+        language: system
+        pass_filenames: false
+        stages: [pre-push]

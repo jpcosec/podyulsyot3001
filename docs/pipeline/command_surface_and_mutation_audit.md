@@ -47,7 +47,7 @@ The goal is to support a robust architecture where normal operations are single-
 | `cv-tailor <job_id>` | single-job | yes | `planning/cv_tailoring.md`, `cv/pipeline_intermediates/*.json` |
 | `match-propose <job_id>` | single-job | yes | `planning/match_proposal.md`, matcher intermediate JSON |
 | `match-approve <job_id>` | single-job | yes | `planning/reviewed_mapping.json`, updates status in `planning/match_proposal.md` |
-| `motivation-pre <job_id>` | single-job | yes | `planning/motivation_letter.pre.md`, `planning/motivation_letter.pre.analysis.json` |
+| `motivation-build <job_id>` | single-job | yes | `planning/motivation_letter.md`, `planning/motivation_letter.analysis.json` |
 | `motivation-build <job_id>` | single-job | yes | `planning/motivation_letter.md`, analysis JSON, PDF, email draft |
 | `app-prepare <job_id>` | single-job | yes | `output/prep/**`, `output/reports/cv_ats_pre.json`, `output/state.md` |
 | `app-review <job_id>` | single-job | yes | `output/review/comments.md`, `output/state.md` |

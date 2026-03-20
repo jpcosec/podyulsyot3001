@@ -7,8 +7,6 @@ import sys
 import argparse
 from pathlib import Path
 
-from deep_translator import GoogleTranslator
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
@@ -16,8 +14,8 @@ if str(REPO_ROOT) not in sys.path:
 from src.scraper.scrape_single_url import (
     coerce_str_list,
     detect_english_status,
-    download_html,
     extract_full_text_markdown,
+    normalize_source_text_to_english,
     parse_structured_from_markdown,
     render_tracker_markdown,
 )
@@ -53,52 +51,6 @@ def _resolve_job_id_from_dirname(dirname: str) -> str:
     return match.group(1) if match else dirname
 
 
-def _to_english_job_url(url: str, job_id: str) -> str:
-    if "/job-postings/" in url:
-        return re.sub(
-            r"https?://www\.jobs\.tu-berlin\.de(?:/[a-z]{2})?/job-postings/\d+.*",
-            f"https://www.jobs.tu-berlin.de/en/job-postings/{job_id}",
-            url,
-        )
-    return f"https://www.jobs.tu-berlin.de/en/job-postings/{job_id}"
-
-
-def _translate_markdown_to_english(markdown_text: str) -> str:
-    translator = GoogleTranslator(source="auto", target="en")
-    translated_lines: list[str] = []
-
-    for raw_line in markdown_text.splitlines():
-        line = raw_line.rstrip("\n")
-        if not line.strip():
-            translated_lines.append(line)
-            continue
-
-        if line.startswith("- URL:") or line.startswith("- Retrieved UTC:"):
-            translated_lines.append(line)
-            continue
-
-        prefix = ""
-        content = line
-        for marker in ("### ", "## ", "# ", "- "):
-            if line.startswith(marker):
-                prefix = marker
-                content = line[len(marker) :]
-                break
-
-        stripped = content.strip()
-        if not stripped:
-            translated_lines.append(line)
-            continue
-
-        try:
-            translated = translator.translate(stripped)
-        except Exception:
-            translated = stripped
-        translated_lines.append(prefix + translated)
-
-    return "\n".join(translated_lines)
-
-
 def _extract_url_from_existing_job_md(job_md_path: Path) -> str:
     if not job_md_path.exists():
         return ""
@@ -115,26 +67,15 @@ def _load_or_build_source_text(
 
     if source_text_path.exists():
         source_text = source_text_path.read_text(encoding="utf-8")
-        language = detect_english_status(source_text)
-        if language["is_english"]:
-            return source_text, False
-
-        english_url = _to_english_job_url(url, job_id)
-        try:
-            english_html = download_html(english_url)
-            english_text = extract_full_text_markdown(english_html, url=english_url)
-            english_language = detect_english_status(english_text)
-            if english_language["is_english"]:
-                raw_html_path.parent.mkdir(parents=True, exist_ok=True)
-                raw_html_path.write_text(english_html, encoding="utf-8")
-                source_text_path.write_text(english_text, encoding="utf-8")
-                return english_text, True
-        except Exception:
-            pass
-
-        translated = _translate_markdown_to_english(source_text)
-        source_text_path.write_text(translated, encoding="utf-8")
-        return translated, True
+        normalized_text, changed = normalize_source_text_to_english(
+            source_text,
+            url=url,
+            job_id=job_id,
+            raw_html_path=raw_html_path,
+        )
+        if changed:
+            source_text_path.write_text(normalized_text, encoding="utf-8")
+        return normalized_text, changed
 
     html_candidates = [
         job_dir / "raw" / "raw.html",
@@ -150,21 +91,12 @@ def _load_or_build_source_text(
 
     html_content = html_path.read_text(encoding="utf-8", errors="ignore")
     source_text = extract_full_text_markdown(html_content, url=url)
-    language = detect_english_status(source_text)
-    if not language["is_english"]:
-        english_url = _to_english_job_url(url, job_id)
-        try:
-            english_html = download_html(english_url)
-            english_text = extract_full_text_markdown(english_html, url=english_url)
-            english_language = detect_english_status(english_text)
-            if english_language["is_english"]:
-                raw_html_path.parent.mkdir(parents=True, exist_ok=True)
-                raw_html_path.write_text(english_html, encoding="utf-8")
-                source_text = english_text
-            else:
-                source_text = _translate_markdown_to_english(source_text)
-        except Exception:
-            source_text = _translate_markdown_to_english(source_text)
+    source_text, _ = normalize_source_text_to_english(
+        source_text,
+        url=url,
+        job_id=job_id,
+        raw_html_path=raw_html_path,
+    )
 
     source_text_path.parent.mkdir(parents=True, exist_ok=True)
     source_text_path.write_text(source_text, encoding="utf-8")
@@ -230,6 +162,11 @@ def regenerate_job_markdown(job_dir: Path) -> dict[str, object]:
 
     raw_dir = job_dir / "raw"
     raw_dir.mkdir(parents=True, exist_ok=True)
+    language = detect_english_status(source_text)
+    (raw_dir / "language_check.json").write_text(
+        json.dumps(language, indent=2, ensure_ascii=True) + "\n",
+        encoding="utf-8",
+    )
     (raw_dir / "extracted.json").write_text(
         json.dumps(structured, indent=2, ensure_ascii=True) + "\n",
         encoding="utf-8",

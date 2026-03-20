@@ -30,6 +30,85 @@ UNAVAILABLE_MARKERS = (
 )
 
 
+def to_english_job_url(url: str, job_id: str) -> str:
+    if "/job-postings/" in url:
+        return re.sub(
+            r"https?://www\.jobs\.tu-berlin\.de(?:/[a-z]{2})?/job-postings/\d+.*",
+            f"https://www.jobs.tu-berlin.de/en/job-postings/{job_id}",
+            url,
+        )
+    return f"https://www.jobs.tu-berlin.de/en/job-postings/{job_id}"
+
+
+def translate_markdown_to_english(markdown_text: str) -> str:
+    try:
+        from deep_translator import GoogleTranslator
+    except Exception:
+        return markdown_text
+
+    translator = GoogleTranslator(source="auto", target="en")
+    translated_lines: list[str] = []
+
+    for raw_line in markdown_text.splitlines():
+        line = raw_line.rstrip("\n")
+        if not line.strip():
+            translated_lines.append(line)
+            continue
+
+        if line.startswith("- URL:") or line.startswith("- Retrieved UTC:"):
+            translated_lines.append(line)
+            continue
+
+        prefix = ""
+        content = line
+        for marker in ("### ", "## ", "# ", "- "):
+            if line.startswith(marker):
+                prefix = marker
+                content = line[len(marker) :]
+                break
+
+        stripped = content.strip()
+        if not stripped:
+            translated_lines.append(line)
+            continue
+
+        try:
+            translated = translator.translate(stripped)
+        except Exception:
+            translated = stripped
+        translated_lines.append(prefix + translated)
+
+    return "\n".join(translated_lines)
+
+
+def normalize_source_text_to_english(
+    source_text: str,
+    *,
+    url: str,
+    job_id: str,
+    raw_html_path: Path | None = None,
+) -> tuple[str, bool]:
+    language = detect_english_status(source_text)
+    if language["is_english"]:
+        return source_text, False
+
+    english_url = to_english_job_url(url, job_id)
+    try:
+        english_html = download_html(english_url)
+        english_text = extract_full_text_markdown(english_html, url=english_url)
+        english_language = detect_english_status(english_text)
+        if english_language["is_english"]:
+            if raw_html_path is not None:
+                raw_html_path.parent.mkdir(parents=True, exist_ok=True)
+                raw_html_path.write_text(english_html, encoding="utf-8")
+            return english_text, True
+    except Exception:
+        pass
+
+    translated = translate_markdown_to_english(source_text)
+    return translated, True
+
+
 def normalize_text(value: str) -> str:
     return re.sub(r"\s+", " ", value).strip()
 
@@ -341,11 +420,11 @@ def extract_full_posting_body(markdown_text: str) -> str:
 
 def render_tracker_markdown(data: dict[str, object], full_text_markdown: str) -> str:
     posting_body = extract_full_posting_body(full_text_markdown)
-    
+
     # If extraction from structured section failed, try raw markdown
     if not posting_body:
         posting_body = full_text_markdown.strip()
-    
+
     # Only as last resort, fall back to filtered checklists
     if not posting_body:
         requirements = coerce_str_list(data.get("requirements"))
@@ -389,7 +468,6 @@ def run_for_url(
     url: str,
     source: str,
     pipeline_root: Path,
-    strict_english: bool,
 ) -> dict[str, str]:
     job_id = extract_job_id(url)
     job_dir = pipeline_root / source / job_id
@@ -401,6 +479,12 @@ def run_for_url(
     raw_html_path.write_text(html_content, encoding="utf-8")
 
     extracted_md = extract_full_text_markdown(html_content, url=url)
+    extracted_md, _ = normalize_source_text_to_english(
+        extracted_md,
+        url=url,
+        job_id=job_id,
+        raw_html_path=raw_html_path,
+    )
     extracted_md_path = raw_dir / "source_text.md"
     extracted_md_path.write_text(extracted_md, encoding="utf-8")
 
@@ -410,12 +494,6 @@ def run_for_url(
         json.dumps(language, indent=2, ensure_ascii=True) + "\n",
         encoding="utf-8",
     )
-    if strict_english and not language["is_english"]:
-        raise ValueError(
-            "Extracted text is not confidently English. "
-            + f"See {language_path} and rerun with translated URL/content."
-        )
-
     structured = parse_structured_from_markdown(extracted_md, url=url, job_id=job_id)
     extracted_json_path = raw_dir / "extracted.json"
     extracted_json_path.write_text(
@@ -449,11 +527,6 @@ def build_parser() -> argparse.ArgumentParser:
         default=os.path.join("data", "pipelined_data"),
         help="Root folder for pipelined data",
     )
-    parser.add_argument(
-        "--strict-english",
-        action="store_true",
-        help="Fail when extracted markdown is not confidently English",
-    )
     return parser
 
 
@@ -465,7 +538,6 @@ def main() -> int:
             url=url,
             source=args.source,
             pipeline_root=pipeline_root,
-            strict_english=args.strict_english,
         )
 
         print(f"[done] job_id={result['job_id']}")

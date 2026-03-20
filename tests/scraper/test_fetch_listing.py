@@ -96,14 +96,12 @@ def test_crawl_listing_scrapes_only_new_jobs(tmp_path, monkeypatch):
         url: str,
         source: str,
         pipeline_root,
-        strict_english: bool,
     ) -> dict[str, str]:
         calls.append(
             {
                 "url": url,
                 "source": source,
                 "pipeline_root": pipeline_root,
-                "strict_english": strict_english,
             }
         )
         return {"job_id": url.rsplit("/", maxsplit=1)[-1]}
@@ -116,7 +114,6 @@ def test_crawl_listing_scrapes_only_new_jobs(tmp_path, monkeypatch):
         listing_url="https://www.jobs.tu-berlin.de/en/job-postings?filter[x]=y",
         source="tu_berlin",
         pipeline_root=tmp_path,
-        strict_english=True,
         delay=0,
     )
 
@@ -129,4 +126,3 @@ def test_crawl_listing_scrapes_only_new_jobs(tmp_path, monkeypatch):
     assert calls[0]["url"] == "https://www.jobs.tu-berlin.de/en/job-postings/200"
     assert calls[0]["source"] == "tu_berlin"
     assert calls[0]["pipeline_root"] == tmp_path
-    assert calls[0]["strict_english"] is True

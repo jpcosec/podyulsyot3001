@@ -1,6 +1,6 @@
 """Email draft step: Generate application email draft from motivation summary.
 
-This step wraps the MotivationLetterService.generate_email_draft() method
+This step uses motivation processing logic from src/steps/motivation_service.py
 and generates a simple, professional email draft for submitting the application.
 
 Reads:
@@ -14,13 +14,12 @@ Produces:
 
 from __future__ import annotations
 
-import json
 import logging
 from pathlib import Path
 
-from src.motivation_letter.service import MotivationLetterService
+from src.steps.motivation_service import MotivationLetterService
 from src.steps import StepResult
-from src.utils.comments import extract_comments, append_to_comment_log
+from src.utils.comments import append_to_comment_log
 from src.utils.state import JobState
 
 logger = logging.getLogger(__name__)

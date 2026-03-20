@@ -99,7 +99,7 @@ src/
 - `src/build_word_cv.py` — legacy hardcoded DOCX builder
 - `src/ats_tester/backend/`, `frontend/`, `.git` — orphaned web app scaffolding
 - `translate` command — dead no-op
-- `motivation-pre` command — broken reference
+- legacy motivation command reference — broken reference
 
 ### What gets absorbed/refactored
 

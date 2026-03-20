@@ -7,7 +7,6 @@ unchanged — this is purely an orchestration layer using JobState for path mana
 
 from __future__ import annotations
 
-import json
 import re
 import time
 from pathlib import Path
@@ -24,7 +23,6 @@ def run(
     *,
     force: bool = False,
     url: str | None = None,
-    strict_english: bool = True,
 ) -> StepResult:
     """
     Ingest a job posting.
@@ -36,7 +34,6 @@ def run(
         state: JobState instance for the target job
         force: Re-run even if outputs already exist (ingestion, not STEP_OUTPUTS)
         url: Optional URL to scrape. If provided, fresh scrape occurs.
-        strict_english: Fail if extracted content is not confidently English
 
     Returns:
         StepResult with status, produced files, message
@@ -59,7 +56,6 @@ def run(
                 url=url,
                 source=state.source,
                 pipeline_root=PIPELINE_ROOT,
-                strict_english=strict_english,
             )
             # Map returned paths to relative paths within job_dir
             for rel_artifact in state.STEP_OUTPUTS["ingestion"]:
@@ -121,8 +117,6 @@ def run(
 def run_from_url(
     url: str,
     source: str = "tu_berlin",
-    *,
-    strict_english: bool = True,
 ) -> StepResult:
     """
     Ingest from a single URL.
@@ -132,7 +126,6 @@ def run_from_url(
     Args:
         url: Full URL to the job posting (e.g., https://www.jobs.tu-berlin.de/en/job-postings/201084)
         source: Source name for job organization (default: "tu_berlin")
-        strict_english: Fail if extracted content is not confidently English
 
     Returns:
         StepResult with status, produced files, message
@@ -163,14 +156,13 @@ def run_from_url(
             message=f"Cannot ingest job {job_id}: {e}",
         )
 
-    return run(state, url=url, strict_english=strict_english)
+    return run(state, url=url)
 
 
 def run_from_listing(
     listing_url: str,
     source: str = "tu_berlin",
     *,
-    strict_english: bool = True,
     delay: float = 0.5,
 ) -> list[StepResult]:
     """
@@ -182,7 +174,6 @@ def run_from_listing(
     Args:
         listing_url: Full URL to a paginated listing page
         source: Source name for job organization (default: "tu_berlin")
-        strict_english: Fail if any extracted content is not confidently English
         delay: Seconds to sleep between URL fetches (default: 0.5)
 
     Returns:
@@ -195,7 +186,6 @@ def run_from_listing(
             listing_url=listing_url,
             source=source,
             pipeline_root=PIPELINE_ROOT,
-            strict_english=strict_english,
             delay=delay,
         )
 
@@ -205,7 +195,7 @@ def run_from_listing(
         for job_id in crawl_result.get("scraped", []):
             # Construct URL and call run_from_url
             job_url = _construct_job_url(listing_url, job_id)
-            result = run_from_url(job_url, source=source, strict_english=strict_english)
+            result = run_from_url(job_url, source=source)
             results.append(result)
             time.sleep(delay)
 
