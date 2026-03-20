@@ -8,6 +8,8 @@ Supporting index docs:
 - Conceptual tree: `docs/index/conceptual_tree.md`
 - Pruning plan: `docs/index/pruning_plan.md`
 
+This index should stay lightweight. It is for navigation, not for holding deep subsystem detail.
+
 ## Read this first
 
 If you need to know what runs today, start with:
