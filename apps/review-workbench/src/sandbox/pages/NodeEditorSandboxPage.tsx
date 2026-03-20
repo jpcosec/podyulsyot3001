@@ -29,7 +29,7 @@ import {
 import dagre from "dagre";
 import "@xyflow/react/dist/style.css";
 
-type EditorState = "browse" | "focus" | "edit_node" | "edit_relation";
+type EditorState = "browse" | "focus" | "focus_relation" | "edit_node" | "edit_relation";
 
 interface SimpleNodeData extends Record<string, unknown> {
   name: string;
@@ -90,6 +90,48 @@ interface NodeTemplate {
   defaults: Record<string, string>;
 }
 
+interface DeleteTarget {
+  kind: "node" | "edge";
+  title: string;
+  description: string;
+  nodes: SimpleNode[];
+  edges: SimpleEdge[];
+}
+
+interface CopiedNodeState {
+  node: SimpleNode;
+  edges: SimpleEdge[];
+}
+
+interface HistoryActionBase {
+  id: string;
+  label: string;
+}
+
+type HistoryAction =
+  | (HistoryActionBase & {
+      kind: "create_elements";
+      nodes: SimpleNode[];
+      edges: SimpleEdge[];
+    })
+  | (HistoryActionBase & {
+      kind: "delete_elements";
+      nodes: SimpleNode[];
+      edges: SimpleEdge[];
+    })
+  | (HistoryActionBase & {
+      kind: "update_node";
+      before: SimpleNode;
+      after: SimpleNode;
+    })
+  | (HistoryActionBase & {
+      kind: "update_edge";
+      before: SimpleEdge;
+      after: SimpleEdge;
+    });
+
+type SidebarSectionKey = "actions" | "filters" | "space" | "creation" | "vacant";
+
 const CATEGORY_COLORS: Record<string, string> = {
   person: "#e8d5b7",
   skill: "#d5e8b7",
@@ -117,6 +159,110 @@ const NODE_TEMPLATES: NodeTemplate[] = [
   { name: "Publication", category: "publication", defaults: { year: "2026" } },
   { name: "Concept", category: "concept", defaults: { note: "new" } },
 ];
+
+function createEntityId(prefix: string): string {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function upsertItemsById<T extends { id: string }>(existing: T[], items: T[]): T[] {
+  const next = [...existing];
+  const indexById = new Map(next.map((item, index) => [item.id, index]));
+  for (const item of items) {
+    const index = indexById.get(item.id);
+    if (index === undefined) {
+      next.push(item);
+      indexById.set(item.id, next.length - 1);
+      continue;
+    }
+    next[index] = item;
+  }
+  return next;
+}
+
+function removeItemsById<T extends { id: string }>(existing: T[], ids: string[]): T[] {
+  const blocked = new Set(ids);
+  return existing.filter((item) => !blocked.has(item.id));
+}
+
+function replaceItemById<T extends { id: string }>(existing: T[], item: T): T[] {
+  return existing.map((current) => (current.id === item.id ? item : current));
+}
+
+function nextCopyName(baseName: string, existingNames: string[]): string {
+  const usedNames = new Set(existingNames);
+  const firstCandidate = `${baseName} (Copy)`;
+  if (!usedNames.has(firstCandidate)) {
+    return firstCandidate;
+  }
+  let index = 2;
+  while (usedNames.has(`${baseName} (Copy ${index})`)) {
+    index += 1;
+  }
+  return `${baseName} (Copy ${index})`;
+}
+
+function buildCopiedElements(copyState: CopiedNodeState, nodes: SimpleNode[]): { nodes: SimpleNode[]; edges: SimpleEdge[] } {
+  const nodeData = copyState.node.data as SimpleNodeData;
+  const existingNodeIds = new Set(nodes.map((node) => node.id));
+  const newNodeId = createEntityId("n-copy");
+  const nextName = nextCopyName(
+    nodeData.name,
+    nodes.map((node) => (node.data as SimpleNodeData).name),
+  );
+  const nextNode: SimpleNode = {
+    ...copyState.node,
+    id: newNodeId,
+    position: {
+      x: copyState.node.position.x + 48,
+      y: copyState.node.position.y + 48,
+    },
+    selected: false,
+    data: {
+      ...nodeData,
+      name: nextName,
+    },
+  };
+
+  const nextEdges = copyState.edges
+    .filter((edge) => {
+      const siblingId = edge.source === copyState.node.id ? edge.target : edge.source;
+      return siblingId === copyState.node.id || existingNodeIds.has(siblingId);
+    })
+    .map((edge) => ({
+      ...edge,
+      id: createEntityId("e-copy"),
+      source: edge.source === copyState.node.id ? newNodeId : edge.source,
+      target: edge.target === copyState.node.id ? newNodeId : edge.target,
+      selected: false,
+    }));
+
+  return {
+    nodes: [nextNode],
+    edges: nextEdges,
+  };
+}
+
+function SidebarSection({
+  title,
+  open,
+  onToggle,
+  children,
+}: {
+  title: string;
+  open: boolean;
+  onToggle: () => void;
+  children: JSX.Element | JSX.Element[] | null;
+}): JSX.Element {
+  return (
+    <section className="ne-section">
+      <button type="button" className="ne-section-toggle" onClick={onToggle}>
+        <span>{title}</span>
+        <span>{open ? "-" : "+"}</span>
+      </button>
+      {open ? <div className="ne-section-body">{children}</div> : null}
+    </section>
+  );
+}
 
 const DAGRE_NODE_WIDTH = 170;
 const DAGRE_NODE_HEIGHT = 68;
@@ -531,6 +677,7 @@ function NodeEditorInner(): JSX.Element {
 
   const [editorState, setEditorState] = useState<EditorState>("browse");
   const [focusedNodeId, setFocusedNodeId] = useState<string | null>(null);
+  const [focusedRelationId, setFocusedRelationId] = useState<string | null>(null);
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [hiddenRelationTypes, setHiddenRelationTypes] = useState<string[]>([]);
@@ -539,6 +686,13 @@ function NodeEditorInner(): JSX.Element {
   const [attributeFilterValue, setAttributeFilterValue] = useState("");
   const [hideNonNeighbors, setHideNonNeighbors] = useState(true);
   const [customLayoutPositions, setCustomLayoutPositions] = useState<Record<string, XYPosition> | null>(null);
+  const [sectionOpen, setSectionOpen] = useState<Record<SidebarSectionKey, boolean>>({
+    actions: true,
+    filters: true,
+    space: true,
+    creation: true,
+    vacant: true,
+  });
 
   const [savedSnapshot, setSavedSnapshot] = useState(() => serializeGraph(initial.nodes, initial.edges));
 
@@ -546,6 +700,10 @@ function NodeEditorInner(): JSX.Element {
   const [edgeDraft, setEdgeDraft] = useState<EdgeDraft | null>(null);
   const [connectMenu, setConnectMenu] = useState<ConnectMenuState | null>(null);
   const [pendingConnectSource, setPendingConnectSource] = useState<string | null>(null);
+  const [copiedNode, setCopiedNode] = useState<CopiedNodeState | null>(null);
+  const [undoStack, setUndoStack] = useState<HistoryAction[]>([]);
+  const [redoStack, setRedoStack] = useState<HistoryAction[]>([]);
+  const [pendingDeleteTarget, setPendingDeleteTarget] = useState<DeleteTarget | null>(null);
   const canvasRef = useRef<HTMLDivElement | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
 
@@ -561,6 +719,20 @@ function NodeEditorInner(): JSX.Element {
     return nodes.find((node) => node.id === focusedNodeId) ?? null;
   }, [focusedNodeId, nodes]);
 
+  const focusedRelation = useMemo(() => {
+    if (!focusedRelationId) {
+      return null;
+    }
+    return edges.find((edge) => edge.id === focusedRelationId) ?? null;
+  }, [edges, focusedRelationId]);
+
+  const focusedRelationEndpointIds = useMemo(() => {
+    if (!focusedRelation) {
+      return new Set<string>();
+    }
+    return new Set([focusedRelation.source, focusedRelation.target]);
+  }, [focusedRelation]);
+
   const neighborIds = useMemo(() => {
     if (!focusedNodeId) {
       return new Set<string>();
@@ -572,7 +744,11 @@ function NodeEditorInner(): JSX.Element {
     return [...new Set(edges.map((edge) => edge.data?.relationType ?? "linked"))];
   }, [edges]);
 
-  const inFocusModes = editorState === "focus" || editorState === "edit_node" || editorState === "edit_relation";
+  const inFocusModes =
+    editorState === "focus" ||
+    editorState === "focus_relation" ||
+    editorState === "edit_node" ||
+    editorState === "edit_relation";
 
   const filterablePropertyKeys = useMemo(() => {
     return [...new Set(nodes.flatMap((node) => Object.keys((node.data as SimpleNodeData).properties)))].sort((a, b) =>
@@ -606,6 +782,81 @@ function NodeEditorInner(): JSX.Element {
         };
       });
   }, [edges, nodeDraft, nodeNameById]);
+
+  const pushHistoryAction = useCallback((action: HistoryAction) => {
+    setUndoStack((prev) => [action, ...prev]);
+    setRedoStack([]);
+  }, []);
+
+  const applyUndoAction = useCallback((action: HistoryAction) => {
+    if (action.kind === "create_elements") {
+      setNodes((prev) => removeItemsById(prev, action.nodes.map((node) => node.id)));
+      setEdges((prev) => removeItemsById(prev, action.edges.map((edge) => edge.id)));
+      return;
+    }
+    if (action.kind === "delete_elements") {
+      setNodes((prev) => upsertItemsById(prev, action.nodes));
+      setEdges((prev) => upsertItemsById(prev, action.edges));
+      return;
+    }
+    if (action.kind === "update_node") {
+      setNodes((prev) => replaceItemById(prev, action.before));
+      return;
+    }
+    setEdges((prev) => replaceItemById(prev, action.before));
+  }, [setEdges, setNodes]);
+
+  const applyRedoAction = useCallback((action: HistoryAction) => {
+    if (action.kind === "create_elements") {
+      setNodes((prev) => upsertItemsById(prev, action.nodes));
+      setEdges((prev) => upsertItemsById(prev, action.edges));
+      return;
+    }
+    if (action.kind === "delete_elements") {
+      setNodes((prev) => removeItemsById(prev, action.nodes.map((node) => node.id)));
+      setEdges((prev) => removeItemsById(prev, action.edges.map((edge) => edge.id)));
+      return;
+    }
+    if (action.kind === "update_node") {
+      setNodes((prev) => replaceItemById(prev, action.after));
+      return;
+    }
+    setEdges((prev) => replaceItemById(prev, action.after));
+  }, [setEdges, setNodes]);
+
+  const onUndo = useCallback(() => {
+    const nextAction = undoStack[0];
+    if (!nextAction) {
+      return;
+    }
+    applyUndoAction(nextAction);
+    setUndoStack((prev) => prev.slice(1));
+    setRedoStack((prev) => [nextAction, ...prev]);
+    setConnectMenu(null);
+    setPendingDeleteTarget(null);
+    setFocusedNodeId(null);
+    setFocusedRelationId(null);
+    setNodeDraft(null);
+    setEdgeDraft(null);
+    setEditorState("browse");
+  }, [applyUndoAction, undoStack]);
+
+  const onRedo = useCallback(() => {
+    const nextAction = redoStack[0];
+    if (!nextAction) {
+      return;
+    }
+    applyRedoAction(nextAction);
+    setRedoStack((prev) => prev.slice(1));
+    setUndoStack((prev) => [nextAction, ...prev]);
+    setConnectMenu(null);
+    setPendingDeleteTarget(null);
+    setFocusedNodeId(null);
+    setFocusedRelationId(null);
+    setNodeDraft(null);
+    setEdgeDraft(null);
+    setEditorState("browse");
+  }, [applyRedoAction, redoStack]);
 
   useEffect(() => {
     if (!isConnecting || !canvasRef.current) {
@@ -817,6 +1068,7 @@ function NodeEditorInner(): JSX.Element {
       }
       const nodeData = node.data as SimpleNodeData;
       setFocusedNodeId(node.id);
+      setFocusedRelationId(null);
       setNodeDraft({
         id: node.id,
         name: nodeData.name,
@@ -829,6 +1081,22 @@ function NodeEditorInner(): JSX.Element {
     [nodes],
   );
 
+  const openRelationFocus = useCallback(
+    (edgeId: string) => {
+      const edge = edges.find((item) => item.id === edgeId);
+      if (!edge) {
+        return;
+      }
+      setFocusedNodeId(null);
+      setFocusedRelationId(edge.id);
+      setNodeDraft(null);
+      setEdgeDraft(null);
+      setEditorState("focus_relation");
+      setTimeout(() => fitView({ nodes: [{ id: edge.source }, { id: edge.target }], duration: 350, padding: 0.45 }), 50);
+    },
+    [edges, fitView],
+  );
+
   const displayNodes = useMemo(() => {
     return nodes
       .filter((node) => filteredNodeIds.has(node.id))
@@ -836,12 +1104,18 @@ function NodeEditorInner(): JSX.Element {
         if (!inFocusModes || !hideNonNeighbors) {
           return true;
         }
+        if (editorState === "focus_relation" || editorState === "edit_relation") {
+          return focusedRelationEndpointIds.has(node.id);
+        }
         return node.id === focusedNodeId || neighborIds.has(node.id);
       })
       .map((node) => {
         const nodeData = node.data as SimpleNodeData;
         if (inFocusModes) {
-          const active = node.id === focusedNodeId || neighborIds.has(node.id);
+          const active =
+            editorState === "focus_relation" || editorState === "edit_relation"
+              ? focusedRelationEndpointIds.has(node.id)
+              : node.id === focusedNodeId || neighborIds.has(node.id);
           return {
             ...node,
             data: {
@@ -866,7 +1140,17 @@ function NodeEditorInner(): JSX.Element {
           selectable: true,
         };
       });
-  }, [nodes, filteredNodeIds, focusedNodeId, hideNonNeighbors, inFocusModes, neighborIds, openNodeEditor]);
+  }, [
+    nodes,
+    filteredNodeIds,
+    focusedNodeId,
+    focusedRelationEndpointIds,
+    hideNonNeighbors,
+    inFocusModes,
+    neighborIds,
+    openNodeEditor,
+    editorState,
+  ]);
 
   const displayEdges = useMemo(() => {
     return visibleEdges.map((edge) => {
@@ -881,6 +1165,18 @@ function NodeEditorInner(): JSX.Element {
       if (!inFocusModes) {
         return baseEdge;
       }
+      if (editorState === "focus_relation" || editorState === "edit_relation") {
+        const active = edge.id === focusedRelationId;
+        if (hideNonNeighbors && !active) {
+          return { ...baseEdge, hidden: true };
+        }
+        return {
+          ...baseEdge,
+          className: active ? "ne-edge-focused" : "ne-edge-dimmed",
+          animated: active,
+          style: active ? { stroke: "#123c69", strokeWidth: 2.4 } : undefined,
+        };
+      }
       const connected = edge.source === focusedNodeId || edge.target === focusedNodeId;
       if (hideNonNeighbors && !connected) {
         return { ...baseEdge, hidden: true };
@@ -891,7 +1187,7 @@ function NodeEditorInner(): JSX.Element {
         animated: connected,
       };
     });
-  }, [visibleEdges, focusedNodeId, hideNonNeighbors, inFocusModes]);
+  }, [visibleEdges, focusedNodeId, focusedRelationId, hideNonNeighbors, inFocusModes, editorState]);
 
   const openEdgeEditor = useCallback(
     (edgeId: string) => {
@@ -899,7 +1195,8 @@ function NodeEditorInner(): JSX.Element {
       if (!edge) {
         return;
       }
-      setFocusedNodeId(edge.source);
+      setFocusedNodeId(null);
+      setFocusedRelationId(edge.id);
       setNodeDraft(null);
       setEdgeDraft({
         id: edge.id,
@@ -907,7 +1204,7 @@ function NodeEditorInner(): JSX.Element {
         properties: pairsFromRecord(edge.data?.properties ?? {}),
       });
       setEditorState("edit_relation");
-      setTimeout(() => fitView({ nodes: [{ id: edge.source }], duration: 350, padding: 0.55 }), 50);
+      setTimeout(() => fitView({ nodes: [{ id: edge.source }, { id: edge.target }], duration: 350, padding: 0.45 }), 50);
     },
     [edges, fitView],
   );
@@ -923,11 +1220,15 @@ function NodeEditorInner(): JSX.Element {
           return;
         }
       }
+      if (editorState === "focus_relation" && !focusedRelationEndpointIds.has(node.id)) {
+        return;
+      }
       setFocusedNodeId(node.id);
+      setFocusedRelationId(null);
       setEditorState("focus");
       setTimeout(() => fitView({ nodes: [{ id: node.id }], duration: 350, padding: 0.55 }), 50);
     },
-    [editorState, focusedNodeId, neighborIds, fitView],
+    [editorState, focusedNodeId, neighborIds, fitView, focusedRelationEndpointIds],
   );
 
   const onNodeDoubleClick = useCallback(
@@ -939,9 +1240,9 @@ function NodeEditorInner(): JSX.Element {
 
   const onEdgeClick = useCallback(
     (_: React.MouseEvent, edge: SimpleEdge) => {
-      openEdgeEditor(edge.id);
+      openRelationFocus(edge.id);
     },
-    [openEdgeEditor],
+    [openRelationFocus],
   );
 
   const onPaneClick = useCallback(() => {
@@ -950,6 +1251,7 @@ function NodeEditorInner(): JSX.Element {
     }
     setConnectMenu(null);
     setFocusedNodeId(null);
+    setFocusedRelationId(null);
     setEditorState("browse");
   }, [editorState]);
 
@@ -958,22 +1260,30 @@ function NodeEditorInner(): JSX.Element {
       if (!connection.source || !connection.target) {
         return;
       }
-      const newId = `e-${connection.source}-${connection.target}-${Date.now()}`;
+      const newEdge: SimpleEdge = {
+        id: createEntityId("e-link"),
+        ...connection,
+        type: "floating",
+        data: { relationType: "linked", properties: {} },
+      };
       setEdges((prev) =>
         addEdge(
-          {
-            id: newId,
-            ...connection,
-            type: "floating",
-            data: { relationType: "linked", properties: {} },
-          },
+          newEdge,
           prev,
         ) as SimpleEdge[],
       );
+      pushHistoryAction({
+        id: createEntityId("history"),
+        kind: "create_elements",
+        label: `Connected ${connection.source} -> ${connection.target}`,
+        nodes: [],
+        edges: [newEdge],
+      });
       setConnectMenu(null);
       setPendingConnectSource(null);
+      setFocusedRelationId(newEdge.id);
     },
-    [setEdges],
+    [pushHistoryAction, setEdges],
   );
 
   const onConnectStart = useCallback((_: unknown, params: { nodeId?: string | null }) => {
@@ -1012,24 +1322,32 @@ function NodeEditorInner(): JSX.Element {
       if (!connectMenu) {
         return;
       }
-      const edgeId = `e-${connectMenu.sourceNodeId}-${targetNodeId}-${Date.now()}`;
+      const nextEdge: SimpleEdge = {
+        id: createEntityId("e-link"),
+        source: connectMenu.sourceNodeId,
+        target: targetNodeId,
+        type: "floating",
+        data: { relationType: "linked", properties: {} },
+      };
       setEdges((prev) =>
         addEdge(
-          {
-            id: edgeId,
-            source: connectMenu.sourceNodeId,
-            target: targetNodeId,
-            type: "floating",
-            data: { relationType: "linked", properties: {} },
-          },
+          nextEdge,
           prev,
         ) as SimpleEdge[],
       );
+      pushHistoryAction({
+        id: createEntityId("history"),
+        kind: "create_elements",
+        label: `Connected ${connectMenu.sourceNodeId} -> ${targetNodeId}`,
+        nodes: [],
+        edges: [nextEdge],
+      });
       setConnectMenu(null);
       setFocusedNodeId(targetNodeId);
+      setFocusedRelationId(null);
       setEditorState("focus");
     },
-    [connectMenu, setEdges],
+    [connectMenu, pushHistoryAction, setEdges],
   );
 
   const onConnectFromVacantDrawer = useCallback(
@@ -1037,29 +1355,37 @@ function NodeEditorInner(): JSX.Element {
       if (!focusedNodeId) {
         return;
       }
-      const edgeId = `e-${focusedNodeId}-${targetNodeId}-${Date.now()}`;
+      const nextEdge: SimpleEdge = {
+        id: createEntityId("e-link"),
+        source: focusedNodeId,
+        target: targetNodeId,
+        type: "floating",
+        data: { relationType: "linked", properties: {} },
+      };
       setEdges((prev) =>
         addEdge(
-          {
-            id: edgeId,
-            source: focusedNodeId,
-            target: targetNodeId,
-            type: "floating",
-            data: { relationType: "linked", properties: {} },
-          },
+          nextEdge,
           prev,
         ) as SimpleEdge[],
       );
+      pushHistoryAction({
+        id: createEntityId("history"),
+        kind: "create_elements",
+        label: `Connected ${focusedNodeId} -> ${targetNodeId}`,
+        nodes: [],
+        edges: [nextEdge],
+      });
+      setFocusedRelationId(null);
       setEditorState("focus");
     },
-    [focusedNodeId, setEdges],
+    [focusedNodeId, pushHistoryAction, setEdges],
   );
 
   const onCreateAndConnectNode = useCallback(() => {
     if (!connectMenu) {
       return;
     }
-    const newNodeId = `n-new-${Date.now()}`;
+    const newNodeId = createEntityId("n-new");
     const flowPoint = screenToFlowPosition({ x: connectMenu.x, y: connectMenu.y });
 
     const newNodeData: SimpleNodeData = {
@@ -1068,32 +1394,34 @@ function NodeEditorInner(): JSX.Element {
       properties: { note: "edit me" },
     };
 
-    setNodes((prev) => [
-      ...prev,
-      {
-        id: newNodeId,
-        type: "simple",
-        position: flowPoint,
-        data: newNodeData,
-      },
-    ]);
+    const newNode: SimpleNode = {
+      id: newNodeId,
+      type: "simple",
+      position: flowPoint,
+      data: newNodeData,
+    };
 
-    const edgeId = `e-${connectMenu.sourceNodeId}-${newNodeId}-${Date.now()}`;
-    setEdges((prev) =>
-      addEdge(
-        {
-            id: edgeId,
-            source: connectMenu.sourceNodeId,
-            target: newNodeId,
-            type: "floating",
-            data: { relationType: "linked", properties: {} },
-          },
-          prev,
-      ) as SimpleEdge[],
-    );
+    const newEdge: SimpleEdge = {
+      id: createEntityId("e-link"),
+      source: connectMenu.sourceNodeId,
+      target: newNodeId,
+      type: "floating",
+      data: { relationType: "linked", properties: {} },
+    };
+
+    setNodes((prev) => [...prev, newNode]);
+    setEdges((prev) => addEdge(newEdge, prev) as SimpleEdge[]);
+    pushHistoryAction({
+      id: createEntityId("history"),
+      kind: "create_elements",
+      label: `Created ${newNodeData.name}`,
+      nodes: [newNode],
+      edges: [newEdge],
+    });
 
     setConnectMenu(null);
     setFocusedNodeId(newNodeId);
+    setFocusedRelationId(null);
     setNodeDraft({
       id: newNodeId,
       name: newNodeData.name,
@@ -1102,26 +1430,32 @@ function NodeEditorInner(): JSX.Element {
       removedRelationIds: [],
     });
     setEditorState("edit_node");
-  }, [connectMenu, nodes.length, screenToFlowPosition, setEdges, setNodes]);
+  }, [connectMenu, nodes.length, pushHistoryAction, screenToFlowPosition, setEdges, setNodes]);
 
   const onAddNode = useCallback(() => {
-    const id = `n-new-${Date.now()}`;
-    setNodes((prev) => [
-      ...prev,
-      {
-        id,
-        type: "simple",
-        position: { x: 140 + prev.length * 45, y: 120 + prev.length * 25 },
-        data: {
-          name: `New Node ${prev.length + 1}`,
-          category: "concept",
-          properties: { note: "edit me" },
-        },
+    const id = createEntityId("n-new");
+    const nextNode: SimpleNode = {
+      id,
+      type: "simple",
+      position: { x: 140 + nodes.length * 45, y: 120 + nodes.length * 25 },
+      data: {
+        name: `New Node ${nodes.length + 1}`,
+        category: "concept",
+        properties: { note: "edit me" },
       },
-    ]);
+    };
+    setNodes((prev) => [...prev, nextNode]);
+    pushHistoryAction({
+      id: createEntityId("history"),
+      kind: "create_elements",
+      label: `Created ${(nextNode.data as SimpleNodeData).name}`,
+      nodes: [nextNode],
+      edges: [],
+    });
     setFocusedNodeId(id);
+    setFocusedRelationId(null);
     setEditorState("focus");
-  }, [setNodes]);
+  }, [nodes.length, pushHistoryAction, setNodes]);
 
   const onTemplateDragStart = useCallback((event: React.DragEvent<HTMLButtonElement>, template: NodeTemplate) => {
     event.dataTransfer.setData("application/node-template", JSON.stringify(template));
@@ -1148,25 +1482,31 @@ function NodeEditorInner(): JSX.Element {
         return;
       }
       const flowPoint = screenToFlowPosition({ x: event.clientX, y: event.clientY });
-      const id = `n-new-${Date.now()}`;
+      const id = createEntityId("n-new");
       const nextName = `${template.name} ${nodes.length + 1}`;
-      setNodes((prev) => [
-        ...prev,
-        {
-          id,
-          type: "simple",
-          position: flowPoint,
-          data: {
-            name: nextName,
-            category: template.category,
-            properties: { ...template.defaults },
-          },
+      const nextNode: SimpleNode = {
+        id,
+        type: "simple",
+        position: flowPoint,
+        data: {
+          name: nextName,
+          category: template.category,
+          properties: { ...template.defaults },
         },
-      ]);
+      };
+      setNodes((prev) => [...prev, nextNode]);
+      pushHistoryAction({
+        id: createEntityId("history"),
+        kind: "create_elements",
+        label: `Created ${nextName}`,
+        nodes: [nextNode],
+        edges: [],
+      });
       setFocusedNodeId(id);
+      setFocusedRelationId(null);
       setEditorState("focus");
     },
-    [nodes.length, screenToFlowPosition, setNodes],
+    [nodes.length, pushHistoryAction, screenToFlowPosition, setNodes],
   );
 
   const onLayoutAll = useCallback(() => {
@@ -1202,8 +1542,12 @@ function NodeEditorInner(): JSX.Element {
     setEdges(parsed.edges);
     setEditorState("browse");
     setFocusedNodeId(null);
+    setFocusedRelationId(null);
     setNodeDraft(null);
     setEdgeDraft(null);
+    setUndoStack([]);
+    setRedoStack([]);
+    setPendingDeleteTarget(null);
   }, [savedSnapshot, setNodes, setEdges]);
 
   const onUnfocus = useCallback(() => {
@@ -1212,8 +1556,85 @@ function NodeEditorInner(): JSX.Element {
     }
     setEditorState("browse");
     setFocusedNodeId(null);
+    setFocusedRelationId(null);
     setTimeout(() => fitView({ duration: 320, padding: 0.1 }), 40);
   }, [editorState, fitView]);
+
+  const onCopyFocusedNode = useCallback(() => {
+    if (editorState !== "focus" || !focusedNode) {
+      return;
+    }
+    setCopiedNode({
+      node: focusedNode,
+      edges: edges.filter((edge) => edge.source === focusedNode.id || edge.target === focusedNode.id),
+    });
+  }, [editorState, edges, focusedNode]);
+
+  const onPasteCopiedNode = useCallback(() => {
+    if (editorState !== "focus" || !copiedNode) {
+      return;
+    }
+    const created = buildCopiedElements(copiedNode, nodes);
+    setNodes((prev) => upsertItemsById(prev, created.nodes));
+    setEdges((prev) => upsertItemsById(prev, created.edges));
+    pushHistoryAction({
+      id: createEntityId("history"),
+      kind: "create_elements",
+      label: `Pasted ${created.nodes[0] ? ((created.nodes[0].data as SimpleNodeData).name ?? "node") : "node"}`,
+      nodes: created.nodes,
+      edges: created.edges,
+    });
+    setFocusedNodeId(created.nodes[0]?.id ?? null);
+    setFocusedRelationId(null);
+    setEditorState("focus");
+  }, [copiedNode, editorState, nodes, pushHistoryAction, setEdges, setNodes]);
+
+  const requestDeleteFocusedSelection = useCallback(() => {
+    if (editorState === "focus" && focusedNode) {
+      const incidentEdges = edges.filter((edge) => edge.source === focusedNode.id || edge.target === focusedNode.id);
+      setPendingDeleteTarget({
+        kind: "node",
+        title: `Delete ${(focusedNode.data as SimpleNodeData).name}?`,
+        description:
+          incidentEdges.length > 0
+            ? `This also removes ${incidentEdges.length} connected relation${incidentEdges.length === 1 ? "" : "s"}.`
+            : "This removes the node from the workspace.",
+        nodes: [focusedNode],
+        edges: incidentEdges,
+      });
+      return;
+    }
+    if (editorState === "focus_relation" && focusedRelation) {
+      setPendingDeleteTarget({
+        kind: "edge",
+        title: "Delete relation?",
+        description: "This removes the selected relation from the workspace.",
+        nodes: [],
+        edges: [focusedRelation],
+      });
+    }
+  }, [editorState, edges, focusedNode, focusedRelation]);
+
+  const onConfirmDeleteSelection = useCallback(() => {
+    if (!pendingDeleteTarget) {
+      return;
+    }
+    const nodeIds = pendingDeleteTarget.nodes.map((node) => node.id);
+    const edgeIds = pendingDeleteTarget.edges.map((edge) => edge.id);
+    setNodes((prev) => removeItemsById(prev, nodeIds));
+    setEdges((prev) => removeItemsById(prev, edgeIds));
+    pushHistoryAction({
+      id: createEntityId("history"),
+      kind: "delete_elements",
+      label: pendingDeleteTarget.kind === "node" ? `Deleted ${pendingDeleteTarget.nodes.length} node` : "Deleted relation",
+      nodes: pendingDeleteTarget.nodes,
+      edges: pendingDeleteTarget.edges,
+    });
+    setPendingDeleteTarget(null);
+    setFocusedNodeId(null);
+    setFocusedRelationId(null);
+    setEditorState("browse");
+  }, [pendingDeleteTarget, pushHistoryAction, setEdges, setNodes]);
 
   const onUpdateNodeDraftProperty = useCallback((
     index: number,
@@ -1256,30 +1677,52 @@ function NodeEditorInner(): JSX.Element {
     if (!nodeDraft) {
       return;
     }
+    const previousNode = nodes.find((node) => node.id === nodeDraft.id);
+    if (!previousNode) {
+      return;
+    }
     const nextProperties = recordFromPairs(nodeDraft.properties);
     const removedRelationIds = new Set(nodeDraft.removedRelationIds);
+    const nextNode: SimpleNode = {
+      ...previousNode,
+      data: {
+        ...(previousNode.data as SimpleNodeData),
+        name: nodeDraft.name || (previousNode.data as SimpleNodeData).name,
+        category: nodeDraft.category || (previousNode.data as SimpleNodeData).category,
+        properties: nextProperties,
+      },
+    };
     setNodes((prev) =>
       prev.map((node) => {
         if (node.id !== nodeDraft.id) {
           return node;
         }
-        return {
-          ...node,
-          data: {
-            ...(node.data as SimpleNodeData),
-            name: nodeDraft.name || (node.data as SimpleNodeData).name,
-            category: nodeDraft.category || (node.data as SimpleNodeData).category,
-            properties: nextProperties,
-          },
-        };
+        return nextNode;
       }),
     );
     if (removedRelationIds.size > 0) {
+      const removedEdges = edges.filter((edge) => removedRelationIds.has(edge.id));
       setEdges((prev) => prev.filter((edge) => !removedRelationIds.has(edge.id)));
+      pushHistoryAction({
+        id: createEntityId("history"),
+        kind: "delete_elements",
+        label: `Removed ${removedEdges.length} relation${removedEdges.length === 1 ? "" : "s"}`,
+        nodes: [],
+        edges: removedEdges,
+      });
     }
+    pushHistoryAction({
+      id: createEntityId("history"),
+      kind: "update_node",
+      label: `Edited ${(nextNode.data as SimpleNodeData).name}`,
+      before: previousNode,
+      after: nextNode,
+    });
     setNodeDraft(null);
     setEditorState("focus");
-  }, [nodeDraft, setEdges, setNodes]);
+    setFocusedNodeId(nextNode.id);
+    setFocusedRelationId(null);
+  }, [edges, nodeDraft, nodes, pushHistoryAction, setEdges, setNodes]);
 
   const onDiscardNodeDraft = useCallback(() => {
     setNodeDraft(null);
@@ -1327,28 +1770,41 @@ function NodeEditorInner(): JSX.Element {
     if (!edgeDraft) {
       return;
     }
+    const previousEdge = edges.find((edge) => edge.id === edgeDraft.id);
+    if (!previousEdge) {
+      return;
+    }
     const nextProperties = recordFromPairs(edgeDraft.properties);
+    const nextEdge: SimpleEdge = {
+      ...previousEdge,
+      data: {
+        relationType: edgeDraft.relationType || "linked",
+        properties: nextProperties,
+      },
+    };
     setEdges((prev) =>
       prev.map((edge) => {
         if (edge.id !== edgeDraft.id) {
           return edge;
         }
-        return {
-          ...edge,
-          data: {
-            relationType: edgeDraft.relationType || "linked",
-            properties: nextProperties,
-          },
-        };
+        return nextEdge;
       }),
     );
+    pushHistoryAction({
+      id: createEntityId("history"),
+      kind: "update_edge",
+      label: `Edited relation ${nextEdge.data?.relationType ?? "linked"}`,
+      before: previousEdge,
+      after: nextEdge,
+    });
     setEdgeDraft(null);
-    setEditorState("focus");
-  }, [edgeDraft, setEdges]);
+    setEditorState("focus_relation");
+    setFocusedRelationId(nextEdge.id);
+  }, [edgeDraft, edges, pushHistoryAction, setEdges]);
 
   const onDiscardEdgeDraft = useCallback(() => {
     setEdgeDraft(null);
-    setEditorState("focus");
+    setEditorState("focus_relation");
   }, []);
 
   const onRemoveRelationFromNodeModal = useCallback(
@@ -1366,6 +1822,71 @@ function NodeEditorInner(): JSX.Element {
     [],
   );
 
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const isEditableTarget =
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement ||
+        Boolean(target?.isContentEditable);
+
+      if (pendingDeleteTarget) {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          setPendingDeleteTarget(null);
+        }
+        return;
+      }
+
+      if (isEditableTarget || editorState === "edit_node" || editorState === "edit_relation") {
+        return;
+      }
+
+      const modifier = event.ctrlKey || event.metaKey;
+      const key = event.key.toLowerCase();
+
+      if (modifier && key === "c") {
+        event.preventDefault();
+        onCopyFocusedNode();
+        return;
+      }
+      if (modifier && key === "v") {
+        event.preventDefault();
+        onPasteCopiedNode();
+        return;
+      }
+      if (modifier && key === "z") {
+        event.preventDefault();
+        onUndo();
+        return;
+      }
+      if (modifier && key === "u") {
+        event.preventDefault();
+        onRedo();
+        return;
+      }
+      if (key === "delete" || key === "backspace") {
+        const canDelete = editorState === "focus" || editorState === "focus_relation";
+        if (canDelete) {
+          event.preventDefault();
+          requestDeleteFocusedSelection();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [
+    editorState,
+    onCopyFocusedNode,
+    onPasteCopiedNode,
+    onRedo,
+    onUndo,
+    pendingDeleteTarget,
+    requestDeleteFocusedSelection,
+  ]);
+
   const stateLabel = useMemo(() => {
     if (editorState === "browse") {
       return "Browse";
@@ -1373,11 +1894,27 @@ function NodeEditorInner(): JSX.Element {
     if (editorState === "focus") {
       return focusedNode ? `Focus: ${(focusedNode.data as SimpleNodeData).name}` : "Focus";
     }
+    if (editorState === "focus_relation") {
+      return focusedRelation ? `Relation: ${focusedRelation.data?.relationType ?? "linked"}` : "Relation Focus";
+    }
     if (editorState === "edit_node") {
       return "Edit Node";
     }
     return "Edit Relation";
-  }, [editorState, focusedNode]);
+  }, [editorState, focusedNode, focusedRelation]);
+
+  const selectedItemLabel = useMemo(() => {
+    if (editorState === "focus" && focusedNode) {
+      return (focusedNode.data as SimpleNodeData).name;
+    }
+    if (editorState === "focus_relation" && focusedRelation) {
+      const relationType = focusedRelation.data?.relationType ?? "linked";
+      const sourceName = nodeNameById.get(focusedRelation.source) ?? focusedRelation.source;
+      const targetName = nodeNameById.get(focusedRelation.target) ?? focusedRelation.target;
+      return `${relationType}: ${sourceName} -> ${targetName}`;
+    }
+    return "Nothing selected";
+  }, [editorState, focusedNode, focusedRelation, nodeNameById]);
 
   const onModeBadgeClick = useCallback(() => {
     if (editorState === "edit_node" || editorState === "edit_relation") {
@@ -1399,183 +1936,295 @@ function NodeEditorInner(): JSX.Element {
               <span className={`ne-dirty-dot ${dirty ? "ne-dirty-dot-on" : ""}`} title={dirty ? "Unsaved" : "Saved"} />
             </div>
 
-            <div className="ne-control-row">
-              <button type="button" className="ne-btn" disabled={editorState === "browse"} onClick={onUnfocus}>
-                Unfocus
-              </button>
-              <span className="ne-inline-note">Edit is on-node</span>
-            </div>
+            <SidebarSection
+              title="Actions"
+              open={sectionOpen.actions}
+              onToggle={() => setSectionOpen((prev) => ({ ...prev, actions: !prev.actions }))}
+            >
+              <>
+                <div className="ne-selection-summary">
+                  <strong>Selected</strong>
+                  <span>{selectedItemLabel}</span>
+                </div>
 
-            <div className="ne-control-row">
-              <button type="button" className="ne-btn ne-btn-primary" disabled={!dirty} onClick={onSaveWorkspace}>
-                Save workspace
-              </button>
-              <button type="button" className="ne-btn" disabled={!dirty} onClick={onDiscardWorkspace}>
-                Discard
-              </button>
-            </div>
-
-            <div className="ne-control-row ne-control-row-single">
-              <button type="button" className="ne-btn" onClick={onAddNode}>
-                + Add node
-              </button>
-            </div>
-
-            <div className="ne-filter-section">
-              <h3>Drag palette</h3>
-              <div className="ne-template-list">
-                {NODE_TEMPLATES.map((template) => (
-                  <button
-                    key={template.name}
-                    type="button"
-                    draggable
-                    className="ne-template-chip"
-                    onDragStart={(event) => onTemplateDragStart(event, template)}
-                  >
-                    + {template.name}
+                <div className="ne-control-row">
+                  <button type="button" className="ne-btn ne-btn-primary" disabled={!dirty} onClick={onSaveWorkspace}>
+                    Save workspace
                   </button>
-                ))}
-              </div>
-              <p className="ne-template-hint">Drag a template into the canvas to create a node.</p>
-            </div>
+                  <button type="button" className="ne-btn" disabled={!dirty} onClick={onDiscardWorkspace}>
+                    Discard
+                  </button>
+                </div>
 
-            <div className="ne-control-row">
-              <button type="button" className="ne-btn" onClick={onLayoutAll}>
-                Layout all
-              </button>
-              <button
-                type="button"
-                className="ne-btn"
-                onClick={onLayoutFocusNeighborhood}
-                disabled={!focusedNodeId}
-              >
-                Layout focus
-              </button>
-              <button type="button" className="ne-btn" onClick={onLayoutCustom} disabled={!customLayoutPositions}>
-                Layout custom
-              </button>
-            </div>
+                <div className="ne-control-row">
+                  <button type="button" className="ne-btn" onClick={onUndo} disabled={undoStack.length === 0}>
+                    Undo
+                  </button>
+                  <button type="button" className="ne-btn" onClick={onRedo} disabled={redoStack.length === 0}>
+                    Redo
+                  </button>
+                </div>
 
-            <div className="ne-stats">
-              <p>
-                Nodes: <strong>{nodes.length}</strong>
-              </p>
-              <p>
-                Edges: <strong>{edges.length}</strong>
-              </p>
-              <p>
-                Relation types: <strong>{relationTypes.join(", ") || "-"}</strong>
-              </p>
-            </div>
+                <div className="ne-control-row">
+                  <button type="button" className="ne-btn" onClick={onCopyFocusedNode} disabled={editorState !== "focus"}>
+                    Copy
+                  </button>
+                  <button
+                    type="button"
+                    className="ne-btn"
+                    onClick={onPasteCopiedNode}
+                    disabled={editorState !== "focus" || !copiedNode}
+                  >
+                    Paste
+                  </button>
+                </div>
 
-            <div className="ne-filter-section">
-              <h3>Relations</h3>
-              {relationTypes.length > 0 ? (
-                relationTypes.map((relationType) => (
-                  <label key={relationType} className="ne-checkbox-label">
+                <div className="ne-control-row">
+                  <button
+                    type="button"
+                    className="ne-btn"
+                    onClick={() => focusedNodeId && openNodeEditor(focusedNodeId)}
+                    disabled={editorState !== "focus" || !focusedNodeId}
+                  >
+                    Edit node
+                  </button>
+                  <button
+                    type="button"
+                    className="ne-btn"
+                    onClick={() => focusedRelationId && openEdgeEditor(focusedRelationId)}
+                    disabled={editorState !== "focus_relation" || !focusedRelationId}
+                  >
+                    Edit relation
+                  </button>
+                </div>
+
+                <div className="ne-control-row ne-control-row-single">
+                  <button
+                    type="button"
+                    className="ne-btn"
+                    onClick={requestDeleteFocusedSelection}
+                    disabled={editorState !== "focus" && editorState !== "focus_relation"}
+                  >
+                    Delete selected
+                  </button>
+                </div>
+
+                <div className="ne-inline-note">Shortcuts: Ctrl/Cmd+C, Ctrl/Cmd+V, Ctrl/Cmd+Z, Ctrl/Cmd+U</div>
+
+                <div className="ne-stats">
+                  <p>
+                    Nodes: <strong>{nodes.length}</strong>
+                  </p>
+                  <p>
+                    Edges: <strong>{edges.length}</strong>
+                  </p>
+                  <p>
+                    Relation types: <strong>{relationTypes.join(", ") || "-"}</strong>
+                  </p>
+                </div>
+
+                <div className="ne-filter-section">
+                  <h3>Relations</h3>
+                  {relationTypes.length > 0 ? (
+                    relationTypes.map((relationType) => (
+                      <label key={relationType} className="ne-checkbox-label">
+                        <input
+                          type="checkbox"
+                          checked={!hiddenRelationTypes.includes(relationType)}
+                          onChange={(event) => {
+                            const isChecked = event.target.checked;
+                            setHiddenRelationTypes((prev) => {
+                              if (isChecked) {
+                                return prev.filter((item) => item !== relationType);
+                              }
+                              if (prev.includes(relationType)) {
+                                return prev;
+                              }
+                              return [...prev, relationType];
+                            });
+                          }}
+                        />
+                        {relationType}
+                      </label>
+                    ))
+                  ) : (
+                    <p className="ne-empty-note">No relation types available.</p>
+                  )}
+                </div>
+
+                <div className="ne-filter-section">
+                  <h3>Action history</h3>
+                  {undoStack.length === 0 ? (
+                    <p className="ne-empty-note">No tracked actions yet.</p>
+                  ) : (
+                    <div className="ne-history-list">
+                      {undoStack.slice(0, 8).map((action) => (
+                        <div key={action.id} className="ne-history-item">
+                          {action.label}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            </SidebarSection>
+
+            <SidebarSection
+              title="Node Filtering"
+              open={sectionOpen.filters}
+              onToggle={() => setSectionOpen((prev) => ({ ...prev, filters: !prev.filters }))}
+            >
+              <>
+                <div className="ne-filter-section">
+                  <h3>Filter nodes</h3>
+                  <input
+                    className="ne-input"
+                    placeholder="Filter by name"
+                    value={filterText}
+                    onChange={(event) => setFilterText(event.target.value)}
+                  />
+                  <select
+                    className="ne-input"
+                    value={attributeFilterKey}
+                    onChange={(event) => setAttributeFilterKey(event.target.value)}
+                  >
+                    <option value="">Any property key</option>
+                    {filterablePropertyKeys.map((key) => (
+                      <option key={key} value={key}>
+                        {key}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    className="ne-input"
+                    placeholder="Property value contains"
+                    value={attributeFilterValue}
+                    onChange={(event) => setAttributeFilterValue(event.target.value)}
+                    disabled={!attributeFilterKey}
+                  />
+                  <button
+                    type="button"
+                    className="ne-btn ne-btn-small"
+                    onClick={() => {
+                      setFilterText("");
+                      setAttributeFilterKey("");
+                      setAttributeFilterValue("");
+                    }}
+                    disabled={!filterText && !attributeFilterKey && !attributeFilterValue}
+                  >
+                    Clear filters
+                  </button>
+                </div>
+              </>
+            </SidebarSection>
+
+            <SidebarSection
+              title="Workspace"
+              open={sectionOpen.space}
+              onToggle={() => setSectionOpen((prev) => ({ ...prev, space: !prev.space }))}
+            >
+              <>
+                <div className="ne-control-row">
+                  <button type="button" className="ne-btn" disabled={editorState === "browse"} onClick={onUnfocus}>
+                    Unfocus
+                  </button>
+                  <span className="ne-inline-note">Edit is on-node</span>
+                </div>
+
+                <div className="ne-control-row">
+                  <button type="button" className="ne-btn" onClick={onLayoutAll}>
+                    Layout all
+                  </button>
+                  <button
+                    type="button"
+                    className="ne-btn"
+                    onClick={onLayoutFocusNeighborhood}
+                    disabled={!focusedNodeId}
+                  >
+                    Layout focus
+                  </button>
+                  <button type="button" className="ne-btn" onClick={onLayoutCustom} disabled={!customLayoutPositions}>
+                    Layout custom
+                  </button>
+                </div>
+
+                <div className="ne-filter-section">
+                  <h3>View options</h3>
+                  <label className="ne-checkbox-label">
                     <input
                       type="checkbox"
-                      checked={!hiddenRelationTypes.includes(relationType)}
-                      onChange={(event) => {
-                        const isChecked = event.target.checked;
-                        setHiddenRelationTypes((prev) => {
-                          if (isChecked) {
-                            return prev.filter((item) => item !== relationType);
-                          }
-                          if (prev.includes(relationType)) {
-                            return prev;
-                          }
-                          return [...prev, relationType];
-                        });
-                      }}
+                      checked={hideNonNeighbors}
+                      onChange={(event) => setHideNonNeighbors(event.target.checked)}
                     />
-                    {relationType}
+                    Hide non-neighbors
                   </label>
-                ))
-              ) : (
-                <p className="ne-empty-note">No relation types available.</p>
-              )}
-            </div>
-
-            <div className="ne-filter-section">
-              <h3>View options</h3>
-              <label className="ne-checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={hideNonNeighbors}
-                  onChange={(event) => setHideNonNeighbors(event.target.checked)}
-                />
-                Hide non-neighbors
-              </label>
-            </div>
-
-            <div className="ne-filter-section">
-              <h3>Filter nodes</h3>
-              <input
-                className="ne-input"
-                placeholder="Filter by name"
-                value={filterText}
-                onChange={(event) => setFilterText(event.target.value)}
-              />
-              <select
-                className="ne-input"
-                value={attributeFilterKey}
-                onChange={(event) => setAttributeFilterKey(event.target.value)}
-              >
-                <option value="">Any property key</option>
-                {filterablePropertyKeys.map((key) => (
-                  <option key={key} value={key}>
-                    {key}
-                  </option>
-                ))}
-              </select>
-              <input
-                className="ne-input"
-                placeholder="Property value contains"
-                value={attributeFilterValue}
-                onChange={(event) => setAttributeFilterValue(event.target.value)}
-                disabled={!attributeFilterKey}
-              />
-              <button
-                type="button"
-                className="ne-btn ne-btn-small"
-                onClick={() => {
-                  setFilterText("");
-                  setAttributeFilterKey("");
-                  setAttributeFilterValue("");
-                }}
-                disabled={!filterText && !attributeFilterKey && !attributeFilterValue}
-              >
-                Clear filters
-              </button>
-            </div>
-
-            <div className="ne-filter-section">
-              <h3>Vacant nodes</h3>
-              {inFocusModes && hideNonNeighbors ? (
-                <p className="ne-empty-note">Hidden non-neighbors can still be linked from this drawer.</p>
-              ) : null}
-              {!focusedNodeId ? (
-                <p className="ne-empty-note">Focus a node to see candidate connection targets.</p>
-              ) : hiddenRelationTypes.includes("linked") ? (
-                <p className="ne-empty-note">Enable relation type `linked` to create new node-to-node links.</p>
-              ) : vacantCandidateNodes.length === 0 ? (
-                <p className="ne-empty-note">No vacant candidates under current filters.</p>
-              ) : (
-                <div className="ne-connect-list">
-                  {vacantCandidateNodes.map((node) => (
-                    <button
-                      key={node.id}
-                      type="button"
-                      className="ne-connect-item"
-                      onClick={() => onConnectFromVacantDrawer(node.id)}
-                    >
-                      {(node.data as SimpleNodeData).name}
-                    </button>
-                  ))}
                 </div>
-              )}
-            </div>
+              </>
+            </SidebarSection>
+
+            <SidebarSection
+              title="Creation"
+              open={sectionOpen.creation}
+              onToggle={() => setSectionOpen((prev) => ({ ...prev, creation: !prev.creation }))}
+            >
+              <>
+                <div className="ne-control-row ne-control-row-single">
+                  <button type="button" className="ne-btn" onClick={onAddNode}>
+                    + Add node
+                  </button>
+                </div>
+
+                <div className="ne-filter-section">
+                  <h3>Drag palette</h3>
+                  <div className="ne-template-list">
+                    {NODE_TEMPLATES.map((template) => (
+                      <button
+                        key={template.name}
+                        type="button"
+                        draggable
+                        className="ne-template-chip"
+                        onDragStart={(event) => onTemplateDragStart(event, template)}
+                      >
+                        + {template.name}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="ne-template-hint">Drag a template into the canvas to create a node.</p>
+                </div>
+              </>
+            </SidebarSection>
+
+            <SidebarSection
+              title="Vacant Nodes"
+              open={sectionOpen.vacant}
+              onToggle={() => setSectionOpen((prev) => ({ ...prev, vacant: !prev.vacant }))}
+            >
+              <>
+                {inFocusModes && hideNonNeighbors ? (
+                  <p className="ne-empty-note">Hidden non-neighbors can still be linked from this drawer.</p>
+                ) : null}
+                {!focusedNodeId ? (
+                  <p className="ne-empty-note">Focus a node to see candidate connection targets.</p>
+                ) : hiddenRelationTypes.includes("linked") ? (
+                  <p className="ne-empty-note">Enable relation type `linked` to create new node-to-node links.</p>
+                ) : vacantCandidateNodes.length === 0 ? (
+                  <p className="ne-empty-note">No vacant candidates under current filters.</p>
+                ) : (
+                  <div className="ne-connect-list ne-connect-list-scroll">
+                    {vacantCandidateNodes.map((node) => (
+                      <button
+                        key={node.id}
+                        type="button"
+                        className="ne-connect-item"
+                        onClick={() => onConnectFromVacantDrawer(node.id)}
+                      >
+                        {(node.data as SimpleNodeData).name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
+            </SidebarSection>
           </div>
         ) : null}
       </aside>
@@ -1598,6 +2247,7 @@ function NodeEditorInner(): JSX.Element {
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           connectionMode={ConnectionMode.Loose}
+          deleteKeyCode={null}
           minZoom={0.1}
           fitView
           attributionPosition="bottom-left"
@@ -1647,6 +2297,23 @@ function NodeEditorInner(): JSX.Element {
           </div>
         ) : null}
       </div>
+
+      {pendingDeleteTarget ? (
+        <div className="ne-modal-backdrop">
+          <div className="ne-modal-card ne-modal-card-confirm">
+            <h2>{pendingDeleteTarget.title}</h2>
+            <p className="ne-confirm-copy">{pendingDeleteTarget.description}</p>
+            <div className="ne-modal-actions">
+              <button type="button" className="ne-btn ne-btn-danger" onClick={onConfirmDeleteSelection}>
+                Delete
+              </button>
+              <button type="button" className="ne-btn" onClick={() => setPendingDeleteTarget(null)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {editorState === "edit_node" && nodeDraft ? (
         <div className="ne-modal-backdrop">

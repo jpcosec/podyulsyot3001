@@ -151,7 +151,7 @@ function normalizeDescriptionKey(value: string): string {
 }
 
 function isEntryContainerCategory(category: string): boolean {
-  return category !== "skills" && category !== "skills_pool" && category !== "related_skills";
+  return category !== "skills";
 }
 
 function categoryFromGroupId(groupId: string): string | null {
@@ -173,11 +173,9 @@ function reorderCategoryEntries(
   category: string,
   movingEntryId: string,
   targetIndex: number,
-  detachedEntries: Record<string, XYPosition>,
 ): CvEntry[] {
   const orderedIds = entries
     .filter((entry) => entry.category === category)
-    .filter((entry) => !detachedEntries[entry.id])
     .map((entry) => entry.id)
     .filter((entryId) => entryId !== movingEntryId);
   const boundedIndex = clampIndex(targetIndex, orderedIds.length);
@@ -186,7 +184,6 @@ function reorderCategoryEntries(
   const orderRank = new Map<string, number>(orderedIds.map((id, index) => [id, index]));
   const sortedCategory = entries
     .filter((entry) => entry.category === category)
-    .filter((entry) => !detachedEntries[entry.id])
     .slice()
     .sort((left, right) => {
       const leftRank = orderRank.get(left.id) ?? Number.MAX_SAFE_INTEGER;
@@ -195,7 +192,7 @@ function reorderCategoryEntries(
     });
   let cursor = 0;
   return entries.map((entry) => {
-    if (entry.category !== category || detachedEntries[entry.id]) {
+    if (entry.category !== category) {
       return entry;
     }
     const nextEntry = sortedCategory[cursor];
@@ -277,7 +274,6 @@ interface BuildGraphParams {
   graph: CvProfileGraphPayload;
   expandedGroups: Set<string>;
   focusedEntryId: string;
-  detachedEntries: Record<string, XYPosition>;
   activeDropzoneCategory: string | null;
   selectedGroupCategory: string | null;
   onToggleGroup: (category: string) => void;
@@ -302,7 +298,6 @@ function buildGraphView(params: BuildGraphParams): {
     graph,
     expandedGroups,
     focusedEntryId,
-    detachedEntries,
     activeDropzoneCategory,
     selectedGroupCategory,
     onToggleGroup,
@@ -342,16 +337,15 @@ function buildGraphView(params: BuildGraphParams): {
 
   categories.forEach((category, idx) => {
     const categoryEntries = graph.entries.filter((entry) => entry.category === category);
-    const attachedCategoryEntries = categoryEntries.filter((entry) => !detachedEntries[entry.id]);
     const expanded = expandedGroups.has(category);
     const groupId = `group:${category}`;
-    const groupHeight = expanded ? Math.max(160, attachedCategoryEntries.length * 84 + 72) : 96;
+    const groupHeight = expanded ? Math.max(160, categoryEntries.length * 84 + 72) : 96;
 
     const groupData: GroupNodeData = {
       kind: "group",
       label: displayCategory(category),
       category,
-      count: attachedCategoryEntries.length,
+        count: categoryEntries.length,
       countLabel: "Entries",
       expanded,
       addLabel: "Add entry",
@@ -375,13 +369,13 @@ function buildGraphView(params: BuildGraphParams): {
     });
 
     if (!expanded) {
-      attachedCategoryEntries.forEach((entry) => {
+      categoryEntries.forEach((entry) => {
         collapsedProxyParentByChild.set(entry.id, groupId);
       });
       return;
     }
 
-    attachedCategoryEntries.forEach((entry, entryIndex) => {
+    categoryEntries.forEach((entry, entryIndex) => {
       const entryData: EntryNodeData = {
         kind: "entry",
         label: entryLabel(entry),
@@ -402,6 +396,7 @@ function buildGraphView(params: BuildGraphParams): {
         type: "entry",
         data: entryData,
         parentId: groupId,
+        extent: "parent",
         position: { x: 14, y: 50 + entryIndex * 78 },
         draggable: true,
         style: {
@@ -413,50 +408,19 @@ function buildGraphView(params: BuildGraphParams): {
     });
   });
 
-  graph.entries
-    .filter((entry) => detachedEntries[entry.id])
-    .forEach((entry) => {
-      const entryData: EntryNodeData = {
-        kind: "entry",
-        label: entryLabel(entry),
-        category: entry.category,
-        essential: entry.essential,
-        descriptions: entry.descriptions,
-        expanded: focusedEntryId === entry.id,
-        connectedSkillLabels: connectedSkillLabels.get(entry.id) ?? [],
-        onToggleExpand,
-        onUpdateCategory,
-        onToggleEssential,
-        onUpdateDescription,
-        onAddDescription,
-      };
-      nodes.push({
-        id: entry.id,
-        type: "entry",
-        data: entryData,
-        position: detachedEntries[entry.id],
-        draggable: true,
-        style: {
-          width: ENTRY_NODE_WIDTH,
-          height: ENTRY_NODE_HEIGHT,
-          zIndex: focusedEntryId === entry.id ? 32 : 2,
-        },
-      });
-    });
-
   const skillsStartX = categories.length * 390;
 
   if (focusedEntryId) {
-    const relatedGroupId = "group:related_skills";
-    const relatedExpanded = expandedGroups.has("related_skills");
-    const relatedHeight = Math.max(160, relatedSkills.length * 76 + 72);
+    const relatedGroupId = "group:skills";
+    const relatedExpanded = expandedGroups.has("skills");
+    const relatedHeight = Math.max(160, relatedSkills.length * 62 + 72);
     nodes.push({
       id: relatedGroupId,
       type: "group",
       data: {
         kind: "group",
-        label: "Related Skills",
-        category: "related_skills",
+        label: "Skills",
+        category: "skills",
         count: relatedSkills.length,
         countLabel: "Skills",
         expanded: relatedExpanded,
@@ -502,74 +466,11 @@ function buildGraphView(params: BuildGraphParams): {
         data: skillData,
         parentId: relatedGroupId,
         extent: "parent",
-        position: { x: 16, y: 50 + index * 76 },
+        position: { x: 14, y: 50 + index * 58 },
         draggable: true,
         style: {
           width: 320,
-          height: 68,
-        },
-      });
-    });
-
-    const poolGroupId = "group:skills_pool";
-    const poolExpanded = expandedGroups.has("skills_pool");
-    const poolHeight = Math.max(160, unrelatedSkills.length * 76 + 72);
-    nodes.push({
-      id: poolGroupId,
-      type: "group",
-      data: {
-        kind: "group",
-        label: "Skill Pool",
-        category: "skills_pool",
-        count: unrelatedSkills.length,
-        countLabel: "Skills",
-        expanded: poolExpanded,
-        addLabel: "Add skill",
-        isDropzoneActive: false,
-        onToggleGroup,
-        onAddItem: () => {
-          onAddSkill();
-        },
-        onSelectGroup,
-      } satisfies GroupNodeData,
-      position: { x: skillsStartX + 430, y: 30 },
-      draggable: false,
-      style: {
-        width: 360,
-        height: poolHeight,
-      },
-    });
-
-    unrelatedSkills.forEach((skill, index) => {
-      if (!poolExpanded) {
-        collapsedProxyParentByChild.set(skill.id, poolGroupId);
-        return;
-      }
-      const mastery = resolveMasteryLevel(skill.level, toSkillMeta(skill.meta));
-      nodes.push({
-        id: skill.id,
-        type: "skill",
-        data: {
-          kind: "skill",
-          label: skill.label,
-          category: skill.category,
-          essential: skill.essential,
-          fillColor: masteryColorForCategory(skill.category, mastery.tag),
-          masteryTag: mastery.tag,
-          masteryLabel: mastery.label,
-          masteryValue: mastery.value,
-          masteryIntensity: mastery.intensity,
-          related: false,
-          shape: "circle",
-          onSelectSkill,
-        } satisfies SkillNodeData,
-        parentId: poolGroupId,
-        extent: "parent",
-        position: { x: 16, y: 50 + index * 76 },
-        draggable: true,
-        style: {
-          width: 320,
-          height: 68,
+          height: 42,
         },
       });
     });
@@ -707,7 +608,7 @@ function applyTopLevelDagreLayout(
 
   topLevelGroups.forEach((node, index) => {
     const style = node.style ?? {};
-    const baseWidth = asDimension(style.width, node.id === "group:related_skills" ? 360 : 340);
+    const baseWidth = asDimension(style.width, node.id === "group:skills" ? 360 : 340);
     const baseHeight = asDimension(style.height, 160);
     const expandedPanelWidth = focusedCategory && node.id === `group:${focusedCategory}` ? 280 : 0;
     const widthForLayout = baseWidth + expandedPanelWidth;
@@ -726,7 +627,7 @@ function applyTopLevelDagreLayout(
       return;
     }
     const style = node.style ?? {};
-    const width = asDimension(style.width, node.id === "group:related_skills" ? 360 : 340);
+    const width = asDimension(style.width, node.id === "group:skills" ? 360 : 340);
     const height = asDimension(style.height, 160);
     layoutById.set(node.id, {
       x: layoutNode.x - width / 2,
@@ -785,7 +686,6 @@ function CvGraphEditorInner(): JSX.Element {
   const [focusedEntryId, setFocusedEntryId] = useState("");
   const [selectedSkillId, setSelectedSkillId] = useState("");
   const [selectedGroupCategory, setSelectedGroupCategory] = useState<string | null>(null);
-  const [detachedEntries, setDetachedEntries] = useState<Record<string, XYPosition>>({});
   const [activeDropzoneCategory, setActiveDropzoneCategory] = useState<string | null>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance<
     FlowNode,
@@ -850,8 +750,7 @@ function CvGraphEditorInner(): JSX.Element {
     }
     setExpandedGroups((previous) => {
       const next = new Set(previous);
-      next.add("related_skills");
-      next.add("skills_pool");
+      next.add("skills");
       return next;
     });
   }, [focusedEntryId]);
@@ -1031,7 +930,6 @@ function CvGraphEditorInner(): JSX.Element {
       graph,
       expandedGroups,
       focusedEntryId,
-      detachedEntries,
       activeDropzoneCategory,
       selectedGroupCategory,
       onToggleGroup,
@@ -1054,7 +952,6 @@ function CvGraphEditorInner(): JSX.Element {
     graph,
     expandedGroups,
     focusedEntryId,
-    detachedEntries,
     activeDropzoneCategory,
     selectedGroupCategory,
     onToggleGroup,
@@ -1161,54 +1058,11 @@ function CvGraphEditorInner(): JSX.Element {
       }
       const entryId = node.id;
       const absolute = resolveNodeAbsolutePosition(node, nodesById);
-      const center = nodeCenterPoint(node, nodesById);
       const parentCategory = node.parentId ? categoryFromGroupId(node.parentId) : null;
       const parentBounds = parentCategory
         ? containerBounds.find((container) => container.category === parentCategory) ?? null
         : null;
-      const targetContainer = findContainerAtPoint(containerBounds, center, null);
-
       if (!parentCategory) {
-        if (!targetContainer || !isEntryContainerCategory(targetContainer.category)) {
-          setDetachedEntries((previous) => ({
-            ...previous,
-            [entryId]: absolute,
-          }));
-          return;
-        }
-
-        setDetachedEntries((previous) => {
-          if (!(entryId in previous)) {
-            return previous;
-          }
-          const next = { ...previous };
-          delete next[entryId];
-          return next;
-        });
-
-        mutateGraph((previous) => {
-          if (!previous) {
-            return previous;
-          }
-          const existing = previous.entries.find((entry) => entry.id === entryId);
-          if (!existing) {
-            return previous;
-          }
-          const movedEntries = previous.entries.map((entry) =>
-            entry.id === entryId ? updateEntry(entry, { category: targetContainer.category }) : entry,
-          );
-          return {
-            ...previous,
-            entries: reorderCategoryEntries(
-              movedEntries,
-              targetContainer.category,
-              entryId,
-              Number.MAX_SAFE_INTEGER,
-              detachedEntries,
-            ),
-          };
-        });
-        setExpandedGroups((previous) => new Set(previous).add(targetContainer.category));
         return;
       }
 
@@ -1232,42 +1086,13 @@ function CvGraphEditorInner(): JSX.Element {
               parentCategory,
               entryId,
               targetIndex,
-              detachedEntries,
             ),
           };
         });
         return;
       }
-
-      if (targetContainer && isEntryContainerCategory(targetContainer.category)) {
-        mutateGraph((previous) => {
-          if (!previous) {
-            return previous;
-          }
-          const movedEntries = previous.entries.map((entry) =>
-            entry.id === entryId ? updateEntry(entry, { category: targetContainer.category }) : entry,
-          );
-          return {
-            ...previous,
-            entries: reorderCategoryEntries(
-              movedEntries,
-              targetContainer.category,
-              entryId,
-              Number.MAX_SAFE_INTEGER,
-              detachedEntries,
-            ),
-          };
-        });
-        setExpandedGroups((previous) => new Set(previous).add(targetContainer.category));
-        return;
-      }
-
-      setDetachedEntries((previous) => ({
-        ...previous,
-        [entryId]: absolute,
-      }));
     },
-    [activeDropzoneCategory, containerBounds, detachedEntries, graph, mutateGraph, nodes],
+    [activeDropzoneCategory, containerBounds, graph, mutateGraph, nodes],
   );
 
   const onConnect = useCallback(
@@ -1361,10 +1186,8 @@ function CvGraphEditorInner(): JSX.Element {
     if (!graph || !selectedGroupCategory) {
       return [] as CvEntry[];
     }
-    return graph.entries.filter(
-      (entry) => entry.category === selectedGroupCategory && !detachedEntries[entry.id],
-    );
-  }, [detachedEntries, graph, selectedGroupCategory]);
+    return graph.entries.filter((entry) => entry.category === selectedGroupCategory);
+  }, [graph, selectedGroupCategory]);
 
   const moveEntryInsideSelectedGroup = useCallback(
     (entryId: string, direction: "up" | "down") => {
@@ -1389,33 +1212,11 @@ function CvGraphEditorInner(): JSX.Element {
             selectedGroupCategory,
             entryId,
             targetIndex,
-            detachedEntries,
           ),
         };
       });
     },
-    [detachedEntries, graph, mutateGraph, selectedGroupCategory],
-  );
-
-  const removeEntryFromContainer = useCallback(
-    (entryId: string) => {
-      if (!selectedGroupCategory) {
-        return;
-      }
-      const selectedBounds = containerBounds.find(
-        (container) => container.category === selectedGroupCategory,
-      );
-      const fallbackIndex = selectedGroupEntries.findIndex((entry) => entry.id === entryId);
-      const fallbackY = selectedBounds
-        ? selectedBounds.y + ENTRY_ROW_START_Y + Math.max(fallbackIndex, 0) * ENTRY_ROW_GAP
-        : 120;
-      const fallbackX = selectedBounds ? selectedBounds.x + selectedBounds.width + 48 : 140;
-      setDetachedEntries((previous) => ({
-        ...previous,
-        [entryId]: { x: fallbackX, y: fallbackY },
-      }));
-    },
-    [containerBounds, selectedGroupCategory, selectedGroupEntries],
+    [graph, mutateGraph, selectedGroupCategory],
   );
 
   const updateSelectedSkill = (patch: Partial<CvSkill>) => {
@@ -1443,6 +1244,17 @@ function CvGraphEditorInner(): JSX.Element {
   const selectedMastery = selectedSkill
     ? resolveMasteryLevel(selectedSkill.level, toSkillMeta(selectedSkill.meta))
     : null;
+  const unrelatedSkillsByCategory = useMemo(() => {
+    const grouped = new Map<string, CvSkill[]>();
+    mapped.unrelatedSkills.forEach((skill) => {
+      const bucket = grouped.get(skill.category) ?? [];
+      bucket.push(skill);
+      grouped.set(skill.category, bucket);
+    });
+    return Array.from(grouped.entries())
+      .sort((left, right) => left[0].localeCompare(right[0]))
+      .map(([category, skills]) => ({ category, skills }));
+  }, [mapped.unrelatedSkills]);
 
   return (
     <section className="panel cv-graph-editor-shell space-y-2">
@@ -1524,11 +1336,6 @@ function CvGraphEditorInner(): JSX.Element {
               ? `Focused entry: ${entryLabel(focusedEntry)}`
               : "Select an entry to split related and unrelated skills."}
           </p>
-          {Object.keys(detachedEntries).length ? (
-            <p className="cv-muted">
-              Detached entries are a sandbox-only layout state and are not persisted by Save.
-            </p>
-          ) : null}
 
           <div className="cv-side-box">
             <h3>Unrelated Skills</h3>
@@ -1540,25 +1347,30 @@ function CvGraphEditorInner(): JSX.Element {
                   <div className="cv-skeleton-chip" />
                 </div>
               ) : (
-                mapped.unrelatedSkills.map((skill) => {
-                  const mastery = resolveMasteryLevel(skill.level, toSkillMeta(skill.meta));
-                  return (
-                    <button
-                      key={skill.id}
-                      type="button"
-                      className={`cv-side-skill-chip ${selectedSkillId === skill.id ? "cv-side-skill-chip-active" : ""}`}
-                      style={{
-                        borderColor: masteryColorForCategory(skill.category, mastery.tag),
-                      }}
-                      onClick={() => setSelectedSkillId(skill.id)}
-                    >
-                      <span>{skill.label}</span>
-                      <small>
-                        {mastery.label} ({mastery.value}/5)
-                      </small>
-                    </button>
-                  );
-                })
+                unrelatedSkillsByCategory.map(({ category, skills }) => (
+                  <div key={category} className="space-y-1">
+                    <p className="cv-muted">{displayCategory(category)}</p>
+                    {skills.map((skill) => {
+                      const mastery = resolveMasteryLevel(skill.level, toSkillMeta(skill.meta));
+                      return (
+                        <button
+                          key={skill.id}
+                          type="button"
+                          className={`cv-side-skill-chip ${selectedSkillId === skill.id ? "cv-side-skill-chip-active" : ""}`}
+                          style={{
+                            borderColor: masteryColorForCategory(skill.category, mastery.tag),
+                          }}
+                          onClick={() => setSelectedSkillId(skill.id)}
+                        >
+                          <span>{skill.label}</span>
+                          <small>
+                            {mastery.label} ({mastery.value}/5)
+                          </small>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ))
               )}
             </div>
             <button type="button" className="cv-plus-button w-full" onClick={onAddSkill}>
@@ -1647,13 +1459,6 @@ function CvGraphEditorInner(): JSX.Element {
                           onClick={() => moveEntryInsideSelectedGroup(entry.id, "down")}
                         >
                           ↓
-                        </button>
-                        <button
-                          type="button"
-                          className="cv-order-btn cv-order-btn-remove"
-                          onClick={() => removeEntryFromContainer(entry.id)}
-                        >
-                          Extract
                         </button>
                       </div>
                     </div>
