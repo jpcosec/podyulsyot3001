@@ -1,14 +1,14 @@
 [
   {
     "id": "TC001",
-    "title": "Portfolio dashboard shows overall job statistics",
-    "description": "Verifies the portfolio dashboard loads and displays the four job stat categories (total, pending review, completed, failed).",
+    "title": "Portfolio dashboard loads and shows job summary stats",
+    "description": "Verifies the portfolio dashboard renders and displays the four top-level job stats values.",
     "category": "Portfolio Dashboard",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to \"/\""
+        "description": "Navigate to /"
       },
       {
         "type": "assertion",
@@ -34,55 +34,47 @@
   },
   {
     "id": "TC002",
-    "title": "Portfolio dashboard shows next review target details",
-    "description": "Verifies the next review target section displays a job source and job ID.",
+    "title": "Portfolio dashboard shows next review target with source and job ID",
+    "description": "Verifies the dashboard displays the next review target section including source and job ID labels/values.",
     "category": "Portfolio Dashboard",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to \"/\""
+        "description": "Navigate to /"
       },
       {
         "type": "assertion",
-        "description": "Verify text \"Next\" is visible"
+        "description": "Verify text \"Next review target\" is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify text \"Review\" is visible"
+        "description": "Verify text \"Source\" is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify element \"Next review target\" is visible"
+        "description": "Verify text \"Job ID\" is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify element \"Job ID\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"Source\" is visible"
+        "description": "Verify element \"Open job workspace\" is visible"
       }
     ]
   },
   {
     "id": "TC003",
-    "title": "Open job workspace from next review target",
-    "description": "Verifies that using the \"Open job workspace\" link from the dashboard transitions into a job workspace page with job context visible.",
+    "title": "Open job workspace from next review target navigates into job workspace (dynamic URL)",
+    "description": "Verifies clicking the Open job workspace link transitions into the job workspace experience.",
     "category": "Portfolio Dashboard",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to \"/\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"Open job workspace\" is visible"
+        "description": "Navigate to /"
       },
       {
         "type": "action",
-        "description": "Click on \"Open job workspace\""
+        "description": "Click \"Open job workspace\""
       },
       {
         "type": "assertion",
@@ -90,7 +82,7 @@
       },
       {
         "type": "assertion",
-        "description": "Verify element \"Job sidebar\" is visible"
+        "description": "Verify element \"Job workspace sidebar\" is visible"
       },
       {
         "type": "assertion",
@@ -104,129 +96,80 @@
   },
   {
     "id": "TC004",
-    "title": "Navigate from portfolio to Data Explorer via artifacts link",
-    "description": "Verifies the \"Browse all local job artifacts\" link navigates to the Data Explorer page.",
+    "title": "Browse jobs in collapsible tree and expand a source group",
+    "description": "Verifies the job tree can be expanded from a collapsed source node to reveal child jobs.",
     "category": "Portfolio Dashboard",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to \"/\""
+        "description": "Navigate to /"
       },
       {
         "type": "assertion",
-        "description": "Verify element \"Browse all local job artifacts\" is visible"
+        "description": "Verify element \"Job tree\" is visible"
       },
       {
         "type": "action",
-        "description": "Click on \"Browse all local job artifacts\""
+        "description": "Click a collapsed source node in the job tree"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/explorer\""
+        "description": "Verify at least one child job entry is visible under that source"
+      },
+      {
+        "type": "action",
+        "description": "Click the same source node again"
       },
       {
         "type": "assertion",
-        "description": "Verify page title contains \"Explorer\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"data/jobs\" is visible"
+        "description": "Verify the child job entries under that source are no longer visible"
       }
     ]
   },
   {
     "id": "TC005",
-    "title": "Expand Developer Tools and open Sandbox index",
-    "description": "Verifies the Developer Tools section expands and the Sandbox index link navigates to the sandbox page.",
+    "title": "Selecting a job entry updates the job details area",
+    "description": "Verifies clicking a job entry in the tree shows job details (card/panel) for that job.",
     "category": "Portfolio Dashboard",
     "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to \"/\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"Developer Tools\" is visible"
+        "description": "Navigate to /"
       },
       {
         "type": "action",
-        "description": "Click on \"Developer Tools\""
+        "description": "Click a job entry in the job tree"
       },
       {
         "type": "assertion",
-        "description": "Verify element \"Sandbox\" is visible"
-      },
-      {
-        "type": "action",
-        "description": "Click on \"Sandbox\""
+        "description": "Verify element \"Job details\" is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/sandbox\""
+        "description": "Verify text \"Source\" is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify page title contains \"Sandbox\""
+        "description": "Verify text \"Job ID\" is visible"
       }
     ]
   },
   {
     "id": "TC006",
-    "title": "Expand a source node in the job tree to reveal child jobs",
-    "description": "Verifies that a collapsed source node in the job tree can be expanded and shows child job entries.",
-    "category": "Portfolio Dashboard",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to \"/\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"Job tree\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"Source\" is visible in the job tree"
-      },
-      {
-        "type": "action",
-        "description": "Click on a collapsed source node in the job tree"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"Job\" is visible within the expanded source section"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify at least one child job entry is visible under the expanded source"
-      }
-    ]
-  },
-  {
-    "id": "TC007",
-    "title": "Select a job entry with missing/empty artifacts state",
-    "description": "Verifies selecting a job without artifacts shows a missing/empty state rather than crashing or rendering blank content.",
+    "title": "Job entry with missing artifacts shows an empty or missing state in job details",
+    "description": "Verifies the UI handles a job without artifacts by showing a missing/empty state rather than breaking.",
     "category": "Portfolio Dashboard",
     "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to \"/\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"Job tree\" is visible"
+        "description": "Navigate to /"
       },
       {
         "type": "action",
-        "description": "Click on a source node in the job tree to expand it"
-      },
-      {
-        "type": "action",
-        "description": "Click on a job entry that is indicated as having no artifacts"
+        "description": "Click a job entry that is labeled or indicated as having no artifacts"
       },
       {
         "type": "assertion",
@@ -235,50 +178,100 @@
       {
         "type": "assertion",
         "description": "Verify text \"No evidence\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "Navigate from Portfolio to Data Explorer via 'Browse all local job artifacts' link",
+    "description": "Verifies the dashboard link routes to the Data Explorer page.",
+    "category": "Portfolio Dashboard",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click \"Browse all local job artifacts\""
       },
       {
         "type": "assertion",
-        "description": "Verify text \"Missing\" is visible"
+        "description": "Verify URL contains \"/explorer\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"data/jobs\" is visible"
       }
     ]
   },
   {
     "id": "TC008",
-    "title": "Portfolio dashboard remains usable if portfolio summary shows no jobs",
-    "description": "Verifies that when the dashboard shows an empty portfolio (no jobs), the page displays an empty state and does not block navigation to explorer or developer tools.",
+    "title": "Developer Tools section expands and exposes sandbox links",
+    "description": "Verifies the Developer Tools section can be expanded and shows available sandbox/tool links.",
     "category": "Portfolio Dashboard",
-    "priority": "Low",
+    "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to \"/\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"Job tree\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"No jobs\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"Browse all local job artifacts\" is visible"
+        "description": "Navigate to /"
       },
       {
         "type": "action",
-        "description": "Click on \"Browse all local job artifacts\""
+        "description": "Click \"Developer Tools\""
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/explorer\""
+        "description": "Verify text \"Sandbox\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Text Tagger\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"CV Graph Editor\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Node Editor\" is visible"
       }
     ]
   },
   {
     "id": "TC009",
-    "title": "Open Data Explorer and view root data/jobs/ directory listing",
-    "description": "Verifies the Data Explorer loads and shows the root directory listing with directory metadata visible.",
+    "title": "Open a sandbox tool from Developer Tools and land on a sandbox route",
+    "description": "Verifies a sandbox link from Developer Tools navigates to its corresponding sandbox page.",
+    "category": "Portfolio Dashboard",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click \"Developer Tools\""
+      },
+      {
+        "type": "action",
+        "description": "Click \"Text Tagger\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/sandbox/text_tagger\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify page title contains \"Sandbox\""
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "Open Data Explorer and view root data/jobs listing",
+    "description": "Verifies the Data Explorer loads and shows the root directory listing with directory item counts and file size indicators.",
     "category": "Data Explorer",
     "priority": "High",
     "steps": [
@@ -300,18 +293,18 @@
       },
       {
         "type": "assertion",
-        "description": "Verify element \"item count for directories\" is visible"
+        "description": "Verify element \"item count for a directory\" is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify element \"size indicator for files\" is visible"
+        "description": "Verify element \"size indicator for a file\" is visible"
       }
     ]
   },
   {
-    "id": "TC010",
-    "title": "Navigate into a folder and verify ?path= updates and folder contents are shown",
-    "description": "Verifies clicking a folder updates the query parameter and displays the folder contents with item counts.",
+    "id": "TC011",
+    "title": "Navigate into a folder and confirm ?path= updates and contents render",
+    "description": "Verifies clicking a folder navigates into it, updates the query parameter, and shows the folder contents with directory item counts.",
     "category": "Data Explorer",
     "priority": "High",
     "steps": [
@@ -329,88 +322,22 @@
       },
       {
         "type": "assertion",
-        "description": "Verify element \"folder contents list\" is visible"
+        "description": "Verify element \"breadcrumb navigation\" is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify element \"item count for directories\" is visible"
+        "description": "Verify element \"folder contents listing\" is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify text \"..\" is visible"
-      }
-    ]
-  },
-  {
-    "id": "TC011",
-    "title": "Preview a JSON file with pretty-printed output",
-    "description": "Verifies selecting a JSON file shows a readable, pretty-printed JSON preview.",
-    "category": "Data Explorer",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /explorer"
-      },
-      {
-        "type": "action",
-        "description": "Click on the first visible folder in the listing"
-      },
-      {
-        "type": "action",
-        "description": "Click on a visible file with a .json extension"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"file preview panel\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"{\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"}\" is visible"
+        "description": "Verify element \"item count for a directory\" is visible"
       }
     ]
   },
   {
     "id": "TC012",
-    "title": "Preview a markdown or text file as plain text",
-    "description": "Verifies selecting a markdown/text file shows a plain-text preview in the preview panel.",
-    "category": "Data Explorer",
-    "priority": "Medium",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /explorer"
-      },
-      {
-        "type": "action",
-        "description": "Click on the first visible folder in the listing"
-      },
-      {
-        "type": "action",
-        "description": "Click on a visible file with a .md or .txt extension"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"file preview panel\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"#\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"size indicator for files\" is visible"
-      }
-    ]
-  },
-  {
-    "id": "TC013",
-    "title": "Preview an image file inline (PNG/JPG/GIF/SVG)",
-    "description": "Verifies selecting an image file renders an inline image preview.",
+    "title": "Open a JSON file and view pretty-printed JSON preview",
+    "description": "Verifies selecting a JSON file shows an inline, readable pretty-printed JSON preview.",
     "category": "Data Explorer",
     "priority": "High",
     "steps": [
@@ -424,118 +351,139 @@
       },
       {
         "type": "action",
-        "description": "Click on a visible file with a .png, .jpg, .gif, or .svg extension"
+        "description": "Click on a visible JSON file in the folder contents"
       },
       {
         "type": "assertion",
         "description": "Verify element \"file preview panel\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"inline image preview\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"size indicator for files\" is visible"
-      }
-    ]
-  },
-  {
-    "id": "TC014",
-    "title": "Use breadcrumb navigation to go back up the directory tree",
-    "description": "Verifies the breadcrumb lets the user navigate to a parent directory and updates the listing accordingly.",
-    "category": "Data Explorer",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /explorer"
-      },
-      {
-        "type": "action",
-        "description": "Click on the first visible folder in the listing"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"breadcrumb navigation\" is visible"
-      },
-      {
-        "type": "action",
-        "description": "Click on the parent level in the breadcrumb navigation"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"root directory listing\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/explorer\""
-      }
-    ]
-  },
-  {
-    "id": "TC015",
-    "title": "Attempt to preview a very large or unsupported file and see a cannot-preview state",
-    "description": "Verifies the UI gracefully handles files that cannot be previewed by showing a clear message/state and keeping navigation usable.",
-    "category": "Data Explorer",
-    "priority": "Medium",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /explorer"
-      },
-      {
-        "type": "action",
-        "description": "Click on the first visible folder in the listing"
-      },
-      {
-        "type": "action",
-        "description": "Click on a visible file that is indicated as very large or has an unsupported extension"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"file preview panel\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"cannot preview\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"size indicator for files\" is visible"
-      }
-    ]
-  },
-  {
-    "id": "TC016",
-    "title": "Switch between two different files and verify preview updates each time",
-    "description": "Verifies the preview panel updates when selecting different files without requiring a page reload.",
-    "category": "Data Explorer",
-    "priority": "Medium",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /explorer"
-      },
-      {
-        "type": "action",
-        "description": "Click on the first visible folder in the listing"
-      },
-      {
-        "type": "action",
-        "description": "Click on a visible file with a .json extension"
       },
       {
         "type": "assertion",
         "description": "Verify text \"{\" is visible"
       },
       {
+        "type": "assertion",
+        "description": "Verify element \"pretty-printed JSON preview\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "Use breadcrumb navigation to go back up one directory level",
+    "description": "Verifies breadcrumb navigation works to move up the directory tree and updates the listing accordingly.",
+    "category": "Data Explorer",
+    "priority": "Medium",
+    "steps": [
+      {
         "type": "action",
-        "description": "Click on a visible image file (.png, .jpg, .gif, or .svg)"
+        "description": "Navigate to /explorer"
+      },
+      {
+        "type": "action",
+        "description": "Click on the first visible folder in the listing"
       },
       {
         "type": "assertion",
-        "description": "Verify element \"inline image preview\" is visible"
+        "description": "Verify URL contains \"?path=\""
+      },
+      {
+        "type": "action",
+        "description": "Click on the breadcrumb item for the parent directory"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"data/jobs\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"root directory listing\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC014",
+    "title": "Preview a markdown/text file as plain text",
+    "description": "Verifies selecting a markdown/text file shows an inline plain-text preview.",
+    "category": "Data Explorer",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /explorer"
+      },
+      {
+        "type": "action",
+        "description": "Click on a visible text or markdown file in the listing"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"file preview panel\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"plain text preview\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"#\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC015",
+    "title": "Preview an image file inline (PNG/JPG/GIF/SVG)",
+    "description": "Verifies selecting an image file renders the image inline in the preview area.",
+    "category": "Data Explorer",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /explorer"
+      },
+      {
+        "type": "action",
+        "description": "Click on a visible image file (PNG/JPG/GIF/SVG) in the listing"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"file preview panel\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"image preview\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"size indicator for the selected file\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC016",
+    "title": "Attempt to preview a very large or unsupported file and see a cannot-preview message",
+    "description": "Verifies large or unsupported files show a size indicator and a clear preview failure/cannot-preview message instead of crashing.",
+    "category": "Data Explorer",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /explorer"
+      },
+      {
+        "type": "action",
+        "description": "Scroll to the bottom of the directory listing"
+      },
+      {
+        "type": "action",
+        "description": "Click on a visible file that appears very large (based on the size indicator) or has an unsupported type"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"size indicator for the selected file\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"cannot preview\" is visible"
       },
       {
         "type": "assertion",
@@ -545,14 +493,47 @@
   },
   {
     "id": "TC017",
-    "title": "Graph Explorer loads with graph visible in View 1",
-    "description": "Verifies the job workspace opens and the Graph Explorer (View 1) content renders a visible graph area.",
+    "title": "Directory item count visibility after navigating across multiple folders",
+    "description": "Verifies directory item counts remain visible and update correctly after navigating into a folder and then into a subfolder.",
+    "category": "Data Explorer",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /explorer"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"item count for a directory\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on the first visible folder in the listing"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"item count for a directory\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on a visible subfolder in the folder contents"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"item count for a directory\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC018",
+    "title": "Graph Explorer displays when entering a job workspace (View 1 selected)",
+    "description": "Verifies the job workspace loads and the Graph Explorer (View 1) graph area is visible.",
     "category": "Job Workspace — Graph Explorer (View 1)",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /"
+        "description": "Navigate to \"/\""
       },
       {
         "type": "assertion",
@@ -560,11 +541,44 @@
       },
       {
         "type": "action",
-        "description": "Click on the first visible job item in the review queue or job list"
+        "description": "Click on the first visible job item in the review queue or job tree"
       },
       {
         "type": "assertion",
-        "description": "Verify element \"View 1\" is visible"
+        "description": "Verify URL contains \"/jobs/\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"View 1\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"View 1\" tab"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Graph\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC019",
+    "title": "Selecting View 1 shows pipeline nodes and edges in the graph area",
+    "description": "Verifies switching to View 1 renders a visible node/edge graph area (ReactFlow view).",
+    "category": "Job Workspace — Graph Explorer (View 1)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on the first visible job item in the review queue or job tree"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/jobs/\""
       },
       {
         "type": "action",
@@ -577,23 +591,27 @@
       {
         "type": "assertion",
         "description": "Verify element \"graph\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"nodes\" is visible"
       }
     ]
   },
   {
-    "id": "TC018",
-    "title": "Selecting a graph edge shows match reasoning below the graph",
-    "description": "Verifies clicking an edge in the ReactFlow graph reveals match reasoning text in the details area.",
+    "id": "TC020",
+    "title": "Clicking an edge reveals match reasoning below the graph",
+    "description": "Verifies that selecting an edge in the graph surfaces match reasoning text in the details area.",
     "category": "Job Workspace — Graph Explorer (View 1)",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /"
+        "description": "Navigate to \"/\""
       },
       {
         "type": "action",
-        "description": "Click on the first visible job item in the review queue or job list"
+        "description": "Click on the first visible job item in the review queue or job tree"
       },
       {
         "type": "action",
@@ -605,7 +623,7 @@
       },
       {
         "type": "action",
-        "description": "Click on a visible edge/connection line between two nodes in the graph"
+        "description": "Click on a visible connection/edge line between two nodes in the graph"
       },
       {
         "type": "assertion",
@@ -613,24 +631,24 @@
       },
       {
         "type": "assertion",
-        "description": "Verify element \"match reasoning\" is visible"
+        "description": "Verify element \"Match reasoning\" is visible"
       }
     ]
   },
   {
-    "id": "TC019",
-    "title": "Match score is visible after selecting an edge",
-    "description": "Verifies that a match score or score label is surfaced in the UI when an edge is selected.",
+    "id": "TC021",
+    "title": "Match score information is visible after selecting a match edge",
+    "description": "Verifies match scoring details become visible after an edge is selected.",
     "category": "Job Workspace — Graph Explorer (View 1)",
     "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /"
+        "description": "Navigate to \"/\""
       },
       {
         "type": "action",
-        "description": "Click on the first visible job item in the review queue or job list"
+        "description": "Click on the first visible job item in the review queue or job tree"
       },
       {
         "type": "action",
@@ -638,7 +656,7 @@
       },
       {
         "type": "action",
-        "description": "Click on a visible edge/connection line between two nodes in the graph"
+        "description": "Click on a visible connection/edge line between two nodes in the graph"
       },
       {
         "type": "assertion",
@@ -646,244 +664,166 @@
       },
       {
         "type": "assertion",
-        "description": "Verify element \"match score\" is visible"
-      }
-    ]
-  },
-  {
-    "id": "TC020",
-    "title": "Graph Explorer remains usable after scrolling details area",
-    "description": "Verifies the details/reasoning region can be scrolled and graph remains visible (no blank/empty state).",
-    "category": "Job Workspace — Graph Explorer (View 1)",
-    "priority": "Low",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /"
-      },
-      {
-        "type": "action",
-        "description": "Click on the first visible job item in the review queue or job list"
-      },
-      {
-        "type": "action",
-        "description": "Click on \"View 1\" tab"
-      },
-      {
-        "type": "action",
-        "description": "Click on a visible edge/connection line between two nodes in the graph"
+        "description": "Verify element \"Match score\" is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify element \"match reasoning\" is visible"
-      },
-      {
-        "type": "action",
-        "description": "Scroll to the bottom of the match reasoning/details section"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"graph\" is visible"
-      }
-    ]
-  },
-  {
-    "id": "TC021",
-    "title": "Switching away from View 1 and back preserves the Graph Explorer UI",
-    "description": "Verifies the user can navigate between workspace views and return to Graph Explorer without losing the graph view.",
-    "category": "Job Workspace — Graph Explorer (View 1)",
-    "priority": "Medium",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /"
-      },
-      {
-        "type": "action",
-        "description": "Click on the first visible job item in the review queue or job list"
-      },
-      {
-        "type": "action",
-        "description": "Click on \"View 1\" tab"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"graph\" is visible"
-      },
-      {
-        "type": "action",
-        "description": "Click on \"View 2\" tab"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"View 2\" is visible"
-      },
-      {
-        "type": "action",
-        "description": "Click on \"View 1\" tab"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"graph\" is visible"
+        "description": "Verify text \"%\" is visible"
       }
     ]
   },
   {
     "id": "TC022",
-    "title": "View 2 tab loads and shows line-by-line source markdown as selectable lines",
-    "description": "Verifies the Extraction Review (View 2) renders source markdown content as line-level selectable items.",
-    "category": "Job Workspace — Document to Graph (Extraction Review, View 2)",
-    "priority": "High",
+    "title": "Graph Explorer remains usable after scrolling (details area stays readable)",
+    "description": "Verifies the match reasoning/details area can be reached and read via scrolling without losing the graph context.",
+    "category": "Job Workspace — Graph Explorer (View 1)",
+    "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /"
+        "description": "Navigate to \"/\""
       },
       {
         "type": "action",
-        "description": "Click on a job item in the review queue or job tree to open the job workspace"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/jobs/\""
+        "description": "Click on the first visible job item in the review queue or job tree"
       },
       {
         "type": "action",
-        "description": "Click the \"View 2\" tab"
+        "description": "Click on \"View 1\" tab"
+      },
+      {
+        "type": "action",
+        "description": "Click on a visible connection/edge line between two nodes in the graph"
+      },
+      {
+        "type": "action",
+        "description": "Scroll to the section below the graph"
       },
       {
         "type": "assertion",
-        "description": "Verify element \"View 2\" is visible"
+        "description": "Verify element \"Match reasoning\" is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify text \"Source\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"a line item button in the source markdown list\" is visible"
+        "description": "Verify text \"reason\" is visible"
       }
     ]
   },
   {
     "id": "TC023",
-    "title": "Selecting a markdown line shows requirement metadata panel (ID, priority, spans)",
-    "description": "Verifies clicking a source line reveals the associated requirement details in the side panel.",
-    "category": "Job Workspace — Document to Graph (Extraction Review, View 2)",
-    "priority": "High",
+    "title": "Sidebar Evidence Bank toggle shows expected limitation (not implemented) without breaking Graph Explorer",
+    "description": "Verifies interacting with the Evidence Bank item does not break the View 1 Graph Explorer view and reflects the known limitation behavior.",
+    "category": "Job Workspace — Graph Explorer (View 1)",
+    "priority": "Low",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /"
+        "description": "Navigate to \"/\""
       },
       {
         "type": "action",
-        "description": "Click on a job item in the review queue or job tree to open the job workspace"
+        "description": "Click on the first visible job item in the review queue or job tree"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"View 1\" tab"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Graph Explorer\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Evidence Bank\" in the workspace sidebar"
       },
       {
         "type": "assertion",
         "description": "Verify URL contains \"/jobs/\""
       },
       {
-        "type": "action",
-        "description": "Click the \"View 2\" tab"
-      },
-      {
-        "type": "action",
-        "description": "Click on a line item button in the source markdown list"
-      },
-      {
         "type": "assertion",
-        "description": "Verify text \"Requirement\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"ID\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"Priority\" is visible"
+        "description": "Verify element \"Graph Explorer\" is visible"
       }
     ]
   },
   {
     "id": "TC024",
-    "title": "Requirement spans are visible after selecting a line",
-    "description": "Verifies the spans section appears in the requirement panel after a line selection.",
-    "category": "Job Workspace — Document to Graph (Extraction Review, View 2)",
-    "priority": "Medium",
+    "title": "Sidebar active-state confusion: Evidence Bank and Graph Explorer may both appear active on the same URL",
+    "description": "Verifies the known limitation where both sidebar items can appear active simultaneously due to shared URL, without blocking use of View 1.",
+    "category": "Job Workspace — Graph Explorer (View 1)",
+    "priority": "Low",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /"
+        "description": "Navigate to \"/\""
       },
       {
         "type": "action",
-        "description": "Click on a job item in the review queue or job tree to open the job workspace"
+        "description": "Click on the first visible job item in the review queue or job tree"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"View 1\" tab"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Graph Explorer\" in the workspace sidebar"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Graph Explorer\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Evidence Bank\" is visible"
       },
       {
         "type": "assertion",
         "description": "Verify URL contains \"/jobs/\""
-      },
-      {
-        "type": "action",
-        "description": "Click the \"View 2\" tab"
-      },
-      {
-        "type": "action",
-        "description": "Click on a line item button in the source markdown list"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"Spans\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"a span entry in the spans list\" is visible"
       }
     ]
   },
   {
     "id": "TC025",
-    "title": "Selecting a line triggers a visible graph highlight state for the related requirement node",
-    "description": "Verifies the UI indicates the corresponding requirement node is highlighted after selecting a source line.",
+    "title": "View 2 tab shows line-level source markdown list",
+    "description": "Verifies that the Extraction Review (View 2) tab can be opened and displays source markdown as selectable line items.",
     "category": "Job Workspace — Document to Graph (Extraction Review, View 2)",
-    "priority": "Medium",
+    "priority": "High",
     "steps": [
       {
         "type": "action",
         "description": "Navigate to /"
       },
       {
-        "type": "action",
-        "description": "Click on a job item in the review queue or job tree to open the job workspace"
-      },
-      {
         "type": "assertion",
-        "description": "Verify URL contains \"/jobs/\""
+        "description": "Verify text \"Portfolio\" is visible"
       },
       {
         "type": "action",
-        "description": "Click the \"View 2\" tab"
+        "description": "Scroll to the review queue or job list section"
       },
       {
         "type": "action",
-        "description": "Click on a line item button in the source markdown list"
+        "description": "Click on the first visible job item to open the job workspace"
       },
       {
         "type": "assertion",
-        "description": "Verify text \"Graph\" is visible"
+        "description": "Verify text \"View 2\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"View 2\""
       },
       {
         "type": "assertion",
-        "description": "Verify text \"Highlighted\" is visible"
+        "description": "Verify element \"source markdown\" is visible as a list of clickable line items"
       }
     ]
   },
   {
     "id": "TC026",
-    "title": "Changing selection updates the requirement panel to a different requirement",
-    "description": "Verifies selecting another line updates the displayed requirement details (not stale).",
+    "title": "Selecting a source line shows requirement details panel",
+    "description": "Verifies that clicking a markdown line shows requirement metadata (ID, priority, spans) in the requirement panel.",
     "category": "Job Workspace — Document to Graph (Extraction Review, View 2)",
     "priority": "High",
     "steps": [
@@ -893,75 +833,34 @@
       },
       {
         "type": "action",
-        "description": "Click on a job item in the review queue or job tree to open the job workspace"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/jobs/\""
+        "description": "Click on the first visible job item to open the job workspace"
       },
       {
         "type": "action",
-        "description": "Click the \"View 2\" tab"
+        "description": "Click on \"View 2\""
       },
       {
         "type": "action",
-        "description": "Click on a line item button in the source markdown list"
+        "description": "Click on the first clickable line item in the source markdown list"
       },
       {
         "type": "assertion",
-        "description": "Verify text \"ID\" is visible"
-      },
-      {
-        "type": "action",
-        "description": "Click on a different line item button in the source markdown list"
+        "description": "Verify text \"ID\" is visible in the requirement panel"
       },
       {
         "type": "assertion",
-        "description": "Verify text \"ID\" is visible"
+        "description": "Verify text \"Priority\" is visible in the requirement panel"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Spans\" is visible in the requirement panel"
       }
     ]
   },
   {
     "id": "TC027",
-    "title": "Inline editing is not available in View 2 and user is guided to Node Editor",
-    "description": "Verifies that attempting to edit a requirement inline is blocked and the UI indicates to use Node Editor (or no edit controls are present).",
-    "category": "Job Workspace — Document to Graph (Extraction Review, View 2)",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /"
-      },
-      {
-        "type": "action",
-        "description": "Click on a job item in the review queue or job tree to open the job workspace"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/jobs/\""
-      },
-      {
-        "type": "action",
-        "description": "Click the \"View 2\" tab"
-      },
-      {
-        "type": "action",
-        "description": "Click on a line item button in the source markdown list"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"Open Node Editor\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"an inline edit field for requirement text\" is not visible"
-      }
-    ]
-  },
-  {
-    "id": "TC028",
-    "title": "View 2 remains functional after scrolling through long documents",
-    "description": "Verifies line selection still works after scrolling within the source markdown list.",
+    "title": "Selecting a different line updates requirement panel content",
+    "description": "Verifies that selecting different markdown lines updates the displayed requirement metadata rather than staying stale.",
     "category": "Job Workspace — Document to Graph (Extraction Review, View 2)",
     "priority": "Medium",
     "steps": [
@@ -971,34 +870,141 @@
       },
       {
         "type": "action",
-        "description": "Click on a job item in the review queue or job tree to open the job workspace"
+        "description": "Click on the first visible job item to open the job workspace"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"View 2\""
+      },
+      {
+        "type": "action",
+        "description": "Click on the first clickable line item in the source markdown list"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/jobs/\""
+        "description": "Verify element \"requirement panel\" is visible"
       },
       {
         "type": "action",
-        "description": "Click the \"View 2\" tab"
-      },
-      {
-        "type": "action",
-        "description": "Scroll to the bottom of the source markdown list"
-      },
-      {
-        "type": "action",
-        "description": "Click on a line item button near the bottom of the source markdown list"
+        "description": "Click on a different clickable line item in the source markdown list"
       },
       {
         "type": "assertion",
-        "description": "Verify text \"Requirement\" is visible"
+        "description": "Verify text \"ID\" is visible in the requirement panel"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Spans\" is visible in the requirement panel"
+      }
+    ]
+  },
+  {
+    "id": "TC028",
+    "title": "Requirement selection triggers graph highlight state",
+    "description": "Verifies that selecting a line in View 2 results in a visible graph highlight for the corresponding requirement node (or an explicit highlight indicator).",
+    "category": "Job Workspace — Document to Graph (Extraction Review, View 2)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click on the first visible job item to open the job workspace"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"View 2\""
+      },
+      {
+        "type": "action",
+        "description": "Click on a clickable line item in the source markdown list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"requirement panel\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"graph highlight\" is visible for the selected requirement"
       }
     ]
   },
   {
     "id": "TC029",
-    "title": "View 2 handles lines with no associated requirement gracefully",
-    "description": "Verifies selecting a line without a mapped requirement shows a clear empty state or message rather than stale requirement data.",
+    "title": "View 2 shows guidance that inline requirement editing is not available",
+    "description": "Verifies that users cannot edit requirements inline in View 2 and are instructed to use Node Editor (or no edit controls appear).",
+    "category": "Job Workspace — Document to Graph (Extraction Review, View 2)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click on the first visible job item to open the job workspace"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"View 2\""
+      },
+      {
+        "type": "action",
+        "description": "Click on a clickable line item in the source markdown list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"requirement panel\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Node Editor\" is visible as guidance for editing or verify that no \"Edit\" control is visible in the requirement panel"
+      }
+    ]
+  },
+  {
+    "id": "TC030",
+    "title": "Attempting to edit requirement inline does not allow changes",
+    "description": "Verifies that attempting to change requirement fields inline is blocked (no editable fields or save action).",
+    "category": "Job Workspace — Document to Graph (Extraction Review, View 2)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click on the first visible job item to open the job workspace"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"View 2\""
+      },
+      {
+        "type": "action",
+        "description": "Click on a clickable line item in the source markdown list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that no input fields for requirement \"ID\" are visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that no input fields for requirement \"Priority\" are visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify that no \"Save\" button is visible in the View 2 requirement panel"
+      }
+    ]
+  },
+  {
+    "id": "TC031",
+    "title": "View 2 remains functional after scrolling through many lines",
+    "description": "Verifies that line selection continues to work after scrolling the source markdown list.",
     "category": "Job Workspace — Document to Graph (Extraction Review, View 2)",
     "priority": "Low",
     "steps": [
@@ -1008,7 +1014,81 @@
       },
       {
         "type": "action",
-        "description": "Click on a job item in the review queue or job tree to open the job workspace"
+        "description": "Click on the first visible job item to open the job workspace"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"View 2\""
+      },
+      {
+        "type": "action",
+        "description": "Scroll to the lower portion of the source markdown line list"
+      },
+      {
+        "type": "action",
+        "description": "Click on a clickable line item near the bottom of the list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"ID\" is visible in the requirement panel"
+      }
+    ]
+  },
+  {
+    "id": "TC032",
+    "title": "View 2 displays empty-state messaging when no line is selected",
+    "description": "Verifies that the requirement panel shows a clear empty state (or prompts the user) before any line is selected.",
+    "category": "Job Workspace — Document to Graph (Extraction Review, View 2)",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click on the first visible job item to open the job workspace"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"View 2\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"requirement panel\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Select\" is visible in the requirement panel as a prompt or verify text indicating no line is selected is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC033",
+    "title": "Open View 3 and see the generated document preview container",
+    "description": "Verifies that View 3 can be opened from a job workspace and shows a visible document preview area.",
+    "category": "Job Workspace — Graph to Document (View 3)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Review Workbench\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Explorer\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/explorer\""
+      },
+      {
+        "type": "action",
+        "description": "Click on a visible job entry or job folder that opens the job workspace"
       },
       {
         "type": "assertion",
@@ -1016,26 +1096,207 @@
       },
       {
         "type": "action",
-        "description": "Click the \"View 2\" tab"
-      },
-      {
-        "type": "action",
-        "description": "Click on a line item that appears non-requirement content (for example, an empty line, heading, or separator)"
+        "description": "Click on the \"View 3\" tab"
       },
       {
         "type": "assertion",
-        "description": "Verify text \"No requirement selected\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"ID\" is not visible"
+        "description": "Verify element \"Generated document preview\" is visible"
       }
     ]
   },
   {
-    "id": "TC030",
-    "title": "Smoke: App can load portfolio dashboard as a starting point for manual navigation into a job (non-dynamic route only)",
-    "description": "Provides a minimal executable smoke check for the app shell to support subsequent manual selection of a job to reach View 3, without using dynamic routes.",
+    "id": "TC034",
+    "title": "Select a document section in View 3 and verify focus/selection changes",
+    "description": "Verifies that clicking a document section in View 3 selects it and shows section-level interaction affordances (focus, caret, or selection state).",
+    "category": "Job Workspace — Graph to Document (View 3)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Explorer\""
+      },
+      {
+        "type": "action",
+        "description": "Click on a visible job entry or job folder that opens the job workspace"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"View 3\" tab"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Generated document preview\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on a visible document section heading or section block in the preview"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Section actions\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC035",
+    "title": "Attempt to insert evidence snippet for a selected section when insertion options are available",
+    "description": "Verifies that section-level insertion options can be opened and an evidence snippet can be chosen when the UI presents available evidence.",
+    "category": "Job Workspace — Graph to Document (View 3)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Explorer\""
+      },
+      {
+        "type": "action",
+        "description": "Click on a visible job entry or job folder that opens the job workspace"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"View 3\" tab"
+      },
+      {
+        "type": "action",
+        "description": "Click on a visible document section heading or section block in the preview"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Insert\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Insert\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Evidence snippet options\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC036",
+    "title": "Edit a section using the basic text editing control (no rich diff)",
+    "description": "Verifies that a section can be placed into an editable state (simple textarea or similar) and accepts typed content.",
+    "category": "Job Workspace — Graph to Document (View 3)",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Explorer\""
+      },
+      {
+        "type": "action",
+        "description": "Click on a visible job entry or job folder that opens the job workspace"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"View 3\" tab"
+      },
+      {
+        "type": "action",
+        "description": "Click on a visible document section heading or section block in the preview"
+      },
+      {
+        "type": "action",
+        "description": "Type \" Test edit\" into the section editor textarea"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Test edit\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC037",
+    "title": "Attempt to open section-level version diff and confirm it is not available",
+    "description": "Verifies that requesting a section-level diff shows an unavailable state (no diff available) rather than a rich diff UI.",
+    "category": "Job Workspace — Graph to Document (View 3)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Explorer\""
+      },
+      {
+        "type": "action",
+        "description": "Click on a visible job entry or job folder that opens the job workspace"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"View 3\" tab"
+      },
+      {
+        "type": "action",
+        "description": "Click on a visible document section heading or section block in the preview"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Diff\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"No diff available\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC038",
+    "title": "Verify View 3 remains usable when no evidence insertion is available",
+    "description": "Verifies that selecting a section does not break the page when evidence snippets are unavailable and provides a read-only or basic editing experience.",
+    "category": "Job Workspace — Graph to Document (View 3)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Explorer\""
+      },
+      {
+        "type": "action",
+        "description": "Click on a visible job entry or job folder that opens the job workspace"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"View 3\" tab"
+      },
+      {
+        "type": "action",
+        "description": "Click on a visible document section heading or section block in the preview"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"No evidence available\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Generated document preview\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC039",
+    "title": "Switch away from View 3 and return to ensure the preview still renders",
+    "description": "Verifies that the document preview continues to render after navigating to another view and back within the job workspace.",
     "category": "Job Workspace — Graph to Document (View 3)",
     "priority": "Low",
     "steps": [
@@ -1044,78 +1305,53 @@
         "description": "Navigate to /"
       },
       {
-        "type": "assertion",
-        "description": "Verify URL contains \"/\""
+        "type": "action",
+        "description": "Click on \"Explorer\""
+      },
+      {
+        "type": "action",
+        "description": "Click on a visible job entry or job folder that opens the job workspace"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"View 3\" tab"
       },
       {
         "type": "assertion",
-        "description": "Verify page title contains \"Review\""
+        "description": "Verify element \"Generated document preview\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"View 2\" tab"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Extraction view\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"View 3\" tab"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Generated document preview\" is visible"
       }
     ]
   },
   {
-    "id": "TC031",
-    "title": "Outputs tab: open markdown output and verify editor is shown",
-    "description": "Verifies a user can open the Outputs tab and view a markdown file in an editable textarea.",
+    "id": "TC040",
+    "title": "Outputs tab - open and edit a Markdown output and save",
+    "description": "Verifies a user can open a Markdown output in the Outputs tab, edit it, and save changes successfully.",
     "category": "Pipeline Outputs (Outputs tab)",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /explorer"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"data/jobs\" is visible"
+        "description": "Navigate to /"
       },
       {
         "type": "action",
-        "description": "Click on the first visible job folder in the list"
-      },
-      {
-        "type": "action",
-        "description": "Click on the first visible JSON file that looks like a job or pipeline descriptor"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify the preview panel is visible"
-      },
-      {
-        "type": "action",
-        "description": "Click on any visible link or button labeled \"Open\" or \"Open in workspace\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/jobs/\""
-      },
-      {
-        "type": "action",
-        "description": "Click on the \"Outputs\" tab"
-      }
-    ]
-  },
-  {
-    "id": "TC032",
-    "title": "Outputs tab: markdown file loads with contents visible in textarea",
-    "description": "Verifies that selecting a markdown output (e.g., cv.md) shows its contents in a textarea editor.",
-    "category": "Pipeline Outputs (Outputs tab)",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /explorer"
-      },
-      {
-        "type": "action",
-        "description": "Click on the first visible job folder in the list"
-      },
-      {
-        "type": "action",
-        "description": "Click on the first visible JSON file that looks like a job or pipeline descriptor"
-      },
-      {
-        "type": "action",
-        "description": "Click on any visible link or button labeled \"Open\" or \"Open in workspace\""
+        "description": "Click on the first visible job item in the review queue or job list to open its workspace"
       },
       {
         "type": "action",
@@ -1123,40 +1359,40 @@
       },
       {
         "type": "assertion",
-        "description": "Verify text \"Outputs\" is visible"
+        "description": "Verify element \"Outputs\" file list is visible"
       },
       {
         "type": "action",
-        "description": "Click on the file named \"cv.md\" in the file list if visible; otherwise click the first file with a \".md\" extension"
+        "description": "Click on the markdown file named \"cv.md\" if it is visible in the list"
       },
       {
         "type": "assertion",
-        "description": "Verify element \"textarea\" is visible"
+        "description": "Verify element \"markdown editor\" textarea is visible"
+      },
+      {
+        "type": "action",
+        "description": "Type \"\\n\\nTest change from UI automation.\" into the markdown editor textarea"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Save\""
       }
     ]
   },
   {
-    "id": "TC033",
-    "title": "Outputs tab: edit markdown and save successfully",
-    "description": "Verifies that a user can modify markdown content and save the proposed change successfully.",
+    "id": "TC041",
+    "title": "Outputs tab - Markdown save persists when reopening the same file (within session)",
+    "description": "Verifies that after saving a Markdown output, reopening the file shows the updated content.",
     "category": "Pipeline Outputs (Outputs tab)",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /explorer"
+        "description": "Navigate to /"
       },
       {
         "type": "action",
-        "description": "Click on the first visible job folder in the list"
-      },
-      {
-        "type": "action",
-        "description": "Click on the first visible JSON file that looks like a job or pipeline descriptor"
-      },
-      {
-        "type": "action",
-        "description": "Click on any visible link or button labeled \"Open\" or \"Open in workspace\""
+        "description": "Click on the first visible job item in the review queue or job list to open its workspace"
       },
       {
         "type": "action",
@@ -1164,40 +1400,44 @@
       },
       {
         "type": "action",
-        "description": "Click on the file named \"cv.md\" in the file list if visible; otherwise click the first file with a \".md\" extension"
+        "description": "Click on the markdown file named \"cv.md\" if it is visible in the list"
       },
       {
         "type": "action",
-        "description": "Type \"\\n\\nTEST_CHANGE: updated by E2E\" into the markdown textarea editor"
+        "description": "Type \"\\nSaved marker: PIPELINE_OUTPUTS_MD\" into the markdown editor textarea"
       },
       {
         "type": "action",
-        "description": "Click on the \"Save\" button"
+        "description": "Click on \"Save\""
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Outputs\" tab"
+      },
+      {
+        "type": "action",
+        "description": "Click on the markdown file named \"cv.md\" if it is visible in the list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"PIPELINE_OUTPUTS_MD\" is visible"
       }
     ]
   },
   {
-    "id": "TC034",
-    "title": "Outputs tab: JSON file opens in raw textarea editor",
-    "description": "Verifies that selecting a JSON output file shows a raw JSON textarea editor.",
+    "id": "TC042",
+    "title": "Outputs tab - open and view a JSON output file",
+    "description": "Verifies a user can open a JSON output file and see a raw JSON textarea editor populated with content.",
     "category": "Pipeline Outputs (Outputs tab)",
     "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /explorer"
+        "description": "Navigate to /"
       },
       {
         "type": "action",
-        "description": "Click on the first visible job folder in the list"
-      },
-      {
-        "type": "action",
-        "description": "Click on the first visible JSON file that looks like a job or pipeline descriptor"
-      },
-      {
-        "type": "action",
-        "description": "Click on any visible link or button labeled \"Open\" or \"Open in workspace\""
+        "description": "Click on the first visible job item in the review queue or job list to open its workspace"
       },
       {
         "type": "action",
@@ -1205,36 +1445,32 @@
       },
       {
         "type": "action",
-        "description": "Click on the first file with a \".json\" extension in the file list"
+        "description": "Click on a file in the list with a \".json\" extension"
       },
       {
         "type": "assertion",
-        "description": "Verify element \"textarea\" is visible"
+        "description": "Verify element \"raw JSON editor\" textarea is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"{\" is visible"
       }
     ]
   },
   {
-    "id": "TC035",
-    "title": "Outputs tab: attempt to save invalid JSON shows visible error or does not indicate success",
-    "description": "Verifies that saving invalid JSON does not succeed and shows a visible error or lacks a success indication.",
+    "id": "TC043",
+    "title": "Outputs tab - invalid JSON shows save failure or validation error",
+    "description": "Verifies saving invalid JSON is rejected or results in a visible error/failure state.",
     "category": "Pipeline Outputs (Outputs tab)",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /explorer"
+        "description": "Navigate to /"
       },
       {
         "type": "action",
-        "description": "Click on the first visible job folder in the list"
-      },
-      {
-        "type": "action",
-        "description": "Click on the first visible JSON file that looks like a job or pipeline descriptor"
-      },
-      {
-        "type": "action",
-        "description": "Click on any visible link or button labeled \"Open\" or \"Open in workspace\""
+        "description": "Click on the first visible job item in the review queue or job list to open its workspace"
       },
       {
         "type": "action",
@@ -1242,40 +1478,77 @@
       },
       {
         "type": "action",
-        "description": "Click on the first file with a \".json\" extension in the file list"
+        "description": "Click on a file in the list with a \".json\" extension"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"raw JSON editor\" textarea is visible"
       },
       {
         "type": "action",
-        "description": "Type \"{ invalid json\" into the JSON textarea editor"
+        "description": "Type \"{ invalid json\" into the raw JSON editor textarea"
       },
       {
         "type": "action",
-        "description": "Click on the \"Save\" button"
+        "description": "Click on \"Save\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"error\" is visible"
       }
     ]
   },
   {
-    "id": "TC036",
-    "title": "Outputs tab: PNG output preview renders as an image when selected",
-    "description": "Verifies that selecting a PNG output displays an image preview.",
+    "id": "TC044",
+    "title": "Outputs tab - switch between two output files updates the preview/editor",
+    "description": "Verifies selecting a different output file updates the visible editor/preview accordingly.",
+    "category": "Pipeline Outputs (Outputs tab)",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click on the first visible job item in the review queue or job list to open its workspace"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Outputs\" tab"
+      },
+      {
+        "type": "action",
+        "description": "Click on a file in the list with a \".md\" extension"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"markdown editor\" textarea is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on a different file in the list with a \".json\" extension"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"raw JSON editor\" textarea is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC045",
+    "title": "Outputs tab - PNG output renders as an image preview",
+    "description": "Verifies that selecting a PNG output displays a visible image preview.",
     "category": "Pipeline Outputs (Outputs tab)",
     "priority": "Low",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /explorer"
+        "description": "Navigate to /"
       },
       {
         "type": "action",
-        "description": "Click on the first visible job folder in the list"
-      },
-      {
-        "type": "action",
-        "description": "Click on the first visible JSON file that looks like a job or pipeline descriptor"
-      },
-      {
-        "type": "action",
-        "description": "Click on any visible link or button labeled \"Open\" or \"Open in workspace\""
+        "description": "Click on the first visible job item in the review queue or job list to open its workspace"
       },
       {
         "type": "action",
@@ -1283,81 +1556,32 @@
       },
       {
         "type": "action",
-        "description": "Click on the first file with a \".png\" extension in the file list (if present)"
+        "description": "Click on a file in the list with a \".png\" extension"
       },
       {
         "type": "assertion",
         "description": "Verify element \"image preview\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Outputs\" file list is visible"
       }
     ]
   },
   {
-    "id": "TC037",
-    "title": "Outputs tab: switching between files updates the preview/editor accordingly",
-    "description": "Verifies that selecting different output artifacts updates the right-side preview/editor panel.",
-    "category": "Pipeline Outputs (Outputs tab)",
-    "priority": "Medium",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /explorer"
-      },
-      {
-        "type": "action",
-        "description": "Click on the first visible job folder in the list"
-      },
-      {
-        "type": "action",
-        "description": "Click on the first visible JSON file that looks like a job or pipeline descriptor"
-      },
-      {
-        "type": "action",
-        "description": "Click on any visible link or button labeled \"Open\" or \"Open in workspace\""
-      },
-      {
-        "type": "action",
-        "description": "Click on the \"Outputs\" tab"
-      },
-      {
-        "type": "action",
-        "description": "Click on the first file with a \".md\" extension in the file list"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"textarea\" is visible"
-      },
-      {
-        "type": "action",
-        "description": "Click on the first file with a \".json\" extension in the file list"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"textarea\" is visible"
-      }
-    ]
-  },
-  {
-    "id": "TC038",
-    "title": "Outputs tab: stage selection changes the file list (if stage selector is present)",
-    "description": "Verifies that changing the selected stage updates the outputs file list when a stage selector exists.",
+    "id": "TC046",
+    "title": "Outputs tab - Save is disabled or no-op when no changes were made",
+    "description": "Verifies the Save behavior when the user has not modified the opened file (either disabled or results in no visible change).",
     "category": "Pipeline Outputs (Outputs tab)",
     "priority": "Low",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /explorer"
+        "description": "Navigate to /"
       },
       {
         "type": "action",
-        "description": "Click on the first visible job folder in the list"
-      },
-      {
-        "type": "action",
-        "description": "Click on the first visible JSON file that looks like a job or pipeline descriptor"
-      },
-      {
-        "type": "action",
-        "description": "Click on any visible link or button labeled \"Open\" or \"Open in workspace\""
+        "description": "Click on the first visible job item in the review queue or job list to open its workspace"
       },
       {
         "type": "action",
@@ -1365,18 +1589,301 @@
       },
       {
         "type": "action",
-        "description": "Select a different option from the stage dropdown (if a stage dropdown is visible)"
+        "description": "Click on a file in the list with a \".md\" extension"
       },
       {
         "type": "assertion",
-        "description": "Verify element \"file list\" is visible"
+        "description": "Verify element \"markdown editor\" textarea is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Save\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Save\""
       }
     ]
   },
   {
-    "id": "TC039",
-    "title": "Deployment page shows mission status, checklist section, and submit button present (not assuming completion state)",
-    "description": "Validates that the Deployment page renders its core sections: mission status, checklist area, and Submit Application button.",
+    "id": "TC047",
+    "title": "Open Node Editor from Portfolio and view graph canvas",
+    "description": "Verifies the Node Editor page can be reached from the portfolio dashboard and displays the ReactFlow graph UI.",
+    "category": "Node Editor",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to \"/\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Portfolio\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Developer Tools\" (or similarly labeled section) if it is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Node Editor\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Node Editor\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Node Editor\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"ReactFlow\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC048",
+    "title": "Select a node and confirm sidebar JSON editor focuses on node path",
+    "description": "Verifies clicking a node updates the sidebar editor to the selected node and shows its JSON path/context.",
+    "category": "Node Editor",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Node Editor\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"ReactFlow\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on a visible node in the graph canvas"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Sidebar\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"path\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"state.json\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC049",
+    "title": "Edit a JSON value for a selected node and save successfully",
+    "description": "Verifies a user can modify a JSON value for a node and trigger a successful save acknowledgement.",
+    "category": "Node Editor",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Node Editor\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"ReactFlow\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on a visible node in the graph canvas"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"JSON editor\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Type \"test_edit_value\" into the JSON editor at a visible editable value field"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Save\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Saved\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC050",
+    "title": "Attempt to save with JSON syntax error and verify save is blocked",
+    "description": "Verifies invalid JSON prevents saving and an error/validation message is shown.",
+    "category": "Node Editor",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Node Editor\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"ReactFlow\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on a visible node in the graph canvas"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"JSON editor\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{\" into the JSON editor to introduce an obvious JSON syntax error"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Save\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"error\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC051",
+    "title": "Switch selection between two nodes and verify sidebar updates accordingly",
+    "description": "Verifies node selection changes update the focused node information/path in the sidebar editor.",
+    "category": "Node Editor",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Node Editor\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"ReactFlow\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on a first visible node in the graph canvas"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Selected\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on a different visible node in the graph canvas"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Selected\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"path\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC052",
+    "title": "Save button remains disabled or no-op when nothing has changed",
+    "description": "Verifies the UI prevents saving when there are no edits to persist (or clearly indicates no changes).",
+    "category": "Node Editor",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Node Editor\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"ReactFlow\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on a visible node in the graph canvas"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"JSON editor\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Save\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"No changes\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC053",
+    "title": "JSON editor remains visible and usable after a failed save attempt",
+    "description": "Verifies that after a validation error, the editor stays open and user can correct input without losing context.",
+    "category": "Node Editor",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Node Editor\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"ReactFlow\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on a visible node in the graph canvas"
+      },
+      {
+        "type": "action",
+        "description": "Type \"{\" into the JSON editor to introduce an obvious JSON syntax error"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Save\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"error\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"JSON editor\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC054",
+    "title": "Deployment Page shows mission status, checklist section, and resume command area",
+    "description": "Verifies the Deployment Page loads and displays the key sections: mission status, checklist, and resume command/package area.",
     "category": "Deployment Page",
     "priority": "High",
     "steps": [
@@ -1386,15 +1893,19 @@
       },
       {
         "type": "assertion",
-        "description": "Verify text \"review\" is visible"
+        "description": "Verify text \"Portfolio\" is visible"
       },
       {
         "type": "action",
-        "description": "Click on the first visible job item in the review queue or job tree"
+        "description": "Click on the first visible job entry in the review queue or job list"
       },
       {
         "type": "action",
-        "description": "Click on \"Deployment\" in the job workspace navigation"
+        "description": "Click on \"Deployment\" in the job workspace navigation/sidebar"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify page title contains \"Deployment\""
       },
       {
         "type": "assertion",
@@ -1402,18 +1913,18 @@
       },
       {
         "type": "assertion",
-        "description": "Verify text \"Submit Application\" is visible"
+        "description": "Verify text \"Resume\" is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify text \"Checklist\" is visible"
+        "description": "Verify text \"Submit Application\" is visible"
       }
     ]
   },
   {
-    "id": "TC040",
-    "title": "Deployment page shows completed-stage indicators (check_circle icons) in checklist",
-    "description": "Validates that checklist items show completion indicators using check_circle icons when stages are completed.",
+    "id": "TC055",
+    "title": "Deployment checklist shows completed-stage indicators (check_circle icons)",
+    "description": "Verifies the checklist renders and shows completed items with check-circle style indicators.",
     "category": "Deployment Page",
     "priority": "High",
     "steps": [
@@ -1423,11 +1934,15 @@
       },
       {
         "type": "action",
-        "description": "Click on the first visible job item in the review queue or job tree"
+        "description": "Click on the first visible job entry in the review queue or job list"
       },
       {
         "type": "action",
-        "description": "Click on \"Deployment\" in the job workspace navigation"
+        "description": "Click on \"Deployment\" in the job workspace navigation/sidebar"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Checklist\" is visible"
       },
       {
         "type": "assertion",
@@ -1435,18 +1950,18 @@
       },
       {
         "type": "assertion",
-        "description": "Verify text \"Checklist\" is visible"
+        "description": "Verify text \"Pipeline\" is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify text \"Mission Status\" is visible"
+        "description": "Verify text \"Package\" is visible"
       }
     ]
   },
   {
-    "id": "TC041",
-    "title": "Submit Application remains disabled when checklist is not fully complete",
-    "description": "Confirms the Submit Application button is disabled when the deployment checklist is not fully complete.",
+    "id": "TC056",
+    "title": "Submit Application button is disabled when checklist is not fully complete",
+    "description": "Verifies that the Submit Application button appears disabled when the job is not ready for submission.",
     "category": "Deployment Page",
     "priority": "High",
     "steps": [
@@ -1456,11 +1971,11 @@
       },
       {
         "type": "action",
-        "description": "Click on a job item that appears incomplete (for example, a job showing pending/in-progress status in the dashboard indicators)"
+        "description": "Click on the first visible job entry in the review queue or job list"
       },
       {
         "type": "action",
-        "description": "Click on \"Deployment\" in the job workspace navigation"
+        "description": "Click on \"Deployment\" in the job workspace navigation/sidebar"
       },
       {
         "type": "assertion",
@@ -1471,15 +1986,19 @@
         "description": "Verify element \"Submit Application\" is visible"
       },
       {
+        "type": "action",
+        "description": "Click on \"Submit Application\""
+      },
+      {
         "type": "assertion",
-        "description": "Verify text \"disabled\" is visible"
+        "description": "Verify text \"Submit Application\" is visible"
       }
     ]
   },
   {
-    "id": "TC042",
-    "title": "Deployment page shows resume command section",
-    "description": "Validates that a resume/continue command is visible to continue the pipeline.",
+    "id": "TC057",
+    "title": "Submit Application click results in no submission (UI-only placeholder) when all items appear complete",
+    "description": "Verifies that clicking Submit Application does not navigate away or show a success submission result (endpoint missing).",
     "category": "Deployment Page",
     "priority": "Medium",
     "steps": [
@@ -1489,11 +2008,48 @@
       },
       {
         "type": "action",
-        "description": "Click on the first visible job item in the review queue or job tree"
+        "description": "Click on the first visible job entry in the review queue or job list"
       },
       {
         "type": "action",
-        "description": "Click on \"Deployment\" in the job workspace navigation"
+        "description": "Click on \"Deployment\" in the job workspace navigation/sidebar"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"check_circle\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Submit Application\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify page title contains \"Deployment\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Mission Status\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC058",
+    "title": "Deployment Page shows resume command for continuing the pipeline",
+    "description": "Verifies the resume command text is present and visible to the user.",
+    "category": "Deployment Page",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click on the first visible job entry in the review queue or job list"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Deployment\" in the job workspace navigation/sidebar"
       },
       {
         "type": "assertion",
@@ -1505,14 +2061,14 @@
       },
       {
         "type": "assertion",
-        "description": "Verify element \"resume command\" is visible"
+        "description": "Verify element \"Resume command\" is visible"
       }
     ]
   },
   {
-    "id": "TC043",
-    "title": "Deployment page shows package file listing section",
-    "description": "Validates that the package files section renders and shows a list area for packaged outputs.",
+    "id": "TC059",
+    "title": "Deployment Page displays package file listing section",
+    "description": "Verifies the package files area is present and shows a listing or an empty-state message.",
     "category": "Deployment Page",
     "priority": "Medium",
     "steps": [
@@ -1522,11 +2078,11 @@
       },
       {
         "type": "action",
-        "description": "Click on the first visible job item in the review queue or job tree"
+        "description": "Click on the first visible job entry in the review queue or job list"
       },
       {
         "type": "action",
-        "description": "Click on \"Deployment\" in the job workspace navigation"
+        "description": "Click on \"Deployment\" in the job workspace navigation/sidebar"
       },
       {
         "type": "assertion",
@@ -1538,16 +2094,20 @@
       },
       {
         "type": "assertion",
-        "description": "Verify element \"package files list\" is visible"
+        "description": "Verify element \"package\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"file\" is visible"
       }
     ]
   },
   {
-    "id": "TC044",
-    "title": "All checklist items complete still results in no submission (UI-only placeholder)",
-    "description": "For a job that appears fully ready, verifies clicking Submit Application does not perform a real submission (known missing endpoint).",
+    "id": "TC060",
+    "title": "Deployment Page remains usable when timeline/package data is slow to load",
+    "description": "Verifies the page renders stable sections while data loads (no blank screen), and content appears after waiting.",
     "category": "Deployment Page",
-    "priority": "High",
+    "priority": "Low",
     "steps": [
       {
         "type": "action",
@@ -1555,100 +2115,38 @@
       },
       {
         "type": "action",
-        "description": "Click on a job item that appears ready/complete (for example, a job showing ready/complete status in the dashboard indicators)"
+        "description": "Click on the first visible job entry in the review queue or job list"
       },
       {
         "type": "action",
-        "description": "Click on \"Deployment\" in the job workspace navigation"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"Submit Application\" is visible"
-      },
-      {
-        "type": "action",
-        "description": "Click on \"Submit Application\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"Submit Application\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"disabled\" is visible"
-      }
-    ]
-  },
-  {
-    "id": "TC045",
-    "title": "Deployment page handles missing/empty package files gracefully",
-    "description": "Validates that if no package files are available, the page still renders and shows an empty-state message or an empty list area.",
-    "category": "Deployment Page",
-    "priority": "Medium",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /"
-      },
-      {
-        "type": "action",
-        "description": "Click on a job item likely to have no packaged outputs (for example, a newly created or early-stage job in the dashboard)"
-      },
-      {
-        "type": "action",
-        "description": "Click on \"Deployment\" in the job workspace navigation"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"Package\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"Files\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"No files\" is visible"
-      }
-    ]
-  },
-  {
-    "id": "TC046",
-    "title": "Deployment page displays mission status state text (pending vs ready)",
-    "description": "Validates that mission status includes visible state text indicating pending/ready status.",
-    "category": "Deployment Page",
-    "priority": "Medium",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /"
-      },
-      {
-        "type": "action",
-        "description": "Click on the first visible job item in the review queue or job tree"
-      },
-      {
-        "type": "action",
-        "description": "Click on \"Deployment\" in the job workspace navigation"
+        "description": "Click on \"Deployment\" in the job workspace navigation/sidebar"
       },
       {
         "type": "assertion",
         "description": "Verify text \"Mission Status\" is visible"
       },
       {
-        "type": "assertion",
-        "description": "Verify text \"Pending\" is visible"
+        "type": "action",
+        "description": "Wait for 3 seconds"
       },
       {
         "type": "assertion",
-        "description": "Verify text \"Ready\" is visible"
+        "description": "Verify text \"Checklist\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Submit Application\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Resume\" is visible"
       }
     ]
   },
   {
-    "id": "TC047",
-    "title": "Open Sandbox index and see available sandbox tools",
-    "description": "Verifies the /sandbox page loads and presents a visible list of sandbox tools for developers.",
+    "id": "TC061",
+    "title": "Open Sandbox index and verify available developer tools are listed",
+    "description": "Verifies the sandbox index page loads and shows entries for the available sandbox tools.",
     "category": "Developer Sandboxes and Tools",
     "priority": "High",
     "steps": [
@@ -1662,22 +2160,26 @@
       },
       {
         "type": "assertion",
-        "description": "Verify text \"Text Tagger\" is visible"
+        "description": "Verify text \"Text\" is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify text \"CV Graph\" is visible"
+        "description": "Verify text \"Tagger\" is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify text \"Node Editor\" is visible"
+        "description": "Verify text \"Node\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Editor\" is visible"
       }
     ]
   },
   {
-    "id": "TC048",
-    "title": "Navigate from Sandbox index to Text Tagger sandbox",
-    "description": "Verifies a user can reach the Text Tagger sandbox from the sandbox index and land on the correct route.",
+    "id": "TC062",
+    "title": "From Sandbox index, open Text Tagger sandbox",
+    "description": "Verifies a user can navigate from the sandbox index to the Text Tagger sandbox page via UI click.",
     "category": "Developer Sandboxes and Tools",
     "priority": "High",
     "steps": [
@@ -1695,18 +2197,18 @@
       },
       {
         "type": "assertion",
-        "description": "Verify page title contains \"Text\""
+        "description": "Verify text \"Text\" is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify element \"Text tagger\" is visible"
+        "description": "Verify text \"Tagger\" is visible"
       }
     ]
   },
   {
-    "id": "TC049",
-    "title": "Text Tagger sandbox responds to basic text input",
-    "description": "Verifies the Text Tagger sandbox updates visible state after entering text into the primary input area.",
+    "id": "TC063",
+    "title": "Text Tagger sandbox basic interaction updates visible state",
+    "description": "Verifies that interacting with Text Tagger controls results in an immediate visible change on the page.",
     "category": "Developer Sandboxes and Tools",
     "priority": "High",
     "steps": [
@@ -1720,26 +2222,26 @@
       },
       {
         "type": "action",
-        "description": "Click on the main text input area"
+        "description": "Click on \"Reset\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"0\" is visible"
       },
       {
         "type": "action",
-        "description": "Type \"Alice worked at Example Corp in 2020.\" into the main text input area"
+        "description": "Click on \"Tag\""
       },
       {
         "type": "assertion",
-        "description": "Verify text \"Alice\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"Tag\" is visible"
+        "description": "Verify text \"1\" is visible"
       }
     ]
   },
   {
-    "id": "TC050",
-    "title": "Text Tagger sandbox creates a visible tag from selected text (if supported)",
-    "description": "Verifies the Text Tagger sandbox can create a visible tag/annotation from text interaction without errors.",
+    "id": "TC064",
+    "title": "Text Tagger sandbox can be reset after creating tags",
+    "description": "Verifies the sandbox state can be cleared via Reset after the user performs tagging actions.",
     "category": "Developer Sandboxes and Tools",
     "priority": "Medium",
     "steps": [
@@ -1749,30 +2251,26 @@
       },
       {
         "type": "action",
-        "description": "Click on the main text input area"
-      },
-      {
-        "type": "action",
-        "description": "Type \"John Doe is a software engineer.\" into the main text input area"
-      },
-      {
-        "type": "action",
         "description": "Click on \"Tag\""
       },
       {
         "type": "assertion",
-        "description": "Verify element \"Tags\" is visible"
+        "description": "Verify text \"1\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Reset\""
       },
       {
         "type": "assertion",
-        "description": "Verify text \"John\" is visible"
+        "description": "Verify text \"0\" is visible"
       }
     ]
   },
   {
-    "id": "TC051",
-    "title": "Open Node Editor Sandbox page and verify core editor UI is present",
-    "description": "Verifies the node editor sandbox loads and shows the primary editor surface and basic controls.",
+    "id": "TC065",
+    "title": "Open Node Editor sandbox page",
+    "description": "Verifies the node editor sandbox page loads and presents the expected sandbox UI entry point.",
     "category": "Developer Sandboxes and Tools",
     "priority": "High",
     "steps": [
@@ -1786,57 +2284,49 @@
       },
       {
         "type": "assertion",
-        "description": "Verify page title contains \"Node\""
+        "description": "Verify text \"Node\" is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify element \"Node editor\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"Canvas\" is visible"
+        "description": "Verify text \"Editor\" is visible"
       }
     ]
   },
   {
-    "id": "TC052",
-    "title": "Node Editor Sandbox: keyboard shortcuts for undo/redo do not provide global history",
-    "description": "Verifies that attempting undo/redo via keyboard does not show a full global history behavior (known gap for desired history).",
+    "id": "TC066",
+    "title": "Open CV Graph Editor sandbox page from sandbox index",
+    "description": "Verifies a user can navigate from the sandbox index to the CV graph editor sandbox page.",
     "category": "Developer Sandboxes and Tools",
     "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /sandbox/node_editor"
+        "description": "Navigate to /sandbox"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"CV Graph\""
       },
       {
         "type": "assertion",
-        "description": "Verify element \"Node editor\" is visible"
-      },
-      {
-        "type": "action",
-        "description": "Press \"Tab\""
-      },
-      {
-        "type": "action",
-        "description": "Press \"Enter\""
-      },
-      {
-        "type": "action",
-        "description": "Press \"Escape\""
+        "description": "Verify URL contains \"/sandbox/cv_graph\""
       },
       {
         "type": "assertion",
-        "description": "Verify text \"History\" is not visible"
+        "description": "Verify text \"CV\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Graph\" is visible"
       }
     ]
   },
   {
-    "id": "TC053",
-    "title": "Open CV Graph Editor sandbox and verify graph UI is visible",
-    "description": "Verifies the CV graph editor sandbox loads successfully and displays a visible graph editing surface.",
+    "id": "TC067",
+    "title": "CV Graph Editor sandbox loads canvas/editor surface",
+    "description": "Verifies the CV graph editor sandbox page renders an editor surface that is visibly present.",
     "category": "Developer Sandboxes and Tools",
-    "priority": "High",
+    "priority": "Medium",
     "steps": [
       {
         "type": "action",
@@ -1848,48 +2338,11 @@
       },
       {
         "type": "assertion",
-        "description": "Verify page title contains \"Graph\""
+        "description": "Verify text \"Graph\" is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify element \"Graph editor\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"Canvas\" is visible"
-      }
-    ]
-  },
-  {
-    "id": "TC054",
-    "title": "CV Graph Editor sandbox: basic interaction does not break page state",
-    "description": "Verifies basic clicks in the CV graph editor do not navigate away and the editor remains visible.",
-    "category": "Developer Sandboxes and Tools",
-    "priority": "Low",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /sandbox/cv_graph"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"Graph editor\" is visible"
-      },
-      {
-        "type": "action",
-        "description": "Click on the graph canvas area"
-      },
-      {
-        "type": "action",
-        "description": "Click on \"Reset\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/sandbox/cv_graph\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"Graph editor\" is visible"
+        "description": "Verify element \"canvas\" is visible"
       }
     ]
   }
