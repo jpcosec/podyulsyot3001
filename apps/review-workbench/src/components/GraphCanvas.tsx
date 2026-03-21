@@ -1,6 +1,15 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
-
-import { Graph } from "diagrammatic-ui";
+import {
+  Background,
+  Controls,
+  MarkerType,
+  MiniMap,
+  ReactFlow,
+  ReactFlowProvider,
+  type Edge,
+  type Node,
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
 
 interface GraphNode {
   id: string;
@@ -34,7 +43,7 @@ class GraphErrorBoundary extends Component<
   }
 
   componentDidCatch(error: unknown, errorInfo: ErrorInfo): void {
-    console.error("Diagrammatic-UI graph failed to render", error, errorInfo);
+    console.error("GraphCanvas failed to render", error, errorInfo);
   }
 
   render(): ReactNode {
@@ -45,38 +54,66 @@ class GraphErrorBoundary extends Component<
   }
 }
 
-export function GraphCanvas(props: GraphCanvasProps): JSX.Element {
-  const nodes =
-    props.nodes ??
-    [
-      { id: "profile", label: "Profile" },
-      { id: "job", label: "Job Posting" },
-      { id: "match", label: "Match" },
-    ];
-  const edges =
-    props.edges ??
-    [
-      { source: "profile", target: "match", label: "SATISFIED_BY" },
-      { source: "job", target: "match", label: "HAS_REQUIREMENT" },
-    ];
+const DEFAULT_NODES: GraphNode[] = [
+  { id: "profile", label: "Profile" },
+  { id: "job", label: "Job Posting" },
+  { id: "match", label: "Match" },
+];
 
-  const activeNodeSet = new Set(props.activeNodeIds ?? []);
-  const graphData = {
-    name: "review-graph",
-    category: "pipeline",
-    nodes: nodes.map((node) => ({
-      id: node.id,
-      name: node.label,
-      type: activeNodeSet.has(node.id) ? "active" : "default",
-      description: node.label,
-    })),
-    edges: edges.map((edge, index) => ({
-      id: `${edge.source}->${edge.target}-${index}`,
-      source: edge.source,
-      target: edge.target,
-      label: edge.label,
-    })),
-  };
+const DEFAULT_EDGES: GraphEdge[] = [
+  { source: "profile", target: "match", label: "SATISFIED_BY" },
+  { source: "job", target: "match", label: "HAS_REQUIREMENT" },
+];
+
+const DEFAULT_NODE_STYLE = {
+  border: "1px solid #99f7ff",
+  background: "#1a1c1e",
+  color: "#eeeef0",
+  borderRadius: 8,
+  padding: "8px",
+  width: 160,
+  fontSize: 13,
+  textAlign: "center" as const,
+};
+
+const ACTIVE_NODE_STYLE = {
+  border: "1px solid #ffaa00",
+  background: "#1d2022",
+};
+
+function toReactFlowNodes(graphNodes: GraphNode[], activeNodeIds: string[]): Node[] {
+  const activeSet = new Set(activeNodeIds);
+  return graphNodes.map((node, index) => ({
+    id: node.id,
+    position: {
+      x: index === 0 ? 380 : 50 + index * 200,
+      y: index === 0 ? 20 : 160,
+    },
+    data: { label: node.label },
+    style: {
+      ...DEFAULT_NODE_STYLE,
+      ...(activeSet.has(node.id) ? ACTIVE_NODE_STYLE : {}),
+    },
+  }));
+}
+
+function toReactFlowEdges(graphEdges: GraphEdge[]): Edge[] {
+  return graphEdges.map((edge, index) => ({
+    id: `${edge.source}->${edge.target}-${index}`,
+    source: edge.source,
+    target: edge.target,
+    label: edge.label,
+    markerEnd: { type: MarkerType.ArrowClosed },
+  }));
+}
+
+export function GraphCanvas(props: GraphCanvasProps): JSX.Element {
+  const nodes = props.nodes ?? DEFAULT_NODES;
+  const edges = props.edges ?? DEFAULT_EDGES;
+  const activeNodeIds = props.activeNodeIds ?? [];
+
+  const reactFlowNodes = toReactFlowNodes(nodes, activeNodeIds);
+  const reactFlowEdges = toReactFlowEdges(edges);
 
   return (
     <div className="graph-shell">
@@ -109,28 +146,23 @@ export function GraphCanvas(props: GraphCanvasProps): JSX.Element {
           </div>
         }
       >
-        <Graph
-          data={graphData}
-          theme="light"
-          autoLayout="tree"
-          width={920}
-          height={360}
-          interactionOptions={{
-            selectionEnabled: true,
-            multiSelectionEnabled: false,
-            draggingEnabled: true,
-            zoomEnabled: true,
-            panningEnabled: true,
-            fitViewOnInit: true,
-          }}
-          nodeStyleConfig={{
-            type: "card",
-            typeStyles: {
-              default: { fill: "#123c69", stroke: "#123c69" },
-              active: { fill: "#b23a48", stroke: "#b23a48" },
-            },
-          }}
-        />
+        <ReactFlowProvider>
+          <ReactFlow
+            nodes={reactFlowNodes}
+            edges={reactFlowEdges}
+            fitView
+            fitViewOptions={{ padding: 0.2 }}
+            panOnDrag={false}
+            zoomOnScroll={false}
+            nodesDraggable={false}
+            nodesConnectable={false}
+            elementsSelectable={false}
+          >
+            <MiniMap pannable zoomable />
+            <Controls />
+            <Background gap={20} size={1} />
+          </ReactFlow>
+        </ReactFlowProvider>
       </GraphErrorBoundary>
     </div>
   );
