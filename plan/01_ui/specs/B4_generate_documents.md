@@ -1,4 +1,9 @@
-# Spec: Generate Documents (HITL C — Sculpting)
+# Spec: Generate Documents (HITL C — Sculpting) — PREP_MATCH
+
+> **Nota:** Este spec describe la vista de PREP_MATCH donde los 3 documentos se generan y
+> revisan juntos en un solo gate (3 tabs simultáneos). En el **DEFAULT pipeline**, cada
+> documento tiene su propio gate HITL separado — ver **spec B4b** para ese flujo.
+> La UI base es la misma — solo cambia qué tabs están activos/locked a la vez.
 
 ## 1. Objetivo del Operador
 El LLM generó los tres documentos de aplicación. El operador debe:
