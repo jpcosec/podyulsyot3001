@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import { DeploymentPage } from "./pages/DeploymentPage";
 import { JobNodeEditorPage } from "./pages/JobNodeEditorPage";
@@ -11,6 +11,31 @@ import { NodeEditorSandboxPage } from "./sandbox/pages/NodeEditorSandboxPage";
 import { SandboxPage } from "./sandbox/pages/SandboxPage";
 import { TextTaggerPage } from "./sandbox/pages/TextTaggerPage";
 
+function App(): JSX.Element {
+  return (
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <Routes>
+        <Route path="/" element={<PortfolioPage />} />
+
+        <Route path="/sandbox" element={<SandboxPage />} />
+        <Route path="/sandbox/text_tagger" element={<TextTaggerPage />} />
+        <Route path="/sandbox/cv_graph" element={<CvGraphEditorPage />} />
+        <Route path="/sandbox/node_editor" element={<NodeEditorSandboxPage />} />
+        <Route path="/sandbox/node_editor_plan" element={<NodeEditorPlanPage />} />
+
+        <Route path="/text-tagger" element={<TextTaggerPage />} />
+        <Route path="/cv-graph" element={<CvGraphEditorPage />} />
+        <Route path="/cv-graph/entry/:entryId" element={<CvGraphEditorPage />} />
+        <Route path="/cv-graph/skill/:skillId" element={<CvGraphEditorPage />} />
+
+        <Route path="/jobs/:source/:jobId" element={<JobLayout><JobStagePage /></JobLayout>} />
+        <Route path="/jobs/:source/:jobId/deployment" element={<JobLayout><DeploymentPage /></JobLayout>} />
+        <Route path="/jobs/:source/:jobId/node-editor" element={<JobLayout><JobNodeEditorPage /></JobLayout>} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
 function JobLayout({ children }: { children: React.ReactNode }): JSX.Element {
   return (
     <div className="job-layout">
@@ -20,62 +45,4 @@ function JobLayout({ children }: { children: React.ReactNode }): JSX.Element {
   );
 }
 
-function AppRoutes(): JSX.Element {
-  const location = useLocation();
-  const isFullscreenNodeEditor = location.pathname === "/sandbox/node_editor";
-  const isSandbox = location.pathname.startsWith("/sandbox") && !isFullscreenNodeEditor;
-
-  const jobRoutes = (
-    <JobLayout>
-      <Routes>
-        <Route path="/jobs/:source/:jobId" element={<JobStagePage />} />
-        <Route path="/jobs/:source/:jobId/deployment" element={<DeploymentPage />} />
-        <Route path="/jobs/:source/:jobId/node-editor" element={<JobNodeEditorPage />} />
-      </Routes>
-    </JobLayout>
-  );
-
-  const routes = (
-    <Routes>
-      <Route path="/" element={<PortfolioPage />} />
-      <Route path="/sandbox" element={<SandboxPage />} />
-      <Route path="/sandbox/text_tagger" element={<TextTaggerPage />} />
-      <Route path="/sandbox/cv_graph" element={<CvGraphEditorPage />} />
-      <Route path="/sandbox/node_editor" element={<NodeEditorSandboxPage />} />
-      <Route path="/sandbox/node_editor_plan" element={<NodeEditorPlanPage />} />
-      <Route path="/text-tagger" element={<TextTaggerPage />} />
-      <Route path="/cv-graph" element={<CvGraphEditorPage />} />
-      <Route path="/cv-graph/entry/:entryId" element={<CvGraphEditorPage />} />
-      <Route path="/cv-graph/skill/:skillId" element={<CvGraphEditorPage />} />
-    </Routes>
-  );
-
-  if (isFullscreenNodeEditor) {
-    return <NodeEditorSandboxPage />;
-  }
-
-  if (isSandbox) {
-    return (
-      <div className="shell-bg">
-        <main className="shell">{routes}</main>
-      </div>
-    );
-  }
-
-  return (
-    <>
-      {jobRoutes}
-      <div className="shell-bg">
-        <main className="shell">{routes}</main>
-      </div>
-    </>
-  );
-}
-
-export default function App(): JSX.Element {
-  return (
-    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <AppRoutes />
-    </BrowserRouter>
-  );
-}
+export default App;

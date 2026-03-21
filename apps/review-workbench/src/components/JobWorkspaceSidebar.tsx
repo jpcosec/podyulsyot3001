@@ -98,12 +98,16 @@ export function JobWorkspaceSidebar(): JSX.Element {
         <nav className="job-sidebar-nav">
           <div className="job-sidebar-nav-label">Navigation</div>
           {navLink("/", "folder_special", "Portfolio", true)}
-          {navLink(`/jobs/${source}/${jobId}`, "database", "Evidence Bank")}
-          {navLink(`/jobs/${source}/${jobId}`, "account_tree", "Graph Explorer")}
-          {navLink(`/jobs/${source}/${jobId}?view=view-2`, "text_fields", "Extraction")}
-          {navLink(`/jobs/${source}/${jobId}?view=view-3`, "edit_document", "Documents")}
-          {navLink(`/jobs/${source}/${jobId}/node-editor`, "hub", "Node Editor")}
-          {navLink(`/jobs/${source}/${jobId}/deployment`, "send", "Deployment")}
+          {source && jobId && (
+            <>
+              {navLink(`/jobs/${source}/${jobId}`, "database", "Evidence Bank")}
+              {navLink(`/jobs/${source}/${jobId}`, "account_tree", "Graph Explorer")}
+              {navLink(`/jobs/${source}/${jobId}?view=view-2`, "text_fields", "Extraction")}
+              {navLink(`/jobs/${source}/${jobId}?view=view-3`, "edit_document", "Documents")}
+              {navLink(`/jobs/${source}/${jobId}/node-editor`, "hub", "Node Editor")}
+              {navLink(`/jobs/${source}/${jobId}/deployment`, "send", "Deployment")}
+            </>
+          )}
         </nav>
       </div>
 

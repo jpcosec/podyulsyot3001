@@ -157,6 +157,7 @@ export function GraphCanvas(props: GraphCanvasProps): JSX.Element {
             nodesDraggable={false}
             nodesConnectable={false}
             elementsSelectable={false}
+            style={{ width: "100%", height: "100%" }}
           >
             <MiniMap pannable zoomable />
             <Controls />
