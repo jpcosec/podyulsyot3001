@@ -72,34 +72,6 @@ export function PortfolioPage(): JSX.Element {
       <h1>Application Portfolio</h1>
       <p>Development dashboard for sandbox exploration and runtime review operations.</p>
 
-      <div className="dev-path-grid">
-        <article className="dev-path-card">
-          <h2>Current Workstream</h2>
-          <p>Use these surfaces first while iterating graph/editor behavior.</p>
-          <div className="workstream-links">
-            {MAIN_WORKSTREAMS.map((flow) => (
-              <Link key={flow.path} className="workstream-link" to={flow.path}>
-                <strong>{flow.title}</strong>
-                <span>{flow.description}</span>
-                <small>{flow.area}</small>
-              </Link>
-            ))}
-          </div>
-        </article>
-
-        <article className="dev-path-card">
-          <h2>Boot Sequence</h2>
-          <ol className="boot-sequence-list">
-            {DEV_BOOT_SEQUENCE.map((step) => (
-              <li key={step}>{step}</li>
-            ))}
-          </ol>
-          <p>
-            Need isolated previews? Open the <Link to="/sandbox">component sandbox</Link>.
-          </p>
-        </article>
-      </div>
-
       <div className="review-queue-card">
         <h2>Review Queue</h2>
         {nextReviewJob ? (
@@ -120,14 +92,10 @@ export function PortfolioPage(): JSX.Element {
       </div>
 
       <div className="review-queue-card">
-        <h2>Operator Quick Commands</h2>
-        <div className="operator-command-grid">
-          {OPERATOR_COMMANDS.map((command) => (
-            <code key={command} className="operator-command-chip">
-              {command}
-            </code>
-          ))}
-        </div>
+        <h2>Data Explorer</h2>
+        <p>
+          <Link to="/explorer">Browse all local job artifacts</Link> — inspect JSON, Markdown, and screenshots in data/jobs/.
+        </p>
       </div>
 
       {error ? <p className="error">{error}</p> : null}
@@ -156,6 +124,48 @@ export function PortfolioPage(): JSX.Element {
 
       <h2>Jobs</h2>
       <JobTree jobs={summary?.jobs ?? []} />
+
+      <details className="dev-section">
+        <summary>Developer Tools</summary>
+        <div className="dev-path-grid">
+          <article className="dev-path-card">
+            <h2>Current Workstream</h2>
+            <p>Use these surfaces first while iterating graph/editor behavior.</p>
+            <div className="workstream-links">
+              {MAIN_WORKSTREAMS.map((flow) => (
+                <Link key={flow.path} className="workstream-link" to={flow.path}>
+                  <strong>{flow.title}</strong>
+                  <span>{flow.description}</span>
+                  <small>{flow.area}</small>
+                </Link>
+              ))}
+            </div>
+          </article>
+
+          <article className="dev-path-card">
+            <h2>Boot Sequence</h2>
+            <ol className="boot-sequence-list">
+              {DEV_BOOT_SEQUENCE.map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ol>
+            <p>
+              Need isolated previews? Open the <Link to="/sandbox">component sandbox</Link>.
+            </p>
+          </article>
+        </div>
+
+        <div className="review-queue-card">
+          <h2>Operator Quick Commands</h2>
+          <div className="operator-command-grid">
+            {OPERATOR_COMMANDS.map((command) => (
+              <code key={command} className="operator-command-chip">
+                {command}
+              </code>
+            ))}
+          </div>
+        </div>
+      </details>
     </section>
   );
 }

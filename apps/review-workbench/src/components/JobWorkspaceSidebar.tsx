@@ -63,7 +63,7 @@ export function JobWorkspaceSidebar(): JSX.Element {
     const active = exact ? currentPath === to : currentPath.startsWith(to);
     return (
       <Link
-        key={to}
+        key={label}
         to={to}
         className={`job-sidebar-nav-link ${active ? "job-sidebar-nav-link-active" : ""}`}
       >

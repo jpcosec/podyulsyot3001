@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
+import { DataExplorerPage } from "./pages/DataExplorerPage";
 import { DeploymentPage } from "./pages/DeploymentPage";
 import { JobNodeEditorPage } from "./pages/JobNodeEditorPage";
 import { JobStagePage } from "./pages/JobStagePage";
@@ -16,6 +17,7 @@ function App(): JSX.Element {
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Routes>
         <Route path="/" element={<PortfolioPage />} />
+        <Route path="/explorer" element={<DataExplorerPage />} />
 
         <Route path="/sandbox" element={<SandboxPage />} />
         <Route path="/sandbox/text_tagger" element={<TextTaggerPage />} />

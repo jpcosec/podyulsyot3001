@@ -1,0 +1,18 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:4174",
+  "executionArgs": {
+    "projectName": "dev",
+    "projectPath": "/home/jp/phd-workspaces/dev",
+    "testIds": [],
+    "additionalInstruction": "",
+    "serverMode": "production",
+    "envs": {
+      "API_KEY": "sk-user-3CV7lW8KqGN8pvNKLzuInJ3nwyeopNOUVjuvozYREFWoFl9irNLXFjYowoLKfkrM1QKnSO49Fx3Uo8ACP7qsMcQep298I9zDzAeLN0BdTst8AfoAv7AFh0ICkQZXFMaZLU0"
+    }
+  },
+  "serverPort": 42029,
+  "proxy": "http://4342ecc1-b662-48de-aaf7-77c8edf27309:jPqxyyKvH48znBrV5UQQfr5CYFpeYyuV@tun.testsprite.com:8080"
+}

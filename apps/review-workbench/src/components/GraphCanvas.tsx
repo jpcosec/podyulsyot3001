@@ -83,18 +83,25 @@ const ACTIVE_NODE_STYLE = {
 
 function toReactFlowNodes(graphNodes: GraphNode[], activeNodeIds: string[]): Node[] {
   const activeSet = new Set(activeNodeIds);
-  return graphNodes.map((node, index) => ({
-    id: node.id,
-    position: {
-      x: index === 0 ? 380 : 50 + index * 200,
-      y: index === 0 ? 20 : 160,
-    },
-    data: { label: node.label },
-    style: {
-      ...DEFAULT_NODE_STYLE,
-      ...(activeSet.has(node.id) ? ACTIVE_NODE_STYLE : {}),
-    },
-  }));
+  const seen = new Set<string>();
+  return graphNodes
+    .filter((node) => {
+      if (seen.has(node.id)) return false;
+      seen.add(node.id);
+      return true;
+    })
+    .map((node, index) => ({
+      id: node.id,
+      position: {
+        x: index === 0 ? 380 : 50 + index * 200,
+        y: index === 0 ? 20 : 160,
+      },
+      data: { label: node.label },
+      style: {
+        ...DEFAULT_NODE_STYLE,
+        ...(activeSet.has(node.id) ? ACTIVE_NODE_STYLE : {}),
+      },
+    }));
 }
 
 function toReactFlowEdges(graphEdges: GraphEdge[]): Edge[] {

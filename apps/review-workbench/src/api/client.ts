@@ -2,6 +2,7 @@ import type {
   CvProfileGraphPayload,
   CvGraphPayload,
   EvidenceBankPayload,
+  ExplorerPayload,
   JobTimeline,
   PackageFilesPayload,
   PortfolioSummary,
@@ -215,4 +216,13 @@ export async function getPackageFiles(source: string, jobId: string): Promise<Pa
     throw new Error(`package files failed: ${response.status}`);
   }
   return (await response.json()) as PackageFilesPayload;
+}
+
+export async function browseExplorer(path: string = ""): Promise<ExplorerPayload> {
+  const params = path ? `?path=${encodeURIComponent(path)}` : "";
+  const response = await fetch(`${API_BASE}/api/v1/explorer/browse${params}`);
+  if (!response.ok) {
+    throw new Error(`explorer browse failed: ${response.status}`);
+  }
+  return (await response.json()) as ExplorerPayload;
 }

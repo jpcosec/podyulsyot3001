@@ -41,8 +41,11 @@ export function JobStagePage(): JSX.Element {
   }, [timeline]);
 
   useEffect(() => {
-    setActiveView(view);
-  }, [view]);
+    // Only auto-detect view from timeline if the URL doesn't specify one explicitly
+    if (!searchParams.get("view")) {
+      setActiveView(view);
+    }
+  }, [view, searchParams]);
 
   useEffect(() => {
     const requestedView = searchParams.get("view");
@@ -102,40 +105,40 @@ export function JobStagePage(): JSX.Element {
               </button>
             ))}
           </div>
-          <div className="view-tabs">
-            <button
-              type="button"
-              className={activeView === "view-1" ? "view-tab view-tab-active" : "view-tab"}
-              onClick={() => setActiveView("view-1")}
-            >
-              View 1 Graph Explorer
-            </button>
-            <button
-              type="button"
-              className={activeView === "view-2" ? "view-tab view-tab-active" : "view-tab"}
-              onClick={() => setActiveView("view-2")}
-            >
-              View 2 Document to Graph
-            </button>
-            <button
-              type="button"
-              className={activeView === "view-3" ? "view-tab view-tab-active" : "view-tab"}
-              onClick={() => setActiveView("view-3")}
-            >
-              View 3 Graph to Document
-            </button>
-            <button
-              type="button"
-              className={activeView === "outputs" ? "view-tab view-tab-active" : "view-tab"}
-              onClick={() => setActiveView("outputs")}
-            >
-              Pipeline Outputs
-            </button>
-          </div>
         </>
       ) : (
         <p>Loading job timeline...</p>
       )}
+      <div className="view-tabs">
+        <button
+          type="button"
+          className={activeView === "view-1" ? "view-tab view-tab-active" : "view-tab"}
+          onClick={() => setActiveView("view-1")}
+        >
+          View 1 Graph Explorer
+        </button>
+        <button
+          type="button"
+          className={activeView === "view-2" ? "view-tab view-tab-active" : "view-tab"}
+          onClick={() => setActiveView("view-2")}
+        >
+          View 2 Document to Graph
+        </button>
+        <button
+          type="button"
+          className={activeView === "view-3" ? "view-tab view-tab-active" : "view-tab"}
+          onClick={() => setActiveView("view-3")}
+        >
+          View 3 Graph to Document
+        </button>
+        <button
+          type="button"
+          className={activeView === "outputs" ? "view-tab view-tab-active" : "view-tab"}
+          onClick={() => setActiveView("outputs")}
+        >
+          Pipeline Outputs
+        </button>
+      </div>
       {activeView === "view-1" ? <ViewOneGraphExplorer /> : null}
       {activeView === "view-2" ? <ViewTwoDocToGraph /> : null}
       {activeView === "view-3" ? <ViewThreeGraphToDoc /> : null}

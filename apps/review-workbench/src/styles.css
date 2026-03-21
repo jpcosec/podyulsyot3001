@@ -2618,3 +2618,81 @@ p {
 .submit-hint { font-size: 11px; color: rgba(254, 203, 0, 0.6); margin-top: 8px; }
 .submit-note { font-size: 11px; opacity: 0.4; margin-top: 12px; }
 .submit-note code { font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+
+/* ── Utility classes ── */
+.text-dim { color: var(--text-dim); }
+
+/* ── Data Explorer ── */
+.explorer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 1rem;
+}
+.explorer-entry {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  color: var(--text-main);
+  text-decoration: none;
+  transition: background 0.1s;
+}
+.explorer-entry:hover {
+  background: var(--bg-2);
+}
+.explorer-entry .material-symbols-outlined {
+  font-size: 20px;
+  color: var(--accent-soft);
+}
+.explorer-entry-name {
+  flex: 1;
+  font-family: "JetBrains Mono", "IBM Plex Mono", monospace;
+  font-size: 0.875rem;
+}
+.explorer-entry-meta {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+.explorer-preview {
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 1rem;
+  font-family: "JetBrains Mono", "IBM Plex Mono", monospace;
+  font-size: 0.8rem;
+  overflow-x: auto;
+  max-height: 70vh;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.explorer-file-view {
+  margin-top: 1rem;
+}
+.explorer-file-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--line);
+}
+
+/* ── Developer section toggle ── */
+.dev-section {
+  margin-top: 1.5rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+}
+.dev-section summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-dim);
+  font-size: 0.9rem;
+}
+.dev-section summary:hover {
+  color: var(--text-main);
+}

@@ -228,3 +228,23 @@ export interface PackageFilesPayload {
   job_id: string;
   files: PackageFile[];
 }
+
+export interface ExplorerEntry {
+  name: string;
+  path: string;
+  is_dir: boolean;
+  size_bytes?: number;
+  extension?: string;
+  child_count?: number;
+}
+
+export interface ExplorerPayload {
+  path: string;
+  is_dir: boolean;
+  entries?: ExplorerEntry[];
+  name?: string;
+  extension?: string;
+  size_bytes?: number;
+  content_type?: "text" | "image" | "binary" | "too_large";
+  content?: string | null;
+}
