@@ -11,8 +11,11 @@ This is the single planning checklist for active work.
 - [ ] `JobWorkspaceShell.tsx` — Pipeline TopBar + nested `<Outlet />`
 - [ ] `Badge.tsx` atom — forwardRef, cn(), variant prop
 - [ ] `usePortfolioSummary.ts` + `PortfolioDashboard.tsx` stub
+- [ ] Stub pages para todas las rutas (DataExplorer, BaseCvEditor, JobFlowInspector, Scrape, Extract, Match, Sculpt, Deployment)
 - [ ] Mock toggle: `VITE_MOCK=true` via vite alias
 - [ ] Mock fixtures: `portfolio.json`, `timeline_201397.json`, `timeline_999001.json`
+- [ ] `types/api.types.ts` — PortfolioSummary, ViewOnePayload, ViewTwoPayload, ViewThreePayload, GraphNode, GraphEdge, etc.
+- [ ] `types/ui.types.ts` — tipos internos de ReactFlow, DnD, editor state
 
 ### Fase 1 — Job Flow Inspector (B0)
 - [ ] `useJobTimeline.ts`

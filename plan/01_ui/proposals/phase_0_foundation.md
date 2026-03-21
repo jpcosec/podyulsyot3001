@@ -82,6 +82,7 @@ import { ScrapeDiagnostics } from './pages/job/ScrapeDiagnostics';
 import { ExtractUnderstand } from './pages/job/ExtractUnderstand';
 import { Match } from './pages/job/Match';
 import { GenerateDocuments } from './pages/job/GenerateDocuments';
+import { PackageDeployment } from './pages/job/PackageDeployment';
 import { IntelligentEditorPage } from './sandbox/pages/IntelligentEditorPage';
 
 const router = createBrowserRouter([
@@ -103,7 +104,8 @@ const router = createBrowserRouter([
           { path: 'scrape',   element: <ScrapeDiagnostics /> }, // B1
           { path: 'extract',  element: <ExtractUnderstand /> }, // B2
           { path: 'match',    element: <Match /> },             // B3
-          { path: 'sculpt',   element: <GenerateDocuments /> }, // B4
+          { path: 'sculpt',      element: <GenerateDocuments /> }, // B4
+          { path: 'deployment', element: <PackageDeployment /> }, // B5
         ],
       },
     ],
@@ -126,8 +128,9 @@ export default function App() {
 /jobs/:source/:jobId/scrape   → ScrapeDiagnostics   (B1)
 /jobs/:source/:jobId/extract  → ExtractUnderstand   (B2)
 /jobs/:source/:jobId/match    → Match               (B3)
-/jobs/:source/:jobId/sculpt   → GenerateDocuments   (B4)
-/sandbox/intelligent_editor   → IntelligentEditorPage (sin shell)
+/jobs/:source/:jobId/sculpt      → GenerateDocuments   (B4)
+/jobs/:source/:jobId/deployment → PackageDeployment    (B5)
+/sandbox/intelligent_editor      → IntelligentEditorPage (sin shell)
 ```
 
 ---
@@ -443,6 +446,7 @@ src/
       ExtractUnderstand.tsx                              STUB
       Match.tsx                                          STUB
       GenerateDocuments.tsx                              STUB
+      PackageDeployment.tsx                              STUB
 ```
 
 ---

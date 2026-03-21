@@ -214,3 +214,4 @@ export function ShellName({ children, leftPanel, className }: ShellNameProps) {
 | Lógica de negocio en `pages/` | Todo en `features/` |
 | `className="bg-blue-500"` en un átomo sin `cn()` | `cn('bg-primary', className)` |
 | Crear un archivo `.css` nuevo | Tailwind utilities o `@layer utilities` en `styles.css` |
+| Datos literales hardcodeados en componentes (`const jobs = [...]`) | Todo dato viene del mock/API via `useQuery` — nunca arrays estáticos en el render |

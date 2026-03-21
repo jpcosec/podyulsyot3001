@@ -110,15 +110,20 @@ Pasos:
 
 ---
 
-## Orden de implementación recomendado
+## Orden de implementación
+
+> Fuente de verdad: `plan/index_checklist.md`
 
 ```
-Fase 0   → AppShell + JobWorkspaceShell + PortfolioDashboard (router + layouts + Badge)
-Fase 1   → Átomos (Button, Tag, Spinner, Kbd) + cn.ts ya lista
-Fase 2   → B0 JobFlowInspector (PipelineTimeline, sin librerías externas)
-Fase 3   → B2 ExtractUnderstand (IntelligentEditor v1 con CodeMirror)
-Fase 4   → B3 Match (GraphCanvas con ReactFlow + EvidenceBankSidebar con dnd-kit)
-Fase 5   → B4 GenerateDocuments (IntelligentEditor modo diff + DocumentTabs)
-Fase 6   → A2 DataExplorer (FileTree + IntelligentEditor modo fold)
-Fase 7   → A3 BaseCvEditor (GraphCanvas modo CV + NodeInspectorSidebar)
+Fase 0  → Foundation: cn.ts, main.tsx, AppShell, JobWorkspaceShell, Badge, PortfolioDashboard, mock toggle, types/
+Fase 1  → B0 JobFlowInspector (PipelineTimeline, sin librerías externas)
+Fase 2  → A2 DataExplorer (FileTree + IntelligentEditor modo fold)
+Fase 3  → B1 ScrapeDiagnostics (metadata + texto + screenshot)
+Fase 4  → B2 ExtractUnderstand (CodeMirror + RequirementList + SourceTextPane)
+Fase 5  → B3 Match (ReactFlow + dagre + dnd-kit + EvidenceBankPanel)
+Fase 6  → B4 GenerateDocuments PREP_MATCH (CodeMirror + DocumentTabs)
+Fase 7  → B5 PackageDeployment (checklist + file download)
+Fase 8  → B4b Default Document Gates ⚠️ BLOCKED — requiere backend
+Fase 9  → A3 BaseCvEditor (ReactFlow modo CV)
+Fase 10 → B3b ApplicationContext ⚠️ BLOCKED — requiere backend
 ```

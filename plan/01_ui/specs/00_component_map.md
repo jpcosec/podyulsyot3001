@@ -62,59 +62,79 @@ El mismo componente se usa en tres vistas con comportamiento distinto:
 
 ## Árbol de archivos target
 
+> Fuente de verdad: `00_architecture.md`. Este árbol replica la estructura canónica.
+
 ```
 src/
-  atoms/
-    Button.tsx
-    Badge.tsx
-    Tag.tsx
-    Icon.tsx
-    Spinner.tsx
-    Kbd.tsx
-  molecules/
-    IntelligentEditor.tsx    ← ya existe en sandbox/components/ (migrar aquí)
-    GraphCanvas.tsx
-    PortfolioTable.tsx
-    HitlCtaBanner.tsx
-    RequirementList.tsx
-    EvidenceBankSidebar.tsx
-    FileTree.tsx
-    ControlPanel/
-      ExtractControlPanel.tsx
-      MatchControlPanel.tsx
-      PackageControlPanel.tsx
-      ScrapeControlPanel.tsx
-  layout/
-    AppShell.tsx             ← sidebar nav + main area
-    SplitPane.tsx
+  components/                  # UI global (Diseño Atómico puro)
+    atoms/
+      Button.tsx
+      Badge.tsx
+      Tag.tsx
+      Icon.tsx
+      Spinner.tsx
+      Kbd.tsx
+    molecules/
+      SplitPane.tsx            # wrapper de react-resizable-panels
+      DiagnosticCard.tsx
+      ControlPanel.tsx
+    organisms/
+      IntelligentEditor.tsx    ← migrar de sandbox/components/
+      GraphCanvas.tsx
+      FileTree.tsx
+    layouts/
+      AppShell.tsx             # LeftNav + <Outlet />
+      JobWorkspaceShell.tsx    # Pipeline TopBar + <Outlet />
+  features/                    # Lógica de negocio (Feature-Sliced)
+    portfolio/
+      api/usePortfolioSummary.ts
+      components/PortfolioTable.tsx, DeadlineSidebar.tsx
+    job-pipeline/
+      api/useJobTimeline.ts, useViewOne.ts, useViewTwo.ts, useViewThree.ts, ...
+      components/RequirementList.tsx, EvidenceBankPanel.tsx, MatchControlPanel.tsx, ...
+    base-cv/
+      api/useCvProfileGraph.ts
+      components/CvGraphEditor.tsx
   pages/
-    PortfolioPage.tsx        (A1)
-    DataExplorerPage.tsx     (A2)
-    CvEditorPage.tsx         (A3)
-    JobFlowPage.tsx          (B0)
-    ScrapePage.tsx           (B1)
-    ExtractPage.tsx          (B2)
-    MatchPage.tsx            (B3)
-    DocumentsPage.tsx        (B4)
+    global/
+      PortfolioDashboard.tsx   (A1)
+      DataExplorer.tsx         (A2)
+      BaseCvEditor.tsx         (A3)
+    job/
+      JobFlowInspector.tsx     (B0)
+      ScrapeDiagnostics.tsx    (B1)
+      ExtractUnderstand.tsx    (B2)
+      Match.tsx                (B3)
+      GenerateDocuments.tsx    (B4)
+      PackageDeployment.tsx    (B5)
+  types/
+    api.types.ts               # PortfolioSummary, ViewOnePayload, GraphNode...
+    ui.types.ts                # ReactFlow, DnD, editor state
+  utils/
+    cn.ts                      # clsx + tailwind-merge
+  api/                         # client real (fetch wrapper)
+  mock/                        # client mock + fixtures
   sandbox/
-    components/
-      IntelligentEditor.tsx  ← prototipo actual
-    pages/
-      IntelligentEditorPage.tsx
-  api/         ← no tocar
-  mock/        ← no tocar
-  types/       ← no tocar
+    components/IntelligentEditor.tsx   ← prototipo actual
+    pages/IntelligentEditorPage.tsx
 ```
 
 ---
 
 ## Orden de construcción
 
+> Fuente de verdad: `plan/index_checklist.md` (Fase 0–10).
+
 ```
-1. Átomos        → Button, Badge, Tag, Icon, Spinner, Kbd
-2. Layout        → AppShell (sidebar + main), SplitPane
-3. Moléculas     → IntelligentEditor (migrar), GraphCanvas, PortfolioTable, HitlCtaBanner
-4. Pages A       → A1 Portfolio, A2 Data Explorer, A3 CV Editor
-5. Pages B       → B0 Job Flow, B2 Extract, B3 Match, B4 Documents
-6. ControlPanels → uno por vista, se construyen con su page
+Fase 0  → cn.ts, main.tsx, AppShell, JobWorkspaceShell, Badge, PortfolioDashboard, mock toggle, types/
+Fase 1  → B0 JobFlowInspector
+Fase 2  → A2 DataExplorer
+Fase 3  → B1 ScrapeDiagnostics
+Fase 4  → B2 ExtractUnderstand
+Fase 5  → B3 Match
+Fase 6  → B4 GenerateDocuments (PREP_MATCH)
+Fase 7  → B5 PackageDeployment
+Fase 8  → B4b Default Document Gates ⚠️ BLOCKED
+Fase 9  → A3 BaseCvEditor
+Fase 10 → B3b ApplicationContext ⚠️ BLOCKED
 ```

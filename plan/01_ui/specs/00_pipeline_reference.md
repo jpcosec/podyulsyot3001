@@ -490,16 +490,16 @@ Todos los nodos deben fallar cerrado — ningún fallback silencioso. Tipos de e
 | extract_understand | ✅ B2 | |
 | match | ✅ B3 | |
 | review_match | ✅ B3 (integrado) | El review es parte de la vista match |
-| build_application_context | ❌ | No implementado — spec pendiente |
-| review_application_context | ❌ | No implementado — spec pendiente |
-| generate_motivation_letter | Parcial B4 | Actualmente lumped en generate_documents. Necesita spec separado para DEFAULT pipeline |
-| review_motivation_letter | Parcial B4 | Tab "COVER_LETTER" del spec B4 |
-| tailor_cv | Parcial B4 | Tab "CV" del spec B4 |
-| review_cv | Parcial B4 | Tab "CV" del spec B4 |
-| draft_email | Parcial B4 | Tab "EMAIL" del spec B4 |
-| review_email | Parcial B4 | Tab "EMAIL" del spec B4 |
+| build_application_context | ✅ B3b (especulativo) | Backend no implementado — spec listo |
+| review_application_context | ✅ B3b (integrado) | Parte de la vista B3b |
+| generate_motivation_letter | ✅ B4 (PREP_MATCH) + B4b (DEFAULT) | B4: 3 tabs simultáneos. B4b: 1 tab activo por gate |
+| review_motivation_letter | ✅ B4b Gate C.1 | Tab "COVER_LETTER" |
+| tailor_cv | ✅ B4b Gate C.2 | Tab "CV" |
+| review_cv | ✅ B4b Gate C.2 | Tab "CV" |
+| draft_email | ✅ B4b Gate C.3 | Tab "EMAIL" |
+| review_email | ✅ B4b Gate C.3 | Tab "EMAIL" |
 | render | En B0/B5 | Solo visible en Job Flow Inspector + Deployment |
 | package | ✅ B5 | |
 
-**Specs pendientes de crear:** `B3b_application_context.md`, y una nota en B4 sobre la
-separación PREP_MATCH vs DEFAULT.
+**Cobertura completa.** Todos los nodos del pipeline tienen spec UI. Los marcados como
+⚠️ BLOCKED dependen del backend (B3b Fase 10, B4b Fase 8).
