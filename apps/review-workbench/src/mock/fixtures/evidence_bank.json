@@ -1,0 +1,70 @@
+{
+  "source": "tu_berlin",
+  "job_id": "201397",
+  "items": [
+    {
+      "id": "P_EDU_001",
+      "title": "MSc Electrical Engineering – Computational Intelligence",
+      "category": "education",
+      "tags": ["machine-learning", "neural-networks", "signal-processing"],
+      "summary": "Master's degree from TU Berlin with specialisation in Computational Intelligence. Thesis on adaptive neural network architectures for cognitive load estimation.",
+      "source_path": "profile/education/msc_tu_berlin.json"
+    },
+    {
+      "id": "P_EXP_005",
+      "title": "Research Associate – Intelligent Tutoring System (ITS)",
+      "category": "experience",
+      "tags": ["ai-in-education", "affective-computing", "python", "pedagogical-systems"],
+      "summary": "Designed and implemented an ITS integrating affective sensing and pedagogical decision logic. Led end-to-end ML pipeline from sensor data to adaptive content delivery.",
+      "source_path": "profile/experience/its_project.json"
+    },
+    {
+      "id": "P_EXP_006",
+      "title": "Research Associate – EEG Stress Detection (LAETEC)",
+      "category": "experience",
+      "tags": ["eeg", "stress-detection", "pytorch", "cognitive-neuroscience"],
+      "summary": "Ongoing research at LAETEC Lab applying PyTorch-based deep learning to EEG signals for real-time stress classification. Includes data collection and preprocessing pipelines.",
+      "source_path": "profile/experience/laetec_eeg.json"
+    },
+    {
+      "id": "P_EXP_007",
+      "title": "Data Engineer – FAIR Reproducible Workflows",
+      "category": "experience",
+      "tags": ["fair-data", "reproducibility", "open-science", "data-engineering"],
+      "summary": "Designed reproducible evaluation workflows and experiment metadata structures following FAIR data principles for a multi-institution research platform.",
+      "source_path": "profile/experience/fair_workflows.json"
+    },
+    {
+      "id": "P_PUB_019",
+      "title": "Affective State Classification from EEG Signals",
+      "category": "publication",
+      "tags": ["eeg", "affective-computing", "deep-learning", "neurips"],
+      "summary": "Workshop paper at NeurIPS presenting a transformer-based architecture for EEG affective state classification. Achieved state-of-the-art on DEAP benchmark.",
+      "source_path": "profile/publications/neurips_2023.json"
+    },
+    {
+      "id": "P_PUB_020",
+      "title": "FAIR Pipelines for Neuroscience Data",
+      "category": "publication",
+      "tags": ["fair", "reproducibility", "neuroscience", "open-science"],
+      "summary": "Peer-reviewed article describing a framework for FAIR-compliant neuroscience data pipelines. Published in Journal of Open Research Software.",
+      "source_path": "profile/publications/jors_2022.json"
+    },
+    {
+      "id": "P_LNG_026",
+      "title": "English – CEFR C1",
+      "category": "language",
+      "tags": ["english", "c1", "cefr"],
+      "summary": "Certified English proficiency at CEFR C1 level (Cambridge Advanced Certificate, 2021).",
+      "source_path": "profile/languages/english_c1.json"
+    },
+    {
+      "id": "P_EXP_012",
+      "title": "Analytics Collaboration / Cross-team Projects",
+      "category": "experience",
+      "tags": ["collaboration", "analytics", "cross-functional"],
+      "summary": "Collaborated with analytics and product teams across multiple organisations on model evaluation, feedback loops, and data product delivery.",
+      "source_path": "profile/experience/analytics_collab.json"
+    }
+  ]
+}

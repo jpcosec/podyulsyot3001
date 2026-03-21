@@ -1,0 +1,25 @@
+{
+  "source": "tu_berlin",
+  "job_id": "999001",
+  "thread_id": "tu_berlin_999001",
+  "current_node": "package",
+  "status": "completed",
+  "updated_at": "2026-03-10T14:20:00Z",
+  "stages": [
+    { "stage": "scrape",              "status": "completed", "artifact_ref": "nodes/scrape/approved/canonical_scrape.json" },
+    { "stage": "translate_if_needed", "status": "completed", "artifact_ref": "nodes/translate_if_needed/approved/state.json" },
+    { "stage": "extract_understand",  "status": "completed", "artifact_ref": "nodes/extract_understand/approved/state.json" },
+    { "stage": "match",               "status": "completed", "artifact_ref": "nodes/match/approved/state.json" },
+    { "stage": "review_match",        "status": "completed", "artifact_ref": "nodes/match/review/decision.md" },
+    { "stage": "generate_documents",  "status": "completed", "artifact_ref": "nodes/generate_documents/approved/state.json" },
+    { "stage": "render",              "status": "completed", "artifact_ref": "nodes/render/approved/state.json" },
+    { "stage": "package",             "status": "completed", "artifact_ref": "nodes/package/approved/state.json" }
+  ],
+  "artifacts": {
+    "scrape":             "nodes/scrape/approved/canonical_scrape.json",
+    "extract_understand": "nodes/extract_understand/approved/state.json",
+    "match":              "nodes/match/approved/state.json",
+    "generate_documents": "nodes/generate_documents/approved/state.json",
+    "package":            "nodes/package/approved/state.json"
+  }
+}

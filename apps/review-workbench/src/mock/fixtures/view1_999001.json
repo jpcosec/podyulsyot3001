@@ -1,0 +1,17 @@
+{
+  "source": "tu_berlin",
+  "job_id": "999001",
+  "nodes": [
+    { "id": "R1", "label": "Python",         "kind": "requirement" },
+    { "id": "R2", "label": "English C1",     "kind": "requirement" },
+    { "id": "R3", "label": "Research in AI", "kind": "requirement" },
+    { "id": "P_SKL_001", "label": "Skill: Python (PyTorch / scikit-learn)", "kind": "profile" },
+    { "id": "P_LANG_001", "label": "Language: English CEFR C1",             "kind": "profile" },
+    { "id": "P_EXP_001",  "label": "Experience: AI Research Projects",      "kind": "profile" }
+  ],
+  "edges": [
+    { "source": "P_SKL_001",  "target": "R1", "label": "MATCHED_BY", "score": 0.9, "reasoning": "Strong Python evidence across multiple projects.", "evidence_id": "P_SKL_001" },
+    { "source": "P_LANG_001", "target": "R2", "label": "MATCHED_BY", "score": 0.8, "reasoning": "English C1 certification on file.",                 "evidence_id": "P_LANG_001" },
+    { "source": "P_EXP_001",  "target": "R3", "label": "MATCHED_BY", "score": 0.7, "reasoning": "AI research background in NLP and ML systems.",     "evidence_id": "P_EXP_001" }
+  ]
+}

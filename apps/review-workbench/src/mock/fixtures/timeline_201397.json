@@ -1,0 +1,23 @@
+{
+  "source": "tu_berlin",
+  "job_id": "201397",
+  "thread_id": "tu_berlin_201397",
+  "current_node": "review_match",
+  "status": "paused_review",
+  "updated_at": "2026-03-05T10:32:00Z",
+  "stages": [
+    { "stage": "scrape",               "status": "completed",     "artifact_ref": "nodes/scrape/approved/state.json" },
+    { "stage": "translate_if_needed",  "status": "completed",     "artifact_ref": "nodes/translate_if_needed/approved/state.json" },
+    { "stage": "extract_understand",   "status": "completed",     "artifact_ref": "nodes/extract_understand/approved/state.json" },
+    { "stage": "match",                "status": "completed",     "artifact_ref": "nodes/match/approved/state.json" },
+    { "stage": "review_match",         "status": "paused_review", "artifact_ref": "nodes/match/review/decision.md" },
+    { "stage": "generate_documents",   "status": "pending",       "artifact_ref": null },
+    { "stage": "render",               "status": "pending",       "artifact_ref": null },
+    { "stage": "package",              "status": "pending",       "artifact_ref": null }
+  ],
+  "artifacts": {
+    "scrape":             "nodes/scrape/approved/state.json",
+    "extract_understand": "nodes/extract_understand/approved/state.json",
+    "match":              "nodes/match/approved/state.json"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "source": "tu_berlin",
+  "job_id": "999001",
+  "source_markdown": "# PhD Researcher Position\n\nContact: Professor Ada Lovelace — ada@example.org\n\n## Requirements\n- Python (required)\n- English C1 (required)\n- Research in AI (desirable)\n\n## Contract\n- Salary: TV-L E13\n- Location: Berlin, on-site\n",
+  "requirements": [
+    { "id": "R1", "text": "Python", "priority": "must", "spans": [], "text_span": null },
+    { "id": "R2", "text": "English C1", "priority": "must", "spans": [], "text_span": null },
+    { "id": "R3", "text": "Research in AI", "priority": "nice", "spans": [], "text_span": null }
+  ]
+}

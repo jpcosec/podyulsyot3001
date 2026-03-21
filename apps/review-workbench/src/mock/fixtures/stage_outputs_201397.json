@@ -1,0 +1,20 @@
+{
+  "source": "tu_berlin",
+  "job_id": "201397",
+  "stage": "extract_understand",
+  "node_name": "extract_understand",
+  "files": [
+    {
+      "path": "nodes/extract_understand/approved/state.json",
+      "content_type": "application/json",
+      "content": "{\n  \"job_title\": \"Research assistant - 0.75 working time\",\n  \"requirements\": [...],\n  \"constraints\": [...]\n}",
+      "editable": true
+    },
+    {
+      "path": "nodes/extract_understand/input/source_text.md",
+      "content_type": "text/markdown",
+      "content": "# Scraped Source Text\n\nJob Posting V-67/26: Research assistant - 0.75 working time\nTU Berlin — Brains, Bots, and Minds Lab\n...",
+      "editable": false
+    }
+  ]
+}
