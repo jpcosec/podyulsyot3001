@@ -1,23 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-
 import { getJobTimeline } from "../api/client";
 import type { JobTimeline } from "../types/models";
 
-interface ChecklistItem {
-  label: string;
-  checked: boolean;
-}
-
-function ChecklistItemComponent({ label, checked }: { label: string; checked: boolean }): JSX.Element {
-  return (
-    <li style={{ display: "flex", alignItems: "center", gap: "8px", padding: "6px 0" }}>
-      <span style={{ color: checked ? "var(--good)" : "var(--bad)", fontSize: "16px" }}>
-        {checked ? "\u2713" : "\u2717"}
-      </span>
-      <span style={{ color: checked ? "var(--text-main)" : "var(--text-dim)" }}>{label}</span>
-    </li>
-  );
+interface PackageFile {
+  name: string;
+  path: string;
+  size_kb: number;
+  preview?: string;
 }
 
 export function DeploymentPage(): JSX.Element {
@@ -26,178 +16,106 @@ export function DeploymentPage(): JSX.Element {
   const jobId = params.jobId ?? "";
 
   const [timeline, setTimeline] = useState<JobTimeline | null>(null);
-  const [timelineError, setTimelineError] = useState("");
-  const [bundleReady, setBundleReady] = useState<boolean | null>(null);
+  const [packageFiles, setPackageFiles] = useState<PackageFile[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     getJobTimeline(source, jobId)
-      .then((data) => {
-        setTimeline(data);
-        const hasPackage = data.artifacts && Object.keys(data.artifacts).some((k) => k.includes("package"));
-        setBundleReady(hasPackage ?? false);
-      })
-      .catch((err: Error) => setTimelineError(err.message));
+      .then(setTimeline)
+      .catch(() => setTimeline(null))
+      .finally(() => setLoading(false));
   }, [source, jobId]);
 
-  const checklistItems: ChecklistItem[] = [
-    { label: "All stages reviewed and approved", checked: timeline?.status === "completed" },
-    {
-      label: "Motivation letter reviewed",
-      checked: timeline?.stages
-        ? timeline.stages.some((s) => s.stage === "review_motivation_letter" && s.status === "completed")
-        : false,
-    },
-    {
-      label: "CV reviewed",
-      checked: timeline?.stages
-        ? timeline.stages.some((s) => s.stage === "review_cv" && s.status === "completed")
-        : false,
-    },
-    {
-      label: "Application email reviewed",
-      checked: timeline?.stages
-        ? timeline.stages.some((s) => s.stage === "review_email" && s.status === "completed")
-        : false,
-    },
-  ];
+  useEffect(() => {
+    fetch(`/api/v1/jobs/${source}/${jobId}/package/files`)
+      .then((r) => (r.ok ? r.json() : { files: [] }))
+      .then((d) => setPackageFiles(d.files ?? []))
+      .catch(() => setPackageFiles([]));
+  }, [source, jobId]);
 
-  const allChecked = checklistItems.every((item) => item.checked);
+  const isComplete = timeline?.current_node === "package" || timeline?.current_node === "render";
+  const requiredStages = ["scrape", "extract_understand", "match", "generate_documents"];
+  const completedStages = requiredStages.filter((s) =>
+    timeline?.stages.some((st) => st.stage === s && (st.status === "completed" || st.status === "paused_review"))
+  );
 
   return (
-    <section className="panel">
+    <section className="panel deployment-page">
       <div className="breadcrumbs">
         <Link to="/">Portfolio</Link>
         <span>/</span>
-        <Link to={`/jobs/${source}/${jobId}`}>
-          {source} {jobId}
-        </Link>
+        <Link to={`/jobs/${source}/${jobId}`}>{source} {jobId}</Link>
         <span>/</span>
         <span>Deployment</span>
       </div>
 
-      <h1>Deployment</h1>
-      <p>Final stage: package and submit application artifacts.</p>
+      <h1>Mission Status</h1>
 
-      {timelineError ? (
-        <p className="error">{timelineError}</p>
-      ) : !timeline ? (
-        <p>Loading...</p>
-      ) : (
-        <>
-          <div className="panel" style={{ marginTop: "16px" }}>
-            <h2 style={{ fontSize: "1.1rem", marginBottom: "12px" }}>Mission Status</h2>
-            <p style={{ margin: "0 0 12px" }}>
-              Current status: <strong>{timeline.status}</strong>
-            </p>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-              {checklistItems.map((item, idx) => (
-                <ChecklistItemComponent key={idx} label={item.label} checked={item.checked} />
-              ))}
-            </ul>
-          </div>
+      <div className={`mission-banner ${isComplete ? "mission-complete" : "mission-pending"}`}>
+        <span className="material-symbols-outlined">
+          {isComplete ? "task_alt" : "pending"}
+        </span>
+        <div>
+          <strong>{isComplete ? "Bundle Ready" : "Bundle Pending"}</strong>
+          <p>
+            {completedStages.length}/{requiredStages.length} stages reviewed
+          </p>
+        </div>
+      </div>
 
-          <div className="panel" style={{ marginTop: "16px" }}>
-            <h2 style={{ fontSize: "1.1rem", marginBottom: "12px" }}>Bundle Status</h2>
-            {bundleReady === null ? (
-              <p>Checking bundle...</p>
-            ) : bundleReady ? (
-              <p style={{ color: "var(--good)" }}>
-                <strong>Ready</strong> - Package artifacts found
-              </p>
-            ) : (
-              <p style={{ color: "var(--warn)" }}>
-                <strong>Pending</strong> - Run pipeline to generate package
-              </p>
-            )}
-            {timeline.artifacts && Object.keys(timeline.artifacts).length > 0 && (
-              <div style={{ marginTop: "12px" }}>
-                <h4 style={{ margin: "0 0 8px", fontSize: "0.9rem", color: "var(--text-dim)" }}>
-                  Available Artifacts
-                </h4>
-                <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                  {Object.entries(timeline.artifacts).map(([key, ref]) => (
-                    <li
-                      key={key}
-                      style={{
-                        padding: "4px 0",
-                        fontSize: "13px",
-                        color: "var(--text-dim)",
-                      }}
-                    >
-                      {key}: <code style={{ fontSize: "12px" }}>{ref}</code>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-
-          <div className="panel" style={{ marginTop: "16px" }}>
-            <h2 style={{ fontSize: "1.1rem", marginBottom: "12px" }}>Version & History</h2>
-            <p style={{ margin: "0 0 8px", fontSize: "13px" }}>
-              Job ID: <strong>{jobId}</strong>
-            </p>
-            <p style={{ margin: "0 0 8px", fontSize: "13px" }}>
-              Source: <strong>{source}</strong>
-            </p>
-            <p style={{ margin: "0 0 8px", fontSize: "13px" }}>
-              Thread: <code style={{ fontSize: "12px" }}>{timeline.thread_id}</code>
-            </p>
-            <p style={{ margin: "0 0 8px", fontSize: "13px" }}>
-              Last updated: <strong>{new Date(timeline.updated_at).toLocaleString()}</strong>
-            </p>
-            <p style={{ margin: 0, fontSize: "13px" }}>
-              Current node: <strong>{timeline.current_node}</strong>
-            </p>
-          </div>
-
-          <div style={{ marginTop: "20px", display: "flex", gap: "12px", alignItems: "center" }}>
-            <button
-              type="button"
-              disabled={!allChecked}
-              title={allChecked ? "Ready to submit" : "Complete all checklist items first"}
-              style={{
-                padding: "10px 24px",
-                borderRadius: "8px",
-                border: "1px solid var(--line)",
-                background: allChecked ? "var(--good)" : "var(--pending)",
-                color: "#fff",
-                fontSize: "14px",
-                fontWeight: 600,
-                cursor: allChecked ? "pointer" : "not-allowed",
-                opacity: allChecked ? 1 : 0.6,
-              }}
-            >
-              Submit Application
-            </button>
-            {!allChecked && (
-              <span style={{ fontSize: "12px", color: "var(--text-dim)" }}>
-                Complete all checklist items to enable submission
+      <div className="checklist">
+        <h2>Mission Checklist</h2>
+        {requiredStages.map((stage) => {
+          const stageInfo = timeline?.stages.find((s) => s.stage === stage);
+          const done = stageInfo?.status === "completed" || stageInfo?.status === "paused_review";
+          return (
+            <div key={stage} className={`checklist-item ${done ? "checklist-done" : ""}`}>
+              <span className="material-symbols-outlined">
+                {done ? "check_circle" : "radio_button_unchecked"}
               </span>
-            )}
-            <span
-              style={{
-                marginLeft: "auto",
-                fontSize: "12px",
-                color: "var(--text-dim)",
-                fontStyle: "italic",
-              }}
-            >
-              Not implemented - run{" "}
-              <code
-                style={{
-                  background: "#f1f5f9",
-                  padding: "2px 6px",
-                  borderRadius: "4px",
-                  fontSize: "11px",
-                }}
-              >
-                python -m src.cli.run_prep_match --resume
-              </code>
-            </span>
-          </div>
-        </>
+              <span>{stage.replace(/_/g, " ")}</span>
+              {stageInfo && (
+                <span className={`status-chip status-${stageInfo.status.replace(/_/g, "_")}`}>
+                  {stageInfo.status.replace(/_/g, " ")}
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {packageFiles.length > 0 && (
+        <div className="package-files">
+          <h2>Bundle Contents</h2>
+          {packageFiles.map((file) => (
+            <div key={file.path} className="package-file-item">
+              <span className="material-symbols-outlined">description</span>
+              <div className="package-file-info">
+                <strong>{file.name}</strong>
+                <span>{file.size_kb.toFixed(1)} KB</span>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
+
+      <div className="submit-section">
+        <button
+          type="button"
+          className="submit-btn"
+          disabled={!isComplete}
+          title={!isComplete ? "Complete all stage reviews before submitting" : "Ready to submit"}
+        >
+          <span className="material-symbols-outlined">send</span>
+          Submit Application
+        </button>
+        {!isComplete && (
+          <p className="submit-hint">Complete all stage reviews to enable submission</p>
+        )}
+        <p className="submit-note">
+          Run <code>python -m src.cli.run_prep_match --resume</code> to continue pipeline
+        </p>
+      </div>
     </section>
   );
 }

@@ -8,6 +8,7 @@ from fastapi import APIRouter, Body, HTTPException
 from src.interfaces.api.config import load_settings
 from src.interfaces.api.models import to_dict
 from src.interfaces.api.read_models import (
+    _read_json_safe,
     build_job_timeline,
     build_view_one_payload,
     build_view_three_payload,
@@ -19,6 +20,7 @@ from src.interfaces.api.read_models import (
     save_document,
     save_editor_state,
 )
+from src.core.io.workspace_manager import WorkspaceManager
 
 router = APIRouter(prefix="/api/v1/jobs", tags=["jobs"])
 
@@ -161,3 +163,96 @@ def update_document_payload(
         return save_document(data_root, source, job_id, doc_key, content)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/{source}/{job_id}/evidence-bank")
+def get_evidence_bank(source: str, job_id: str) -> dict:
+    """Return evidence entries from the candidate profile."""
+    settings = load_settings()
+    data_root = Path(settings.data_root)
+    job_root = data_root / source / job_id
+    if not job_root.exists():
+        raise HTTPException(status_code=404, detail="job not found")
+
+    workspace = WorkspaceManager(data_root)
+    evidence_dir = workspace.job_root(source, job_id) / "profile" / "evidence"
+
+    items = []
+    if evidence_dir.exists():
+        for f in sorted(evidence_dir.glob("*.json")):
+            data = _read_json_safe(f)
+            if data:
+                items.append(
+                    {
+                        "id": f.stem,
+                        "title": data.get("title", data.get("name", f.stem)),
+                        "category": data.get("category", "unknown"),
+                        "tags": data.get("tags", data.get("skills", [])),
+                        "summary": data.get("summary", data.get("description", "")),
+                        "source_path": str(
+                            f.relative_to(workspace.job_root(source, job_id))
+                        ),
+                    }
+                )
+
+    return {"source": source, "job_id": job_id, "items": items}
+
+
+@router.get("/{source}/{job_id}/package/files")
+def get_package_files(source: str, job_id: str) -> dict:
+    """List files in the package directory if it exists."""
+    import os
+
+    settings = load_settings()
+    data_root = Path(settings.data_root)
+    job_root = data_root / source / job_id
+    if not job_root.exists():
+        raise HTTPException(status_code=404, detail="job not found")
+
+    workspace = WorkspaceManager(data_root)
+    package_dir = workspace.job_root(source, job_id) / "nodes" / "package"
+
+    files = []
+    if package_dir.exists():
+        for f in sorted(package_dir.rglob("*")):
+            if f.is_file():
+                size_kb = os.path.getsize(f) / 1024
+                files.append(
+                    {
+                        "name": f.name,
+                        "path": str(f.relative_to(workspace.job_root(source, job_id))),
+                        "size_kb": round(size_kb, 1),
+                    }
+                )
+
+    return {"source": source, "job_id": job_id, "files": files}
+
+
+@router.get("/{source}/{job_id}/profile/summary")
+def get_profile_summary(source: str, job_id: str) -> dict:
+    """Return candidate profile summary."""
+    settings = load_settings()
+    data_root = Path(settings.data_root)
+    job_root = data_root / source / job_id
+    if not job_root.exists():
+        raise HTTPException(status_code=404, detail="job not found")
+
+    workspace = WorkspaceManager(data_root)
+    evidence_dir = workspace.job_root(source, job_id) / "profile" / "evidence"
+
+    items_by_cat: dict[str, int] = {}
+    if evidence_dir.exists():
+        for f in evidence_dir.glob("*.json"):
+            data = _read_json_safe(f)
+            if data:
+                cat = data.get("category", "unknown")
+                items_by_cat[cat] = items_by_cat.get(cat, 0) + 1
+
+    return {
+        "source": source,
+        "job_id": job_id,
+        "skills_count": items_by_cat.get("skill", 0),
+        "projects_count": items_by_cat.get("project", 0),
+        "education_count": items_by_cat.get("education", 0),
+        "experience_count": items_by_cat.get("experience", 0),
+    }

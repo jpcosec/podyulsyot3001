@@ -66,7 +66,7 @@ export function JobStagePage(): JSX.Element {
   }, [searchParams]);
 
   return (
-    <section className="panel">
+    <div className="panel">
       <div className="breadcrumbs">
         <Link to="/">Portfolio</Link>
         <span>/</span>
@@ -140,6 +140,6 @@ export function JobStagePage(): JSX.Element {
       {activeView === "view-2" ? <ViewTwoDocToGraph /> : null}
       {activeView === "view-3" ? <ViewThreeGraphToDoc /> : null}
       {activeView === "outputs" ? <PipelineOutputsView stage={selectedStage} /> : null}
-    </section>
+    </div>
   );
 }

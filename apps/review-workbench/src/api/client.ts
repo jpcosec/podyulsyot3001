@@ -1,8 +1,11 @@
 import type {
   CvProfileGraphPayload,
   CvGraphPayload,
+  EvidenceBankPayload,
   JobTimeline,
+  PackageFilesPayload,
   PortfolioSummary,
+  ProfileSummary,
   StageOutputsPayload,
   ViewOnePayload,
   ViewThreePayload,
@@ -188,4 +191,28 @@ export async function saveCvProfileGraphPayload(
     throw new Error(`save cv profile graph failed: ${response.status} ${detail}`);
   }
   return (await response.json()) as CvProfileGraphPayload;
+}
+
+export async function getEvidenceBank(source: string, jobId: string): Promise<EvidenceBankPayload> {
+  const response = await fetch(`${API_BASE}/api/v1/jobs/${source}/${jobId}/evidence-bank`);
+  if (!response.ok) {
+    throw new Error(`evidence bank failed: ${response.status}`);
+  }
+  return (await response.json()) as EvidenceBankPayload;
+}
+
+export async function getProfileSummary(source: string, jobId: string): Promise<ProfileSummary> {
+  const response = await fetch(`${API_BASE}/api/v1/jobs/${source}/${jobId}/profile/summary`);
+  if (!response.ok) {
+    throw new Error(`profile summary failed: ${response.status}`);
+  }
+  return (await response.json()) as ProfileSummary;
+}
+
+export async function getPackageFiles(source: string, jobId: string): Promise<PackageFilesPayload> {
+  const response = await fetch(`${API_BASE}/api/v1/jobs/${source}/${jobId}/package/files`);
+  if (!response.ok) {
+    throw new Error(`package files failed: ${response.status}`);
+  }
+  return (await response.json()) as PackageFilesPayload;
 }

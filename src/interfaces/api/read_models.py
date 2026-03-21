@@ -207,6 +207,16 @@ def load_match_review_payload(data_root: Path, source: str, job_id: str) -> dict
     }
 
 
+def _read_json_safe(path: Path) -> dict | None:
+    """Read a JSON file safely, returning None on error."""
+    if not path.exists():
+        return None
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+
+
 def _read_json(path: Path) -> dict:
     if not path.exists():
         return {}

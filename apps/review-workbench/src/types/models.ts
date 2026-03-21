@@ -192,3 +192,39 @@ export interface CvProfileGraphPayload {
   skills: CvSkill[];
   demonstrates: CvDemonstratesEdge[];
 }
+
+export interface EvidenceItem {
+  id: string;
+  title: string;
+  category: string;
+  tags: string[];
+  summary: string;
+  source_path: string;
+}
+
+export interface EvidenceBankPayload {
+  source: string;
+  job_id: string;
+  items: EvidenceItem[];
+}
+
+export interface ProfileSummary {
+  source: string;
+  job_id: string;
+  skills_count: number;
+  projects_count: number;
+  education_count: number;
+  experience_count: number;
+}
+
+export interface PackageFile {
+  name: string;
+  path: string;
+  size_kb: number;
+}
+
+export interface PackageFilesPayload {
+  source: string;
+  job_id: string;
+  files: PackageFile[];
+}
