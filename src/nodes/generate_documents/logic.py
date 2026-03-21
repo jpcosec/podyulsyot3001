@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import re
 from datetime import datetime, timezone
 from pathlib import Path
@@ -14,6 +13,7 @@ from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 from src.ai.prompt_manager import PromptManager
 from src.ai.runtime import LLMRuntime
+from src.core.ai.config import LLMConfig
 from src.nodes.generate_documents.contract import (
     DocumentDeltas,
     TextReviewAssistEnvelope,
@@ -42,11 +42,11 @@ FORBIDDEN_PHRASES = (
 
 def run_logic(state: Mapping[str, Any]) -> dict[str, Any]:
     """Generate document deltas and deterministic assist indicators."""
+    cfg = LLMConfig.from_env()
     input_data, profile_data = _build_input_data(state)
 
     prompt_manager = PromptManager(base_path="src/nodes")
-    model_name = os.getenv("PHD2_GEMINI_MODEL", "gemini-2.5-flash")
-    runtime = LLMRuntime(model_name=model_name)
+    runtime = LLMRuntime(model_name=cfg.model)
 
     system_prompt, user_prompt = prompt_manager.build_prompt(
         "generate_documents",

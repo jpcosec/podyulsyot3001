@@ -49,11 +49,20 @@ export interface TextSpanItem {
   text_preview: string;
 }
 
+export interface RequirementTextSpan {
+  start_line: number | null;
+  end_line: number | null;
+  start_offset: number | null;
+  end_offset: number | null;
+  preview_snippet: string | null;
+}
+
 export interface RequirementItem {
   id: string;
   text: string;
   priority: string;
   spans: TextSpanItem[];
+  text_span: RequirementTextSpan | null;
 }
 
 export interface ViewTwoPayload {

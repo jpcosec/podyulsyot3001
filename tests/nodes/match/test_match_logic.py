@@ -36,7 +36,7 @@ def test_run_logic_updates_state_with_match_output(
 
     class FakeRuntime:
         def __init__(self, model_name: str):
-            assert model_name == "gemini-2.5-flash"
+            assert model_name == "gemini-2.0-flash"
 
         def generate_structured(
             self, system_prompt: str, user_prompt: str, output_schema
@@ -124,7 +124,7 @@ def test_run_logic_renders_review_markdown_with_requirement_and_evidence_text(
 
     class FakeRuntime:
         def __init__(self, model_name: str):
-            assert model_name == "gemini-2.5-flash"
+            assert model_name == "gemini-2.0-flash"
 
         def generate_structured(
             self, system_prompt: str, user_prompt: str, output_schema
@@ -208,7 +208,7 @@ def test_run_logic_regeneration_focuses_review_table_on_patch_requirements(
 
     class FakeRuntime:
         def __init__(self, model_name: str):
-            assert model_name == "gemini-2.5-flash"
+            assert model_name == "gemini-2.0-flash"
 
         def generate_structured(
             self, system_prompt: str, user_prompt: str, output_schema
@@ -317,7 +317,7 @@ def test_run_logic_fail_closed_when_regen_feedback_missing(
 
     class FakeRuntime:
         def __init__(self, model_name: str):
-            assert model_name == "gemini-2.5-flash"
+            assert model_name == "gemini-2.0-flash"
 
         def generate_structured(
             self, system_prompt: str, user_prompt: str, output_schema

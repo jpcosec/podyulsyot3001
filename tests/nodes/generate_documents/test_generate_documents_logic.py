@@ -109,7 +109,7 @@ def test_run_logic_writes_artifacts_and_indicators(
 
     class FakeRuntime:
         def __init__(self, model_name: str):
-            assert model_name == "gemini-2.5-flash"
+            assert model_name == "gemini-2.0-flash"
 
         def generate_structured(
             self, system_prompt: str, user_prompt: str, output_schema
@@ -234,7 +234,7 @@ def test_run_logic_uses_real_prompt_template_xml_tags(
 
     class FakeRuntime:
         def __init__(self, model_name: str):
-            assert model_name == "gemini-2.5-flash"
+            assert model_name == "gemini-2.0-flash"
 
         def generate_structured(
             self, system_prompt: str, user_prompt: str, output_schema

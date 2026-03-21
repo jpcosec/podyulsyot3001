@@ -56,18 +56,21 @@ const MOCK_REQUIREMENTS: RequirementItem[] = [
     text: "Master's degree in Computer Science or related field",
     priority: "must",
     spans: [{ requirement_id: "R1", start_line: 3, end_line: 3, text_preview: "Master degree" }],
+    text_span: { start_line: 3, end_line: 3, start_offset: null, end_offset: null, preview_snippet: "...Master degree in..." },
   },
   {
     id: "R2",
     text: "Strong SQL knowledge",
     priority: "must",
     spans: [{ requirement_id: "R2", start_line: 4, end_line: 4, text_preview: "SQL" }],
+    text_span: { start_line: 4, end_line: 4, start_offset: null, end_offset: null, preview_snippet: "...strong SQL..." },
   },
   {
     id: "R3",
     text: "Distributed systems experience",
     priority: "nice",
     spans: [{ requirement_id: "R3", start_line: 4, end_line: 4, text_preview: "distributed systems" }],
+    text_span: { start_line: 4, end_line: 4, start_offset: null, end_offset: null, preview_snippet: "...distributed systems..." },
   },
 ];
 

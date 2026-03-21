@@ -5,12 +5,19 @@ from __future__ import annotations
 import os
 import re
 import importlib
-from contextlib import nullcontext
 from typing import Any, Mapping
 
 from src.ai.llm_runtime import LLMRuntimeDependencyError, LLMRuntimeResponseError
 from src.ai.prompt_manager import PromptManager
-from src.nodes.extract_understand.contract import ContactInfo, JobUnderstandingExtract
+from src.core.ai.config import LLMConfig
+from src.core.ai.tracing import trace_section
+from src.core.text.span_resolver import resolve_span
+from src.nodes.extract_understand.contract import (
+    ContactInfo,
+    JobRequirement,
+    JobUnderstandingExtract,
+    TextSpan,
+)
 
 EMAIL_RE = re.compile(r"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}", re.IGNORECASE)
 SALARY_RE = re.compile(
@@ -34,16 +41,29 @@ def run_logic(state: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def _run_langchain_extraction(node_data: dict[str, Any]) -> JobUnderstandingExtract:
+    cfg = LLMConfig.from_env()
     prompt_value = _build_prompt_value(node_data)
     llm = _build_structured_llm()
     try:
-        with _langsmith_trace_context(node_data):
+        with trace_section(
+            "extract_understand.llm_call",
+            metadata={
+                "job_id": node_data.get("job_id"),
+                "langsmith_enabled": cfg.langsmith_enabled,
+            },
+        ):
             response = llm.invoke(prompt_value)
     except Exception as exc:  # noqa: BLE001
         raise LLMRuntimeResponseError("langchain structured extraction failed") from exc
 
     try:
-        return JobUnderstandingExtract.model_validate(response)
+        result = JobUnderstandingExtract.model_validate(response)
+        with trace_section(
+            "extract_understand.persist",
+            metadata={"job_id": node_data.get("job_id"), "validated": True},
+        ):
+            pass
+        return result
     except Exception as exc:  # noqa: BLE001
         raise LLMRuntimeResponseError(
             "langchain response failed schema validation"
@@ -72,8 +92,8 @@ def _build_prompt_value(node_data: dict[str, Any]) -> Any:
 
 def _build_structured_llm() -> Any:
     ChatGoogleGenerativeAI = _load_chat_google_model()
-    model_name = os.getenv("PHD2_GEMINI_MODEL", "gemini-2.5-flash")
-    llm = ChatGoogleGenerativeAI(model=model_name, temperature=0)
+    cfg = LLMConfig.from_env()
+    llm = ChatGoogleGenerativeAI(model=cfg.model, temperature=cfg.temperature)
     return llm.with_structured_output(JobUnderstandingExtract)
 
 
@@ -107,28 +127,6 @@ def _extract_human_message(prompt_value: Any) -> str:
     return ""
 
 
-def _langsmith_trace_context(node_data: Mapping[str, Any]) -> Any:
-    if not os.getenv("LANGSMITH_API_KEY"):
-        return nullcontext()
-    try:
-        run_helpers = importlib.import_module("langsmith.run_helpers")
-    except ImportError:
-        return nullcontext()
-
-    trace = getattr(run_helpers, "trace", None)
-    if not callable(trace):
-        return nullcontext()
-    return trace(
-        "extract_understand",
-        run_type="chain",
-        inputs={
-            "job_id": node_data.get("job_id"),
-            "active_feedback": node_data.get("active_feedback", []),
-        },
-        tags=["phd2", "extract_understand", "minimal-architecture"],
-    )
-
-
 def _enrich_extraction_result(
     result: JobUnderstandingExtract, source_text: str
 ) -> JobUnderstandingExtract:
@@ -144,7 +142,28 @@ def _enrich_extraction_result(
     payload["salary_grade"] = payload.get("salary_grade") or _detect_salary_grade(
         source_text
     )
+    payload["requirements"] = _enrich_requirements(
+        payload.get("requirements", []), source_text
+    )
     return JobUnderstandingExtract.model_validate(payload)
+
+
+def _enrich_requirements(requirements: list[dict], source_text: str) -> list[dict]:
+    enriched = []
+    for req in requirements:
+        span_resolution = resolve_span(source_text, req.get("text"))
+        if span_resolution.found:
+            req["text_span"] = TextSpan(
+                start_line=span_resolution.start_line,
+                end_line=span_resolution.end_line,
+                start_offset=span_resolution.start_offset,
+                end_offset=span_resolution.end_offset,
+                preview_snippet=span_resolution.preview_snippet,
+            ).model_dump()
+        else:
+            req["text_span"] = None
+        enriched.append(req)
+    return enriched
 
 
 def _detect_contact_email(source_text: str) -> str | None:

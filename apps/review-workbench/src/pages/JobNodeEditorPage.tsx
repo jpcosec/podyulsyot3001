@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
   Background,
@@ -29,6 +29,18 @@ const STAGE_OPTIONS: Array<{ key: EditorStage; label: string }> = [
   { key: "match", label: "Match" },
 ];
 
+const MAX_HISTORY = 50;
+
+const SHORTCUTS = [
+  { keys: ["Ctrl", "S"], action: "Save" },
+  { keys: ["Ctrl", "Z"], action: "Undo" },
+  { keys: ["Ctrl", "Shift", "Z"], action: "Redo" },
+  { keys: ["Ctrl", "Y"], action: "Redo (alt)" },
+  { keys: ["Escape"], action: "Exit focus / Deselect" },
+  { keys: ["/"], action: "Focus search" },
+  { keys: ["Arrow Up/Down"], action: "Navigate nodes" },
+];
+
 export function JobNodeEditorPage(): JSX.Element {
   return (
     <ReactFlowProvider>
@@ -50,6 +62,12 @@ function JobNodeEditorInner(): JSX.Element {
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
   const [error, setError] = useState<string>("");
 
+  const [history, setHistory] = useState<Record<string, unknown>[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [focusedNode, setFocusedNode] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showShortcuts, setShowShortcuts] = useState(false);
+
   useEffect(() => {
     const requestedStage = searchParams.get("stage");
     if (requestedStage === "extract_understand" || requestedStage === "match") {
@@ -64,6 +82,9 @@ function JobNodeEditorInner(): JSX.Element {
         setSelectedPath("$");
         setError("");
         setSaveState("idle");
+        setHistory([]);
+        setHistoryIndex(-1);
+        setFocusedNode(null);
       })
       .catch((err: Error) => {
         setStatePayload(null);
@@ -78,6 +99,42 @@ function JobNodeEditorInner(): JSX.Element {
     setEditorValue(toPrettyJson(selectedValue));
   }, [selectedValue]);
 
+  const pushHistory = useCallback((state: Record<string, unknown> | null) => {
+    if (!state) return;
+    const clone = JSON.parse(JSON.stringify(state)) as Record<string, unknown>;
+    setHistory((prev) => {
+      const newHistory = prev.slice(0, historyIndex + 1);
+      newHistory.push(clone);
+      if (newHistory.length > MAX_HISTORY) {
+        newHistory.shift();
+        return newHistory;
+      }
+      return newHistory;
+    });
+    setHistoryIndex((prev) => Math.min(prev + 1, MAX_HISTORY - 1));
+  }, [historyIndex]);
+
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
+
+  const handleUndo = useCallback(() => {
+    if (!canUndo || !statePayload) return;
+    const prevState = history[historyIndex - 1];
+    if (!prevState) return;
+    setStatePayload(prevState);
+    setHistoryIndex((prev) => prev - 1);
+    setFocusedNode(null);
+  }, [canUndo, history, historyIndex, statePayload]);
+
+  const handleRedo = useCallback(() => {
+    if (!canRedo || !statePayload) return;
+    const nextState = history[historyIndex + 1];
+    if (!nextState) return;
+    setStatePayload(nextState);
+    setHistoryIndex((prev) => prev + 1);
+    setFocusedNode(null);
+  }, [canRedo, history, historyIndex, statePayload]);
+
   const handleSave = async (): Promise<void> => {
     if (!statePayload) {
       return;
@@ -88,13 +145,133 @@ function JobNodeEditorInner(): JSX.Element {
       const parsed = JSON.parse(editorValue) as unknown;
       const nextState = setValueAtPath(statePayload, selectedPath, parsed);
       const payload = await saveEditorState(source, jobId, stage, nextState as Record<string, unknown>);
+      pushHistory(statePayload);
       setStatePayload(payload.state);
       setSaveState("saved");
+      setFocusedNode(null);
     } catch (err) {
       setSaveState("idle");
       setError(err instanceof Error ? err.message : "save failed");
     }
   };
+
+  const handleNodeClick = useCallback((_: React.MouseEvent, node: FlowNode) => {
+    setSelectedPath(node.data.path);
+    setFocusedNode(node.id);
+  }, []);
+
+  const handlePaneClick = useCallback(() => {
+    setFocusedNode(null);
+  }, []);
+
+  const handleExitFocus = useCallback(() => {
+    setFocusedNode(null);
+    setSelectedPath("$");
+  }, []);
+
+  const handleFocusSearch = useCallback(() => {
+    const searchInput = document.getElementById("node-search-input");
+    if (searchInput) {
+      searchInput.focus();
+      searchInput.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const isEditableTarget =
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement ||
+        Boolean(target?.isContentEditable);
+
+      const modifier = e.ctrlKey || e.metaKey;
+
+      if (modifier && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        void handleSave();
+        return;
+      }
+
+      if (modifier && e.key.toLowerCase() === "z" && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+        return;
+      }
+
+      if (modifier && (e.key.toLowerCase() === "z" && e.shiftKey) || e.key.toLowerCase() === "y") {
+        e.preventDefault();
+        handleRedo();
+        return;
+      }
+
+      if (e.key === "Escape") {
+        if (showShortcuts) {
+          setShowShortcuts(false);
+          return;
+        }
+        if (focusedNode) {
+          handleExitFocus();
+          return;
+        }
+        setFocusedNode(null);
+        return;
+      }
+
+      if (e.key === "/" && !isEditableTarget) {
+        e.preventDefault();
+        handleFocusSearch();
+        return;
+      }
+
+      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key) && !isEditableTarget) {
+        e.preventDefault();
+        const allNodes = graph.nodes;
+        if (allNodes.length === 0) return;
+        const currentIndex = focusedNode ? allNodes.findIndex((n) => n.id === focusedNode) : -1;
+        let nextIndex: number;
+        if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+          nextIndex = currentIndex < allNodes.length - 1 ? currentIndex + 1 : 0;
+        } else {
+          nextIndex = currentIndex > 0 ? currentIndex - 1 : allNodes.length - 1;
+        }
+        const nextNode = allNodes[nextIndex];
+        if (nextNode) {
+          setSelectedPath(nextNode.data.path);
+          setFocusedNode(nextNode.id);
+        }
+        return;
+      }
+    };
+
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [focusedNode, graph.nodes, handleExitFocus, handleFocusSearch, handleRedo, handleSave, handleUndo, showShortcuts]);
+
+  const filteredGraph = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) {
+      return graph;
+    }
+    const filteredNodes = graph.nodes.filter((node) =>
+      node.data.label.toLowerCase().includes(query)
+    );
+    const filteredNodeIds = new Set(filteredNodes.map((n) => n.id));
+    const filteredEdges = graph.edges.filter(
+      (edge) => filteredNodeIds.has(edge.source) || filteredNodeIds.has(edge.target)
+    );
+    return { nodes: filteredNodes, edges: filteredEdges };
+  }, [graph, searchQuery]);
+
+  const focusedNodeData = useMemo(() => {
+    if (!focusedNode) return null;
+    const node = graph.nodes.find((n) => n.id === focusedNode);
+    if (!node) return null;
+    return { path: node.data.path, label: node.data.label };
+  }, [focusedNode, graph.nodes]);
+
+  const showHistoryIndicator = history.length > 0;
 
   return (
     <section className="panel node-editor-page">
@@ -125,13 +302,68 @@ function JobNodeEditorInner(): JSX.Element {
         </div>
       </div>
       {error ? <p className="error">{error}</p> : null}
+      <div className="node-editor-toolbar">
+        <div className="node-editor-toolbar-left">
+          <input
+            id="node-search-input"
+            type="text"
+            className="node-search-input"
+            placeholder="Search nodes... (press /)"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {showHistoryIndicator && (
+            <span className="history-indicator">
+              History: {historyIndex + 1}/{history.length}
+            </span>
+          )}
+        </div>
+        <div className="node-editor-toolbar-right">
+          <button
+            type="button"
+            className="view-tab"
+            onClick={handleUndo}
+            disabled={!canUndo}
+            title="Undo (Ctrl+Z)"
+          >
+            Undo
+          </button>
+          <button
+            type="button"
+            className="view-tab"
+            onClick={handleRedo}
+            disabled={!canRedo}
+            title="Redo (Ctrl+Shift+Z)"
+          >
+            Redo
+          </button>
+          <button
+            type="button"
+            className={`view-tab ${focusedNode ? "view-tab-active" : ""}`}
+            onClick={handleExitFocus}
+            disabled={!focusedNode}
+            title="Exit focus mode (Escape)"
+          >
+            Exit Focus
+          </button>
+          <button
+            type="button"
+            className="view-tab shortcuts-btn"
+            onClick={() => setShowShortcuts(true)}
+            title="Keyboard shortcuts"
+          >
+            ??
+          </button>
+        </div>
+      </div>
       <div className="node-editor-grid">
         <div className="node-editor-canvas">
           <ReactFlow
-            nodes={graph.nodes}
-            edges={graph.edges}
+            nodes={filteredGraph.nodes}
+            edges={filteredGraph.edges}
             fitView
-            onNodeClick={(_event, node) => setSelectedPath(node.data.path)}
+            onNodeClick={handleNodeClick}
+            onPaneClick={handlePaneClick}
           >
             <MiniMap pannable zoomable />
             <Controls />
@@ -140,6 +372,12 @@ function JobNodeEditorInner(): JSX.Element {
         </div>
         <div className="node-editor-sidebar">
           <h2>Selection</h2>
+          {focusedNodeData && (
+            <div className="focus-mode-indicator">
+              <span className="focus-badge">Focus Mode</span>
+              <span className="focus-label">{focusedNodeData.label}</span>
+            </div>
+          )}
           <p>
             Path: <code>{selectedPath}</code>
           </p>
@@ -156,6 +394,34 @@ function JobNodeEditorInner(): JSX.Element {
           </div>
         </div>
       </div>
+
+      {showShortcuts && (
+        <div className="shortcuts-overlay" onClick={() => setShowShortcuts(false)}>
+          <div className="shortcuts-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="shortcuts-header">
+              <h3>Keyboard Shortcuts</h3>
+              <button type="button" className="shortcuts-close" onClick={() => setShowShortcuts(false)}>
+                &times;
+              </button>
+            </div>
+            <div className="shortcuts-list">
+              {SHORTCUTS.map((shortcut, index) => (
+                <div key={index} className="shortcuts-item">
+                  <span className="shortcuts-action">{shortcut.action}</span>
+                  <span className="shortcuts-keys">
+                    {shortcut.keys.map((key, keyIndex) => (
+                      <span key={keyIndex}>
+                        <kbd className="shortcut-key">{key}</kbd>
+                        {keyIndex < shortcut.keys.length - 1 && <span className="shortcut-plus">+</span>}
+                      </span>
+                    ))}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

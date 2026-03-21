@@ -7,10 +7,19 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 
+class TextSpan(BaseModel):
+    start_line: int | None = None
+    end_line: int | None = None
+    start_offset: int | None = None
+    end_offset: int | None = None
+    preview_snippet: str | None = None
+
+
 class JobRequirement(BaseModel):
     id: str
     text: str
     priority: Literal["must", "nice"]
+    text_span: TextSpan | None = None
 
 
 class JobConstraint(BaseModel):

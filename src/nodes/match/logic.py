@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-import os
 from typing import Any, Mapping
 
 from src.ai.prompt_manager import PromptManager
 from src.ai.runtime import LLMRuntime
+from src.core.ai.config import LLMConfig
+from src.core.ai.tracing import trace_section
 from src.core.io import (
     ArtifactWriter,
     ObservabilityService,
@@ -19,27 +20,42 @@ from src.nodes.match.contract import MatchEnvelope
 
 def run_logic(state: Mapping[str, Any]) -> dict[str, Any]:
     """Generate structured requirement/evidence match assessment."""
+    cfg = LLMConfig.from_env()
     input_data = _build_input_data(state)
 
-    prompt_manager = PromptManager(base_path="src/nodes")
-    model_name = os.getenv("PHD2_GEMINI_MODEL", "gemini-2.5-flash")
-    runtime = LLMRuntime(model_name=model_name)
+    with trace_section(
+        "match.build_prompt",
+        metadata={"job_id": input_data.get("job_id")},
+    ):
+        prompt_manager = PromptManager(base_path="src/nodes")
+        system_prompt, user_prompt = prompt_manager.build_prompt(
+            "match",
+            input_data,
+            required_xml_tags=("job_requirements", "profile_evidence"),
+            optional_xml_tags=("round_feedback", "regeneration_scope"),
+        )
 
-    system_prompt, user_prompt = prompt_manager.build_prompt(
-        "match",
-        input_data,
-        required_xml_tags=("job_requirements", "profile_evidence"),
-        optional_xml_tags=("round_feedback", "regeneration_scope"),
-    )
-
-    match_result = runtime.generate_structured(
-        system_prompt=system_prompt,
-        user_prompt=user_prompt,
-        output_schema=MatchEnvelope,
-    )
+    with trace_section(
+        "match.llm_call",
+        metadata={
+            "job_id": input_data.get("job_id"),
+            "langsmith_enabled": cfg.langsmith_enabled,
+        },
+    ):
+        runtime = LLMRuntime(model_name=cfg.model)
+        match_result = runtime.generate_structured(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            output_schema=MatchEnvelope,
+        )
 
     matched_payload = match_result.model_dump()
-    _persist_match_artifacts(state, matched_payload, input_data)
+
+    with trace_section(
+        "match.persist",
+        metadata={"job_id": input_data.get("job_id")},
+    ):
+        _persist_match_artifacts(state, matched_payload, input_data)
 
     next_status = "pending_review" if _has_job_scope(state) else "running"
 

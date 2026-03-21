@@ -2,7 +2,18 @@
 
 > Historical note: older entries may reference paths or planning structures that no longer exist after later cleanups. Treat each entry as accurate for its date.
 
-## 2026-03-21
+## 2026-03-21 (continued)
+
+- Completed minimal viable architecture plan across all 3 tracks (UI, AI, Scraper).
+- Added deterministic span resolution service at `src/core/text/span_resolver.py`: `resolve_span()` performs case-insensitive, whitespace-normalized string matching against source text to derive line numbers, character offsets, and preview snippets — no LLM offsets used. Integrated into `extract_understand/logic.py` to populate `text_span` on each requirement.
+- Added structured LangSmith tracing config: `src/core/ai/config.py` (`LLMConfig.from_env()`) and `src/core/ai/tracing.py` (`trace_section`, `get_tracer`). LangSmith is disabled by default; activated by `LANGSMITH_API_KEY`. Wired into `extract_understand` and `match` logic.
+- Enhanced `JobNodeEditorPage` with sandbox interaction patterns: undo/redo history stack (Ctrl+Z/Y), focus mode (click node → sidebar shows only that path), search/filter nodes, keyboard shortcuts modal (Ctrl+S, /, Escape, arrow keys).
+- Made `ViewThreeGraphToDoc` editable: documents saveable, word/character count, match confidence indicator, contrast diff toggle (proposed vs approved side-by-side).
+- Added `DeploymentPage` at `/jobs/:source/:jobId/deployment`: mission status panel, bundle readiness checklist, disabled submit button.
+- Updated `index_checklist.md` with all 12 completion criteria checked off.
+- 161 tests passing.
+
+## 2026-03-21 (morning)
 
 - Added minimal local-review architecture slices: direct JSON read/write job editor endpoints for `extract_understand` and `match`, stage-output inspection endpoints, document read/write endpoints for `generate_documents` markdown artifacts, and corresponding review-workbench UI surfaces for per-stage outputs, document editing, and local job node editing.
 - Refactored `extract_understand` toward LangChain structured-output execution with `contact_info` + optional `salary_grade`, plus optional LangSmith tracing hooks when credentials are configured.
