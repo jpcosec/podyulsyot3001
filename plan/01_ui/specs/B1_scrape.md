@@ -1,11 +1,19 @@
-# Spec: Scrape (Setup / Diagnóstico)
+# Spec B1 — Scrape Diagnostics
+
+**Feature:** `src/features/job-pipeline/`
+**Page:** `src/pages/job/ScrapeDiagnostics.tsx`
+**Librerías:** `@tanstack/react-query` · `lucide-react`
+**Fase:** 3
+
+---
 
 ## 1. Objetivo del Operador
-Esta vista tiene dos modos según el estado del job:
 
-**Modo Setup (job nuevo):** El operador configura la URL a scrapear y elige el adaptador de fuente. Lanza el scrape.
+Dos modos según el estado del job:
 
-**Modo Diagnóstico (scrape ya ejecutado):** El operador revisa el resultado — texto extraído, metadata, y si falló: el screenshot de error del scraper. Puede re-lanzar el scrape si el resultado es incompleto.
+**Modo Setup (job nuevo):** Configura la URL a scrapear y elige el adaptador. Lanza el scrape.
+
+**Modo Diagnóstico (scrape ejecutado):** Revisa el resultado — texto extraído, metadata HTTP, y si falló: el screenshot de error. Puede re-lanzar el scrape si el resultado es incompleto.
 
 ---
 
@@ -15,78 +23,106 @@ Esta vista tiene dos modos según el estado del job:
 - `GET /api/v1/jobs/:source/:jobId/stage/scrape/outputs` → `StageOutputsPayload`
   ```ts
   {
-    source, job_id, stage: "scrape", node_name: "scrape",
-    files: StageOutputFile[]   // canonical_scrape.json, raw.html, error_screenshot.png, etc.
+    source, job_id, stage: "scrape",
+    files: StageOutputFile[]   // canonical_scrape.json, raw.html, error_screenshot.png...
   }
   ```
 
 **Escritura (Setup mode):**
-- `POST /api/v1/jobs` → `{ source_url, source, job_id?, adapter }` (futura — no implementado aún)
-- Por ahora en el mock, modo diagnóstico solamente.
+- `POST /api/v1/jobs` → `{ source_url, source, adapter }` (**futuro — no implementado**)
+- Por ahora: modo diagnóstico solamente con datos del mock.
 
 ---
 
 ## 3. Composición de la UI y Layout
 
-**Layout Base:** Columna única con cards verticales (no split). Right panel con control actions.
+**Layout:** Columna única con cards + right control panel.
 
 ```
-┌─ LeftNav ─┬────────────── Main ─────────────────────────────┬── Control Panel ──┐
-│           │  [SCRAPE_DIAGNOSTICS header]                    │ [PHASE: SCRAPE]   │
-│           │                                                 │                   │
-│           │  ┌── Fetch Metadata card ───────────────────┐  │ URL configurada   │
-│           │  │ URL: https://jobs.tu-berlin.de/...       │  │ Adapter: tu_berlin│
-│           │  │ Retrieved: 2026-03-05T04:50:18Z          │  │ Status: completed │
-│           │  │ Adapter: tu_berlin                       │  │                   │
-│           │  │ HTTP Status: 200                         │  │ [RE-RUN SCRAPE]   │
-│           │  └──────────────────────────────────────────┘  │                   │
-│           │                                                 │ [ADVANCE →]       │
-│           │  ┌── Source Text Preview ───────────────────┐  │                   │
-│           │  │ [texto extraído — 20 líneas con scroll]  │  │                   │
-│           │  │ [expand button]                          │  │                   │
-│           │  └──────────────────────────────────────────┘  │                   │
-│           │                                                 │                   │
-│           │  ┌── Error Screenshot (si existe) ──────────┐  │                   │
-│           │  │ [img screenshot]  ERROR_TRACE: ...       │  │                   │
-│           │  └──────────────────────────────────────────┘  │                   │
-└───────────┴─────────────────────────────────────────────────┴───────────────────┘
+┌──────────────── Main ─────────────────────┬── Control Panel ──┐
+│  [SCRAPE_DIAGNOSTICS header]              │ [PHASE: SCRAPE]   │
+│                                           │                   │
+│  ┌── Fetch Metadata ──────────────────┐  │ URL configurada   │
+│  │ URL: https://...                   │  │ Adapter: tu_berlin│
+│  │ Retrieved: 2026-03-05T04:50:18Z   │  │ Status: completed │
+│  │ Adapter: tu_berlin  HTTP: 200      │  │                   │
+│  └────────────────────────────────────┘  │ [RE-RUN SCRAPE]   │
+│                                           │ [ADVANCE →]       │
+│  ┌── Source Text Preview ─────────────┐  │                   │
+│  │ [20 líneas collapsable]            │  │                   │
+│  │ [EXPAND button]                    │  │                   │
+│  └────────────────────────────────────┘  │                   │
+│                                           │                   │
+│  ┌── Error Screenshot (si existe) ────┐  │                   │
+│  │ [img] ERROR_TRACE: ...             │  │                   │
+│  └────────────────────────────────────┘  │                   │
+└───────────────────────────────────────────┴───────────────────┘
 ```
 
 **Componentes Core:**
 - `<ScrapeMetaCard>` — URL, timestamp, adapter, HTTP status
 - `<SourceTextPreview>` — texto colapsable (20 líneas → expand full)
-- `<ErrorScreenshot>` — imagen inline si existe `error_screenshot.png` en los outputs
-- `<ScrapeControlPanel>` — right panel con re-run + advance actions
-
-**Componentes a Reciclar/Limpiar:**
-- `PipelineOutputsView.tsx` — sirve de base para mostrar los artefactos de scrape
-- No hay vista actual específica de scrape — es nueva
+- `<ErrorScreenshot>` — imagen inline si existe `error_screenshot.png`
+- `<ScrapeControlPanel>` — re-run + advance actions
 
 ---
 
-## 4. Estilos y Unificación (Terran Command Theme)
+## 4. Estilos (Terran Command)
 
-**Paleta:**
-- Cards de metadata: `bg-surface-container-low panel-border`
-- Source text preview: `bg-surface-container-lowest border border-outline-variant/20 font-mono text-xs`
+- Cards: `bg-surface-container-low panel-border`
+- Source text: `bg-surface-low border border-outline/20 font-mono text-xs`
 - Error screenshot container: `border border-error/40 bg-error-container/10`
-- HTTP 200 status: `text-primary font-mono`
-- HTTP 4xx/5xx status: `text-error font-mono`
+- HTTP 200: `text-primary font-mono`
+- HTTP 4xx/5xx: `text-error font-mono`
+- Card headers: `font-mono text-[10px] text-on-muted uppercase tracking-[0.2em]`
 
-**Tipografía:**
-- Headers de card: `font-mono text-[10px] text-outline uppercase tracking-[0.2em]`
-- Valores de metadata: `font-mono text-xs text-on-surface`
-- Source text: `font-mono text-xs text-on-surface-variant leading-relaxed`
+**Interacciones:**
+- "RE-RUN SCRAPE" → confirm dialog (endpoint futuro — disabled en mock)
+- "ADVANCE" → navega a `/extract`
+- "EXPAND" en source text → modal o inline expand
 
-**Interacciones Clave:**
-- "RE-RUN SCRAPE" → confirm dialog + re-dispara el nodo (endpoint futuro)
-- "ADVANCE" → navega a Extract & Understand
-- "EXPAND" en source text → modal o inline expand del contenido completo
+**Estado Setup (sin scrape):** form con input URL + selector adaptador + botón LAUNCH
+**Estado Error:** banner rojo `SCRAPE_FAILED` + screenshot prominente
 
-**Estado Vacío:**
-- Scrape aún no ejecutado (setup mode): form con input de URL + selector de adaptador + botón LAUNCH
-- No hay screenshot de error: sección oculta
+---
 
-**Estado Error:**
-- Scrape falló: banner rojo `SCRAPE_FAILED` + screenshot de error prominente
-- Texto extraído vacío: warning `EMPTY_CONTENT_EXTRACTED — REVIEW_SCREENSHOT`
+## 5. Archivos a crear
+
+```
+src/features/job-pipeline/
+  api/
+    useStageOutputs.ts            useQuery(['stage-outputs', source, jobId, 'scrape'])
+  components/
+    ScrapeMetaCard.tsx            URL, timestamp, HTTP status
+    SourceTextPreview.tsx         texto colapsable
+    ErrorScreenshot.tsx           imagen condicional
+    ScrapeControlPanel.tsx        re-run + advance
+src/pages/job/
+  ScrapeDiagnostics.tsx           TONTO: useParams + hook + render
+```
+
+---
+
+## 6. Definition of Done
+
+```
+[ ] ScrapeDiagnostics renderiza sin errores para job 201397 (mock)
+[ ] ScrapeMetaCard muestra URL, timestamp, adapter, HTTP status del mock
+[ ] SourceTextPreview muestra las primeras 20 líneas colapsado
+[ ] EXPAND muestra el texto completo
+[ ] ErrorScreenshot no aparece si no hay error en los outputs del mock
+[ ] "ADVANCE" navega a /jobs/tu_berlin/201397/extract
+[ ] Estado loading muestra Spinner
+[ ] Sin datos hardcodeados — todo dato proviene del mock/API, nunca de literales en el componente
+```
+
+---
+
+## 7. E2E (TestSprite)
+
+**URL:** `/jobs/tu_berlin/201397/scrape`
+
+1. Verificar que `<ScrapeMetaCard>` renderiza con URL y HTTP status visibles
+2. Verificar que `<SourceTextPreview>` está colapsado (máx 20 líneas)
+3. Click en EXPAND → verificar que el texto completo es visible
+4. Click en ADVANCE → verificar navegación a `/jobs/tu_berlin/201397/extract`

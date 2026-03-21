@@ -1,15 +1,23 @@
-# Spec: Generate Documents (HITL C — Sculpting) — PREP_MATCH
+# Spec B4 — Generate Documents (HITL C — Sculpting) — PREP_MATCH
 
-> **Nota:** Este spec describe la vista de PREP_MATCH donde los 3 documentos se generan y
-> revisan juntos en un solo gate (3 tabs simultáneos). En el **DEFAULT pipeline**, cada
-> documento tiene su propio gate HITL separado — ver **spec B4b** para ese flujo.
-> La UI base es la misma — solo cambia qué tabs están activos/locked a la vez.
+**Feature:** `src/features/job-pipeline/`
+**Page:** `src/pages/job/GenerateDocuments.tsx`
+**Librerías:** `react-resizable-panels` · `@uiw/react-codemirror` · `@tanstack/react-query` · `lucide-react`
+**Fase:** 6
+
+> **Nota PREP_MATCH vs DEFAULT:** Este spec describe la vista de PREP_MATCH donde los 3 documentos
+> se generan y revisan juntos en un solo gate (3 tabs simultáneos). En el **DEFAULT pipeline**,
+> cada documento tiene su propio gate HITL separado — ver **spec B4b**. La UI base es la misma:
+> solo cambia qué tabs están activos/locked a la vez.
+
+---
 
 ## 1. Objetivo del Operador
+
 El LLM generó los tres documentos de aplicación. El operador debe:
-- Leer el CV adaptado, la cover letter y el email propuestos por el LLM
-- Editar libremente el texto (esculpir tono, reordenar, completar huecos)
-- Ver qué fragmentos del documento mapean a qué evidencias del perfil (panel de contexto)
+- Leer el CV adaptado, la cover letter y el email propuestos
+- Editar libremente el texto (tono, estructura, longitud)
+- Ver qué fragmentos del documento mapean a qué evidencias del perfil
 - Aprobar cada documento por separado o todos juntos
 - Pedir regeneración con feedback si el output es insatisfactorio
 
@@ -22,16 +30,12 @@ El LLM generó los tres documentos de aplicación. El operador debe:
   ```ts
   {
     source, job_id,
-    documents: {
-      cv: string,
-      motivation_letter: string,
-      application_email: string
-    },
-    nodes: GraphNode[],    // para el mini-grafo de contexto
+    documents: { cv: string, motivation_letter: string, application_email: string },
+    nodes: GraphNode[],
     edges: GraphEdge[]
   }
   ```
-- `GET /api/v1/jobs/:source/:jobId/documents/:docKey` → doc individual con `artifact_ref`
+- `GET /api/v1/jobs/:source/:jobId/documents/:docKey`
 
 **Escritura:**
 - `PUT /api/v1/jobs/:source/:jobId/documents/:docKey` → `{ content: string }`
@@ -40,79 +44,104 @@ El LLM generó los tres documentos de aplicación. El operador debe:
 
 ## 3. Composición de la UI y Layout
 
-**Layout Base:** Tabs horizontales (CV / Cover Letter / Email) + editor de texto principal + right panel de contexto.
+**Layout:** `<SplitPane>` 70/30 — editor principal + context panel.
 
 ```
-┌─ LeftNav ─┬──── Tab Bar ─────────────────────────────────────────┬── Context Panel (w-72) ──┐
-│           │ [CV] [COVER_LETTER] [EMAIL]           [SAVE] [APPROVE]│ [PHASE: SCULPTING]       │
-│           ├──────────────────────────────────────────────────────│                          │
-│           │                                                       │ Mini match graph         │
-│           │  Rich Text Editor (Slate)                            │ (stripped down, static)  │
-│           │                                                       │                          │
-│           │  [contenido del documento activo]                    │ Evidence usada:          │
-│           │                                                       │ [EV-005] EEG Research   │
-│           │  Selección de texto → tooltip con "link to evidence" │ [EV-006] ITS Project    │
-│           │                                                       │                          │
-│           │                                                       │ [REQUEST REGEN]          │
-│           │                                                       │ [APPROVE ALL & PROCEED]  │
-└───────────┴───────────────────────────────────────────────────────┴──────────────────────────┘
+┌── Tab Bar + Editor (70%) ───────────────────────┬── Context Panel (30%) ──┐
+│ [CV] [COVER_LETTER] [EMAIL]    [SAVE] [APPROVE]  │ [PHASE: SCULPTING]     │
+│──────────────────────────────────────────────── │                         │
+│                                                  │ Mini match graph        │
+│  CodeMirror (markdown mode, editable)            │ (read-only, estático)   │
+│  [contenido del documento activo]               │                         │
+│                                                  │ Evidence usada:         │
+│                                                  │ [EV-005] EEG Research  │
+│                                                  │ [EV-006] ITS Project   │
+│                                                  │                         │
+│                                                  │ [REQUEST REGEN]         │
+│                                                  │ [APPROVE ALL]           │
+└──────────────────────────────────────────────────┴─────────────────────────┘
 ```
-
-**Componentes Core:**
-- `<DocumentTabs>` — tab bar con los 3 documentos + indicadores de aprobación
-- `<DocumentEditor>` — Slate rich text editor (sin markdown, texto plano estructurado)
-- `<ContextPanel>` — right sidebar con mini-grafo de match + lista de evidencias usadas
-- `<DocApproveBar>` — sticky bottom bar con Save (Ctrl+S) + Approve doc (Ctrl+Enter)
-- `<RegenModal>` — modal con textarea de feedback + botón de re-run
 
 **Tab indicator de estado:**
 ```
-Aprobado: [✓ CV]           → text-primary border-b-2 border-primary
+Aprobado:          [✓ CV]  → text-primary border-b-2 border-primary
 Editado sin guardar: [● CV] → text-secondary (amber dot)
-Sin editar: [CV]            → text-outline
+Sin editar:          [CV]   → text-on-muted
 ```
 
-**Componentes a Reciclar/Limpiar:**
-- `ViewThreeGraphToDoc.tsx` — base a rediseñar. Mantener lógica de Slate, rediseñar layout y estilos.
-- El mini-grafo puede reutilizar `<GraphCanvas>` en modo read-only, tamaño reducido.
+**Componentes Core:**
+- `<DocumentTabs>` — tab bar con 3 docs + indicadores de estado
+- `<DocumentEditor>` — CodeMirror editable en modo markdown
+- `<ContextPanel>` — right panel con mini-grafo + lista de evidencias
+- `<DocApproveBar>` — sticky bottom: Save (Ctrl+S) + Approve (Ctrl+Enter)
+- `<RegenModal>` — modal con textarea feedback + botón re-run
 
 ---
 
-## 4. Estilos y Unificación (Terran Command Theme)
+## 4. Estilos (Terran Command)
 
-**Paleta:**
-- Tab bar: `bg-surface-container border-b border-outline-variant/20`
-- Editor principal: `bg-surface-container-low` — texto `font-body text-sm text-on-surface leading-relaxed`
-- Context panel: `bg-[#0c0e10] border-l border-secondary/20`
+- Tab bar: `bg-surface-container border-b border-outline/20`
+- Editor: `bg-surface-low font-body text-sm`
+- Context panel: `bg-background border-l border-secondary/20`
 - Context panel header: `text-secondary font-headline uppercase`
-- Save bar bottom: `bg-surface-container-high border-t border-outline-variant/20`
+- Evidence IDs: `font-mono text-[9px] text-primary/60`
+- Botones acción: `font-headline font-bold uppercase tracking-widest text-xs`
 
-**Tipografía:**
-- Tab labels: `font-headline uppercase tracking-widest text-xs`
-- Editor: `font-body text-sm` — mantiene tipografía legible para documentos largos
-- Evidence IDs en context: `font-mono text-[9px] text-primary/60`
-- Botones de acción: `font-headline font-bold uppercase tracking-widest text-xs`
-
-**Interacciones Clave:**
-- `Ctrl+S` → guarda documento activo (`saveDocument`)
+**Interacciones:**
+- `Ctrl+S` → guarda documento activo (useMutation)
 - `Ctrl+Enter` → aprueba documento activo (marca tab con ✓)
-- Tab click → cambia documento (con warning si hay cambios sin guardar)
-- Selección de texto en editor → muestra tooltip "LINK_TO_EVIDENCE" (futura funcionalidad)
-- `Ctrl+Z` / `Ctrl+Y` → undo/redo del editor Slate
+- Tab click → cambia documento (warning si hay cambios sin guardar)
+- "APPROVE ALL" → aprueba los 3 docs + navega al deployment
 
-**Estado Vacío:**
-- Documento sin contenido: `NO_CONTENT_GENERATED — REQUEST_REGEN`
-
-**Estado Error:**
-- Fallo en save: toast `SAVE_FAILED` en amber
-- LLM generation failed: banner rojo `GENERATION_FAILED` con opción de re-run
-- Schema mismatch en docKey: `UNKNOWN_DOCUMENT_KEY: [key]`
+**Estado Vacío:** `NO_CONTENT_GENERATED — REQUEST_REGEN`
+**Estado Error:** toast amber `SAVE_FAILED` / banner rojo `GENERATION_FAILED`
 
 ---
 
-## Notas de Implementación
+## 5. Archivos a crear
 
-- Los 3 documentos se cargan al abrir la vista — tabs cambian entre los ya cargados (no re-fetch)
-- `approved` se trackea en estado local del componente — solo persiste al backend si se hace "Approve All & Proceed"
-- El mini-grafo en el context panel es estático (no interactivo) — solo muestra las conexiones para recordarle al operador qué evidencias usó el LLM
-- La futura funcionalidad de "link texto ↔ evidencia" (anotación) va en HITL C v2, no en este sprint
+```
+src/features/job-pipeline/
+  api/
+    useViewThree.ts               useQuery(['view3', source, jobId])
+    useDocumentSave.ts            useMutation para saveDocument
+  components/
+    DocumentTabs.tsx              tab bar con estados de aprobación
+    DocumentEditor.tsx            CodeMirror markdown editable
+    ContextPanel.tsx              mini-grafo + lista de evidencias
+    DocApproveBar.tsx             sticky bottom save/approve
+    RegenModal.tsx                modal feedback + re-run
+src/pages/job/
+  GenerateDocuments.tsx           TONTO: useParams + hooks + render
+```
+
+---
+
+## 6. Definition of Done
+
+```
+[ ] GenerateDocuments renderiza con 3 tabs para job 999001 (mock)
+[ ] Tab CV activo por defecto con contenido del mock en DocumentEditor
+[ ] Cambiar tab carga el contenido del documento correspondiente
+[ ] Editar texto en DocumentEditor actualiza estado local
+[ ] Ctrl+S ejecuta useMutation sin error
+[ ] Tab muestra ● (amber) cuando hay cambios sin guardar
+[ ] Ctrl+Enter marca el tab con ✓ (aprobado)
+[ ] "REQUEST REGEN" abre RegenModal
+[ ] "APPROVE ALL" navega a /jobs/tu_berlin/999001/sculpt (o deployment)
+[ ] Sin datos hardcodeados — todo dato proviene del mock/API, nunca de literales en el componente
+```
+
+---
+
+## 7. E2E (TestSprite)
+
+**URL:** `/jobs/tu_berlin/999001/sculpt`
+
+1. Verificar que los 3 tabs (CV / COVER_LETTER / EMAIL) son visibles
+2. Verificar que el tab CV está activo y el editor tiene contenido
+3. Click en tab COVER_LETTER → verificar que el editor carga el contenido de la carta
+4. Editar texto en el editor → verificar que el tab muestra el dot amber (●)
+5. Presionar `Ctrl+S` → verificar que el dot desaparece (guardado)
+6. Presionar `Ctrl+Enter` → verificar que el tab muestra ✓
+7. Click en "REQUEST REGEN" → verificar que `<RegenModal>` aparece con textarea

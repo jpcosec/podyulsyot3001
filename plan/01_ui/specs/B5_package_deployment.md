@@ -1,9 +1,17 @@
-# Spec: Package & Deployment
+# Spec B5 — Package & Deployment
+
+**Feature:** `src/features/job-pipeline/`
+**Page:** `src/pages/job/PackageDeployment.tsx`
+**Librerías:** `@tanstack/react-query` · `lucide-react`
+**Fase:** 7
+
+---
 
 ## 1. Objetivo del Operador
-El pipeline completó. El operador hace el checklist final y descarga el paquete de aplicación:
-- Ver que todos los artefactos están en verde (rendered, packaged)
-- Descargar los archivos finales (PDFs, docx, email MD)
+
+El pipeline completó. El operador hace el checklist final y descarga el paquete:
+- Verificar que todos los artefactos están en verde (rendered, packaged)
+- Descargar los archivos finales (PDFs, email MD)
 - Marcar el job como "deployed" (enviado a la institución)
 - Ver un resumen de misión: job title, institución, score, fecha
 
@@ -12,100 +20,130 @@ El pipeline completó. El operador hace el checklist final y descarga el paquete
 ## 2. Contrato de Datos (API I/O)
 
 **Lectura:**
-- `GET /api/v1/jobs/:source/:jobId/timeline` → `JobTimeline` (para checklist de stages)
+- `GET /api/v1/jobs/:source/:jobId/timeline` → `JobTimeline` (para checklist)
 - `GET /api/v1/jobs/:source/:jobId/package/files` → `PackageFilesPayload`
   ```ts
   {
     source, job_id,
-    files: PackageFile[]    // { name, path, size_kb }
+    files: PackageFile[]   // { name, path, size_kb }
   }
   ```
 
-**Escritura:** Ninguna desde la UI (el marking como deployed será CLI o futuro endpoint).
+**Escritura:** Ninguna desde la UI (deployed marking será CLI o endpoint futuro).
 
 ---
 
 ## 3. Composición de la UI y Layout
 
-**Layout Base:** Columna central única (no split), centrada, max-width. Sin right panel.
+**Layout:** Columna central única, max-w-3xl, centrada.
 
 ```
-┌─ LeftNav ─┬──────────────── Main (max-w-3xl centrado) ───────────────────────────────┐
-│           │                                                                           │
-│           │  [MISSION_COMPLETE header con glow]                                      │
-│           │                                                                           │
-│           │  ┌── Mission Summary card ──────────────────────────────────────────┐    │
-│           │  │ Job: Research Assistant – TU Berlin         Score: 0.85          │    │
-│           │  │ Thread: tu_berlin_999001              Completed: 2026-03-10      │    │
-│           │  └──────────────────────────────────────────────────────────────────┘    │
-│           │                                                                           │
-│           │  ┌── Pipeline Checklist ────────────────────────────────────────────┐    │
-│           │  │ [✓] SCRAPE            completed                                  │    │
-│           │  │ [✓] EXTRACT           completed                                  │    │
-│           │  │ [✓] MATCH             completed  score: 0.85                     │    │
-│           │  │ [✓] REVIEW            approved                                   │    │
-│           │  │ [✓] GENERATE          completed                                  │    │
-│           │  │ [✓] RENDER            completed                                  │    │
-│           │  │ [✓] PACKAGE           completed                                  │    │
-│           │  └──────────────────────────────────────────────────────────────────┘    │
-│           │                                                                           │
-│           │  ┌── Package Files ─────────────────────────────────────────────────┐    │
-│           │  │ [pdf icon] motivation_letter.pdf    84 KB   [download]           │    │
-│           │  │ [pdf icon] cv.pdf                   62 KB   [download]           │    │
-│           │  │ [md icon]  application_email.md      2 KB   [download]           │    │
-│           │  │                                                                   │    │
-│           │  │ [DOWNLOAD ALL AS ZIP]                                            │    │
-│           │  └──────────────────────────────────────────────────────────────────┘    │
-│           │                                                                           │
-│           │  [MARK AS DEPLOYED →]  (prominent CTA, full width)                      │
-└───────────┴───────────────────────────────────────────────────────────────────────────┘
+┌──────── Main (max-w-3xl centrado) ─────────────────────────────┐
+│                                                                  │
+│  [MISSION_COMPLETE header — glow cyan]                          │
+│                                                                  │
+│  ┌── Mission Summary ─────────────────────────────────────┐    │
+│  │ Job: Research Assistant – TU Berlin   Score: 0.85      │    │
+│  │ Thread: tu_berlin_999001    Completed: 2026-03-10      │    │
+│  └────────────────────────────────────────────────────────┘    │
+│                                                                  │
+│  ┌── Pipeline Checklist ──────────────────────────────────┐    │
+│  │ [✓] SCRAPE         completed                           │    │
+│  │ [✓] EXTRACT        completed                           │    │
+│  │ [✓] MATCH          completed  score: 0.85              │    │
+│  │ [✓] REVIEW         approved                            │    │
+│  │ [✓] GENERATE       completed                           │    │
+│  │ [✓] RENDER         completed                           │    │
+│  │ [✓] PACKAGE        completed                           │    │
+│  └────────────────────────────────────────────────────────┘    │
+│                                                                  │
+│  ┌── Package Files ───────────────────────────────────────┐    │
+│  │ [FileType] motivation_letter.pdf   84 KB  [download]   │    │
+│  │ [FileType] cv.pdf                  62 KB  [download]   │    │
+│  │ [FileText] application_email.md     2 KB  [download]   │    │
+│  │ [DOWNLOAD ALL AS ZIP — disabled, COMING_SOON]          │    │
+│  └────────────────────────────────────────────────────────┘    │
+│                                                                  │
+│  [MARK AS DEPLOYED →]  (full-width CTA, bg-primary)            │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 **Componentes Core:**
-- `<MissionSummaryCard>` — card con metadata del job y score
-- `<PipelineChecklist>` — lista de etapas todas con ✓ (o ✗ si fallaron)
-- `<PackageFileList>` — lista de archivos con iconos, tamaños y botones de descarga
-- `<DeploymentCta>` — botón prominente full-width para marcar como deployed
-
-**Componentes a Reciclar/Limpiar:**
-- `DeploymentPage.tsx` — rediseñar completamente con este layout. Mantener lógica de fetch.
+- `<MissionSummaryCard>` — metadata del job y score
+- `<PipelineChecklist>` — lista de etapas todas ✓ (o ✗ si fallaron)
+- `<PackageFileList>` — archivos con iconos, tamaños y botones download
+- `<DeploymentCta>` — botón full-width prominente
 
 **Checklist item:**
 ```
-[✓] STAGE_NAME    status_text    [artifact link opcional]
+[✓] STAGE_NAME    status_text    [artifact link]
+check verde: text-primary + CheckCircle icon
+cross rojo:  text-error + XCircle icon
 ```
-- Check verde: `text-primary` + `check_circle` icon filled
-- Cross rojo: `text-error` + `cancel` icon (si alguna etapa falló)
 
 ---
 
-## 4. Estilos y Unificación (Terran Command Theme)
+## 4. Estilos (Terran Command)
 
-**Paleta:**
-- Fondo main: `bg-surface`
-- Summary card: `bg-surface-container-low tactical-glow panel-border`
-- Checklist container: `bg-surface-container-low panel-border`
-- Package files container: `bg-surface-container-low panel-border`
-- CTA Deployed: `bg-primary text-on-primary tactical-glow` — `hover:brightness-110`
-- Header MISSION_COMPLETE: `text-primary drop-shadow-[0_0_12px_rgba(0,242,255,0.5)]`
-
-**Tipografía:**
-- Header: `font-headline font-black text-2xl uppercase tracking-tighter text-primary`
-- Stage labels en checklist: `font-headline uppercase tracking-widest text-sm`
-- Status text: `font-mono text-[10px] text-outline uppercase`
+- Header `MISSION_COMPLETE`: `font-headline font-black text-2xl uppercase tracking-tighter text-primary drop-shadow-[0_0_12px_rgba(0,242,255,0.5)]`
+- Summary card: `bg-surface-low tactical-glow panel-border`
+- Checklist container: `bg-surface-low panel-border`
+- Package files container: `bg-surface-low panel-border`
+- CTA Deployed: `bg-primary text-primary-on tactical-glow hover:brightness-110`
+- Stage labels: `font-headline uppercase tracking-widest text-sm`
 - File names: `font-mono text-xs text-on-surface`
-- File sizes: `font-mono text-[10px] text-outline`
-- Metadata (thread_id, score): `font-mono text-[10px]`
+- Metadata: `font-mono text-[10px]`
 
-**Interacciones Clave:**
-- Download individual → `<a href="/api/v1/jobs/:source/:jobId/package/files/:filename" download>`
-- "Download All as ZIP" → endpoint futuro, por ahora disabled con tooltip `COMING_SOON`
-- "Mark as Deployed" → confirm dialog → navega de vuelta al portfolio
-- Click en artifact link del checklist → navega al Data Explorer en ese path
+**Interacciones:**
+- Download individual → `<a href="..." download>`
+- "Download All as ZIP" → disabled, tooltip `COMING_SOON`
+- "MARK AS DEPLOYED" → confirm dialog → navega al portfolio
 
-**Estado Vacío / Incompleto:**
-- Si algunas etapas están pendientes (job no completado): checklist con items grises, CTA disabled
-- Mensaje: `PIPELINE_INCOMPLETE — RETURN_TO_FLOW`
+**Estado Incompleto:** checklist con ítems grises, CTA disabled con `PIPELINE_INCOMPLETE — RETURN_TO_FLOW`
+**Estado Error:** ítem ✗ rojo con link a log de error
 
-**Estado Error:**
-- Si render/package fallaron: ítem con `✗` rojo + `ERROR_DETAILS` link al log
+---
+
+## 5. Archivos a crear
+
+```
+src/features/job-pipeline/
+  api/
+    usePackageFiles.ts            useQuery(['package-files', source, jobId])
+    (reutiliza useJobTimeline.ts de B0)
+  components/
+    MissionSummaryCard.tsx        metadata del job
+    PipelineChecklist.tsx         lista de stages con ✓/✗
+    PackageFileList.tsx           archivos con download links
+    DeploymentCta.tsx             botón full-width
+src/pages/job/
+  PackageDeployment.tsx           TONTO: useParams + hooks + render
+```
+
+---
+
+## 6. Definition of Done
+
+```
+[ ] PackageDeployment renderiza sin errores para job 999001 (mock)
+[ ] MissionSummaryCard muestra título, score y fecha del mock
+[ ] PipelineChecklist muestra todas las etapas con ✓ verde
+[ ] PackageFileList muestra los 3 archivos del mock con tamaños
+[ ] Links de download tienen href correctos
+[ ] "DOWNLOAD ALL AS ZIP" aparece disabled con tooltip COMING_SOON
+[ ] "MARK AS DEPLOYED" abre confirm dialog
+[ ] Confirm → navega a /
+[ ] Sin datos hardcodeados — todo dato proviene del mock/API, nunca de literales en el componente
+```
+
+---
+
+## 7. E2E (TestSprite)
+
+**URL:** `/jobs/tu_berlin/999001/sculpt` (o ruta de deployment si se agrega)
+
+1. Verificar que `MISSION_COMPLETE` header es visible con glow cyan
+2. Verificar que `<PipelineChecklist>` muestra 7 items con checkmarks verdes
+3. Verificar que `<PackageFileList>` muestra 3 archivos con botones de download
+4. Click en "MARK AS DEPLOYED" → verificar que aparece confirm dialog
+5. Confirmar → verificar navegación a `/`

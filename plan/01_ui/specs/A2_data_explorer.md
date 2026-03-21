@@ -1,7 +1,15 @@
-# Spec: Data Explorer (Raw Views)
+# Spec A2 — Data Explorer
+
+**Feature:** `src/features/explorer/`
+**Page:** `src/pages/global/DataExplorer.tsx`
+**Librerías:** `react-resizable-panels` · `@uiw/react-codemirror` · `lucide-react`
+**Fase:** 8
+
+---
 
 ## 1. Objetivo del Operador
-Navegar el filesystem de `data/jobs/` para inspeccionar artefactos crudos en cualquier etapa — JSONs aprobados, propuestos, trazas de error, screenshots. No es una vista de edición; es diagnóstico y auditoría.
+
+Navegar el filesystem de `data/jobs/` para inspeccionar artefactos crudos — JSONs aprobados, propuestos, trazas de error, screenshots. No es una vista de edición; es diagnóstico y auditoría.
 
 ---
 
@@ -13,9 +21,9 @@ Navegar el filesystem de `data/jobs/` para inspeccionar artefactos crudos en cua
   {
     path: string,
     is_dir: boolean,
-    entries?: ExplorerEntry[],     // si es directorio
+    entries?: ExplorerEntry[],
     content_type?: "text" | "image" | "binary" | "too_large",
-    content?: string | null        // si es archivo de texto
+    content?: string | null
   }
   ```
 
@@ -25,70 +33,100 @@ Navegar el filesystem de `data/jobs/` para inspeccionar artefactos crudos en cua
 
 ## 3. Composición de la UI y Layout
 
-**Layout Base:** SplitScreen 30/70 — panel izquierdo (árbol de navegación) + panel derecho (preview).
+**Layout:** `<SplitPane>` 30/70 — árbol izquierdo + preview derecho.
 
 ```
-┌── col-left (30%) ─────┬── col-right (70%) ──────────────────┐
-│ Path breadcrumb       │ [header: ruta actual + tipo]        │
-│                       │                                     │
-│ ► tu_berlin/          │  Si directorio:                     │
-│   ► 201397/           │    grid de carpetas/archivos        │
-│     ► nodes/          │    con iconos por tipo              │
-│       ► match/        │                                     │
-│         approved/ ←   │  Si archivo texto/JSON:             │
-│                       │    pre formateado con sintaxis      │
-│                       │    highlighting mono                │
-│                       │                                     │
-│                       │  Si imagen:                         │
-│                       │    img centrada con metadata        │
-└───────────────────────┴─────────────────────────────────────┘
+┌── col-left (30%) ─────┬── col-right (70%) ───────────────────┐
+│ Path breadcrumb        │ [header: ruta actual + tipo]         │
+│                        │                                      │
+│ ► tu_berlin/           │  Si directorio:                      │
+│   ► 201397/            │    grid de carpetas/archivos         │
+│     ► nodes/           │    con iconos por tipo               │
+│       ► match/         │                                      │
+│         approved/ ←   │  Si archivo JSON/text:               │
+│                        │    CodeMirror read-only              │
+│                        │    syntax highlighting               │
+│                        │                                      │
+│                        │  Si imagen:                          │
+│                        │    img centrada + metadata           │
+└────────────────────────┴──────────────────────────────────────┘
 ```
 
 **Componentes Core:**
-- `<ExplorerTree>` — árbol colapsable con íconos por tipo (folder/json/md/image)
+- `<ExplorerTree>` — árbol colapsable, íconos por tipo (Lucide)
 - `<BreadcrumbNav>` — path segmentado, cada segmento clickeable
 - `<FilePreview>` — dispatcher: `<JsonPreview>` / `<MarkdownPreview>` / `<ImagePreview>` / `<BinaryStub>`
-- `<JsonPreview>` — JSON pretty-printed en `font-mono text-xs`, coloreado por tipo de valor
+- `<JsonPreview>` — CodeMirror en modo `json`, read-only, tema oscuro
 
-**Componentes a Reciclar/Limpiar:**
-- `DataExplorerPage.tsx` existente — mantener lógica, rediseñar layout y estilos
-
-**Íconos por extensión:**
+**Íconos por extensión (lucide-react):**
 ```
-.json     → settings_ethernet  (cyan)
-.md       → article            (cyan dim)
-.png/.jpg → image              (outline)
-.pdf      → description        (error/salmon)
-.sqlite   → storage            (outline)
-carpeta   → folder_special     (cyan dim)
+.json    → FileJson  (cyan)
+.md      → FileText  (cyan dim)
+.png/.jpg→ Image     (outline)
+.pdf     → FileType  (error/salmon)
+carpeta  → Folder    (cyan dim)
 ```
 
 ---
 
-## 4. Estilos y Unificación (Terran Command Theme)
+## 4. Estilos (Terran Command)
 
-**Paleta:**
-- Panel izquierdo árbol: `bg-surface-container-low border-r border-outline-variant/20`
-- Ítem activo en árbol: `bg-primary/10 text-primary border-r-2 border-primary`
-- Panel derecho: `bg-surface`
-- Header del preview: `bg-surface-container-high px-4 py-2 font-mono text-[10px] text-outline uppercase`
-- JSON values: string=primary, number=secondary, boolean=error, null=outline
+- Panel árbol: `bg-surface-container-low border-r border-outline/20`
+- Ítem activo árbol: `bg-primary/10 text-primary border-r-2 border-primary`
+- Panel preview: `bg-surface`
+- Header preview: `bg-surface-high px-4 py-2 font-mono text-[10px] text-on-muted uppercase`
+- CodeMirror: tema `tokyoNightStorm` o tema custom con `bg-surface`
 
-**Tipografía:**
-- Nombres de archivo en árbol: `font-mono text-[11px]`
-- Path breadcrumb: `font-mono text-xs text-outline` → segmento activo: `text-on-surface`
-- Contenido JSON/text: `font-mono text-xs leading-relaxed`
-
-**Interacciones Clave:**
-- Click en carpeta → expande árbol + navega al path en panel derecho
-- Click en archivo → carga preview en panel derecho
+**Interacciones:**
+- Click carpeta → expande árbol + navega en panel derecho
+- Click archivo → carga preview (nueva query)
 - Breadcrumb click → sube niveles
-- `Esc` → colapsa preview, vuelve al directorio padre
 
-**Estado Vacío:**
-- Carpeta vacía: icono `folder_open` + "DIRECTORY_EMPTY" en mono
-- Archivo binary: icono `block` + "BINARY_CONTENT: NO_PREVIEW_AVAILABLE"
-- Archivo too_large: icono `warning` + "FILE_EXCEEDS_PREVIEW_LIMIT"
+**Estado Vacío:** `DIRECTORY_EMPTY`, `BINARY_CONTENT: NO_PREVIEW`, `FILE_EXCEEDS_LIMIT`
+**Estado Error:** path no encontrado → icono `AlertTriangle` + path en rojo
 
-**Estado Error:**
-- Path no encontrado: icono `error_outline` + path en rojo
+---
+
+## 5. Archivos a crear
+
+```
+src/features/explorer/
+  api/
+    useExplorerBrowse.ts          useQuery(['explorer', path])
+  components/
+    ExplorerTree.tsx              árbol recursivo colapsable
+    BreadcrumbNav.tsx             segmentos clickeables
+    FilePreview.tsx               dispatcher por tipo
+    JsonPreview.tsx               CodeMirror read-only json
+    MarkdownPreview.tsx           CodeMirror read-only markdown
+    ImagePreview.tsx              img + metadata
+src/pages/global/
+  DataExplorer.tsx                TONTO: estado de path en URL search params
+```
+
+---
+
+## 6. Definition of Done
+
+```
+[ ] DataExplorer renderiza con SplitPane 30/70 redimensionable
+[ ] ExplorerTree muestra las 2 carpetas del mock (root fixture)
+[ ] Click en carpeta expande el árbol y actualiza el panel derecho
+[ ] Click en archivo JSON carga CodeMirror read-only con syntax highlighting
+[ ] BreadcrumbNav actualiza al navegar
+[ ] Estado loading visible mientras fetchea (Spinner en panel derecho)
+[ ] Estado vacío muestra DIRECTORY_EMPTY
+[ ] Archivo de imagen muestra <img> centrada
+[ ] Sin datos hardcodeados — todo dato proviene del mock/API, nunca de literales en el componente
+```
+
+---
+
+## 7. E2E (TestSprite)
+
+**URL:** `/explorer`
+
+1. Verificar que el SplitPane renderiza con dos paneles
+2. Expandir la carpeta `tu_berlin/` en el árbol → verificar que aparece `201397/`
+3. Navegar hasta `nodes/match/approved/` → hacer click en `state.json` → verificar que CodeMirror carga JSON con colores
+4. Click en breadcrumb `match` → verificar que el panel derecho vuelve al directorio

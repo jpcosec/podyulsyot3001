@@ -1,11 +1,19 @@
-# Spec: Extract & Understand (HITL A)
+# Spec B2 — Extract & Understand (HITL A)
+
+**Feature:** `src/features/job-pipeline/`
+**Page:** `src/pages/job/ExtractUnderstand.tsx`
+**Librerías:** `react-resizable-panels` · `@uiw/react-codemirror` · `@tanstack/react-query` · `lucide-react`
+**Fase:** 4
+
+---
 
 ## 1. Objetivo del Operador
+
 El LLM extrajo los requerimientos del job posting. El operador debe:
-- Leer el texto fuente original y ver qué fragmentos fueron usados para cada requerimiento
+- Leer el texto fuente y ver qué fragmentos corresponden a cada requerimiento
 - Verificar que cada requerimiento extraído es correcto (texto, prioridad)
 - Editar texto o prioridad de requerimientos incorrectos
-- Agregar requerimientos que el LLM omitió
+- Agregar requerimientos omitidos por el LLM
 - Eliminar requerimientos duplicados o alucinados
 - Aprobar la extracción para continuar al match
 
@@ -18,92 +26,115 @@ El LLM extrajo los requerimientos del job posting. El operador debe:
   ```ts
   {
     source, job_id,
-    source_markdown: string,           // texto fuente completo
-    requirements: RequirementItem[]    // { id, text, priority, spans, text_span }
+    source_markdown: string,
+    requirements: RequirementItem[]   // { id, text, priority, spans, text_span }
   }
   ```
 
 **Escritura:**
-- `PUT /api/v1/jobs/:source/:jobId/editor/extract_understand/state` → guarda estado editado
+- `PUT /api/v1/jobs/:source/:jobId/editor/extract_understand/state`
 
 ---
 
 ## 3. Composición de la UI y Layout
 
-**Layout Base:** SplitScreen 50/50 — izquierda texto fuente, derecha lista de requerimientos. Right panel (control panel w-80) con acciones HITL.
+**Layout:** `<SplitPane>` 50/50 + right control panel (w-80).
 
 ```
-┌─ LeftNav ─┬──── Source Text (50%) ────┬──── Requirements (50%) ────┬── Control Panel ──┐
-│           │ [header: SOURCE_TEXT]     │ [header: EXTRACTED_REQS]  │ [PHASE: EXTRACT]  │
-│           │                          │                            │                   │
-│           │ Texto markdown con        │ Lista de RequirementItem   │ [Technical tab]   │
-│           │ spans resaltados al       │ Cada item:                 │ Selected req JSON │
-│           │ hover de un req           │ [ID] [priority badge]      │                   │
-│           │                          │ texto editable (Slate)     │ [Stage Actions]   │
-│           │                          │ [spans count]              │ + Commit          │
-│           │                          │                            │ × Discard         │
-│           │                          │ [+ Add Requirement]        │                   │
-└───────────┴──────────────────────────┴────────────────────────────┴───────────────────┘
+┌── Source Text (50%) ─────────┬── Requirements (50%) ──────┬── Control Panel ──┐
+│ [SOURCE_TEXT header]          │ [EXTRACTED_REQS header]    │ [PHASE: EXTRACT]  │
+│                               │                            │                   │
+│ Texto markdown con             │ Lista RequirementItem:     │ [Technical tab]   │
+│ spans resaltados al           │ [ID] [priority badge]      │ Selected req JSON │
+│ hover de un req               │ texto editable             │                   │
+│                               │ [spans count]              │ [Stage Actions]   │
+│                               │                            │ [Commit]          │
+│                               │ [+ Add Requirement]        │ [Discard]         │
+└───────────────────────────────┴────────────────────────────┴───────────────────┘
 ```
 
 **Interacción de spans:**
-- Hover sobre un `RequirementItem` → resalta los spans correspondientes en el texto fuente con `bg-primary/20 border-x border-primary`
-- Click en span resaltado en texto → selecciona el requirement
+- Hover sobre `RequirementItem` → resalta spans en texto fuente: `bg-primary/20 border-x border-primary`
+- Click en span resaltado → selecciona el requirement correspondiente
 
 **Componentes Core:**
-- `<SourceTextPane>` — markdown viewer con sistema de highlight por span
-- `<RequirementList>` — lista de `<RequirementItem>` editables
+- `<SourceTextPane>` — CodeMirror read-only con decoraciones de span highlight
+- `<RequirementList>` — lista de `<RequirementItem>` editables (organismo)
 - `<RequirementItem>` — card con ID badge + priority selector + texto editable inline
-- `<ControlPanel>` — right sidebar amber con tabs Technical / Stage Actions
-- `<AddRequirementForm>` — inline form al bottom de la lista
-
-**Componentes a Reciclar/Limpiar:**
-- `ViewTwoDocToGraph.tsx` — es el antecedente directo de esta vista. Extraer el Slate editor,
-  rediseñar layout con el nuevo theme.
+- `<ExtractControlPanel>` — right panel amber, tabs Technical / Stage Actions
 
 **Priority badge:**
 ```
 must → bg-secondary/10 text-secondary border border-secondary/30  [MUST]
-nice → bg-outline/10 text-outline border border-outline/30         [NICE]
+nice → bg-outline/10 text-on-muted border border-outline/30       [NICE]
 ```
 
 ---
 
-## 4. Estilos y Unificación (Terran Command Theme)
+## 4. Estilos (Terran Command)
 
-**Paleta:**
-- Panel izquierdo (source): `bg-surface-container-low border-r border-outline-variant/20`
-- Panel derecho (reqs): `bg-surface`
-- Control panel: `bg-[#0c0e10] border-l border-secondary/20`
+- Panel source: `bg-surface-low border-r border-outline/20`
+- Panel reqs: `bg-surface`
+- Control panel: `bg-background border-l border-secondary/20`
 - Control panel header: `text-secondary font-headline uppercase tracking-widest`
-- Span highlight en texto: `bg-primary/15 border-x border-primary/60 px-0.5`
+- Span highlight: `bg-primary/15 border-x border-primary/60 px-0.5`
 - Span hover activo: `bg-primary/30 border-primary`
+- ID req: `font-mono text-[9px] text-primary/60`
+- Texto req: `font-body text-sm text-on-surface`
 
-**Tipografía:**
-- Header panels: `font-mono text-[10px] text-outline uppercase tracking-[0.2em]`
-- ID de requerimiento: `font-mono text-[9px] text-primary/60`
-- Texto de requerimiento: `font-body text-sm text-on-surface`
-- Execution logs en control panel: `font-mono text-[10px] border-l border-primary/20 pl-3`
-
-**Interacciones Clave:**
-- `Ctrl+S` → guarda estado actual
-- `Ctrl+Enter` → commit y avanzar al match
-- `Delete` en req seleccionado → eliminar (con confirm si `priority === "must"`)
-- `Escape` → deseleccionar req activo, quitar highlights
+**Interacciones:**
+- `Ctrl+S` → guarda estado (useMutation)
+- `Ctrl+Enter` → commit y navega al match
+- `Delete` en req seleccionado → eliminar (confirm si `priority === "must"`)
+- `Escape` → deseleccionar req, quitar highlights
 - `+` button → agrega nuevo req al final de la lista
 
-**Estado Vacío:**
-- Sin requerimientos: mensaje `NO_REQUIREMENTS_EXTRACTED` + botón de add manual
-- Source text vacío: `SOURCE_TEXT_UNAVAILABLE`
-
-**Estado Error:**
-- LLM falló en extracción: banner `EXTRACTION_FAILED` con opción de re-run o entrada manual
-- JSON schema inválido al guardar: highlight del campo inválido en rojo
+**Estado Vacío:** `NO_REQUIREMENTS_EXTRACTED` + botón add manual
+**Estado Error:** banner `EXTRACTION_FAILED` con opción re-run o entrada manual
 
 ---
 
-## Notas de Implementación
+## 5. Archivos a crear
 
-- El Slate editor por requerimiento es `singleLine` (solo texto, sin formato)
-- Los `spans` son opcionales — si `text_span === null`, no se hace highlight
-- La aprobación final escribe al `editor/extract_understand/state` endpoint y navega automáticamente al Match
+```
+src/features/job-pipeline/
+  api/
+    useViewTwo.ts                 useQuery(['view2', source, jobId])
+    useExtractState.ts            useMutation para saveEditorState
+  components/
+    SourceTextPane.tsx            CodeMirror read-only + span decorations
+    RequirementList.tsx           organismo: lista de items editables
+    RequirementItem.tsx           card individual editable
+    ExtractControlPanel.tsx       right panel amber con acciones HITL
+src/pages/job/
+  ExtractUnderstand.tsx           TONTO: useParams + hooks + render
+```
+
+---
+
+## 6. Definition of Done
+
+```
+[ ] ExtractUnderstand renderiza con SplitPane 50/50 para job 201397 (mock)
+[ ] SourceTextPane muestra el markdown del mock (texto TU Berlin real)
+[ ] RequirementList muestra los 14 requerimientos del mock
+[ ] Hover en un RequirementItem resalta los spans correspondientes en el texto
+[ ] Editar el texto de un req actualiza el estado local
+[ ] Ctrl+S ejecuta useMutation sin error (mock no-op)
+[ ] Ctrl+Enter navega a /match después de guardar
+[ ] Botón + agrega un RequirementItem vacío al final de la lista
+[ ] Delete en req "must" muestra confirm dialog
+[ ] Sin datos hardcodeados — todo dato proviene del mock/API, nunca de literales en el componente
+```
+
+---
+
+## 7. E2E (TestSprite)
+
+**URL:** `/jobs/tu_berlin/201397/extract`
+
+1. Verificar que el SplitPane renderiza con texto fuente a la izquierda y lista de reqs a la derecha
+2. Hover sobre el primer `<RequirementItem>` → verificar que aparece highlight en el SourceTextPane
+3. Click en un req → verificar que el `<ExtractControlPanel>` muestra el JSON del req seleccionado
+4. Editar el texto de un req + presionar `Ctrl+S` → verificar que no hay errores en consola
+5. Presionar `Ctrl+Enter` → verificar navegación a `/jobs/tu_berlin/201397/match`

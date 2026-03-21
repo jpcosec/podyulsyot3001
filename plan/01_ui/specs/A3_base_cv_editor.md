@@ -1,14 +1,20 @@
-# Spec: Base CV Editor (Evidence Bank Global)
+# Spec A3 — Base CV Editor (Evidence Bank Global)
+
+**Feature:** `src/features/base-cv/`
+**Page:** `src/pages/global/BaseCvEditor.tsx`
+**Librerías:** `@xyflow/react` · `@dagrejs/dagre` · `@tanstack/react-query` · `lucide-react`
+**Fase:** 9
+
+---
 
 ## 1. Objetivo del Operador
-Esta es la vista global donde el operador gestiona su "arsenal" de experiencias y habilidades maestras — el perfil canónico que el pipeline usa como fuente para generar aplicaciones. El operador puede:
-- Ver todos sus entries (experiencias, educación, publicaciones, idiomas) y skills como un grafo visual
-- Editar el contenido de cualquier entry/skill directamente en el panel lateral
-- Marcar entries/skills como `essential` (siempre se incluyen) vs opcionales
+
+Vista global para gestionar el "arsenal" de experiencias y habilidades maestras — el perfil canónico que el pipeline usa como fuente para generar aplicaciones. El operador puede:
+- Ver todos sus entries (experiencias, educación, publicaciones, idiomas) y skills como grafo visual
+- Editar el contenido de cualquier entry/skill en el panel lateral
+- Marcar entries/skills como `essential` vs opcionales
 - Agregar o eliminar entries y skills
 - Ver las conexiones `demonstrates` (qué skills demuestran qué entries)
-
-Unifica y reemplaza el `CvGraphEditor` del sandbox y el sidebar `EvidenceBank` del job view.
 
 ---
 
@@ -18,12 +24,10 @@ Unifica y reemplaza el `CvGraphEditor` del sandbox y el sidebar `EvidenceBank` d
 - `GET /api/v1/portfolio/cv-profile-graph` → `CvProfileGraphPayload`
   ```ts
   {
-    profile_id: string,
-    snapshot_version: string,
-    captured_on: string,
-    entries: CvEntry[],          // experiencias, edu, pubs, idiomas
-    skills: CvSkill[],           // skills atómicos con nivel
-    demonstrates: CvDemonstratesEdge[]  // entry → skill con description_keys
+    profile_id, snapshot_version, captured_on,
+    entries: CvEntry[],
+    skills: CvSkill[],
+    demonstrates: CvDemonstratesEdge[]
   }
   ```
 
@@ -34,83 +38,112 @@ Unifica y reemplaza el `CvGraphEditor` del sandbox y el sidebar `EvidenceBank` d
 
 ## 3. Composición de la UI y Layout
 
-**Layout Base:** Canvas ReactFlow (principal) + sidebar derecho (inspector de nodo seleccionado).
+**Layout:** ReactFlow canvas (flex-1) + `<NodeInspector>` derecho (w-80).
 
 ```
-┌─ LeftNav ─┬────────── ReactFlow Canvas (flex-1) ──────────┬── Inspector ──┐
-│           │  [dot-grid] [scanline]                        │  (w-80)       │
-│           │                                               │ Si selección: │
-│           │  [CvEntry nodes]  ──→  [CvSkill nodes]       │  campos edit  │
-│           │                                               │               │
-│           │  [color por category]                         │ Sin sel:      │
-│           │  [essential badge en nodo]                    │  stats global │
-│           │                                               │               │
-│           │  [ReactFlow toolbar: zoom/fit/add]            │ [SAVE button] │
-└───────────┴───────────────────────────────────────────────┴───────────────┘
+┌─ LeftNav ─┬──── ReactFlow Canvas (flex-1) ────────┬── Inspector (w-80) ──┐
+│           │  [dot-grid] [scanline]                 │ Si nodo seleccionado:│
+│           │                                        │   campos editables   │
+│           │  [CvEntry nodes] → [CvSkill nodes]    │                      │
+│           │  [color por category]                  │ Sin selección:       │
+│           │  [essential badge en nodo]             │   ProfileStats       │
+│           │                                        │                      │
+│           │  [ReactFlow toolbar: zoom/fit/add]     │ [SAVE]               │
+└───────────┴────────────────────────────────────────┴──────────────────────┘
 ```
 
 **Tipos de nodos:**
 
 `CvEntry node`:
 ```
-┌─ [category badge] ──────────────── [essential? ●] ─┐
-│  título / institución / fecha                       │
-│  [descripción breve — 1 línea]                      │
-│  ID: P_EXP_005  (mono xs)                           │
-└─────────────────────────────────────────────────────┘
-color borde: por categoría
-  experience → cyan (--primary)
+┌─ [category badge] ─────── [essential ●] ─┐
+│  título / institución / fecha             │
+│  descripción breve — 1 línea             │
+│  ID: P_EXP_005  (mono xs)                │
+└───────────────────────────────────────────┘
+borde color por categoría:
+  experience → primary (cyan)
   education  → outline
   publication→ secondary (amber)
-  language   → tertiary/salmon
+  language   → error/salmon
 ```
 
-`CvSkill node` (más compacto):
+`CvSkill node` (compacto):
 ```
-┌─ [label] ─────── [level badge] ─┐
-│  ID: P_SKL_021  [category]      │
-└──────────────────────────────────┘
+┌─ [label] ── [level badge] ─┐
+│  ID: P_SKL_021  [category] │
+└────────────────────────────┘
 ```
 
-`demonstrates edge`: línea dashed cyan, animated pulse si `essential=true`
+`demonstrates edge` — dashed cyan, animated pulse si `essential=true`
 
 **Componentes Core:**
-- `<CvGraphCanvas>` — ReactFlow con nodos custom y dagre layout
-- `<EntryNode>` / `<SkillNode>` — nodos custom Terran Command styled
-- `<NodeInspector>` — panel lateral con form de edición (Slate o inputs simples)
-- `<ProfileStats>` — mini dashboard de counts cuando nada está seleccionado
-
-**Componentes a Reciclar/Limpiar:**
-- `CvGraphEditorPage.tsx` + `cv-graph/` components del sandbox — limpiar CSS, migrar a nueva paleta
-- Eliminar cualquier import de sandbox styles
+- `<CvGraphCanvas>` — ReactFlow con dagre layout automático
+- `<EntryNode>` / `<SkillNode>` — nodos custom Terran Command
+- `<NodeInspector>` — panel con inputs/textareas editables
+- `<ProfileStats>` — counts de entries/skills cuando nada está seleccionado
 
 ---
 
-## 4. Estilos y Unificación (Terran Command Theme)
+## 4. Estilos (Terran Command)
 
-**Paleta:**
-- Canvas fondo: `bg-surface` con `node-connector` dot-grid
-- Nodo entry seleccionado: `border-primary node-active` glow
-- Nodo entry normal: `border-primary/20 node-glow`
-- Nodo skill: más pequeño, `border-outline/30`
-- Edge `demonstrates`: `stroke=#00f2ff stroke-dasharray="6 3"` con `edge-pulse` si essential
+- Canvas: `bg-surface node-connector`
+- Nodo seleccionado: `border-primary tactical-glow`
+- Edge `demonstrates`: `stroke=#00f2ff stroke-dasharray="6 3"` + `edge-pulse` si essential
+- ID del nodo: `font-mono text-[9px] text-on-muted/60`
+- Título entry: `font-headline font-semibold text-sm text-on-surface`
 
-**Tipografía:**
-- ID del nodo: `font-mono text-[9px] text-outline/60`
-- Título del entry: `font-headline font-semibold text-sm text-on-surface`
-- Category badge: `font-mono text-[9px] uppercase tracking-widest`
-
-**Interacciones Clave:**
-- Click en nodo → abre inspector lateral con campos editables
-- `Ctrl+S` → guarda todo el grafo (`saveCvProfileGraphPayload`)
-- `Ctrl+Z` / `Ctrl+Y` → undo/redo (estado local en React)
+**Interacciones:**
+- Click en nodo → abre inspector lateral
+- `Ctrl+S` → `saveCvProfileGraphPayload` (useMutation + invalidar query)
 - `F` → fit-to-screen del canvas
-- `Delete` → elimina nodo seleccionado (con confirm dialog)
-- Drag nodo → reposiciona (posición solo en estado local, no persiste al backend)
+- `Delete` → elimina nodo (confirm dialog)
+- Drag nodo → reposiciona (posición solo en estado local)
 
-**Estado Vacío:**
-- Canvas sin nodos: icono `account_tree` + "EVIDENCE_BANK_EMPTY — ADD_FIRST_ENTRY"
+**Estado Vacío:** icono + `EVIDENCE_BANK_EMPTY — ADD_FIRST_ENTRY`
+**Estado Error:** toast amber `SAVE_FAILED` / panel con retry si falla el load
 
-**Estado Error:**
-- Fallo en save: toast amber en bottom: "SAVE_FAILED: [error msg]"
-- Fallo en load: panel de error con retry button
+---
+
+## 5. Archivos a crear
+
+```
+src/features/base-cv/
+  api/
+    useCvProfileGraph.ts          useQuery + useMutation
+  components/
+    CvGraphCanvas.tsx             ReactFlow + dagre layout
+    EntryNode.tsx                 custom node Terran Command
+    SkillNode.tsx                 custom node compacto
+    NodeInspector.tsx             panel lateral con inputs
+    ProfileStats.tsx              mini dashboard de counts
+src/pages/global/
+  BaseCvEditor.tsx                TONTO: hook + render
+```
+
+---
+
+## 6. Definition of Done
+
+```
+[ ] BaseCvEditor renderiza sin errores con datos del mock cv_profile_graph.json
+[ ] Nodos se posicionan con dagre (no amontonados)
+[ ] Click en nodo abre NodeInspector con datos del nodo
+[ ] Editar un campo en NodeInspector + Ctrl+S → llama useMutation
+[ ] useMutation resuelve sin error (mock no-op)
+[ ] ProfileStats muestra counts correctos cuando nada está seleccionado
+[ ] Edges demonstrated se ven como líneas dashed cyan entre nodos
+[ ] Essential entries tienen el borde pulsando
+[ ] Sin datos hardcodeados — todo dato proviene del mock/API, nunca de literales en el componente
+```
+
+---
+
+## 7. E2E (TestSprite)
+
+**URL:** `/cv`
+
+1. Verificar que el canvas de ReactFlow renderiza con nodos visibles
+2. Hacer click en un nodo de entry → verificar que `<NodeInspector>` aparece con el título del nodo
+3. Editar el campo de título en el inspector → presionar `Ctrl+S` → verificar que no hay error en consola
+4. Click fuera de cualquier nodo → verificar que `<ProfileStats>` vuelve a aparecer

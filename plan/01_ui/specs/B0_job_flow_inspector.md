@@ -1,13 +1,19 @@
-# Spec: Job Flow Inspector (Entrypoint del Job)
+# Spec B0 — Job Flow Inspector
+
+**Feature:** `src/features/job-pipeline/`
+**Page:** `src/pages/job/JobFlowInspector.tsx`
+**Librerías:** `@tanstack/react-query` · `lucide-react`
+**Fase:** 2
+
+---
 
 ## 1. Objetivo del Operador
-Al abrir un job, esta es la vista principal de contexto. El operador ve:
-- En qué etapa está el pipeline y cuál es el estado de cada una
-- Qué artefactos están disponibles en cada etapa (links directos)
+
+Hub de navegación del job. El operador ve:
+- En qué etapa está el pipeline y el estado de cada una
+- Qué artefactos están disponibles (links directos)
 - Si hay un bloqueo HITL activo, un CTA prominente para ir a resolverlo
 - Metadatos del job (título, institución, deadline, score de match si existe)
-
-Funciona como "hub de navegación" — desde aquí se navega a cualquier vista de etapa.
 
 ---
 
@@ -24,73 +30,108 @@ Funciona como "hub de navegación" — desde aquí se navega a cualquier vista d
   }
   ```
 
-**Escritura:** Ninguna. Vista de solo lectura.
+**Escritura:** Ninguna.
 
 ---
 
 ## 3. Composición de la UI y Layout
 
-**Layout Base:** Columna central (sin right panel — el inspector es el main). Left nav persiste.
+**Layout:** Columna central, sin panel lateral. El inspector ocupa el main completo.
 
 ```
-┌─ LeftNav ─┬───────────────────── Main (flex-1) ──────────────────────────┐
-│           │  [Job header: título + institución + status badge]            │
-│           │  [Pipeline timeline vertical — 8 etapas]                     │
-│           │                                                               │
-│           │  Cada etapa:                                                  │
-│           │  [●]──[SCRAPE]────────[completed]──[artifact link]           │
-│           │  [●]──[EXTRACT]───────[completed]──[artifact link]           │
-│           │  [●]──[MATCH]─────────[completed]──[artifact link]           │
-│           │  [◉]──[REVIEW_MATCH]──[paused_review]──[→ GO TO REVIEW]     │← CTA
-│           │  [○]──[GENERATE]──────[pending]                              │
-│           │  [○]──[RENDER]────────[pending]                              │
-│           │  [○]──[PACKAGE]───────[pending]                              │
-│           │                                                               │
-│           │  [Run metadata panel: match score, deadline, last updated]   │
-└───────────┴───────────────────────────────────────────────────────────────┘
+┌─────────────── Main (flex-1, max-w-2xl mx-auto) ───────────────┐
+│  [Job header: título + institución + status badge]              │
+│                                                                  │
+│  [HitlCtaBanner — solo si paused_review]                        │
+│                                                                  │
+│  [PipelineTimeline vertical]                                     │
+│  ● SCRAPE ────── completed ── [artifact link]                   │
+│  ● EXTRACT ───── completed ── [artifact link]                   │
+│  ● MATCH ──────── completed ── [artifact link]                  │
+│  ◉ REVIEW_MATCH ─ paused_review ── [→ GO TO REVIEW]           │← CTA
+│  ○ GENERATE ───── pending                                       │
+│  ○ RENDER ──────── pending                                      │
+│  ○ PACKAGE ──────── pending                                     │
+│                                                                  │
+│  [JobMetaPanel: match score, deadline, thread_id, updated_at]  │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 **Componentes Core:**
-- `<PipelineTimeline>` — lista vertical de etapas con conector vertical
-- `<StageRow>` — fila de etapa: dot (colored) + nombre + status badge + artifact link
-- `<JobMetaPanel>` — tarjeta con match score, deadline, thread_id, updated_at
-- `<HitlCta>` — banner prominente cuando `status === "paused_review"` con botón que navega a la vista de review
+- `<PipelineTimeline>` — lista vertical de etapas con conector
+- `<StageRow>` — dot (colored) + nombre + Badge status + artifact link
+- `<JobMetaPanel>` — tarjeta con score, deadline, thread_id, updated_at
+- `<HitlCtaBanner>` — banner amber prominente cuando `status === "paused_review"`
 
 **Stage dot colors:**
 ```
-completed     → ● bg-primary (cyan filled)
-paused_review → ● bg-secondary animate-pulse (amber pulsing)
-running       → ● bg-secondary (amber static)
-failed        → ● bg-error (salmon)
-pending       → ○ border border-outline (grey empty)
+completed     → text-primary (●)
+paused_review → text-secondary animate-pulse (◉)
+running       → text-secondary (●)
+failed        → text-error (●)
+pending       → text-on-muted border border-outline (○)
 ```
-
-**Componentes a Reciclar/Limpiar:**
-- `JobStagePage.tsx` — extraer la lógica de timeline en `<PipelineTimeline>`, separar del tab system
-- `StageStatusBadge.tsx` — adaptar colores al theme
 
 ---
 
-## 4. Estilos y Unificación (Terran Command Theme)
+## 4. Estilos (Terran Command)
 
-**Paleta:**
 - Fondo: `bg-surface`
-- Pipeline container: `bg-surface-container-low panel-border tactical-glow` — ancho máximo centrado
-- Conector vertical entre dots: `border-l-2 border-outline-variant/30 ml-[5px]`
+- Pipeline container: `bg-surface-container-low panel-border tactical-glow`
+- Conector vertical: `border-l-2 border-outline/20 ml-[5px]`
 - CTA banner HITL: `bg-secondary/10 border border-secondary/40 alert-glow`
-
-**Tipografía:**
 - Nombre job: `font-headline font-bold text-lg text-on-surface uppercase`
-- Nombre de etapa: `font-headline uppercase tracking-widest text-sm`
-- Status badge: `font-mono text-[10px] uppercase`
+- Nombre etapa: `font-headline uppercase tracking-widest text-sm`
 - Artifact link: `font-mono text-[10px] text-primary hover:underline`
 
-**Interacciones Clave:**
-- Click en nombre de etapa → navega a la vista de esa etapa (si tiene vista propia)
+**Interacciones:**
+- Click en nombre de etapa → navega a la vista de esa etapa
 - Click en artifact link → navega a Data Explorer en ese path
 - CTA "GO TO REVIEW" → navega a la vista de review correspondiente
-- Pipeline nav del TopBar muestra etapa activa del job
 
-**Estado Vacío / Error:**
-- Job no encontrado: `NOT_FOUND` en mono + link de vuelta al portfolio
-- Pipeline vacío (solo scrape pendiente): primera etapa con pulsing running dot
+**Estado Error:** `NOT_FOUND` + link al portfolio
+**Estado Vacío:** primera etapa con dot pulsando (running)
+
+---
+
+## 5. Archivos a crear
+
+```
+src/features/job-pipeline/
+  api/
+    useJobTimeline.ts             useQuery(['timeline', source, jobId])
+  components/
+    PipelineTimeline.tsx          lista vertical de etapas
+    StageRow.tsx                  fila individual de etapa
+    HitlCtaBanner.tsx             banner amber de acción HITL
+    JobMetaPanel.tsx              tarjeta de metadata del job
+src/pages/job/
+  JobFlowInspector.tsx            TONTO: useParams + hook + render
+```
+
+---
+
+## 6. Definition of Done
+
+```
+[ ] JobFlowInspector renderiza sin errores para job 201397 (mock)
+[ ] PipelineTimeline muestra todas las etapas con dots del color correcto
+[ ] HitlCtaBanner visible cuando status=paused_review
+[ ] Click en etapa completada navega a la ruta correspondiente
+[ ] JobMetaPanel muestra thread_id y updated_at del mock
+[ ] Estado loading muestra Spinner
+[ ] Estado error muestra NOT_FOUND con link al portfolio
+[ ] Sin datos hardcodeados — todo dato proviene del mock/API, nunca de literales en el componente
+```
+
+---
+
+## 7. E2E (TestSprite)
+
+**URL:** `/jobs/tu_berlin/201397`
+
+1. Verificar que `<PipelineTimeline>` renderiza con las etapas del job
+2. Verificar que el dot de `review_match` tiene clase `animate-pulse` (paused_review)
+3. Verificar que `<HitlCtaBanner>` está visible con botón "GO TO REVIEW"
+4. Click en "GO TO REVIEW" → verificar navegación a `/jobs/tu_berlin/201397/match`
+5. Navegar a `/jobs/tu_berlin/999001` → verificar que HitlCtaBanner NO aparece (status=completed)
