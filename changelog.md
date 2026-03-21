@@ -13,6 +13,8 @@
 - Updated `index_checklist.md` with all 12 completion criteria checked off.
 - 161 tests passing.
 
+- Fix `diagrammatic-ui` crash (`recentlyCreatedOwnerStacks` on React StrictMode). Replaced with `@xyflow/react` throughout `GraphCanvas`, removing the broken dependency. All 13 routes now pass Playwright browser tests with zero page errors.
+
 ## 2026-03-21 (morning)
 
 - Added minimal local-review architecture slices: direct JSON read/write job editor endpoints for `extract_understand` and `match`, stage-output inspection endpoints, document read/write endpoints for `generate_documents` markdown artifacts, and corresponding review-workbench UI surfaces for per-stage outputs, document editing, and local job node editing.
