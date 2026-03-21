@@ -9,6 +9,7 @@ import { PortfolioPage } from "./pages/PortfolioPage";
 import { CvGraphEditorPage } from "./sandbox/pages/CvGraphEditorPage";
 import { NodeEditorPlanPage } from "./sandbox/pages/NodeEditorPlanPage";
 import { NodeEditorSandboxPage } from "./sandbox/pages/NodeEditorSandboxPage";
+import { IntelligentEditorPage } from "./sandbox/pages/IntelligentEditorPage";
 import { SandboxPage } from "./sandbox/pages/SandboxPage";
 import { TextTaggerPage } from "./sandbox/pages/TextTaggerPage";
 
@@ -24,6 +25,7 @@ function App(): JSX.Element {
         <Route path="/sandbox/cv_graph" element={<CvGraphEditorPage />} />
         <Route path="/sandbox/node_editor" element={<NodeEditorSandboxPage />} />
         <Route path="/sandbox/node_editor_plan" element={<NodeEditorPlanPage />} />
+        <Route path="/sandbox/intelligent_editor" element={<IntelligentEditorPage />} />
 
         <Route path="/text-tagger" element={<TextTaggerPage />} />
         <Route path="/cv-graph" element={<CvGraphEditorPage />} />

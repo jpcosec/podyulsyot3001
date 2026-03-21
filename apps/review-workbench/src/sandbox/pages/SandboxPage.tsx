@@ -247,6 +247,17 @@ export function SandboxPage(): JSX.Element {
         </article>
 
         <article className="panel sandbox-card">
+          <h2>Intelligent Editor</h2>
+          <p>
+            Context-aware document editor with inline tagged spans, hover cards,
+            SVG connector lines, and pinned context sidebar. Prototype for HITL C sculpting view.
+          </p>
+          <p>
+            <Link to="/sandbox/intelligent_editor">Go to intelligent editor</Link>
+          </p>
+        </article>
+
+        <article className="panel sandbox-card">
           <h2>Node Editor Plan</h2>
           <p>
             Implementation plan for the node-to-node editor phase with state machine, overlays,
