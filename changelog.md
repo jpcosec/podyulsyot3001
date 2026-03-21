@@ -4,6 +4,10 @@
 
 ## 2026-03-21
 
+- Added minimal local-review architecture slices: direct JSON read/write job editor endpoints for `extract_understand` and `match`, stage-output inspection endpoints, document read/write endpoints for `generate_documents` markdown artifacts, and corresponding review-workbench UI surfaces for per-stage outputs, document editing, and local job node editing.
+- Refactored `extract_understand` toward LangChain structured-output execution with `contact_info` + optional `salary_grade`, plus optional LangSmith tracing hooks when credentials are configured.
+- Hardened scraping minimalism by keeping screenshot evidence and persistent bot-profile behavior in the Playwright fetcher, exposing scrape artifacts in the UI, and embedding scrape screenshots directly in stage output review.
+- Added reproducible Python runtime setup via `requirements.txt`, documented installation in `README.md`, and installed the missing LangChain/LangSmith/LangGraph dependencies required by the current minimal architecture path.
 - Cleaned the repository root by moving `agent_entrypoint.md` to `docs/operations/agent_entrypoint.md`, relocating loose node-editor screenshots to `docs/ui/images/node-editor/`, and moving local UI prototype HTML files into `docs/ui/prototypes/`.
 - Updated doc references so operations runbooks now point to `docs/operations/agent_entrypoint.md`, and expanded `docs/ui/README.md` to document where prototype HTML files and node-editor screenshots now live.
 - Restructured active planning around `plan/01_ui/`, `plan/02_langchain/`, `plan/03_scrapper/`, promoted planning checklist to `plan/index_checklist.md`, and moved subsystem/spec-style documents out of `plan/spec/` into official docs under `docs/architecture/`, `docs/reference/`, and `docs/policy/`.

@@ -3,6 +3,7 @@ import type {
   CvGraphPayload,
   JobTimeline,
   PortfolioSummary,
+  StageOutputsPayload,
   ViewOnePayload,
   ViewThreePayload,
   ViewTwoPayload,
@@ -60,6 +61,102 @@ export async function getViewThreePayload(
     throw new Error(`view3 payload failed: ${response.status}`);
   }
   return (await response.json()) as ViewThreePayload;
+}
+
+export async function getStageOutputs(
+  source: string,
+  jobId: string,
+  stage: string,
+): Promise<StageOutputsPayload> {
+  const response = await fetch(`${API_BASE}/api/v1/jobs/${source}/${jobId}/stage/${stage}/outputs`);
+  if (!response.ok) {
+    throw new Error(`stage outputs failed: ${response.status}`);
+  }
+  return (await response.json()) as StageOutputsPayload;
+}
+
+export async function getEditorState(
+  source: string,
+  jobId: string,
+  nodeName: string,
+): Promise<{ source: string; job_id: string; node_name: string; artifact_ref: string; state: Record<string, unknown> }> {
+  const response = await fetch(`${API_BASE}/api/v1/jobs/${source}/${jobId}/editor/${nodeName}/state`);
+  if (!response.ok) {
+    throw new Error(`editor state failed: ${response.status}`);
+  }
+  return (await response.json()) as {
+    source: string;
+    job_id: string;
+    node_name: string;
+    artifact_ref: string;
+    state: Record<string, unknown>;
+  };
+}
+
+export async function saveEditorState(
+  source: string,
+  jobId: string,
+  nodeName: string,
+  payload: Record<string, unknown>,
+): Promise<{ source: string; job_id: string; node_name: string; artifact_ref: string; state: Record<string, unknown> }> {
+  const response = await fetch(`${API_BASE}/api/v1/jobs/${source}/${jobId}/editor/${nodeName}/state`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    throw new Error(`save editor state failed: ${response.status} ${detail}`);
+  }
+  return (await response.json()) as {
+    source: string;
+    job_id: string;
+    node_name: string;
+    artifact_ref: string;
+    state: Record<string, unknown>;
+  };
+}
+
+export async function getDocument(
+  source: string,
+  jobId: string,
+  docKey: string,
+): Promise<{ source: string; job_id: string; doc_key: string; artifact_ref: string; content: string }> {
+  const response = await fetch(`${API_BASE}/api/v1/jobs/${source}/${jobId}/documents/${docKey}`);
+  if (!response.ok) {
+    throw new Error(`document load failed: ${response.status}`);
+  }
+  return (await response.json()) as {
+    source: string;
+    job_id: string;
+    doc_key: string;
+    artifact_ref: string;
+    content: string;
+  };
+}
+
+export async function saveDocument(
+  source: string,
+  jobId: string,
+  docKey: string,
+  content: string,
+): Promise<{ source: string; job_id: string; doc_key: string; artifact_ref: string; content: string }> {
+  const response = await fetch(`${API_BASE}/api/v1/jobs/${source}/${jobId}/documents/${docKey}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content }),
+  });
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    throw new Error(`document save failed: ${response.status} ${detail}`);
+  }
+  return (await response.json()) as {
+    source: string;
+    job_id: string;
+    doc_key: string;
+    artifact_ref: string;
+    content: string;
+  };
 }
 
 export async function getBaseCvGraphPayload(): Promise<CvGraphPayload> {

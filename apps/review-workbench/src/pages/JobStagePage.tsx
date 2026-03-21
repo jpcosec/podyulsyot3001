@@ -1,22 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 
 import { StageStatusBadge } from "../components/StageStatusBadge";
 import { getJobTimeline } from "../api/client";
 import type { JobTimeline } from "../types/models";
 import { ViewOneGraphExplorer } from "../views/ViewOneGraphExplorer";
+import { PipelineOutputsView } from "../views/PipelineOutputsView";
 import { ViewThreeGraphToDoc } from "../views/ViewThreeGraphToDoc";
 import { ViewTwoDocToGraph } from "../views/ViewTwoDocToGraph";
 
-type ViewKey = "view-1" | "view-2" | "view-3";
+type ViewKey = "view-1" | "view-2" | "view-3" | "outputs";
 
 export function JobStagePage(): JSX.Element {
   const params = useParams();
+  const [searchParams] = useSearchParams();
   const source = params.source ?? "";
   const jobId = params.jobId ?? "";
   const [timeline, setTimeline] = useState<JobTimeline | null>(null);
   const [error, setError] = useState<string>("");
   const [activeView, setActiveView] = useState<ViewKey>("view-2");
+  const [selectedStage, setSelectedStage] = useState<string>("extract_understand");
 
   useEffect(() => {
     getJobTimeline(source, jobId)
@@ -41,6 +44,27 @@ export function JobStagePage(): JSX.Element {
     setActiveView(view);
   }, [view]);
 
+  useEffect(() => {
+    const requestedView = searchParams.get("view");
+    if (requestedView === "view-1" || requestedView === "view-2" || requestedView === "view-3" || requestedView === "outputs") {
+      setActiveView(requestedView);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (!timeline) {
+      return;
+    }
+    setSelectedStage(timeline.current_node);
+  }, [timeline]);
+
+  useEffect(() => {
+    const requestedStage = searchParams.get("stage");
+    if (requestedStage) {
+      setSelectedStage(requestedStage);
+    }
+  }, [searchParams]);
+
   return (
     <section className="panel">
       <div className="breadcrumbs">
@@ -50,6 +74,9 @@ export function JobStagePage(): JSX.Element {
           {source} {jobId}
         </span>
       </div>
+      <p>
+        <Link to={`/jobs/${source}/${jobId}/node-editor`}>Open JSON-backed node editor</Link>
+      </p>
       <h1>
         Job {jobId} ({source})
       </h1>
@@ -61,10 +88,18 @@ export function JobStagePage(): JSX.Element {
           </p>
           <div className="stage-list">
             {timeline.stages.map((stage) => (
-              <div key={stage.stage} className="stage-item">
+              <button
+                type="button"
+                key={stage.stage}
+                className={`stage-item stage-item-button${selectedStage === stage.stage ? " stage-item-active" : ""}`}
+                onClick={() => {
+                  setSelectedStage(stage.stage);
+                  setActiveView("outputs");
+                }}
+              >
                 <span>{stage.stage}</span>
                 <StageStatusBadge status={stage.status} />
-              </div>
+              </button>
             ))}
           </div>
           <div className="view-tabs">
@@ -89,6 +124,13 @@ export function JobStagePage(): JSX.Element {
             >
               View 3 Graph to Document
             </button>
+            <button
+              type="button"
+              className={activeView === "outputs" ? "view-tab view-tab-active" : "view-tab"}
+              onClick={() => setActiveView("outputs")}
+            >
+              Pipeline Outputs
+            </button>
           </div>
         </>
       ) : (
@@ -97,6 +139,7 @@ export function JobStagePage(): JSX.Element {
       {activeView === "view-1" ? <ViewOneGraphExplorer /> : null}
       {activeView === "view-2" ? <ViewTwoDocToGraph /> : null}
       {activeView === "view-3" ? <ViewThreeGraphToDoc /> : null}
+      {activeView === "outputs" ? <PipelineOutputsView stage={selectedStage} /> : null}
     </section>
   );
 }

@@ -2,15 +2,19 @@ from __future__ import annotations
 
 import json
 import logging
+import base64
 from dataclasses import asdict
 from datetime import UTC, datetime
 from pathlib import Path
 import re
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 SAVED_GRAPH_FILENAME = "cv_profile_graph_saved.json"
 
+from src.core.io.artifact_writer import ArtifactWriter
+from src.core.io.workspace_manager import WorkspaceManager
 from src.core.graph.state import build_thread_id
 from src.interfaces.api.models import (
     CvDemonstratesEdge,
@@ -213,6 +217,213 @@ def _read_json(path: Path) -> dict:
     if isinstance(value, dict):
         return value
     return {}
+
+
+EDITOR_NODE_PATHS: dict[str, str] = {
+    "extract_understand": "nodes/extract_understand/approved/state.json",
+    "match": "nodes/match/approved/state.json",
+}
+
+DOCUMENT_PATHS: dict[str, str] = {
+    "cv": "nodes/generate_documents/proposed/cv.md",
+    "motivation_letter": "nodes/generate_documents/proposed/motivation_letter.md",
+    "application_email": "nodes/generate_documents/proposed/application_email.md",
+}
+
+
+def load_editor_state(
+    data_root: Path, source: str, job_id: str, node_name: str
+) -> dict[str, Any]:
+    path = _resolve_editor_state_path(data_root, source, job_id, node_name)
+    return {
+        "source": source,
+        "job_id": job_id,
+        "node_name": node_name,
+        "artifact_ref": str(path),
+        "state": _read_json(path),
+    }
+
+
+def save_editor_state(
+    data_root: Path,
+    source: str,
+    job_id: str,
+    node_name: str,
+    payload: dict[str, Any],
+) -> dict[str, Any]:
+    path = _resolve_editor_state_path(data_root, source, job_id, node_name)
+    writer = ArtifactWriter(WorkspaceManager(data_root))
+    writer.write_json(path, payload)
+    return load_editor_state(data_root, source, job_id, node_name)
+
+
+def load_stage_outputs(
+    data_root: Path, source: str, job_id: str, stage: str
+) -> dict[str, Any]:
+    workspace = WorkspaceManager(data_root)
+    files: list[dict[str, Any]] = []
+    for relative_path in _stage_relative_paths(stage):
+        path = workspace.resolve_under_job(source, job_id, relative_path)
+        if not path.exists() or not path.is_file():
+            continue
+        stage_file = _read_stage_file(path)
+        if stage_file is None:
+            continue
+        files.append(
+            {
+                "path": relative_path,
+                "content_type": stage_file["content_type"],
+                "content": stage_file["content"],
+                "editable": _is_editable_stage_file(relative_path),
+            }
+        )
+
+    if stage == "review_match":
+        node_name = "match"
+    else:
+        node_name = stage if stage in EDITOR_NODE_PATHS else None
+
+    return {
+        "source": source,
+        "job_id": job_id,
+        "stage": stage,
+        "node_name": node_name,
+        "files": files,
+    }
+
+
+def load_document(
+    data_root: Path, source: str, job_id: str, doc_key: str
+) -> dict[str, Any]:
+    path = _resolve_document_path(data_root, source, job_id, doc_key)
+    return {
+        "source": source,
+        "job_id": job_id,
+        "doc_key": doc_key,
+        "artifact_ref": str(path),
+        "content": path.read_text(encoding="utf-8") if path.exists() else "",
+    }
+
+
+def save_document(
+    data_root: Path, source: str, job_id: str, doc_key: str, content: str
+) -> dict[str, Any]:
+    path = _resolve_document_path(data_root, source, job_id, doc_key)
+    writer = ArtifactWriter(WorkspaceManager(data_root))
+    writer.write_text(path, content)
+    return load_document(data_root, source, job_id, doc_key)
+
+
+def _resolve_editor_state_path(
+    data_root: Path, source: str, job_id: str, node_name: str
+) -> Path:
+    relative_path = EDITOR_NODE_PATHS.get(node_name)
+    if relative_path is None:
+        raise ValueError(f"unsupported editor node: {node_name}")
+    workspace = WorkspaceManager(data_root)
+    return workspace.resolve_under_job(source, job_id, relative_path)
+
+
+def _resolve_document_path(
+    data_root: Path, source: str, job_id: str, doc_key: str
+) -> Path:
+    relative_path = DOCUMENT_PATHS.get(doc_key)
+    if relative_path is None:
+        raise ValueError(f"unsupported document key: {doc_key}")
+    workspace = WorkspaceManager(data_root)
+    return workspace.resolve_under_job(source, job_id, relative_path)
+
+
+def _stage_relative_paths(stage: str) -> list[str]:
+    if stage == "scrape":
+        return [
+            "nodes/scrape/input/fetch_metadata.json",
+            "nodes/scrape/input/raw_snapshot.json",
+            "nodes/scrape/proposed/source_extraction.json",
+            "nodes/scrape/approved/canonical_scrape.json",
+            "raw/source_text.md",
+            "nodes/scrape/trace/error_screenshot.png",
+        ]
+    if stage == "translate_if_needed":
+        return ["nodes/translate_if_needed/approved/state.json"]
+    if stage == "extract_understand":
+        return ["nodes/extract_understand/approved/state.json"]
+    if stage == "match":
+        return [
+            "nodes/match/proposed/state.json",
+            "nodes/match/approved/state.json",
+            "nodes/match/review/decision.md",
+            "nodes/match/review/decision.json",
+        ]
+    if stage == "review_match":
+        return [
+            "nodes/match/review/decision.md",
+            "nodes/match/review/decision.json",
+        ]
+    if stage == "generate_documents":
+        return [
+            "nodes/generate_documents/approved/state.json",
+            "nodes/generate_documents/proposed/cv.md",
+            "nodes/generate_documents/proposed/motivation_letter.md",
+            "nodes/generate_documents/proposed/application_email.md",
+            "nodes/generate_documents/assist/proposed/state.json",
+            "nodes/generate_documents/assist/proposed/view.md",
+        ]
+    if stage == "render":
+        return [
+            "nodes/render/approved/state.json",
+            "nodes/render/proposed/cv.md",
+            "nodes/render/proposed/motivation_letter.md",
+            "nodes/render/proposed/application_email.md",
+        ]
+    if stage == "package":
+        return [
+            "nodes/package/approved/state.json",
+            "final/manifest.json",
+            "final/cv.md",
+            "final/motivation_letter.md",
+            "final/application_email.md",
+        ]
+    return []
+
+
+def _read_stage_file(path: Path) -> dict[str, str] | None:
+    suffix = path.suffix.lower()
+    if suffix in {".json", ".md", ".txt"}:
+        text = path.read_text(encoding="utf-8")
+        if suffix == ".json":
+            try:
+                parsed = json.loads(text)
+            except json.JSONDecodeError:
+                return {"content_type": "json", "content": text}
+            return {
+                "content_type": "json",
+                "content": json.dumps(parsed, indent=2, ensure_ascii=False),
+            }
+        return {"content_type": _infer_content_type(path), "content": text}
+    if suffix == ".png":
+        encoded = base64.b64encode(path.read_bytes()).decode("ascii")
+        return {"content_type": "image", "content": f"data:image/png;base64,{encoded}"}
+    return None
+
+
+def _infer_content_type(path: Path) -> str:
+    suffix = path.suffix.lower()
+    if suffix == ".json":
+        return "json"
+    if suffix == ".md":
+        return "markdown"
+    if suffix == ".txt":
+        return "text"
+    if suffix == ".png":
+        return "image"
+    return "unknown"
+
+
+def _is_editable_stage_file(relative_path: str) -> bool:
+    if relative_path in EDITOR_NODE_PATHS.values():
+        return True
+    return relative_path in DOCUMENT_PATHS.values()
 
 
 def build_view_two_payload(data_root: Path, source: str, job_id: str) -> ViewTwoPayload:

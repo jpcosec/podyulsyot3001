@@ -97,6 +97,21 @@ export interface ViewThreePayload {
   edges: GraphEdge[];
 }
 
+export interface StageOutputFile {
+  path: string;
+  content_type: string;
+  content: string;
+  editable: boolean;
+}
+
+export interface StageOutputsPayload {
+  source: string;
+  job_id: string;
+  stage: string;
+  node_name: string | null;
+  files: StageOutputFile[];
+}
+
 export interface CvGraphNode {
   id: string;
   label: string;

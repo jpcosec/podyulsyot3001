@@ -18,12 +18,19 @@ class JobConstraint(BaseModel):
     description: str
 
 
-class JobUnderstandingExtract(BaseModel):#TODO: puede que ayude un poco aca hacer una especie de "preordenamiento"
+class ContactInfo(BaseModel):
+    name: str | None = None
+    email: str | None = None
+
+
+class JobUnderstandingExtract(BaseModel):
     job_title: str
-    analysis_notes: str = Field(#TODO: Faltan campos base como Tematica (puede ser un par de tags), descripcion, contacto y el formulario exacto que va arriba
+    analysis_notes: str = Field(
         ...,
-        description="Razonamiento logico detras de la extraccion y clasificacion",#TODO: ENGLISH PLEASE!
+        description="Logical extraction rationale written in English.",
     )
     requirements: list[JobRequirement]
     constraints: list[JobConstraint]
     risk_areas: list[str] = Field(default_factory=list)
+    contact_info: ContactInfo = Field(default_factory=ContactInfo)
+    salary_grade: str | None = None

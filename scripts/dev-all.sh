@@ -8,7 +8,7 @@ API_HOST="${PHD2_UI_API_HOST:-127.0.0.1}"
 API_PORT="${PHD2_UI_API_PORT:-8010}"
 UI_PORT="${PHD2_UI_PORT:-4173}"
 NEO4J_HTTP_PORT="${PHD2_NEO4J_HTTP_PORT:-7474}"
-START_NEO4J="${START_NEO4J:-1}"
+START_NEO4J="${START_NEO4J:-0}"
 BOOTSTRAP_SCHEMA="${BOOTSTRAP_SCHEMA:-1}"
 STOP_NEO4J_ON_EXIT="${STOP_NEO4J_ON_EXIT:-0}"
 WAIT_TIMEOUT_SECS="${WAIT_TIMEOUT_SECS:-90}"
@@ -115,6 +115,8 @@ if [[ "$START_NEO4J" == "1" ]]; then
   docker compose -f "$NEO4J_COMPOSE_FILE" up -d
   echo "[neo4j] Waiting for browser endpoint..."
   wait_for_http "http://${API_HOST}:${NEO4J_HTTP_PORT}" "neo4j" "$WAIT_TIMEOUT_SECS"
+else
+  echo "[neo4j] Skipped (START_NEO4J=0, minimal local JSON mode)."
 fi
 
 if [[ ! -d "$REPO_ROOT/apps/review-workbench/node_modules" ]]; then

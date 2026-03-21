@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 
+import { JobNodeEditorPage } from "./pages/JobNodeEditorPage";
 import { JobStagePage } from "./pages/JobStagePage";
 import { PortfolioPage } from "./pages/PortfolioPage";
 import { CvGraphEditorPage } from "./sandbox/pages/CvGraphEditorPage";
@@ -16,6 +17,7 @@ function AppRoutes(): JSX.Element {
     <Routes>
       <Route path="/" element={<PortfolioPage />} />
       <Route path="/jobs/:source/:jobId" element={<JobStagePage />} />
+      <Route path="/jobs/:source/:jobId/node-editor" element={<JobNodeEditorPage />} />
       <Route path="/sandbox" element={<SandboxPage />} />
       <Route path="/sandbox/text_tagger" element={<TextTaggerPage />} />
       <Route path="/sandbox/cv_graph" element={<CvGraphEditorPage />} />

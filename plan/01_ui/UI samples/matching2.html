@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tactical Match Analysis | TERRAN COMMAND</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            background-color: #0c0e10;
+            color: #e2e2e5;
+            overflow: hidden;
+        }
+        .scanline-overlay {
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .tactical-glow-cyan {
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.15);
+        }
+        .tactical-glow-red {
+            box-shadow: 0 0 15px rgba(255, 180, 171, 0.1);
+        }
+        .edge-path {
+            stroke-dasharray: 10;
+            stroke-dashoffset: 100;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-container": "#00f2ff",
+                        "on-primary-container": "#006a71",
+                        "secondary-container": "#ffaa00",
+                        "surface": "#121416",
+                        "surface-container-lowest": "#0c0e10",
+                        "surface-container-low": "#1a1c1e",
+                        "surface-container-high": "#282a2c",
+                        "surface-container-highest": "#333537",
+                        "surface-variant": "#333537",
+                        "on-surface": "#e2e2e5",
+                        "on-surface-variant": "#b9cacb",
+                        "outline": "#849495",
+                        "outline-variant": "#3a494b",
+                        "error": "#ffb4ab",
+                        "error-container": "#93000a"
+                    },
+                    fontFamily: {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "mono": ["JetBrains Mono"]
+                    },
+                    borderRadius: { "DEFAULT": "0px", "lg": "0px", "xl": "0px", "full": "9999px" }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="font-body selection:bg-primary-container selection:text-on-primary-container">
+<!-- Background Layers -->
+<div class="fixed inset-0 z-0 bg-surface-container-lowest">
+<div class="absolute inset-0 scanline-overlay opacity-20"></div>
+<div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 50% 50%, #00f2ff 0%, transparent 70%);"></div>
+</div>
+<!-- TopAppBar -->
+<header class="bg-[#121416] text-[#00f2ff] font-['Space_Grotesk'] tracking-tighter uppercase flex justify-between items-center w-full px-6 h-16 border-b border-[#00f2ff]/10 fixed top-0 z-50">
+<div class="text-2xl font-black text-[#00f2ff] drop-shadow-[0_0_8px_rgba(0,242,255,0.4)]">TERRAN COMMAND</div>
+<nav class="hidden md:flex items-center space-x-8">
+<a class="text-[#00f2ff] border-b-2 border-[#00f2ff] pb-1" href="#">MISSION STATUS</a>
+</nav>
+<div class="flex items-center space-x-4">
+<span class="material-symbols-outlined hover:text-[#00f2ff] hover:bg-[#1c1f23] transition-colors p-2 cursor-pointer" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined hover:text-[#00f2ff] hover:bg-[#1c1f23] transition-colors p-2 cursor-pointer" data-icon="terminal">terminal</span>
+<div class="h-8 w-8 bg-surface-container-highest border border-outline-variant flex items-center justify-center">
+<img alt="Sarah Chen" class="w-full h-full object-cover" data-alt="User profile avatar Sarah Chen" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgz9dox0UE8iZepf3lEZtpbnqXl6tsvf1GhtdO60VMRet_8X46g5Zq0RakKjdZthTOQHRYwcOA5WjDPUt_ziohAnGSsFtea-dpJEQtz9Tpsixl9dEr8CNp0veF3q89yk9Qq6rGOhjHgSOSalwJ47k8SdXpj5w5BgRyzXU3kL-E2SJN4qVRER79aOcN0BxlWcrrwGMjmTDxscMnTwqT3aPfYPC2KRj7V62yObwQ5x8wTdMTo0u-HrRrQReIHISbtif7KGqjqcL8XsMe"/>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<aside class="bg-[#0c0e10] text-[#00f2ff] font-['JetBrains_Mono'] text-xs uppercase fixed left-0 top-16 bottom-0 flex flex-col items-center py-4 z-40 w-20 border-r border-[#00f2ff]/10">
+<div class="flex flex-col space-y-6 flex-1 items-center">
+<div class="flex flex-col items-center group cursor-pointer text-[#849495] opacity-60 hover:text-[#00f2ff] transition-all">
+<span class="material-symbols-outlined text-2xl" data-icon="map">map</span>
+<span class="mt-1 scale-75">Sector</span>
+</div>
+<div class="flex flex-col items-center group cursor-pointer bg-[#00f2ff]/10 text-[#00f2ff] border-l-4 border-[#00f2ff] w-full py-2">
+<span class="material-symbols-outlined text-2xl" data-icon="database">database</span>
+<span class="mt-1 scale-75">Evidence</span>
+</div>
+<div class="flex flex-col items-center group cursor-pointer text-[#849495] opacity-60 hover:text-[#00f2ff] transition-all">
+<span class="material-symbols-outlined text-2xl" data-icon="terminal">terminal</span>
+<span class="mt-1 scale-75">Work</span>
+</div>
+<div class="flex flex-col items-center group cursor-pointer text-[#849495] opacity-60 hover:text-[#00f2ff] transition-all">
+<span class="material-symbols-outlined text-2xl" data-icon="settings">settings</span>
+<span class="mt-1 scale-75">System</span>
+</div>
+</div>
+<div class="flex flex-col items-center text-[#849495] opacity-60 hover:text-[#00f2ff] transition-all">
+<span class="material-symbols-outlined text-2xl" data-icon="history">history</span>
+<span class="mt-1 scale-75">Log</span>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="fixed inset-0 left-20 top-16 grid grid-cols-12 gap-0 overflow-hidden">
+<!-- Left Pane: Enemy Intel (Job Requirements) -->
+<section class="col-span-3 bg-surface-container-low border-r border-outline-variant/20 p-6 flex flex-col space-y-4 overflow-y-auto">
+<div class="flex items-center space-x-2 mb-4">
+<span class="w-2 h-2 bg-error animate-pulse"></span>
+<h2 class="font-headline font-bold text-lg text-error uppercase tracking-widest">Enemy Intel</h2>
+</div>
+<!-- Requirement Pad 1 -->
+<div class="bg-surface-container-highest/40 border-l-4 border-error p-4 tactical-glow-red relative group">
+<div class="absolute top-0 right-0 p-1 text-[10px] font-mono text-error/50">REQ_ID: 0x4F2</div>
+<h3 class="font-mono text-sm text-error font-bold mb-2">HYPER-DRIVE CALIBRATION</h3>
+<p class="text-xs text-on-surface-variant leading-relaxed">Expertise in multi-phasic warp containment and flux capacitor synchronization required.</p>
+<div class="mt-3 flex justify-between items-center">
+<span class="text-[10px] font-mono bg-error/10 text-error px-2 py-0.5">PRIORITY: ALPHA</span>
+</div>
+</div>
+<!-- Requirement Pad 2 -->
+<div class="bg-surface-container-highest/40 border-l-4 border-error p-4 tactical-glow-red relative group">
+<div class="absolute top-0 right-0 p-1 text-[10px] font-mono text-error/50">REQ_ID: 0x9A1</div>
+<h3 class="font-mono text-sm text-error font-bold mb-2">NEURAL LINK INTERFACING</h3>
+<p class="text-xs text-on-surface-variant leading-relaxed">Direct combat reflex uplink protocols for Siege Tank deployment scenarios.</p>
+<div class="mt-3 flex justify-between items-center">
+<span class="text-[10px] font-mono bg-error/10 text-error px-2 py-0.5">PRIORITY: HIGH</span>
+</div>
+</div>
+<!-- Requirement Pad 3 -->
+<div class="bg-surface-container-highest/40 border-l-4 border-error p-4 tactical-glow-red relative group">
+<div class="absolute top-0 right-0 p-1 text-[10px] font-mono text-error/50">REQ_ID: 0xB12</div>
+<h3 class="font-mono text-sm text-error font-bold mb-2">XENO-BIOLOGY PROTOCOLS</h3>
+<p class="text-xs text-on-surface-variant leading-relaxed">Analysis of Zerg carapace density and adaptive mutation patterns.</p>
+<div class="mt-3 flex justify-between items-center">
+<span class="text-[10px] font-mono bg-error/10 text-error px-2 py-0.5">PRIORITY: CRITICAL</span>
+</div>
+</div>
+</section>
+<!-- Center Pane: Targeting Matrix (Flow Canvas) -->
+<section class="col-span-6 relative bg-surface overflow-hidden">
+<div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+<!-- SVG Connections (Simulating React Flow Edges) -->
+<svg class="absolute inset-0 w-full h-full opacity-60">
+<defs>
+<filter id="glow">
+<fegaussianblur result="coloredBlur" stddeviation="3.5"></fegaussianblur>
+<femerge>
+<femergenode in="coloredBlur"></femergenode>
+<femergenode in="SourceGraphic"></femergenode>
+</femerge>
+</filter>
+</defs>
+<!-- Connection 1 -->
+<path class="edge-path" d="M 0 150 C 150 150, 150 400, 600 400" fill="none" filter="url(#glow)" stroke="#00f2ff" stroke-width="2"></path>
+<!-- Connection 2 -->
+<path d="M 0 350 C 200 350, 200 200, 600 200" fill="none" filter="url(#glow)" stroke="#00f2ff" stroke-width="2"></path>
+<!-- Connection 3 -->
+<path d="M 0 550 C 300 550, 300 600, 600 600" fill="none" stroke="#849495" stroke-dasharray="4" stroke-width="1"></path>
+</svg>
+<!-- Floating Assessment Tooltip (Center Active Edge) -->
+<div class="z-20 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-surface-container-highest/90 border border-primary-container p-4 backdrop-blur-md w-64 pointer-events-auto">
+<div class="flex justify-between items-start mb-2">
+<span class="text-[10px] font-mono text-primary-container uppercase tracking-widest">AI Tactical Assessment</span>
+<span class="text-primary-container font-mono text-lg font-bold">95.4%</span>
+</div>
+<div class="space-y-2">
+<p class="font-mono text-[11px] text-on-surface leading-tight">
+                            &gt; MATCH DETECTED: EVIDENCE_ID_2943 ALIGNS WITH REQ_ID_0x4F2.<br/>
+                            &gt; STRENGTH: OVERLAPPING HEURISTICS IN HYPER-SPATIAL CALCULUS.<br/>
+                            &gt; CONFIDENCE: OPTIMAL.
+                        </p>
+</div>
+<div class="mt-4 border-t border-primary-container/20 pt-2 text-[9px] font-mono text-primary-container/60 uppercase">
+                        Recommendation: Authorize Link
+                    </div>
+</div>
+</div>
+<!-- Floating Match Scores Labels -->
+<div class="absolute top-[28%] left-[20%] bg-surface-container-lowest border border-primary-container px-2 py-1 tactical-glow-cyan">
+<span class="font-mono text-xs font-bold text-primary-container">MATCH: 88%</span>
+</div>
+<div class="absolute bottom-[28%] left-[35%] bg-surface-container-lowest border border-outline px-2 py-1 opacity-50">
+<span class="font-mono text-xs font-bold text-outline">MATCH: 12%</span>
+</div>
+<!-- Control Overlay -->
+<div class="absolute bottom-10 left-1/2 -translate-x-1/2 z-30">
+<button class="group relative px-12 py-4 bg-primary-container text-on-primary-container font-headline font-black uppercase tracking-widest text-lg hover:brightness-110 active:scale-95 transition-all shadow-[0_0_20px_rgba(0,242,255,0.3)]">
+<span class="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-on-primary-container"></span>
+<span class="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-on-primary-container"></span>
+<span class="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-on-primary-container"></span>
+<span class="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-on-primary-container"></span>
+                    OVERRIDE LINK
+                </button>
+</div>
+</section>
+<!-- Right Pane: Candidate Arsenal (Evidence Bank) -->
+<section class="col-span-3 bg-surface-container-low border-l border-outline-variant/20 p-6 flex flex-col space-y-4 overflow-y-auto">
+<div class="flex items-center space-x-2 mb-4">
+<span class="w-2 h-2 bg-primary-container animate-pulse"></span>
+<h2 class="font-headline font-bold text-lg text-primary-container uppercase tracking-widest">Candidate Arsenal</h2>
+</div>
+<!-- Evidence Pad 1 -->
+<div class="bg-surface-container-highest/40 border-r-4 border-primary-container p-4 tactical-glow-cyan relative">
+<div class="absolute top-0 left-0 p-1 text-[10px] font-mono text-primary-container/50">EVD_ID: 2943</div>
+<h3 class="font-mono text-sm text-primary-container font-bold mb-2">QUANTUM CORE LEADERSHIP</h3>
+<p class="text-xs text-on-surface-variant leading-relaxed">6 years managing Ghost-class operative units during Sector 7 campaign.</p>
+<div class="mt-3 flex gap-2">
+<span class="text-[9px] font-mono border border-primary-container/30 text-primary-container px-1">CALIBRATION</span>
+<span class="text-[9px] font-mono border border-primary-container/30 text-primary-container px-1">COMMAND</span>
+</div>
+</div>
+<!-- Evidence Pad 2 -->
+<div class="bg-surface-container-highest/40 border-r-4 border-primary-container p-4 tactical-glow-cyan relative">
+<div class="absolute top-0 left-0 p-1 text-[10px] font-mono text-primary-container/50">EVD_ID: 1108</div>
+<h3 class="font-mono text-sm text-primary-container font-bold mb-2">NEURAL PATHWAY MASTERY</h3>
+<p class="text-xs text-on-surface-variant leading-relaxed">Certified in High-Stress Neural Interlink (Level 5). Zero feedback latency recorded.</p>
+<div class="mt-3 flex gap-2">
+<span class="text-[9px] font-mono border border-primary-container/30 text-primary-container px-1">UPLINK</span>
+<span class="text-[9px] font-mono border border-primary-container/30 text-primary-container px-1">REFLEX</span>
+</div>
+</div>
+<!-- Evidence Pad 3 -->
+<div class="bg-surface-container-highest/40 border-r-4 border-primary-container p-4 tactical-glow-cyan relative">
+<div class="absolute top-0 left-0 p-1 text-[10px] font-mono text-primary-container/50">EVD_ID: 0042</div>
+<h3 class="font-mono text-sm text-primary-container font-bold mb-2">FIELD MEDIC EXPERIENCE</h3>
+<p class="text-xs text-on-surface-variant leading-relaxed">Biological repair under heavy fire. Specialist in Stimpack deployment optimization.</p>
+<div class="mt-3 flex gap-2">
+<span class="text-[9px] font-mono border border-primary-container/30 text-primary-container px-1">BIO</span>
+<span class="text-[9px] font-mono border border-primary-container/30 text-primary-container px-1">TACTICAL</span>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Status Bar -->
+<footer class="fixed bottom-0 left-20 right-0 h-8 bg-surface-container-lowest border-t border-outline-variant/30 flex items-center justify-between px-4 z-50">
+<div class="flex items-center space-x-6">
+<div class="flex items-center space-x-2">
+<div class="w-1.5 h-1.5 rounded-full bg-primary-container shadow-[0_0_5px_#00f2ff]"></div>
+<span class="font-mono text-[10px] uppercase text-primary-container tracking-tighter">System: Online</span>
+</div>
+<div class="flex items-center space-x-2">
+<span class="font-mono text-[10px] uppercase text-outline">Encryption: L7-Nova</span>
+</div>
+</div>
+<div class="flex items-center space-x-4 font-mono text-[10px] text-outline">
+<span>COORD: 45.23 // 119.04</span>
+<span class="text-primary-container/50">TERRAN_CMD_OS v4.2.0</span>
+</div>
+</footer>
+</body></html>

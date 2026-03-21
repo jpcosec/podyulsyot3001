@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Terran Command: Mission Status</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-secondary-fixed": "#291800",
+                        "tertiary": "#f6f7ff",
+                        "surface-container-lowest": "#0c0e10",
+                        "on-secondary-container": "#694300",
+                        "on-secondary": "#452b00",
+                        "error-container": "#93000a",
+                        "tertiary-container": "#d8dbe4",
+                        "tertiary-fixed": "#dfe2eb",
+                        "primary-fixed": "#74f5ff",
+                        "primary": "#e1fdff",
+                        "outline": "#849495",
+                        "tertiary-fixed-dim": "#c3c6cf",
+                        "secondary-fixed-dim": "#ffb952",
+                        "secondary-fixed": "#ffddb4",
+                        "on-error-container": "#ffdad6",
+                        "surface-variant": "#333537",
+                        "surface-tint": "#00dbe7",
+                        "on-surface-variant": "#b9cacb",
+                        "surface-container-low": "#1a1c1e",
+                        "secondary-container": "#ffaa00",
+                        "on-primary-fixed-variant": "#004f54",
+                        "background": "#121416",
+                        "surface-dim": "#121416",
+                        "on-secondary-fixed-variant": "#633f00",
+                        "on-error": "#690005",
+                        "on-tertiary": "#2d3137",
+                        "surface-bright": "#37393b",
+                        "inverse-surface": "#e2e2e5",
+                        "surface-container": "#1e2022",
+                        "inverse-primary": "#00696f",
+                        "secondary": "#ffcf90",
+                        "inverse-on-surface": "#2f3133",
+                        "outline-variant": "#3a494b",
+                        "on-primary-container": "#006a71",
+                        "on-tertiary-container": "#5c6067",
+                        "error": "#ffb4ab",
+                        "surface-container-high": "#282a2c",
+                        "on-surface": "#e2e2e5",
+                        "surface": "#121416",
+                        "primary-container": "#00f2ff",
+                        "on-primary-fixed": "#002022",
+                        "on-background": "#e2e2e5",
+                        "surface-container-highest": "#333537",
+                        "on-tertiary-fixed-variant": "#43474e",
+                        "primary-fixed-dim": "#00dbe7",
+                        "on-primary": "#00363a",
+                        "on-tertiary-fixed": "#181c22"
+                    },
+                    fontFamily: {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0px", "lg": "0px", "xl": "0px", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .scanline-overlay {
+            background: linear-gradient(rgba(18, 20, 22, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+        .hazard-pattern {
+            background: repeating-linear-gradient(
+                45deg,
+                #ffaa00,
+                #ffaa00 10px,
+                #121416 10px,
+                #121416 20px
+            );
+        }
+        .grid-bg {
+            background-image: radial-gradient(circle at 1px 1px, #3a494b 1px, transparent 0);
+            background-size: 40px 40px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="fixed top-0 z-50 flex justify-between items-center w-full px-6 h-16 bg-[#121416] dark:bg-[#0c0e10]">
+<div class="flex items-center gap-8">
+<div class="text-xl font-bold text-[#00f2ff] drop-shadow-[0_0_8px_rgba(0,242,255,0.4)] font-headline tracking-tighter uppercase">
+                TERRAN COMMAND: PHD ADMISSIONS
+            </div>
+<nav class="hidden md:flex items-center gap-6 font-headline tracking-tighter uppercase text-sm">
+<a class="text-[#849495] hover:text-[#00f2ff] hover:bg-[#1b1e21] transition-colors" href="#">MISSION LOG</a>
+<a class="text-[#849495] hover:text-[#00f2ff] hover:bg-[#1b1e21] transition-colors" href="#">TARGETS</a>
+<a class="text-[#849495] hover:text-[#00f2ff] hover:bg-[#1b1e21] transition-colors" href="#">TRANSCRIPTS</a>
+<a class="text-[#00f2ff] border-b-2 border-[#00f2ff] pb-1" href="#">INTEL</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-[#849495] hover:text-[#00f2ff]">notifications</button>
+<button class="material-symbols-outlined text-[#849495] hover:text-[#00f2ff]">settings</button>
+<div class="w-8 h-8 bg-surface-container-highest border border-outline-variant flex items-center justify-center overflow-hidden">
+<img alt="COMMANDER_AVATAR" data-alt="Avatar of a futuristic tactical commander" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFNdSqrMAd63wrjk87_C9MNjO0qo1DTD-c79nz1IqcumpHWKKotFZ8rGd1PvCOHDA46RExZ5b2S3EGDSuLw82WKy_qC7MtZNApDcLHD3Byhk2fDF0y-o3Po8572vauh6j5pTv12BHi0giW1edsLz73Uuot2KJop4tIzszSFFpQhts_j4g3s4ExokqFsDR3plShPBYxNHM-GpbV69O0juwAW5vcNy4pGhxa5O7ZKgN0y8xHobRv0hIcp8wdoyuRB3VLLyoLUPGwoIhq"/>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-16 h-[calc(100vh-64px)] flex flex-col w-64 z-40 bg-[#0c0e10]">
+<div class="p-6 border-b border-outline-variant/10">
+<div class="flex items-center gap-3 mb-2">
+<span class="material-symbols-outlined text-[#00f2ff]" style="font-variation-settings: 'FILL' 1;">radar</span>
+<span class="text-[#00f2ff] font-bold font-['JetBrains_Mono'] text-xs tracking-widest uppercase">SECTOR 01</span>
+</div>
+<div class="text-[10px] text-outline font-['JetBrains_Mono'] tracking-widest uppercase">PHD_PIPELINE_ACTIVE</div>
+</div>
+<nav class="flex-1 py-4">
+<a class="flex items-center px-6 py-3 gap-4 text-[#849495] border-l-4 border-transparent hover:bg-[#1b1e21] hover:text-[#00f2ff] font-['JetBrains_Mono'] text-xs tracking-widest uppercase transition-all duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined">radar</span> SECTOR SCAN
+            </a>
+<a class="flex items-center px-6 py-3 gap-4 text-[#849495] border-l-4 border-transparent hover:bg-[#1b1e21] hover:text-[#00f2ff] font-['JetBrains_Mono'] text-xs tracking-widest uppercase transition-all duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined">groups</span> PERSONNEL
+            </a>
+<a class="flex items-center px-6 py-3 gap-4 text-[#849495] border-l-4 border-transparent hover:bg-[#1b1e21] hover:text-[#00f2ff] font-['JetBrains_Mono'] text-xs tracking-widest uppercase transition-all duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined">database</span> RESOURCES
+            </a>
+<a class="flex items-center px-6 py-3 gap-4 text-[#849495] border-l-4 border-transparent hover:bg-[#1b1e21] hover:text-[#00f2ff] font-['JetBrains_Mono'] text-xs tracking-widest uppercase transition-all duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined">science</span> LABS
+            </a>
+<a class="flex items-center px-6 py-3 gap-4 bg-[#1b1e21] text-[#00f2ff] border-l-4 border-[#00f2ff] shadow-[inset_0_0_10px_rgba(0,242,255,0.1)] font-['JetBrains_Mono'] text-xs tracking-widest uppercase transition-all duration-150 ease-in-out" href="#">
+<span class="material-symbols-outlined">inventory_2</span> ARCHIVE
+            </a>
+</nav>
+<div class="p-6 mt-auto flex flex-col gap-4">
+<button class="bg-primary-container text-on-primary-container font-headline font-bold py-3 text-sm tracking-tighter uppercase shadow-[0_0_15px_rgba(0,242,255,0.2)] hover:shadow-[0_0_25px_rgba(0,242,255,0.4)] transition-all">
+                DEPLOY APPLICATION
+            </button>
+<div class="flex justify-around border-t border-outline-variant/10 pt-4">
+<button class="material-symbols-outlined text-outline hover:text-primary-container">terminal</button>
+<button class="material-symbols-outlined text-outline hover:text-primary-container">support_agent</button>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 mt-16 p-8 min-h-screen grid-bg relative">
+<div class="scanline-overlay fixed inset-0 z-0 opacity-10"></div>
+<div class="relative z-10">
+<!-- Header Section -->
+<div class="flex justify-between items-end mb-12 border-l-4 border-primary-container pl-6 py-2 bg-gradient-to-r from-primary-container/5 to-transparent">
+<div>
+<h1 class="font-headline text-4xl font-extrabold tracking-tighter uppercase text-on-surface">Mission Status: Deployment Ready</h1>
+<p class="font-['JetBrains_Mono'] text-primary-container text-sm mt-1">COORD_01 // OBJECTIVE: FINAL_BUNDLE_REVIEW // STATUS: STABLE</p>
+</div>
+<div class="text-right">
+<div class="text-xs font-['JetBrains_Mono'] text-outline uppercase tracking-widest">System Entropy</div>
+<div class="text-xl font-bold font-['JetBrains_Mono'] text-secondary-container">0.002%</div>
+</div>
+</div>
+<div class="grid grid-cols-12 gap-8">
+<!-- Data-Pad Artifacts Grid -->
+<div class="col-span-12 lg:col-span-9">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Artifact Card 1: CV -->
+<div class="bg-surface-container-low border-b-2 border-primary-container relative group overflow-hidden">
+<div class="absolute top-0 right-0 p-2">
+<span class="text-[10px] font-['JetBrains_Mono'] text-primary-container/50">DATA_NODE_01</span>
+</div>
+<div class="p-6">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-primary-container">description</span>
+<h3 class="font-headline font-bold uppercase tracking-tight text-lg">Curriculum Vitae</h3>
+</div>
+<div class="h-48 bg-surface-container-lowest border border-outline-variant/20 p-4 font-['JetBrains_Mono'] text-[10px] text-outline overflow-hidden opacity-60">
+<p class="mb-2">NAME: [REDACTED]</p>
+<p class="mb-2">EXP: 8 YEARS QUANTUM ANALYTICS</p>
+<p class="mb-2">PUBS: 14 PEER REVIEWED</p>
+<p class="mb-2">SKILLS: C++, PYTHON, NEURAL_NETS</p>
+<p>----------------------------------</p>
+<p class="mt-2 text-primary-container/40">CHECKSUM: 0x88A2F...</p>
+</div>
+<div class="mt-6 flex justify-between items-center">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-green-500 drop-shadow-[0_0_5px_rgba(34,197,94,0.6)]" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span class="text-[10px] font-['JetBrains_Mono'] text-green-500 uppercase tracking-widest">Verified</span>
+</div>
+<button class="text-xs font-headline font-bold text-primary-container hover:underline uppercase tracking-tighter">Review Source</button>
+</div>
+</div>
+<div class="absolute inset-0 border border-primary-container/10 pointer-events-none group-hover:border-primary-container/30 transition-colors"></div>
+</div>
+<!-- Artifact Card 2: Motivation Letter -->
+<div class="bg-surface-container-low border-b-2 border-primary-container relative group overflow-hidden">
+<div class="absolute top-0 right-0 p-2">
+<span class="text-[10px] font-['JetBrains_Mono'] text-primary-container/50">DATA_NODE_02</span>
+</div>
+<div class="p-6">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-primary-container">history_edu</span>
+<h3 class="font-headline font-bold uppercase tracking-tight text-lg">Motivation Letter</h3>
+</div>
+<div class="h-48 bg-surface-container-lowest border border-outline-variant/20 p-4 font-['JetBrains_Mono'] text-[10px] text-outline overflow-hidden opacity-60">
+<p class="mb-2 italic">"My interest in the Terran Command's Research wing stems from my belief that computational..."</p>
+<p class="mb-2">KEY_THEMES:</p>
+<p class="mb-1 text-primary-container/60">&gt; INNOVATION</p>
+<p class="mb-1 text-primary-container/60">&gt; RESILIENCE</p>
+<p class="mb-1 text-primary-container/60">&gt; STRATEGIC ALIGNMENT</p>
+</div>
+<div class="mt-6 flex justify-between items-center">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-green-500 drop-shadow-[0_0_5px_rgba(34,197,94,0.6)]" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span class="text-[10px] font-['JetBrains_Mono'] text-green-500 uppercase tracking-widest">Verified</span>
+</div>
+<button class="text-xs font-headline font-bold text-primary-container hover:underline uppercase tracking-tighter">Review Source</button>
+</div>
+</div>
+<div class="absolute inset-0 border border-primary-container/10 pointer-events-none group-hover:border-primary-container/30 transition-colors"></div>
+</div>
+<!-- Artifact Card 3: Email Comms -->
+<div class="bg-surface-container-low border-b-2 border-primary-container relative group overflow-hidden">
+<div class="absolute top-0 right-0 p-2">
+<span class="text-[10px] font-['JetBrains_Mono'] text-primary-container/50">DATA_NODE_03</span>
+</div>
+<div class="p-6">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-primary-container">alternate_email</span>
+<h3 class="font-headline font-bold uppercase tracking-tight text-lg">Email Draft</h3>
+</div>
+<div class="h-48 bg-surface-container-lowest border border-outline-variant/20 p-4 font-['JetBrains_Mono'] text-[10px] text-outline overflow-hidden opacity-60">
+<p class="mb-2">TO: ADMISSIONS_OFFICE@TERRA.UNIV</p>
+<p class="mb-2">SUBJ: APPLICATION_REF_99128</p>
+<p class="mb-2">BODY: Please find attached the formal documentation for the Sector 01 Lab appointment...</p>
+<p>----------------------------------</p>
+<p class="mt-2 text-primary-container/40">ATTACHMENTS: CV_FINAL.PDF, ML_FINAL.PDF</p>
+</div>
+<div class="mt-6 flex justify-between items-center">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-green-500 drop-shadow-[0_0_5px_rgba(34,197,94,0.6)]" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span class="text-[10px] font-['JetBrains_Mono'] text-green-500 uppercase tracking-widest">Verified</span>
+</div>
+<button class="text-xs font-headline font-bold text-primary-container hover:underline uppercase tracking-tighter">Edit Draft</button>
+</div>
+</div>
+<div class="absolute inset-0 border border-primary-container/10 pointer-events-none group-hover:border-primary-container/30 transition-colors"></div>
+</div>
+</div>
+<!-- CTA Section -->
+<div class="mt-12 bg-surface-container-low p-8 border border-outline-variant/20 flex flex-col items-center">
+<div class="w-full max-w-2xl text-center mb-8">
+<div class="inline-block px-4 py-1 bg-secondary-container/10 text-secondary-container font-['JetBrains_Mono'] text-xs tracking-widest uppercase mb-4">
+                                Action Required: Terminal Confirmation
+                            </div>
+<h2 class="text-2xl font-headline font-bold uppercase tracking-tighter mb-2">Initialize Global Packaging Protocol?</h2>
+<p class="text-outline text-sm">Proceeding will seal the artifacts and initiate the deployment sequence to all target institutions. This action is irreversible.</p>
+</div>
+<button class="relative group w-full max-w-xl h-24 overflow-hidden border-2 border-secondary-container">
+<div class="absolute inset-0 hazard-pattern opacity-10 group-hover:opacity-20 transition-opacity"></div>
+<div class="relative z-10 flex items-center justify-center gap-6 h-full bg-background group-hover:bg-background/80 transition-colors">
+<span class="material-symbols-outlined text-4xl text-secondary-container">rocket_launch</span>
+<span class="text-3xl font-headline font-black uppercase italic tracking-widest text-secondary-container">INITIATE PACKAGING</span>
+<span class="material-symbols-outlined text-4xl text-secondary-container">rocket_launch</span>
+</div>
+<div class="absolute bottom-0 left-0 h-1 bg-secondary-container shadow-[0_0_15px_rgba(255,170,0,0.8)] w-full"></div>
+</button>
+</div>
+</div>
+<!-- Mission Progress Sidebar -->
+<div class="col-span-12 lg:col-span-3">
+<div class="bg-surface-container-low p-6 border-l border-outline-variant/20 sticky top-24">
+<h4 class="font-headline font-bold uppercase tracking-tight text-sm mb-8 flex items-center gap-2">
+<span class="material-symbols-outlined text-xs text-primary-container">timeline</span>
+                            Mission Progress
+                        </h4>
+<div class="space-y-8 relative">
+<!-- Timeline Line -->
+<div class="absolute left-[11px] top-2 bottom-2 w-px bg-outline-variant"></div>
+<!-- Step 1 -->
+<div class="relative flex items-start gap-4">
+<div class="z-10 w-6 h-6 bg-primary-container flex items-center justify-center border border-primary-container">
+<span class="material-symbols-outlined text-sm text-on-primary-container" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div>
+<div class="text-[10px] font-['JetBrains_Mono'] text-primary-container uppercase tracking-widest">Completed</div>
+<div class="font-headline font-bold text-sm uppercase">Sector Scrape</div>
+<div class="text-[10px] text-outline font-['JetBrains_Mono'] mt-1">128 TARGETS IDENTIFIED</div>
+</div>
+</div>
+<!-- Step 2 -->
+<div class="relative flex items-start gap-4">
+<div class="z-10 w-6 h-6 bg-primary-container flex items-center justify-center border border-primary-container">
+<span class="material-symbols-outlined text-sm text-on-primary-container" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div>
+<div class="text-[10px] font-['JetBrains_Mono'] text-primary-container uppercase tracking-widest">Completed</div>
+<div class="font-headline font-bold text-sm uppercase">Data Extraction</div>
+<div class="text-[10px] text-outline font-['JetBrains_Mono'] mt-1">BIOMETRICS SECURED</div>
+</div>
+</div>
+<!-- Step 3 -->
+<div class="relative flex items-start gap-4">
+<div class="z-10 w-6 h-6 bg-primary-container flex items-center justify-center border border-primary-container">
+<span class="material-symbols-outlined text-sm text-on-primary-container" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div>
+<div class="text-[10px] font-['JetBrains_Mono'] text-primary-container uppercase tracking-widest">Completed</div>
+<div class="font-headline font-bold text-sm uppercase">Alignment Match</div>
+<div class="text-[10px] text-outline font-['JetBrains_Mono'] mt-1">89% COMPATIBILITY</div>
+</div>
+</div>
+<!-- Step 4 -->
+<div class="relative flex items-start gap-4">
+<div class="z-10 w-6 h-6 bg-primary-container flex items-center justify-center border border-primary-container">
+<span class="material-symbols-outlined text-sm text-on-primary-container" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div>
+<div class="text-[10px] font-['JetBrains_Mono'] text-primary-container uppercase tracking-widest">Completed</div>
+<div class="font-headline font-bold text-sm uppercase">Review Protocol</div>
+<div class="text-[10px] text-outline font-['JetBrains_Mono'] mt-1">ARTIFACTS VALIDATED</div>
+</div>
+</div>
+<!-- Step 5: Current -->
+<div class="relative flex items-start gap-4">
+<div class="z-10 w-6 h-6 bg-background flex items-center justify-center border-2 border-secondary-container shadow-[0_0_10px_rgba(255,170,0,0.5)]">
+<div class="w-2 h-2 bg-secondary-container animate-pulse"></div>
+</div>
+<div>
+<div class="text-[10px] font-['JetBrains_Mono'] text-secondary-container uppercase tracking-widest">Awaiting Command</div>
+<div class="font-headline font-bold text-sm uppercase">Deployment</div>
+<div class="text-[10px] text-outline font-['JetBrains_Mono'] mt-1">PENDING FINAL INITIATION</div>
+</div>
+</div>
+</div>
+<!-- Mini Status Card -->
+<div class="mt-12 bg-surface-container-highest p-4 border-l-2 border-secondary-container">
+<div class="text-[10px] font-['JetBrains_Mono'] text-outline uppercase mb-2">Tactical Overlay</div>
+<div class="space-y-2">
+<div class="flex justify-between text-[10px] font-['JetBrains_Mono']">
+<span>NETWORK:</span>
+<span class="text-primary-container">SECURE</span>
+</div>
+<div class="flex justify-between text-[10px] font-['JetBrains_Mono']">
+<span>ENCRYPTION:</span>
+<span class="text-primary-container">AES-512</span>
+</div>
+<div class="flex justify-between text-[10px] font-['JetBrains_Mono']">
+<span>BANDWIDTH:</span>
+<span class="text-secondary-container">8.4 GB/S</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Tactical Footer Readout -->
+<footer class="ml-64 bg-surface-container-lowest border-t border-outline-variant/10 px-8 py-4 flex justify-between items-center relative z-20">
+<div class="flex gap-8">
+<div class="flex flex-col">
+<span class="text-[8px] font-['JetBrains_Mono'] text-outline uppercase">System Time</span>
+<span class="text-xs font-['JetBrains_Mono'] text-primary-container">22:04:18 UTC</span>
+</div>
+<div class="flex flex-col">
+<span class="text-[8px] font-['JetBrains_Mono'] text-outline uppercase">Location</span>
+<span class="text-xs font-['JetBrains_Mono'] text-primary-container">SECTOR_01_COMMAND</span>
+</div>
+</div>
+<div class="flex items-center gap-4 text-[10px] font-['JetBrains_Mono'] text-outline/40">
+<span>© 2491 TERRAN ADMISSIONS AUTHORITY</span>
+<div class="w-1 h-1 bg-primary-container rounded-full"></div>
+<span>V_2.4.11-BETA</span>
+</div>
+</footer>
+</body></html>

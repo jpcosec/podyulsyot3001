@@ -1,57 +1,32 @@
-# LangChain Fase 1: Wrappers y Structured Output
 
-## Objetivo
+LangChain Fase 1: Wrappers y Structured Output
+Objetivo
+Resolver la perdida de calidad en la extraccion y el drift de los esquemas reemplazando el runtime in-house por abstracciones de LangChain, manteniendo la orquestacion determinista intacta.
 
-Resolver la perdida de calidad en extraccion y el drift de esquemas reemplazando el runtime in-house por abstracciones de LangChain, manteniendo la orquestacion determinista intacta.
+Alcance Estricto
+Reemplazo del LLMRuntime:
 
-## Alcance estricto
+Deprecar el wrapper custom de Gemini.
 
-### 1. Reemplazo del `LLMRuntime`
+Implementar ChatGoogleGenerativeAI de langchain-google-genai.
 
-- Deprecar el wrapper custom actual de Gemini.
-- Implementar `ChatGoogleGenerativeAI` desde `langchain-google-genai`.
-- Reemplazar la validacion/parsing custom por `.with_structured_output(Schema)` donde tenga sentido.
+Reemplazar la validacion custom por .with_structured_output(Schema). Esto delega el manejo de reintentos y parseo JSON al framework.
 
-### 2. Integracion de LangSmith
+Integracion de LangSmith (Observabilidad):
 
-- Activar trazas exactas de inputs, prompts y outputs.
-- Usar esa observabilidad para depurar alucinaciones, campos perdidos y drift de esquema.
+Enchufar LangSmith para tener trazas exactas de que entra y que sale de los prompts de extraccion. Sin esto, depurar alucinaciones es dar palos de ciego.
 
-### 3. Preservar la disciplina actual
+Preservar la Disciplina Actual:
 
-- **NO** tocar `src/graph.py` como parte de esta fase.
-- **NO** cambiar el papel de LangGraph como orquestador.
-- **NO** reescribir el sistema de prompts locales (`system.md`, `user_template.md`).
-- Los prompts actuales deben cargarse y envolverse con `ChatPromptTemplate` o un adaptador equivalente.
+NO se toca src/graph.py (LangGraph sigue siendo el orquestador maestro).
 
-### 4. Eliminar offsets inventados por el LLM
+NO se cambian los archivos de prompt locales (system.md, user_template.md). Se cargan y se wrappean en ChatPromptTemplate.
 
-- El modelo no debe intentar adivinar `start_offset` ni `end_offset`.
-- El LLM devuelve `exact_quote` y el backend/UI calcula offsets reales de forma determinista por busqueda de texto.
+Eliminacion del offset LLM (TextSpan real):
 
-## Donde aplicar primero
+Eliminar el intento de que el LLM adivine el start_offset / end_offset.
 
-1. `extract_understand`
-2. `match`
+El LLM solo debe devolver el exact_quote (string). La UI o el backend calcularan la posicion determinista real para RecogitoJS usando busqueda de texto.
 
-No extender esto a todo el pipeline hasta demostrar estabilidad en esos dos nodos.
-
-## Restricciones no negociables
-
-1. LangGraph sigue intacto como capa de orquestacion.
-2. La semantica fail-closed no se negocia.
-3. Los contratos de artefactos no se rompen.
-4. El flujo `--resume` debe seguir funcionando igual.
-
-## Implementacion minima esperada
-
-1. Adaptador LangChain para cargar prompts actuales.
-2. Structured output con esquemas existentes o sus sucesores inmediatos.
-3. Mapeo claro de excepciones hacia la taxonomia actual de errores.
-4. Trazas observables para comparar runtime viejo vs nuevo.
-
-## Criterio de exito
-
-`extract_understand` produce JSONs estables y validos la gran mayoria de las veces, capturando informacion critica como contacto, salario e instituto sin romper el comportamiento determinista del grafo.
-
-Si esta fase sale bien, LangChain queda como wrapper util. Si no, no se justifica una reescritura mayor.
+Criterio de Exito
+El nodo extract_understand produce JSONs estables y validos el 99% de las veces, capturando la info critica sin que LangGraph pierda su comportamiento de fail-closed.

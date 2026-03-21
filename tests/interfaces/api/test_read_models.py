@@ -7,6 +7,9 @@ from src.interfaces.api.read_models import (
     build_cv_profile_graph_payload,
     build_base_cv_graph_payload,
     build_job_timeline,
+    load_document,
+    load_stage_outputs,
+    save_document,
     build_view_one_payload,
     build_view_three_payload,
     build_view_two_payload,
@@ -157,6 +160,53 @@ def test_build_view_three_payload_loads_documents(tmp_path: Path) -> None:
     assert payload.documents["cv"] == "cv content"
     assert payload.documents["motivation_letter"] == "motivation content"
     assert payload.documents["application_email"] == "email content"
+
+
+def test_load_stage_outputs_returns_stage_files(tmp_path: Path) -> None:
+    data_root = tmp_path / "jobs"
+    job_root = data_root / "tu_berlin" / "201114"
+
+    _write_json(
+        job_root / "nodes" / "extract_understand" / "approved" / "state.json",
+        {"job_title": "Role"},
+    )
+
+    payload = load_stage_outputs(data_root, "tu_berlin", "201114", "extract_understand")
+
+    assert payload["node_name"] == "extract_understand"
+    assert payload["files"][0]["path"] == "nodes/extract_understand/approved/state.json"
+    assert '"job_title": "Role"' in payload["files"][0]["content"]
+
+
+def test_load_stage_outputs_embeds_scrape_screenshot(tmp_path: Path) -> None:
+    data_root = tmp_path / "jobs"
+    screenshot = (
+        data_root
+        / "tu_berlin"
+        / "201115"
+        / "nodes"
+        / "scrape"
+        / "trace"
+        / "error_screenshot.png"
+    )
+    screenshot.parent.mkdir(parents=True, exist_ok=True)
+    screenshot.write_bytes(b"fake-png")
+
+    payload = load_stage_outputs(data_root, "tu_berlin", "201115", "scrape")
+
+    image_file = next(
+        file for file in payload["files"] if file["content_type"] == "image"
+    )
+    assert image_file["content"].startswith("data:image/png;base64,")
+
+
+def test_save_document_round_trips_markdown(tmp_path: Path) -> None:
+    data_root = tmp_path / "jobs"
+
+    save_document(data_root, "tu_berlin", "201116", "cv", "updated cv")
+    payload = load_document(data_root, "tu_berlin", "201116", "cv")
+
+    assert payload["content"] == "updated cv"
 
 
 def test_build_base_cv_graph_payload_builds_deterministic_profile_graph(

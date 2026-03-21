@@ -77,6 +77,12 @@ Start here:
 
 ## Common commands
 
+Install Python runtime dependencies:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
 Run all tests:
 
 ```bash
@@ -95,6 +101,14 @@ Start local dev stack:
 
 ```bash
 ./scripts/dev-all.sh
+```
+
+This starts the minimal local JSON mode by default (UI + API, no Neo4j).
+
+If you explicitly need the legacy Neo4j sidecar:
+
+```bash
+START_NEO4J=1 ./scripts/dev-all.sh
 ```
 
 ## Core principles
