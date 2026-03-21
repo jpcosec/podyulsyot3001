@@ -1,5 +1,13 @@
 # Changelog
 
+> Historical note: older entries may reference paths or planning structures that no longer exist after later cleanups. Treat each entry as accurate for its date.
+
+## 2026-03-21
+
+- Cleaned the repository root by moving `agent_entrypoint.md` to `docs/operations/agent_entrypoint.md`, relocating loose node-editor screenshots to `docs/ui/images/node-editor/`, and moving local UI prototype HTML files into `docs/ui/prototypes/`.
+- Updated doc references so operations runbooks now point to `docs/operations/agent_entrypoint.md`, and expanded `docs/ui/README.md` to document where prototype HTML files and node-editor screenshots now live.
+- Restructured active planning around `plan/01_ui/`, `plan/02_langchain/`, `plan/03_scrapper/`, promoted planning checklist to `plan/index_checklist.md`, and moved subsystem/spec-style documents out of `plan/spec/` into official docs under `docs/architecture/`, `docs/reference/`, and `docs/policy/`.
+
 ## 2026-03-20
 
 - Audited `README.md`, `docs/`, and `plan/` against the current codebase; rewrote the main runtime-truth docs (`README.md`, `docs/graph/*`, `docs/reference/data_management_actual_state.md`, `docs/operations/tool_interaction_and_known_issues.md`, `docs/index/*`, `docs/architecture/core_io_and_provenance_manager.md`) to reflect the actual runnable prep-match flow and marked several architecture/plan/schema/business-rule docs as target-state, sandbox-only, or historical where they no longer mirror runtime.

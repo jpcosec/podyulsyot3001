@@ -29,7 +29,7 @@ If you need to know what runs today, start with:
 - `docs/operations/` - current operator playbooks
 - `docs/index/` - navigation only
 
-Anything primarily future-looking should live in `plan/`, not here.
+Future execution sequencing belongs in `plan/`, while official specs belong in `docs/` with an explicit current-vs-future status note.
 
 ## Quick reading paths
 
@@ -44,11 +44,11 @@ Anything primarily future-looking should live in `plan/`, not here.
 
 ### 2) Understand design intent and target-state architecture
 
-1. `plan/archive/project_overview.md`
-2. `plan/archive/structure_and_rationale.md`
-3. `plan/runtime/graph_state_contract.md`
-4. `plan/runtime/artifact_schemas.md`
-5. `plan/runtime/node_template_discipline.md`
+1. `docs/reference/graph_state_contract.md`
+2. `docs/reference/artifact_schemas.md`
+3. `docs/reference/node_template_discipline.md`
+4. `docs/architecture/core_io_and_provenance_manager_spec.md`
+5. `docs/architecture/sync_json_md_spec.md`
 
 ### 3) Understand the node editor sandbox
 
@@ -59,10 +59,10 @@ Anything primarily future-looking should live in `plan/`, not here.
 
 ### 4) Planning and migration work
 
-1. `plan/subplan/deterministic_parity_migration_from_phd.md`
-2. `plan/subplan/review_ui_and_flow_observability.md`
-3. `plan/subplan/langchain_langgraph_adoption_evaluation.md`
-4. `plan/adr_001_execution_tracker.md`
+1. `plan/index_checklist.md`
+2. `plan/01_ui/fase1_minimal_json_editor.md`
+3. `plan/02_langchain/fase1_llm_wrappers_y_structured_output.md`
+4. `plan/03_scrapper/json_first_scraping_migration.md`
 
 ## Status rule
 

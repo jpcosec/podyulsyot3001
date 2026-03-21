@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GraphOS - Focus Mode: Python</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary-fixed": "#373f54",
+              "on-primary-container": "#0048bf",
+              "on-secondary-fixed-variant": "#4d5d73",
+              "on-secondary-fixed": "#314055",
+              "primary-fixed-dim": "#c7d3ff",
+              "error": "#9f403d",
+              "secondary-dim": "#44546a",
+              "on-primary-fixed-variant": "#0050d4",
+              "surface-container-highest": "#d9e4ea",
+              "on-primary": "#f8f7ff",
+              "tertiary-container": "#dae2fd",
+              "background": "#f7f9fb",
+              "surface-dim": "#cfdce3",
+              "error-dim": "#4e0309",
+              "on-error-container": "#752121",
+              "primary-container": "#dbe1ff",
+              "on-secondary-container": "#435368",
+              "secondary-fixed-dim": "#c5d6f0",
+              "primary": "#0053db",
+              "inverse-surface": "#0b0f10",
+              "surface-container-low": "#f0f4f7",
+              "tertiary-fixed": "#dae2fd",
+              "on-tertiary-container": "#4a5167",
+              "error-container": "#fe8983",
+              "surface-container-high": "#e1e9ee",
+              "tertiary-fixed-dim": "#ccd4ee",
+              "inverse-primary": "#618bff",
+              "surface-container-lowest": "#ffffff",
+              "on-surface-variant": "#566166",
+              "surface-container": "#e8eff3",
+              "on-surface": "#2a3439",
+              "inverse-on-surface": "#9a9d9f",
+              "tertiary": "#575f75",
+              "on-primary-fixed": "#003798",
+              "secondary-fixed": "#d3e4fe",
+              "surface-variant": "#d9e4ea",
+              "on-tertiary": "#f9f8ff",
+              "on-secondary": "#f7f9ff",
+              "primary-dim": "#0048c1",
+              "on-background": "#2a3439",
+              "primary-fixed": "#dbe1ff",
+              "outline-variant": "#a9b4b9",
+              "surface": "#f7f9fb",
+              "outline": "#717c82",
+              "on-tertiary-fixed-variant": "#535b71",
+              "surface-tint": "#0053db",
+              "tertiary-dim": "#4b5369",
+              "secondary-container": "#d3e4fe",
+              "surface-bright": "#f7f9fb",
+              "on-error": "#fff7f6",
+              "secondary": "#506076"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            font-size: 20px;
+        }
+        .focused-node-glow {
+            box-shadow: 0 0 40px rgba(0, 83, 219, 0.15);
+        }
+        .editorial-grid {
+            background-image: radial-gradient(#d9e4ea 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body antialiased">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full flex justify-between items-center px-6 h-16 bg-white/80 backdrop-blur-xl z-50 shadow-sm">
+<div class="flex items-center space-x-8">
+<span class="text-xl font-extrabold text-slate-900 font-headline tracking-tight">GraphOS</span>
+<nav class="hidden md:flex items-center space-x-6 text-sm font-manrope font-bold tracking-tight">
+<a class="text-slate-500 hover:text-slate-900 transition-colors" href="#">Sandbox</a>
+<a class="text-blue-600 border-b-2 border-blue-600 pb-1" href="#">Node Editor</a>
+<a class="text-slate-500 hover:text-slate-900 transition-colors" href="#">CV Graph</a>
+</nav>
+</div>
+<!-- Exit Focus Breadcrumb / Action -->
+<div class="flex items-center space-x-4">
+<div class="flex items-center bg-surface-container-low px-3 py-1.5 rounded-lg space-x-2 border border-outline-variant/20">
+<span class="text-xs font-label text-on-surface-variant">Focus Mode:</span>
+<span class="text-sm font-headline font-bold text-primary">Python</span>
+<button class="ml-2 p-1 hover:bg-surface-container-high rounded transition-colors flex items-center group">
+<span class="material-symbols-outlined text-[18px] text-error">close</span>
+<span class="text-xs font-bold text-error ml-1 uppercase tracking-tighter">Exit Focus</span>
+</button>
+</div>
+<div class="h-6 w-[1px] bg-outline-variant/30"></div>
+<div class="flex items-center space-x-2">
+<button class="p-2 hover:bg-slate-100/50 rounded-lg transition-colors scale-95 duration-200">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button class="p-2 hover:bg-slate-100/50 rounded-lg transition-colors scale-95 duration-200">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</div>
+</header>
+<!-- SideNavBar (Properties Panel) -->
+<aside class="fixed left-0 top-16 h-[calc(100vh-4rem)] w-80 flex flex-col p-4 space-y-4 bg-slate-50 border-r border-slate-200/20 z-40">
+<div class="space-y-1 mb-2">
+<h2 class="font-headline font-extrabold text-lg text-on-surface">Focus Mode: Python</h2>
+<p class="font-label text-xs text-on-surface-variant italic">Active: Semantic_Node_01</p>
+</div>
+<div class="flex flex-col space-y-2">
+<button class="flex items-center space-x-3 p-3 bg-white text-blue-600 font-semibold rounded-lg shadow-sm ring-2 ring-blue-500/20 translate-x-1 transition-transform">
+<span class="material-symbols-outlined">info</span>
+<span class="font-inter text-sm antialiased">Metadata</span>
+</button>
+<button class="flex items-center space-x-3 p-3 text-slate-500 hover:bg-slate-200/50 rounded-lg transition-transform hover:translate-x-1">
+<span class="material-symbols-outlined">hub</span>
+<span class="font-inter text-sm antialiased">Relationships</span>
+</button>
+<button class="flex items-center space-x-3 p-3 text-slate-500 hover:bg-slate-200/50 rounded-lg transition-transform hover:translate-x-1">
+<span class="material-symbols-outlined">history</span>
+<span class="font-inter text-sm antialiased">History</span>
+</button>
+<button class="flex items-center space-x-3 p-3 text-slate-500 hover:bg-slate-200/50 rounded-lg transition-transform hover:translate-x-1">
+<span class="material-symbols-outlined">account_tree</span>
+<span class="font-inter text-sm antialiased">Workflow</span>
+</button>
+</div>
+<div class="mt-6 space-y-4 flex-1">
+<div class="p-4 bg-surface-container-lowest rounded-xl border border-outline-variant/10 shadow-sm">
+<p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-3">Advanced Relationship Tools</p>
+<div class="space-y-3">
+<button class="w-full flex items-center justify-between p-2 rounded-lg bg-primary/5 hover:bg-primary/10 text-primary transition-colors group">
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-[20px]">add_link</span>
+<span class="text-xs font-semibold">Connect to new node</span>
+</div>
+<span class="material-symbols-outlined text-[16px] opacity-0 group-hover:opacity-100">chevron_right</span>
+</button>
+<div class="pt-2">
+<label class="text-[10px] font-bold text-on-surface-variant block mb-2 uppercase">Filter Relationship Types</label>
+<div class="grid grid-cols-2 gap-2">
+<div class="flex items-center space-x-2 px-2 py-1.5 bg-surface-container-low rounded-md border border-outline-variant/10">
+<div class="w-2 h-2 rounded-full bg-blue-500"></div>
+<span class="text-[10px] font-medium">Imports</span>
+</div>
+<div class="flex items-center space-x-2 px-2 py-1.5 bg-surface-container-low rounded-md border border-outline-variant/10">
+<div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+<span class="text-[10px] font-medium">Built-in</span>
+</div>
+<div class="flex items-center space-x-2 px-2 py-1.5 bg-surface-container-low rounded-md border border-outline-variant/10">
+<div class="w-2 h-2 rounded-full bg-amber-500"></div>
+<span class="text-[10px] font-medium">Extension</span>
+</div>
+<div class="flex items-center space-x-2 px-2 py-1.5 bg-surface-container-low rounded-md border border-outline-variant/10">
+<div class="w-2 h-2 rounded-full bg-purple-500"></div>
+<span class="text-[10px] font-medium">Library</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="p-4 bg-surface-container rounded-xl">
+<p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2">Neighborhood Stats</p>
+<div class="flex justify-between items-end">
+<div>
+<span class="text-2xl font-bold font-headline text-on-surface">12</span>
+<span class="text-[10px] block text-on-surface-variant">Direct Neighbors</span>
+</div>
+<div class="text-right">
+<span class="text-sm font-bold text-primary">85%</span>
+<span class="text-[10px] block text-on-surface-variant">Centrality</span>
+</div>
+</div>
+</div>
+</div>
+<button class="w-full bg-gradient-to-br from-primary to-primary-dim text-white py-3 rounded-xl font-bold text-sm shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform">
+            Commit Changes
+        </button>
+</aside>
+<!-- Canvas Area -->
+<main class="ml-80 pt-16 h-screen w-[calc(100vw-20rem)] relative overflow-hidden editorial-grid">
+<!-- Focus Overlay (Dimming Background) -->
+<div class="absolute inset-0 bg-background/60 pointer-events-none z-0 backdrop-blur-[1px]"></div>
+<!-- The Focused Node View (Immediate Context) -->
+<div class="relative w-full h-full flex items-center justify-center z-10">
+<!-- Relationship Lines (SVG) -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none">
+<!-- Connected to Node 1 -->
+<line opacity="0.4" stroke="#0053db" stroke-dasharray="4 2" stroke-width="1.5" x1="50%" x2="40%" y1="50%" y2="35%"></line>
+<!-- Connected to Node 2 -->
+<line opacity="0.4" stroke="#0053db" stroke-dasharray="4 2" stroke-width="1.5" x1="50%" x2="65%" y1="50%" y2="45%"></line>
+<!-- Connected to Node 3 -->
+<line opacity="0.4" stroke="#0053db" stroke-dasharray="4 2" stroke-width="1.5" x1="50%" x2="55%" y1="50%" y2="70%"></line>
+<!-- Connected to Node 4 -->
+<line opacity="0.4" stroke="#0053db" stroke-dasharray="4 2" stroke-width="1.5" x1="50%" x2="35%" y1="50%" y2="60%"></line>
+</svg>
+<!-- Main Focused Node -->
+<div class="relative group">
+<div class="absolute inset-0 bg-primary/20 rounded-2xl blur-2xl scale-150 animate-pulse"></div>
+<div class="relative bg-white p-8 rounded-2xl border-2 border-primary shadow-2xl focused-node-glow flex flex-col items-center min-w-[200px] z-20">
+<div class="w-16 h-16 bg-primary-container rounded-xl flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-primary text-[32px]">code</span>
+</div>
+<h1 class="text-3xl font-headline font-extrabold text-on-surface tracking-tight">Python</h1>
+<span class="text-xs font-label font-bold text-primary mt-1 uppercase tracking-widest">Programming Language</span>
+<div class="mt-4 flex space-x-2">
+<span class="px-2 py-0.5 bg-surface-container rounded text-[10px] font-bold">v3.12</span>
+<span class="px-2 py-0.5 bg-surface-container rounded text-[10px] font-bold">SEMANTIC_CORE</span>
+</div>
+</div>
+</div>
+<!-- Neighbor 1: Pandas -->
+<div class="absolute top-[35%] left-[40%] -translate-x-1/2 -translate-y-1/2">
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-md border border-outline-variant/10 flex items-center space-x-3 scale-90 hover:scale-100 transition-transform cursor-pointer">
+<div class="w-10 h-10 bg-secondary-container rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary text-[24px]">analytics</span>
+</div>
+<div>
+<h3 class="text-sm font-bold font-headline">Pandas</h3>
+<p class="text-[10px] text-on-surface-variant font-medium">Library • Dependency</p>
+</div>
+</div>
+</div>
+<!-- Neighbor 2: NumPy -->
+<div class="absolute top-[45%] left-[65%] -translate-x-1/2 -translate-y-1/2">
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-md border border-outline-variant/10 flex items-center space-x-3 scale-90 hover:scale-100 transition-transform cursor-pointer">
+<div class="w-10 h-10 bg-tertiary-container rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary text-[24px]">calculate</span>
+</div>
+<div>
+<h3 class="text-sm font-bold font-headline">NumPy</h3>
+<p class="text-[10px] text-on-surface-variant font-medium">Core • Dependency</p>
+</div>
+</div>
+</div>
+<!-- Neighbor 3: Django -->
+<div class="absolute top-[70%] left-[55%] -translate-x-1/2 -translate-y-1/2">
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-md border border-outline-variant/10 flex items-center space-x-3 scale-90 hover:scale-100 transition-transform cursor-pointer">
+<div class="w-10 h-10 bg-error-container/20 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-error text-[24px]">web</span>
+</div>
+<div>
+<h3 class="text-sm font-bold font-headline">Django</h3>
+<p class="text-[10px] text-on-surface-variant font-medium">Framework • Extension</p>
+</div>
+</div>
+</div>
+<!-- Neighbor 4: Machine Learning -->
+<div class="absolute top-[60%] left-[35%] -translate-x-1/2 -translate-y-1/2">
+<div class="bg-surface-container-lowest p-4 rounded-xl shadow-md border border-outline-variant/10 flex items-center space-x-3 scale-90 hover:scale-100 transition-transform cursor-pointer">
+<div class="w-10 h-10 bg-primary-container rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-[24px]">psychology</span>
+</div>
+<div>
+<h3 class="text-sm font-bold font-headline">ML_Stack</h3>
+<p class="text-[10px] text-on-surface-variant font-medium">Domain • Relationship</p>
+</div>
+</div>
+</div>
+<!-- Dimmed Out Background Nodes (Visual fluff) -->
+<div class="absolute top-[20%] right-[10%] opacity-20 pointer-events-none">
+<div class="w-24 h-12 bg-surface-container-high rounded-full"></div>
+</div>
+<div class="absolute bottom-[20%] left-[10%] opacity-20 pointer-events-none">
+<div class="w-16 h-16 bg-surface-container-high rounded-lg"></div>
+</div>
+</div>
+<!-- Canvas Controls (BottomNavBar Replacement for Focus Tools) -->
+<div class="fixed bottom-0 left-1/2 -translate-x-1/2 flex items-center space-x-2 px-4 py-2 z-40 bg-white/70 backdrop-blur-md rounded-full mb-6 mx-auto w-fit border border-slate-200/30 shadow-2xl shadow-blue-900/10">
+<button class="text-slate-600 p-3 hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">zoom_in</span>
+</button>
+<button class="text-slate-600 p-3 hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">pan_tool</span>
+</button>
+<button class="bg-blue-600 text-white rounded-full p-3 hover:scale-110 transition-transform animate-pulse">
+<span class="material-symbols-outlined">auto_graph</span>
+</button>
+<button class="text-slate-600 p-3 hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+</div>
+<!-- Floating UI Action: Toggle Visibility -->
+<div class="absolute bottom-10 right-10 flex flex-col space-y-3 items-end z-30">
+<div class="bg-white rounded-xl shadow-lg border border-outline-variant/10 p-2 flex flex-col space-y-1">
+<button class="flex items-center space-x-3 px-3 py-2 rounded-lg bg-primary-container text-on-primary-container text-xs font-bold">
+<span class="material-symbols-outlined text-[18px]">visibility_off</span>
+<span>Hide non-neighbors</span>
+</button>
+<button class="flex items-center space-x-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container text-xs font-bold transition-colors">
+<span class="material-symbols-outlined text-[18px]">share</span>
+<span>Graph View</span>
+</button>
+</div>
+</div>
+</main>
+<!-- Visual Hint for Drag and Drop Relationship -->
+<div class="fixed top-1/2 right-[320px] -translate-y-1/2 flex flex-col items-center pointer-events-none opacity-40">
+<div class="w-[1px] h-20 bg-gradient-to-b from-transparent via-primary to-transparent"></div>
+<div class="text-[10px] font-bold text-primary uppercase rotate-90 my-10 tracking-widest">Neighborhood Context</div>
+<div class="w-[1px] h-20 bg-gradient-to-b from-transparent via-primary to-transparent"></div>
+</div>
+</body></html>

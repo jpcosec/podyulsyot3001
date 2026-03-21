@@ -28,4 +28,4 @@ Implemented modules under `src/core/io/`:
 
 - Current code: `src/core/io/`
 - Current runtime semantics: `docs/runtime/data_management.md`
-- Target-state spec: `plan/spec/core_io_and_provenance_manager_spec.md`
+- Target-state spec: `docs/architecture/core_io_and_provenance_manager_spec.md`

@@ -33,7 +33,7 @@ Observed error:
 ModuleNotFoundError: No module named 'langgraph'
 ```
 
-Important context from `agent_entrypoint.md`:
+Important context from `docs/operations/agent_entrypoint.md`:
 
 - expected env is `conda activate phd-cv`
 - expected preflight is `set -a; source .env; set +a`
@@ -79,7 +79,7 @@ Current per-job sqlite files have schema but no checkpoint rows, so there is no 
 
 ## 3) Runtime dependency preflight not satisfied in tested shell (secondary)
 
-The tested shell did not satisfy the runtime preconditions documented in `agent_entrypoint.md` (notably `phd-cv` + `.env` export), so resume exited before graph execution started.
+The tested shell did not satisfy the runtime preconditions documented in `docs/operations/agent_entrypoint.md` (notably `phd-cv` + `.env` export), so resume exited before graph execution started.
 
 ## Why this affects reviewed jobs specifically
 

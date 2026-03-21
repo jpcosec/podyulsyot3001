@@ -4,7 +4,7 @@
 
 Describe only the runnable graph behavior in the current codebase.
 
-Forward-looking topology is tracked under `plan/spec/` and other planning docs.
+Forward-looking topology is tracked in `docs/reference/node_io_target_matrix.md` and the active track plans under `plan/`.
 
 ## Executable entrypoints
 

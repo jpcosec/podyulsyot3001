@@ -69,4 +69,4 @@ Thumbs.db
 # --- Local AI tooling / scratch ---
 .superpowers/
 tmp-*.png
-examples*.html
+/examples*.html

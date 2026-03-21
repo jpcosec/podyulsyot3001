@@ -8,7 +8,7 @@ Run the current prep-match pipeline on all available jobs, including jobs with m
 
 ## Preconditions
 
-Use the runtime environment documented in `agent_entrypoint.md`:
+Use the runtime environment documented in `docs/operations/agent_entrypoint.md`:
 
 ```bash
 conda activate phd-cv

@@ -12,10 +12,10 @@ This directory contains the active frontend sandbox surfaces.
 
 - heavy implementation notes for sandbox behavior should live near this code
 - central docs under `docs/` should summarize current behavior and point here
-- UI redesign and future work plans belong under `plan/ui/` or other plan folders, not here
+- UI redesign and future work plans belong under `plan/01_ui/` or other active plan folders, not here
 
 ## Central references
 
 - `docs/ui/node_editor_behavior_spec.md`
 - `docs/ui/node_editor_customization_and_architecture.md`
-- `plan/ui/ui_plan/README.md`
+- `plan/01_ui/fase1_minimal_json_editor.md`

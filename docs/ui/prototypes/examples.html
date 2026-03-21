@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GraphCurator - Focus Mode</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#575f75",
+                        "surface-container": "#eaeff2",
+                        "primary-dim": "#4b5369",
+                        "inverse-on-surface": "#9a9d9f",
+                        "secondary": "#506076",
+                        "tertiary-fixed": "#8342f4",
+                        "inverse-primary": "#dae2fd",
+                        "error-dim": "#67040d",
+                        "on-secondary-container": "#435368",
+                        "inverse-surface": "#0b0f10",
+                        "outline": "#747c80",
+                        "on-tertiary-fixed-variant": "#e5d5ff",
+                        "surface-container-high": "#e3e9ed",
+                        "surface-dim": "#d4dbdf",
+                        "secondary-fixed-dim": "#c5d6f0",
+                        "on-tertiary": "#fdf7ff",
+                        "secondary-dim": "#44546a",
+                        "on-secondary": "#f7f9ff",
+                        "on-error-container": "#6e0a12",
+                        "on-tertiary-container": "#ffffff",
+                        "tertiary-dim": "#681ad9",
+                        "primary-container": "#dae2fd",
+                        "primary-fixed-dim": "#ccd4ee",
+                        "tertiary-fixed-dim": "#7632e7",
+                        "on-surface": "#2c3437",
+                        "on-tertiary-fixed": "#ffffff",
+                        "secondary-container": "#d3e4fe",
+                        "error": "#a83836",
+                        "surface-container-highest": "#dce4e8",
+                        "secondary-fixed": "#d3e4fe",
+                        "outline-variant": "#acb3b7",
+                        "surface-bright": "#f7f9fb",
+                        "on-secondary-fixed-variant": "#4d5d73",
+                        "surface": "#f7f9fb",
+                        "surface-container-low": "#f0f4f7",
+                        "surface-tint": "#575f75",
+                        "on-primary-fixed": "#373f54",
+                        "on-secondary-fixed": "#314055",
+                        "surface-variant": "#dce4e8",
+                        "tertiary": "#742fe5",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface-variant": "#596064",
+                        "on-error": "#fff7f6",
+                        "primary-fixed": "#dae2fd",
+                        "background": "#f7f9fb",
+                        "error-container": "#fa746f",
+                        "on-primary-container": "#4a5167",
+                        "on-primary": "#f9f8ff",
+                        "on-primary-fixed-variant": "#535b71",
+                        "on-background": "#2c3437",
+                        "tertiary-container": "#8342f4"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .dot-grid {
+            background-image: radial-gradient(#acb3b7 1px, transparent 1px);
+            background-size: 24px 24px;
+            opacity: 0.08;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface selection:bg-primary-container overflow-hidden h-screen flex flex-col">
+<!-- Top Navigation (Shared Component) -->
+<header class="bg-slate-50/85 backdrop-blur-md flex justify-between items-center w-full px-6 py-3 border-b border-slate-200/20 docked full-width top-0 z-50">
+<div class="flex items-center gap-8">
+<span class="text-lg font-bold text-slate-800 tracking-tighter">GraphCurator</span>
+<nav class="hidden md:flex items-center gap-6 font-manrope font-bold tracking-tight text-sm">
+<a class="text-slate-900 border-b-2 border-slate-600 pb-1" href="#">Canvas</a>
+<a class="text-slate-500 hover:text-slate-700 transition-colors" href="#">Sandbox</a>
+<a class="text-slate-500 hover:text-slate-700 transition-colors" href="#">Templates</a>
+<a class="text-slate-500 hover:text-slate-700 transition-colors" href="#">History</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+<input class="bg-slate-100/50 border-none rounded-full py-1.5 pl-9 pr-4 text-xs w-48 focus:ring-1 focus:ring-slate-300 transition-all" placeholder="Search nodes..." type="text"/>
+</div>
+<div class="flex items-center gap-1">
+<button class="p-2 text-slate-500 hover:bg-slate-100/50 rounded-full transition-colors"><span class="material-symbols-outlined" data-icon="settings">settings</span></button>
+<button class="p-2 text-slate-500 hover:bg-slate-100/50 rounded-full transition-colors"><span class="material-symbols-outlined" data-icon="help">help</span></button>
+<button class="p-2 text-slate-500 hover:bg-slate-100/50 rounded-full transition-colors"><span class="material-symbols-outlined" data-icon="account_circle">account_circle</span></button>
+</div>
+</div>
+</header>
+<div class="flex-1 flex overflow-hidden">
+<!-- Side Navigation (Shared Component) -->
+<aside class="bg-slate-100/50 flex flex-col h-full py-8 px-4 space-y-6 h-screen w-64 left-0 border-r border-slate-200/10 z-40">
+<div class="px-2">
+<h2 class="font-inter text-xs font-semibold uppercase tracking-widest text-slate-600">Workspace</h2>
+<p class="text-[10px] text-slate-400 font-medium">Editorial Graph</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-indigo-600 border-r-2 border-indigo-500 font-inter text-xs font-semibold uppercase tracking-widest bg-indigo-50/30" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="info">info</span>
+<span>Inspector</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200/30 font-inter text-xs font-semibold uppercase tracking-widest transition-all" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="layers">layers</span>
+<span>Layers</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200/30 font-inter text-xs font-semibold uppercase tracking-widest transition-all" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="add_circle">add_circle</span>
+<span>Nodes</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200/30 font-inter text-xs font-semibold uppercase tracking-widest transition-all" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="account_tree">account_tree</span>
+<span>Layout</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200/30 font-inter text-xs font-semibold uppercase tracking-widest transition-all" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="filter_list">filter_list</span>
+<span>Filters</span>
+</a>
+</nav>
+<div class="px-2 pb-4 space-y-4">
+<button class="w-full py-2.5 bg-primary text-on-tertiary rounded-xl font-headline text-xs font-bold tracking-tight shadow-sm hover:bg-primary-dim transition-all active:scale-95">
+                    New Node
+                </button>
+<div class="pt-4 border-t border-slate-200/40 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:text-slate-800 font-inter text-[10px] font-semibold uppercase tracking-widest" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="ios_share">ios_share</span>
+<span>Export</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-500 hover:text-slate-800 font-inter text-[10px] font-semibold uppercase tracking-widest" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="contact_support">contact_support</span>
+<span>Support</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Canvas Area -->
+<main class="flex-1 relative bg-surface overflow-hidden">
+<!-- Background Grid -->
+<div class="absolute inset-0 dot-grid pointer-events-none"></div>
+<!-- Canvas Header / Status Bar -->
+<div class="absolute top-6 left-1/2 -translate-x-1/2 flex items-center gap-3 px-4 py-2 bg-surface-container-lowest/80 backdrop-blur shadow-sm border border-outline-variant/10 rounded-full z-10">
+<div class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></div>
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Focus Mode Active: Alice</span>
+<div class="h-4 w-px bg-outline-variant/20 mx-1"></div>
+<button class="text-[10px] font-bold text-error uppercase tracking-widest hover:underline transition-all">Exit Focus Mode</button>
+</div>
+<!-- Graph Canvas Simulation -->
+<div class="absolute inset-0 flex items-center justify-center">
+<!-- Central Focused Node: Alice -->
+<div class="relative z-30">
+<!-- Focus Ring -->
+<div class="absolute -inset-4 border-2 border-tertiary/30 rounded-2xl animate-ping opacity-20"></div>
+<div class="absolute -inset-2 border border-tertiary rounded-2xl"></div>
+<!-- The Node -->
+<div class="relative bg-primary-container text-on-primary-container w-48 p-4 rounded-xl shadow-xl border border-primary/20">
+<div class="flex items-start justify-between mb-3">
+<div class="w-10 h-10 rounded-lg bg-primary-fixed flex items-center justify-center text-primary-fixed-dim">
+<span class="material-symbols-outlined text-2xl" data-icon="person" style="font-variation-settings: 'FILL' 1;">person</span>
+</div>
+<button class="p-1 hover:bg-on-primary-container/10 rounded">
+<span class="material-symbols-outlined text-lg" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+<h3 class="font-headline font-extrabold text-lg leading-tight">Alice</h3>
+<p class="text-xs font-medium opacity-70">Lead Data Curator</p>
+</div>
+<!-- Contextual Menu -->
+<div class="absolute top-full left-1/2 -translate-x-1/2 mt-4 glass-panel border border-outline-variant/20 rounded-xl shadow-2xl p-1 w-40 z-50">
+<button class="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="auto_fix">auto_fix</span>
+<span>Layout Focus</span>
+</button>
+<button class="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="share">share</span>
+<span>Expand context</span>
+</button>
+<div class="h-px bg-outline-variant/10 my-1"></div>
+<button class="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-error hover:bg-error/5 rounded-lg transition-colors">
+<span class="material-symbols-outlined text-sm" data-icon="delete">delete</span>
+<span>Delete</span>
+</button>
+</div>
+</div>
+<!-- Relationships (Edges) -->
+<!-- SVG layer for edges -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none">
+<!-- Alice to Python -->
+<path d="M 50% 50% L 35% 35%" fill="none" stroke="url(#activeGradient)" stroke-dasharray="4" stroke-width="2"></path>
+<!-- Alice to React -->
+<path d="M 50% 50% L 65% 35%" fill="none" stroke="url(#activeGradient)" stroke-dasharray="4" stroke-width="2"></path>
+<!-- Dimmed Background Edges -->
+<path d="M 20% 80% L 35% 35%" fill="none" stroke="#acb3b7" stroke-opacity="0.1" stroke-width="1"></path>
+<path d="M 80% 80% L 65% 35%" fill="none" stroke="#acb3b7" stroke-opacity="0.1" stroke-width="1"></path>
+<defs>
+<lineargradient id="activeGradient" x1="0%" x2="100%" y1="0%" y2="100%">
+<stop offset="0%" style="stop-color:#575f75;stop-opacity:1"></stop>
+<stop offset="100%" style="stop-color:#8342f4;stop-opacity:1"></stop>
+</lineargradient>
+</defs>
+</svg>
+<!-- Neighbors: Python (Skill) -->
+<div class="absolute top-[25%] left-[30%] z-20">
+<div class="bg-secondary-container text-on-secondary-container px-4 py-2 rounded-lg shadow-md border border-secondary/10 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="terminal">terminal</span>
+<span class="text-xs font-bold font-headline uppercase tracking-tight">Python</span>
+</div>
+</div>
+<!-- Neighbors: React (Skill) -->
+<div class="absolute top-[25%] right-[30%] z-20">
+<div class="bg-secondary-container text-on-secondary-container px-4 py-2 rounded-lg shadow-md border border-secondary/10 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="javascript">javascript</span>
+<span class="text-xs font-bold font-headline uppercase tracking-tight">React</span>
+</div>
+</div>
+<!-- Dimmed Background Nodes (Progressive Disclosure) -->
+<div class="absolute bottom-[20%] left-[20%] opacity-10 pointer-events-none scale-90">
+<div class="bg-surface-container-high px-4 py-2 rounded-lg border border-outline-variant/30 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="work">work</span>
+<span class="text-xs font-bold uppercase tracking-tight">Project Delta</span>
+</div>
+</div>
+<div class="absolute bottom-[20%] right-[20%] opacity-10 pointer-events-none scale-90">
+<div class="bg-surface-container-high px-4 py-2 rounded-lg border border-outline-variant/30 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="public">public</span>
+<span class="text-xs font-bold uppercase tracking-tight">Publication X</span>
+</div>
+</div>
+</div>
+<!-- Floating Controls -->
+<div class="absolute bottom-8 left-8 flex flex-col gap-3">
+<button class="w-12 h-12 flex items-center justify-center bg-surface-container-lowest shadow-lg border border-outline-variant/10 rounded-xl hover:scale-105 transition-all text-on-surface-variant active:bg-surface-container-low">
+<span class="material-symbols-outlined" data-icon="add">add</span>
+</button>
+<button class="w-12 h-12 flex items-center justify-center bg-surface-container-lowest shadow-lg border border-outline-variant/10 rounded-xl hover:scale-105 transition-all text-on-surface-variant active:bg-surface-container-low">
+<span class="material-symbols-outlined" data-icon="zoom_in">zoom_in</span>
+</button>
+<button class="w-12 h-12 flex items-center justify-center bg-surface-container-lowest shadow-lg border border-outline-variant/10 rounded-xl hover:scale-105 transition-all text-on-surface-variant active:bg-surface-container-low">
+<span class="material-symbols-outlined" data-icon="zoom_out">zoom_out</span>
+</button>
+</div>
+<div class="absolute bottom-8 right-8">
+<button class="flex items-center gap-2 px-6 py-3 bg-tertiary text-on-tertiary shadow-xl shadow-tertiary/20 rounded-2xl font-headline font-extrabold text-sm tracking-tight hover:brightness-110 active:scale-95 transition-all">
+<span class="material-symbols-outlined" data-icon="hub">hub</span>
+<span>Connect to New Node</span>
+</button>
+</div>
+</main>
+<!-- Inspector Panel (Editorial Right Sidebar) -->
+<aside class="w-96 bg-surface-container-low border-l border-slate-200/10 h-full overflow-y-auto flex flex-col p-8 gap-8">
+<!-- Header -->
+<div class="flex items-center justify-between">
+<div>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.2em] mb-1 block">Node Properties</span>
+<h2 class="font-headline font-extrabold text-2xl text-on-surface tracking-tighter">Alice</h2>
+</div>
+<button class="p-2 hover:bg-surface-container-highest rounded-full text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+</div>
+<!-- Profile Info Section -->
+<section class="space-y-6">
+<div class="relative group aspect-video rounded-2xl overflow-hidden bg-surface-container-highest border border-outline-variant/20">
+<img class="w-full h-full object-cover" data-alt="Close up professional portrait of a woman" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyzlRIImumjcq83xXOA2Luyx84SDnIjYDb6ZlY7sX3aZyy_SMBO-NxJTZezDVlFSI34w3_VxMAd36uIrfw9mAa5O4igHipLhDqpneNMqjMcrYqrcl6wRtp2ftGGhRq61rXBIKuBoGLdSANfZRPd3yYmU1-rdqQ0OnW7iIj00oUrXPLBoXtWXij3F5jkTZienS4P92RkASrUY4y5oTrO_mQLACoZ93LPAaWuhSzf53Y7nfK8xwfxLM4M09gqYK4NNQXevt36YELLvg"/>
+<div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer">
+<span class="text-white font-bold text-xs uppercase tracking-widest">Update Photo</span>
+</div>
+</div>
+<div class="space-y-4">
+<div class="space-y-1">
+<label class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest px-1">Display Name</label>
+<input class="w-full bg-surface-container-lowest border border-outline-variant/10 rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-primary/20 transition-all outline-none" type="text" value="Alice"/>
+</div>
+<div class="space-y-1">
+<label class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest px-1">Role/Title</label>
+<input class="w-full bg-surface-container-lowest border border-outline-variant/10 rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-primary/20 transition-all outline-none" type="text" value="Lead Data Curator"/>
+</div>
+<div class="space-y-1">
+<label class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest px-1">Biography</label>
+<textarea class="w-full bg-surface-container-lowest border border-outline-variant/10 rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-primary/20 transition-all outline-none resize-none" rows="4">Specializing in high-dimensional graph curation and editorial data mapping. Lead on Project Delta since 2022.</textarea>
+</div>
+</div>
+</section>
+<!-- Relationships Metadata Section -->
+<section class="space-y-4">
+<h3 class="font-headline font-bold text-sm tracking-tight border-b border-outline-variant/10 pb-2">Active Relations</h3>
+<div class="space-y-2">
+<div class="flex items-center justify-between p-3 bg-surface-container-highest rounded-xl border border-outline-variant/10">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary" data-icon="terminal">terminal</span>
+<div>
+<p class="text-xs font-bold leading-none">Python</p>
+<p class="text-[10px] text-on-surface-variant mt-1">Primary Skill</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-sm text-outline cursor-pointer hover:text-error" data-icon="link_off">link_off</span>
+</div>
+<div class="flex items-center justify-between p-3 bg-surface-container-highest rounded-xl border border-outline-variant/10">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary" data-icon="javascript">javascript</span>
+<div>
+<p class="text-xs font-bold leading-none">React</p>
+<p class="text-[10px] text-on-surface-variant mt-1">Secondary Skill</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-sm text-outline cursor-pointer hover:text-error" data-icon="link_off">link_off</span>
+</div>
+</div>
+<button class="w-full py-3 border-2 border-dashed border-outline-variant/30 rounded-xl text-[10px] font-bold text-on-surface-variant uppercase tracking-widest hover:bg-surface-container-highest hover:border-outline-variant/50 transition-all">
+                    + Add New Relation
+                </button>
+</section>
+<!-- Quick Actions Section -->
+<section class="mt-auto space-y-3 pt-8 border-t border-outline-variant/10">
+<button class="w-full flex items-center justify-between px-4 py-3 bg-surface-container-lowest border border-outline-variant/10 rounded-xl hover:bg-surface transition-colors group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="edit">edit</span>
+<span class="text-xs font-bold">Edit Relations</span>
+</div>
+<span class="material-symbols-outlined text-sm text-outline" data-icon="chevron_right">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between px-4 py-3 bg-surface-container-lowest border border-outline-variant/10 rounded-xl hover:bg-surface transition-colors group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors" data-icon="history">history</span>
+<span class="text-xs font-bold">View Publication History</span>
+</div>
+<span class="material-symbols-outlined text-sm text-outline" data-icon="chevron_right">chevron_right</span>
+</button>
+</section>
+</aside>
+</div>
+</body></html>

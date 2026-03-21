@@ -22,6 +22,7 @@ Use these first when you need to know what actually runs today.
 ## Current policy notes
 
 - `docs/policy/feedback_memory.md`
+- `docs/policy/claim_admissibility_and_policy.md`
 
 ## Current UI sandbox docs
 
@@ -32,43 +33,29 @@ These are current for sandbox/workbench behavior, not for pipeline runtime truth
 - `docs/ui/node_editor_compliance_matrix.md`
 - `apps/review-workbench/src/sandbox/README.md`
 
-## Target-state / design references
+## Official specs and design references
 
-These are useful design-intent docs, but they should not be treated as exact current runtime behavior unless they explicitly say so.
+These are official specs or design-intent docs. Each one should say clearly what is implemented today and what remains future/target-state.
 
-- `plan/runtime/graph_state_contract.md`
-- `plan/runtime/artifact_schemas.md`
-- `plan/runtime/node_template_discipline.md`
-- `plan/runtime/templates/taxonomy_template_catalog.md`
-- `plan/runtime/sync_json_md.md`
-- `plan/runtime/claim_admissibility_and_policy.md`
-- `plan/archive/project_overview.md`
-- `plan/archive/structure_and_rationale.md`
+- `docs/reference/graph_state_contract.md`
+- `docs/reference/artifact_schemas.md`
+- `docs/reference/node_template_discipline.md`
+- `docs/reference/node_io_target_matrix.md`
+- `docs/architecture/core_io_and_provenance_manager_spec.md`
+- `docs/architecture/sync_json_md_spec.md`
+- `docs/policy/claim_admissibility_and_policy.md`
 
 ## Active planning / migration docs
 
 These are planning records, not runtime truth.
 
-- `plan/subplan/deterministic_parity_migration_from_phd.md`
-- `plan/subplan/review_ui_and_flow_observability.md`
-- `plan/subplan/playwright_scraping_execution_blueprint.md`
-- `plan/subplan/langchain_runtime_migration_plan.md`
-- `plan/subplan/langchain_langgraph_adoption_evaluation.md`
-- `plan/adr/adr_001_ui_first_knowledge_graph_langchain.md`
-- `plan/adr/adr_001_ui_first_knowledge_graph_langchain_status.md`
-- `plan/ui/README.md`
-- `plan/adr_001_execution_tracker.md`
-
-## Historical / status-snapshot docs
-
-These should be read as dated snapshots unless updated explicitly.
-
-- `plan/archive/phd2_stepwise_plan.md`
-- `plan/archive/index_checklist.md`
-- `plan/archive/step6_13_delta_generation_and_text_reviewers.md`
-- `plan/archive/step6_13_implementation_notes.md`
-- `plan/archive/document_glossary.md`
-- `plan/archive/comments_inventory.md`
+- `plan/index_checklist.md`
+- `plan/01_ui/fase1_minimal_json_editor.md`
+- `plan/01_ui/fase2_neo4j_knowledge_graph.md`
+- `plan/02_langchain/fase1_llm_wrappers_y_structured_output.md`
+- `plan/02_langchain/fase2_full_pipeline_rewrite.md`
+- `plan/03_scrapper/playwright_scraping_blueprint.md`
+- `plan/03_scrapper/json_first_scraping_migration.md`
 
 ## Rule
 

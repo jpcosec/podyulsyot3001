@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GraphOS | Node Editor</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-tertiary-fixed": "#373f54",
+                        "on-primary-container": "#0048bf",
+                        "on-secondary-fixed-variant": "#4d5d73",
+                        "on-secondary-fixed": "#314055",
+                        "primary-fixed-dim": "#c7d3ff",
+                        "error": "#9f403d",
+                        "secondary-dim": "#44546a",
+                        "on-primary-fixed-variant": "#0050d4",
+                        "surface-container-highest": "#d9e4ea",
+                        "on-primary": "#f8f7ff",
+                        "tertiary-container": "#dae2fd",
+                        "background": "#f7f9fb",
+                        "surface-dim": "#cfdce3",
+                        "error-dim": "#4e0309",
+                        "on-error-container": "#752121",
+                        "primary-container": "#dbe1ff",
+                        "on-secondary-container": "#435368",
+                        "secondary-fixed-dim": "#c5d6f0",
+                        "primary": "#0053db",
+                        "inverse-surface": "#0b0f10",
+                        "surface-container-low": "#f0f4f7",
+                        "tertiary-fixed": "#dae2fd",
+                        "on-tertiary-container": "#4a5167",
+                        "error-container": "#fe8983",
+                        "surface-container-high": "#e1e9ee",
+                        "tertiary-fixed-dim": "#ccd4ee",
+                        "inverse-primary": "#618bff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-surface-variant": "#566166",
+                        "surface-container": "#e8eff3",
+                        "on-surface": "#2a3439",
+                        "inverse-on-surface": "#9a9d9f",
+                        "tertiary": "#575f75",
+                        "on-primary-fixed": "#003798",
+                        "secondary-fixed": "#d3e4fe",
+                        "surface-variant": "#d9e4ea",
+                        "on-tertiary": "#f9f8ff",
+                        "on-secondary": "#f7f9ff",
+                        "primary-dim": "#0048c1",
+                        "on-background": "#2a3439",
+                        "primary-fixed": "#dbe1ff",
+                        "outline-variant": "#a9b4b9",
+                        "surface": "#f7f9fb",
+                        "outline": "#717c82",
+                        "on-tertiary-fixed-variant": "#535b71",
+                        "surface-tint": "#0053db",
+                        "tertiary-dim": "#4b5369",
+                        "secondary-container": "#d3e4fe",
+                        "surface-bright": "#f7f9fb",
+                        "on-error": "#fff7f6",
+                        "secondary": "#506076"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .canvas-dot-grid {
+            background-image: radial-gradient(circle, #d9e4ea 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        .node-gradient {
+            background: linear-gradient(135deg, #0053db 0%, #0048c1 100%);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopNavBar (Shared Component) -->
+<header class="fixed top-0 w-full flex justify-between items-center px-6 h-16 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-sm dark:shadow-none z-50">
+<div class="flex items-center space-x-8">
+<span class="text-xl font-extrabold text-slate-900 dark:text-slate-50 font-headline tracking-tight">GraphOS</span>
+<nav class="hidden md:flex space-x-6 font-manrope font-bold tracking-tight">
+<a class="text-slate-500 dark:text-slate-400 hover:text-slate-900 transition-colors" href="#">Sandbox</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-slate-900 transition-colors" href="#">CV Graph</a>
+<a class="text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 pb-1" href="#">Node Editor</a>
+</nav>
+</div>
+<div class="flex items-center space-x-4">
+<div class="relative group">
+<span class="material-symbols-outlined text-on-surface-variant p-2 hover:bg-slate-100/50 rounded-lg transition-colors cursor-pointer">settings</span>
+</div>
+<div class="flex items-center space-x-2 p-1 pl-3 pr-1 bg-surface-container-low rounded-full">
+<span class="text-xs font-semibold text-on-surface">Admin_User</span>
+<span class="material-symbols-outlined text-3xl text-primary" data-icon="account_circle">account_circle</span>
+</div>
+</div>
+</header>
+<main class="relative h-screen pt-16 overflow-hidden flex">
+<!-- Spatial Canvas Workspace -->
+<div class="flex-grow relative canvas-dot-grid overflow-hidden">
+<!-- Connection Lines (SVG) -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+<path d="M420 320 L580 440" opacity="0.3" stroke="#0053db" stroke-dasharray="4 4" stroke-width="2"></path>
+<path d="M420 320 L260 480" opacity="0.3" stroke="#0053db" stroke-dasharray="4 4" stroke-width="2"></path>
+<path d="M420 320 L600 200" opacity="0.3" stroke="#0053db" stroke-dasharray="4 4" stroke-width="2"></path>
+</svg>
+<!-- Nodes -->
+<!-- Alice (Selected Node) -->
+<div class="absolute left-[360px] top-[260px] group">
+<div class="relative w-32 h-32 rounded-xl bg-surface-container-lowest shadow-2xl ring-2 ring-primary ring-offset-4 flex flex-col items-center justify-center p-4 cursor-move">
+<div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center mb-2">
+<span class="material-symbols-outlined text-on-primary-container" style="font-variation-settings: 'FILL' 1;">person</span>
+</div>
+<span class="text-on-surface font-headline font-bold">Alice</span>
+<span class="text-[10px] text-on-surface-variant uppercase tracking-widest font-label mt-1">Lead Architect</span>
+</div>
+</div>
+<!-- Python Node -->
+<div class="absolute left-[580px] top-[440px]">
+<div class="w-28 h-28 rounded-xl bg-surface-container shadow-lg border-2 border-transparent hover:border-outline-variant transition-all flex flex-col items-center justify-center p-4 cursor-pointer">
+<div class="w-10 h-10 rounded-lg bg-secondary-container flex items-center justify-center mb-2">
+<span class="material-symbols-outlined text-on-secondary-container">code</span>
+</div>
+<span class="text-on-surface font-headline font-semibold text-sm">Python</span>
+</div>
+</div>
+<!-- React Node -->
+<div class="absolute left-[200px] top-[480px]">
+<div class="w-28 h-28 rounded-xl bg-surface-container shadow-lg border-2 border-transparent hover:border-outline-variant transition-all flex flex-col items-center justify-center p-4 cursor-pointer">
+<div class="w-10 h-10 rounded-lg bg-tertiary-container flex items-center justify-center mb-2">
+<span class="material-symbols-outlined text-on-tertiary-container">web</span>
+</div>
+<span class="text-on-surface font-headline font-semibold text-sm">React</span>
+</div>
+</div>
+<!-- Graph Editor Node -->
+<div class="absolute left-[600px] top-[140px]">
+<div class="w-28 h-28 rounded-xl bg-surface-container shadow-lg border-2 border-transparent hover:border-outline-variant transition-all flex flex-col items-center justify-center p-4 cursor-pointer">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center mb-2">
+<span class="material-symbols-outlined text-on-surface">hub</span>
+</div>
+<span class="text-on-surface font-headline font-semibold text-sm text-center">Graph Editor</span>
+</div>
+</div>
+<!-- Canvas Helper Overlay -->
+<div class="absolute top-6 left-6 flex items-center space-x-2 bg-surface-container-lowest/80 backdrop-blur-md px-4 py-2 rounded-full shadow-sm border border-outline-variant/10">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<span class="text-xs font-label text-on-surface-variant tracking-wide">Spatial Live View • 4 Nodes Active</span>
+</div>
+</div>
+<!-- SideNavBar (Properties Panel - Right Docked) -->
+<aside class="w-80 h-full bg-slate-50 dark:bg-slate-950 border-l border-slate-200/20 dark:border-slate-800/20 flex flex-col p-4 space-y-4 z-40">
+<header class="mb-6">
+<h2 class="text-lg font-headline font-bold text-on-surface">Node Properties</h2>
+<p class="text-xs font-body text-on-surface-variant">Active: Semantic_Node_01</p>
+</header>
+<!-- Tabs -->
+<div class="flex space-x-1 bg-surface-container p-1 rounded-lg">
+<button class="flex-1 flex flex-col items-center justify-center py-2 bg-white dark:bg-slate-900 text-blue-600 font-semibold rounded-lg shadow-sm ring-2 ring-blue-500/20">
+<span class="material-symbols-outlined text-xl" data-icon="info">info</span>
+<span class="text-[10px] uppercase tracking-tighter mt-1">Metadata</span>
+</button>
+<button class="flex-1 flex flex-col items-center justify-center py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-lg transition-transform hover:translate-x-1">
+<span class="material-symbols-outlined text-xl" data-icon="hub">hub</span>
+<span class="text-[10px] uppercase tracking-tighter mt-1">Relationships</span>
+</button>
+<button class="flex-1 flex flex-col items-center justify-center py-2 text-slate-500 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-lg transition-transform hover:translate-x-1">
+<span class="material-symbols-outlined text-xl" data-icon="history">history</span>
+<span class="text-[10px] uppercase tracking-tighter mt-1">History</span>
+</button>
+</div>
+<!-- Content Area -->
+<div class="flex-grow space-y-6 overflow-y-auto pt-4">
+<section>
+<label class="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Description</label>
+<div class="bg-surface-container-lowest p-3 rounded-lg text-sm text-on-surface leading-relaxed border border-outline-variant/10">
+                        Primary entity responsible for semantic orchestration and node linkage within the workspace.
+                    </div>
+</section>
+<section>
+<label class="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Semantic Tags</label>
+<div class="flex flex-wrap gap-2">
+<span class="px-2 py-1 bg-primary-container text-on-primary-container text-[11px] font-semibold rounded">Identity</span>
+<span class="px-2 py-1 bg-secondary-container text-on-secondary-container text-[11px] font-semibold rounded">Admin</span>
+<span class="px-2 py-1 bg-tertiary-container text-on-tertiary-container text-[11px] font-semibold rounded">Orchestrator</span>
+</div>
+</section>
+<section>
+<label class="block text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Immediate Neighbors</label>
+<div class="space-y-2">
+<div class="flex items-center justify-between p-2 bg-surface-container-low rounded hover:bg-surface-container transition-colors cursor-pointer group">
+<div class="flex items-center space-x-3">
+<span class="material-symbols-outlined text-lg text-secondary">code</span>
+<span class="text-sm font-medium">Python</span>
+</div>
+<span class="material-symbols-outlined text-sm text-outline-variant group-hover:text-primary">arrow_forward_ios</span>
+</div>
+<div class="flex items-center justify-between p-2 bg-surface-container-low rounded hover:bg-surface-container transition-colors cursor-pointer group">
+<div class="flex items-center space-x-3">
+<span class="material-symbols-outlined text-lg text-tertiary">web</span>
+<span class="text-sm font-medium">React</span>
+</div>
+<span class="material-symbols-outlined text-sm text-outline-variant group-hover:text-primary">arrow_forward_ios</span>
+</div>
+</div>
+</section>
+</div>
+<!-- CTA Footer -->
+<button class="w-full py-3 node-gradient text-white font-headline font-bold rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+                Commit Changes
+            </button>
+</aside>
+</main>
+<!-- BottomNavBar (Shared Component) -->
+<nav class="fixed bottom-0 left-1/2 -translate-x-1/2 flex items-center space-x-2 px-4 py-2 z-40 rounded-full mb-6 mx-auto w-fit bg-white/70 dark:bg-slate-900/70 backdrop-blur-md border border-slate-200/30 dark:border-slate-700/30 shadow-2xl shadow-blue-900/10">
+<button class="text-slate-600 dark:text-slate-300 p-3 hover:scale-110 transition-transform flex flex-col items-center">
+<span class="material-symbols-outlined" data-icon="zoom_in">zoom_in</span>
+<span class="font-inter text-[10px] uppercase tracking-widest mt-1">Zoom</span>
+</button>
+<button class="text-slate-600 dark:text-slate-300 p-3 hover:scale-110 transition-transform flex flex-col items-center">
+<span class="material-symbols-outlined" data-icon="pan_tool">pan_tool</span>
+<span class="font-inter text-[10px] uppercase tracking-widest mt-1">Pan</span>
+</button>
+<button class="bg-blue-600 text-white rounded-full p-3 animate-pulse flex flex-col items-center shadow-lg shadow-blue-500/30">
+<span class="material-symbols-outlined" data-icon="auto_graph">auto_graph</span>
+<span class="font-inter text-[10px] uppercase tracking-widest mt-1">Relayout</span>
+</button>
+<button class="text-slate-600 dark:text-slate-300 p-3 hover:scale-110 transition-transform flex flex-col items-center">
+<span class="material-symbols-outlined" data-icon="filter_list">filter_list</span>
+<span class="font-inter text-[10px] uppercase tracking-widest mt-1">Filter</span>
+</button>
+</nav>
+<!-- Context Floating UI -->
+<div class="fixed bottom-8 right-8 flex flex-col items-center space-y-4">
+<div class="p-3 bg-surface-container-lowest shadow-xl rounded-2xl border border-outline-variant/20 flex flex-col space-y-2">
+<button class="p-2 hover:bg-primary-container hover:text-on-primary-container rounded-lg transition-colors">
+<span class="material-symbols-outlined">add</span>
+</button>
+<div class="h-px bg-outline-variant/20 mx-2"></div>
+<button class="p-2 hover:bg-primary-container hover:text-on-primary-container rounded-lg transition-colors">
+<span class="material-symbols-outlined">remove</span>
+</button>
+</div>
+</div>
+</body></html>

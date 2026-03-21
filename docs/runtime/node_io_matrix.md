@@ -4,7 +4,7 @@
 
 This document describes only the node I/O behavior implemented in the current codebase.
 
-Forward-looking/target topology and I/O contracts are tracked under `plan/spec/` and related planning docs.
+Forward-looking/target topology and I/O contracts are tracked under `docs/reference/node_io_target_matrix.md` and related planning docs.
 
 ## Authority scope
 
@@ -48,4 +48,4 @@ with `review_match.approve -> generate_documents`.
 
 ## Planning pointer
 
-Target-state node I/O contract and full topology matrix remain in planning docs under `plan/`.
+Target-state node I/O contract and full topology matrix live in `docs/reference/node_io_target_matrix.md`.

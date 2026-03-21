@@ -27,4 +27,4 @@ This directory contains the current scraping runtime.
 
 - `docs/runtime/data_management.md`
 - `docs/runtime/node_io_matrix.md`
-- `plan/subplan/playwright_scraping_execution_blueprint.md`
+- `plan/03_scrapper/playwright_scraping_blueprint.md`
