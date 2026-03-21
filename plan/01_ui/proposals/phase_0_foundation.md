@@ -47,10 +47,7 @@ import './styles.css';
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: {
-      staleTime: 30_000,
-      retry: 1,
-    },
+    queries: { staleTime: 30_000, retry: 1 },
   },
 });
 
@@ -70,39 +67,48 @@ createRoot(document.getElementById('root')!).render(
 
 ### `src/App.tsx`
 
+`JobWorkspaceShell` se anida dentro de `AppShell` — el LeftNav siempre renderiza,
+nunca se duplica, nunca parpadea al navegar entre vistas.
+
 ```tsx
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { AppShell } from './components/layouts/AppShell';
 import { JobWorkspaceShell } from './components/layouts/JobWorkspaceShell';
-import { PortfolioPage } from './pages/global/PortfolioPage';
-import { DataExplorerPage } from './pages/global/DataExplorerPage';
-import { CvEditorPage } from './pages/global/CvEditorPage';
-import { JobFlowPage } from './pages/job/JobFlowPage';
-import { ExtractPage } from './pages/job/ExtractPage';
-import { MatchPage } from './pages/job/MatchPage';
-import { DocumentsPage } from './pages/job/DocumentsPage';
+import { PortfolioDashboard } from './pages/global/PortfolioDashboard';
+import { DataExplorer } from './pages/global/DataExplorer';
+import { BaseCvEditor } from './pages/global/BaseCvEditor';
+import { JobFlowInspector } from './pages/job/JobFlowInspector';
+import { ScrapeDiagnostics } from './pages/job/ScrapeDiagnostics';
+import { ExtractUnderstand } from './pages/job/ExtractUnderstand';
+import { Match } from './pages/job/Match';
+import { GenerateDocuments } from './pages/job/GenerateDocuments';
 import { IntelligentEditorPage } from './sandbox/pages/IntelligentEditorPage';
 
 const router = createBrowserRouter([
   {
-    element: <AppShell />,           // LeftNav + fondo oscuro
+    path: '/',
+    element: <AppShell />,          // LeftNav siempre visible
     children: [
-      { path: '/',         element: <PortfolioPage /> },
-      { path: '/explorer', element: <DataExplorerPage /> },
-      { path: '/cv',       element: <CvEditorPage /> },
+      // Vistas globales
+      { index: true,       element: <PortfolioDashboard /> },
+      { path: 'explorer',  element: <DataExplorer /> },
+      { path: 'cv',        element: <BaseCvEditor /> },
+
+      // Job workspace — anidado, hereda el LeftNav de AppShell
+      {
+        path: 'jobs/:source/:jobId',
+        element: <JobWorkspaceShell />,   // inyecta el Pipeline TopBar
+        children: [
+          { index: true,      element: <JobFlowInspector /> },  // B0
+          { path: 'scrape',   element: <ScrapeDiagnostics /> }, // B1
+          { path: 'extract',  element: <ExtractUnderstand /> }, // B2
+          { path: 'match',    element: <Match /> },             // B3
+          { path: 'sculpt',   element: <GenerateDocuments /> }, // B4
+        ],
+      },
     ],
   },
-  {
-    path: '/jobs/:source/:jobId',
-    element: <JobWorkspaceShell />,  // LeftNav + job breadcrumb + status sidebar
-    children: [
-      { index: true,            element: <JobFlowPage /> },
-      { path: 'extract',        element: <ExtractPage /> },
-      { path: 'match',          element: <MatchPage /> },
-      { path: 'documents',      element: <DocumentsPage /> },
-    ],
-  },
-  // Sandbox — sin shell
+  // Sandbox — fuera del AppShell, sin LeftNav
   { path: '/sandbox/intelligent_editor', element: <IntelligentEditorPage /> },
 ]);
 
@@ -111,78 +117,77 @@ export default function App() {
 }
 ```
 
-**Por qué `createBrowserRouter` en lugar de `<BrowserRouter>`:**
-- Permite loaders y actions (React Router v6.4+) para pre-fetch en la navegación
-- El layout nesting es explícito y estático — más fácil de leer
-- Habilita `useRouteError` para error boundaries por ruta
+**Árbol de rutas:**
+```
+/                        → PortfolioDashboard  (A1)
+/explorer                → DataExplorer         (A2)
+/cv                      → BaseCvEditor         (A3)
+/jobs/:source/:jobId     → JobFlowInspector     (B0)
+/jobs/:source/:jobId/scrape   → ScrapeDiagnostics   (B1)
+/jobs/:source/:jobId/extract  → ExtractUnderstand   (B2)
+/jobs/:source/:jobId/match    → Match               (B3)
+/jobs/:source/:jobId/sculpt   → GenerateDocuments   (B4)
+/sandbox/intelligent_editor   → IntelligentEditorPage (sin shell)
+```
 
 ---
 
-## Paso 4 — Layouts (cascarones)
+## Paso 4 — Layouts
 
 ### `src/components/layouts/AppShell.tsx`
 
-Shell global: LeftNav fijo a la izquierda + área de contenido scrolleable.
+LeftNav fijo a la izquierda (w-14). Área de contenido scrolleable a la derecha.
 
 ```
-┌──────────────────────────────────────────────────────┐
-│ LeftNav (w-14, fixed, bg-background)                  │
-│  [logo]                                               │
-│  [icon: portfolio]  ← activo si path='/'              │
-│  [icon: explorer]   ← activo si path='/explorer'      │
-│  [icon: cv]         ← activo si path='/cv'            │
-│  ──────────────────                                   │
-│  [icon: sandbox]    ← bottom                          │
-├──────────────────────────────────────────────────────┤
-│ <main> (ml-14, min-h-screen, bg-background)           │
-│   <Outlet />                                          │
-└──────────────────────────────────────────────────────┘
+┌─ LeftNav (w-14, fixed) ──┬─ main (flex-1) ───────────┐
+│  [P2]                    │                            │
+│  [icon] Portfolio        │   <Outlet />               │
+│  [icon] Explorer         │   (PortfolioDashboard,     │
+│  [icon] CV               │    DataExplorer, o         │
+│                          │    JobWorkspaceShell)       │
+│  ── bottom ──            │                            │
+│  [icon] Sandbox          │                            │
+└──────────────────────────┴────────────────────────────┘
 ```
 
 ```tsx
-// src/components/layouts/AppShell.tsx
 import { Outlet, NavLink } from 'react-router-dom';
 import { LayoutDashboard, FolderOpen, Network, FlaskConical } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
 const NAV_ITEMS = [
-  { to: '/',         icon: LayoutDashboard, label: 'Portfolio' },
-  { to: '/explorer', icon: FolderOpen,      label: 'Explorer'  },
-  { to: '/cv',       icon: Network,         label: 'Base CV'   },
+  { to: '/',        icon: LayoutDashboard, label: 'Portfolio', end: true },
+  { to: '/explorer', icon: FolderOpen,     label: 'Explorer',  end: false },
+  { to: '/cv',      icon: Network,         label: 'Base CV',   end: false },
 ];
 
 export function AppShell() {
   return (
     <div className="flex min-h-screen bg-background">
       <nav className="fixed left-0 top-0 h-full w-14 bg-surface flex flex-col items-center py-4 gap-2 border-r border-outline/10 z-50">
-        {/* Logo mark */}
         <div className="w-7 h-7 mb-4 border border-primary/40 flex items-center justify-center">
           <span className="text-primary font-mono text-[10px] font-bold">P2</span>
         </div>
 
-        {NAV_ITEMS.map(({ to, icon: Icon, label }) => (
+        {NAV_ITEMS.map(({ to, icon: Icon, label, end }) => (
           <NavLink
             key={to}
             to={to}
-            end={to === '/'}
+            end={end}
             className={({ isActive }) =>
               cn(
                 'w-10 h-10 flex items-center justify-center transition-colors group relative',
-                isActive
-                  ? 'text-primary tactical-glow'
-                  : 'text-on-muted hover:text-on-surface',
+                isActive ? 'text-primary tactical-glow' : 'text-on-muted hover:text-on-surface',
               )
             }
           >
             <Icon size={18} />
-            {/* Tooltip */}
-            <span className="absolute left-full ml-2 px-2 py-1 bg-surface-high text-on-surface text-[10px] font-mono uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+            <span className="absolute left-full ml-2 px-2 py-1 bg-surface-high text-on-surface text-[10px] font-mono uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
               {label}
             </span>
           </NavLink>
         ))}
 
-        {/* Bottom: sandbox link */}
         <div className="mt-auto">
           <NavLink
             to="/sandbox/intelligent_editor"
@@ -205,57 +210,113 @@ export function AppShell() {
 
 ### `src/components/layouts/JobWorkspaceShell.tsx`
 
-Shell de job: hereda el LeftNav de AppShell + añade breadcrumb del job arriba
-y un status sidebar colapsable a la derecha (para la fase siguiente).
+Se renderiza dentro del `<main>` de AppShell. Añade el Pipeline TopBar secundario
+con las etapas del job. El `<Outlet>` escupe la vista específica (B0–B4).
 
 ```
-┌─ LeftNav (w-14) ─┬─ JobBreadcrumb ─────────────────────────────────┐
-│                  │ tu_berlin / 201397 / review_match  [status pill] │
-│                  ├─────────────────────────────────────────────────  │
-│                  │  <Outlet />   (el contenido de la vista actual)   │
-└──────────────────┴─────────────────────────────────────────────────  ┘
+┌─ Pipeline TopBar ──────────────────────────────────────────────────┐
+│  tu_berlin / 201397     FLOW · SCRAPE · [EXTRACT] · MATCH · SCULPT │
+├────────────────────────────────────────────────────────────────────┤
+│  <Outlet />                                                         │
+│  (JobFlowInspector, ScrapeDiagnostics, ExtractUnderstand...)        │
+└────────────────────────────────────────────────────────────────────┘
 ```
 
 ```tsx
-// src/components/layouts/JobWorkspaceShell.tsx
 import { Outlet, useParams, NavLink } from 'react-router-dom';
-import { AppShell } from './AppShell';        // reutiliza el LeftNav
 import { ChevronRight } from 'lucide-react';
+import { cn } from '../../utils/cn';
+
+const PIPELINE_STEPS = [
+  { label: 'Flow',    path: '' },
+  { label: 'Scrape',  path: 'scrape' },
+  { label: 'Extract', path: 'extract' },
+  { label: 'Match',   path: 'match' },
+  { label: 'Sculpt',  path: 'sculpt' },
+];
 
 export function JobWorkspaceShell() {
   const { source, jobId } = useParams();
+  const base = `/jobs/${source}/${jobId}`;
 
   return (
-    // JobWorkspaceShell es un <AppShell> con contenido adicional arriba del Outlet
-    // Alternativa: repetir el LeftNav inline y no heredar de AppShell.
-    // Decisión pendiente según cómo quede el anidamiento de rutas.
-    <div className="flex min-h-screen bg-background ml-14">
-      {/* Breadcrumb de job */}
-      <div className="flex flex-col flex-1">
-        <header className="h-10 flex items-center gap-2 px-4 border-b border-outline/10 bg-surface text-[11px] font-mono text-on-muted">
+    <div className="flex flex-col min-h-full">
+      <header className="h-10 flex items-center justify-between px-4 border-b border-outline/10 bg-surface shrink-0">
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-2 text-[11px] font-mono text-on-muted">
           <NavLink to="/" className="hover:text-primary transition-colors">Portfolio</NavLink>
           <ChevronRight size={12} />
-          <span className="text-on-surface">{source}</span>
+          <span>{source}</span>
           <ChevronRight size={12} />
           <span className="text-primary">{jobId}</span>
-        </header>
-        <main className="flex-1">
-          <Outlet />
-        </main>
-      </div>
+        </div>
+
+        {/* Pipeline step nav */}
+        <nav className="flex items-center gap-1">
+          {PIPELINE_STEPS.map(({ label, path }) => (
+            <NavLink
+              key={path}
+              to={path ? `${base}/${path}` : base}
+              end={path === ''}
+              className={({ isActive }) =>
+                cn(
+                  'px-3 py-1 text-[10px] font-mono uppercase tracking-widest transition-colors',
+                  isActive
+                    ? 'text-primary border-b border-primary'
+                    : 'text-on-muted hover:text-on-surface',
+                )
+              }
+            >
+              {label}
+            </NavLink>
+          ))}
+        </nav>
+      </header>
+
+      <main className="flex-1">
+        <Outlet />
+      </main>
     </div>
   );
 }
 ```
 
-> **Duda de diseño:** ¿`JobWorkspaceShell` anida dentro de `AppShell` (reutilizando el LeftNav)
-> o tiene su propio LeftNav? En el router actual están como rutas separadas — si se quiere
-> el mismo LeftNav en ambos, hay que hacer `AppShell` como layout raíz y anidar ambos grupos
-> dentro de él. Resolver antes de implementar.
+---
+
+## Paso 5 — Átomo: Badge
+
+Necesario para `PortfolioTable`. Primer átomo del sistema.
+
+```tsx
+// src/components/atoms/Badge.tsx
+import { cn } from '../../utils/cn';
+
+const VARIANTS = {
+  primary:   'bg-primary/15 text-primary border border-primary/30',
+  secondary: 'bg-secondary/15 text-secondary border border-secondary/30',
+  success:   'bg-primary/10 text-primary-dim border border-primary/20',
+  danger:    'bg-error-container/20 text-error border border-error/30',
+  muted:     'bg-surface-high text-on-muted border border-outline/20',
+};
+
+interface Props {
+  variant?: keyof typeof VARIANTS;
+  className?: string;
+  children: React.ReactNode;
+}
+
+export function Badge({ variant = 'muted', className, children }: Props) {
+  return (
+    <span className={cn('inline-flex items-center px-2 py-0.5 text-[10px] font-mono uppercase tracking-widest', VARIANTS[variant], className)}>
+      {children}
+    </span>
+  );
+}
+```
 
 ---
 
-## Paso 5 — Feature: Portfolio
+## Paso 6 — Feature: Portfolio
 
 ### `src/features/portfolio/api/usePortfolioSummary.ts`
 
@@ -272,31 +333,19 @@ export function usePortfolioSummary() {
 }
 ```
 
-### `src/pages/global/PortfolioPage.tsx` (página tonta)
+### `src/features/portfolio/components/PortfolioTable.tsx`
 
 ```tsx
-import { usePortfolioSummary } from '../../features/portfolio/api/usePortfolioSummary';
-import { PortfolioTable } from '../../features/portfolio/components/PortfolioTable';
-
-export function PortfolioPage() {
-  const { data, isLoading, isError } = usePortfolioSummary();
-  return (
-    <div className="p-6">
-      <header className="mb-6">
-        <p className="font-mono text-[10px] text-primary uppercase tracking-widest">System / PhD 2.0</p>
-        <h1 className="font-headline text-xl font-bold text-on-surface mt-1">Application Portfolio</h1>
-      </header>
-      <PortfolioTable data={data} loading={isLoading} error={isError} />
-    </div>
-  );
-}
-```
-
-### `src/features/portfolio/components/PortfolioTable.tsx` (esqueleto)
-
-```tsx
+import { useNavigate } from 'react-router-dom';
 import type { PortfolioSummary } from '../../../types/models';
 import { Badge } from '../../../components/atoms/Badge';
+
+const STATUS_VARIANT: Record<string, 'primary' | 'secondary' | 'success' | 'danger' | 'muted'> = {
+  completed:     'success',
+  paused_review: 'secondary',
+  running:       'primary',
+  failed:        'danger',
+};
 
 interface Props {
   data?: PortfolioSummary;
@@ -305,38 +354,60 @@ interface Props {
 }
 
 export function PortfolioTable({ data, loading, error }: Props) {
-  if (loading) return <div className="text-on-muted font-mono text-sm">Loading...</div>;
-  if (error)   return <div className="text-error font-mono text-sm">Failed to load portfolio.</div>;
+  const navigate = useNavigate();
+
+  if (loading) return <p className="text-on-muted font-mono text-sm">Loading...</p>;
+  if (error)   return <p className="text-error font-mono text-sm">Failed to load portfolio.</p>;
   if (!data)   return null;
 
   return (
-    <table className="w-full text-sm font-mono border-collapse">
+    <table className="w-full text-sm border-collapse">
       <thead>
-        <tr className="text-[10px] text-on-muted uppercase tracking-widest border-b border-outline/20">
-          <th className="text-left py-2 pr-4">Source / Job ID</th>
-          <th className="text-left py-2 pr-4">Current Stage</th>
-          <th className="text-left py-2 pr-4">Status</th>
+        <tr className="text-[10px] font-mono text-on-muted uppercase tracking-widest border-b border-outline/20">
+          <th className="text-left py-2 pr-6">Source / Job ID</th>
+          <th className="text-left py-2 pr-6">Current Stage</th>
+          <th className="text-left py-2 pr-6">Status</th>
           <th className="text-left py-2">Updated</th>
         </tr>
       </thead>
       <tbody>
         {data.jobs.map((job) => (
-          <tr key={job.job_id} className="border-b border-outline/10 hover:bg-surface-low transition-colors">
-            <td className="py-3 pr-4">
+          <tr
+            key={job.job_id}
+            className="border-b border-outline/10 hover:bg-surface-low transition-colors cursor-pointer"
+            onClick={() => navigate(`/jobs/${job.source}/${job.job_id}`)}
+          >
+            <td className="py-3 pr-6 font-mono">
               <span className="text-on-muted">{job.source} / </span>
               <span className="text-primary">{job.job_id}</span>
             </td>
-            <td className="py-3 pr-4 text-on-surface">{job.current_node}</td>
-            <td className="py-3 pr-4">
-              <Badge variant={job.status === 'completed' ? 'success' : job.status === 'paused_review' ? 'secondary' : 'muted'}>
-                {job.status}
-              </Badge>
+            <td className="py-3 pr-6 font-mono text-on-surface">{job.current_node}</td>
+            <td className="py-3 pr-6">
+              <Badge variant={STATUS_VARIANT[job.status] ?? 'muted'}>{job.status}</Badge>
             </td>
-            <td className="py-3 text-on-muted">{job.updated_at}</td>
+            <td className="py-3 font-mono text-on-muted text-xs">{job.updated_at}</td>
           </tr>
         ))}
       </tbody>
     </table>
+  );
+}
+```
+
+### `src/pages/global/PortfolioDashboard.tsx`
+
+```tsx
+import { usePortfolioSummary } from '../../features/portfolio/api/usePortfolioSummary';
+import { PortfolioTable } from '../../features/portfolio/components/PortfolioTable';
+
+export function PortfolioDashboard() {
+  const { data, isLoading, isError } = usePortfolioSummary();
+  return (
+    <div className="p-6">
+      <p className="font-mono text-[10px] text-primary uppercase tracking-widest">System / PhD 2.0</p>
+      <h1 className="font-headline text-xl font-bold text-on-surface mt-1 mb-6">Application Portfolio</h1>
+      <PortfolioTable data={data} loading={isLoading} error={isError} />
+    </div>
   );
 }
 ```
@@ -347,29 +418,31 @@ export function PortfolioTable({ data, loading, error }: Props) {
 
 ```
 src/
-  utils/cn.ts                                          NEW
-  main.tsx                                             UPDATE (add QueryClient)
-  App.tsx                                              UPDATE (createBrowserRouter)
+  utils/
+    cn.ts                                                NEW
+  main.tsx                                               UPDATE — add QueryClient + providers
+  App.tsx                                                UPDATE — createBrowserRouter nested
   components/
     atoms/
-      Badge.tsx                                        NEW (necesario para PortfolioTable)
+      Badge.tsx                                          NEW
     layouts/
-      AppShell.tsx                                     NEW
-      JobWorkspaceShell.tsx                            NEW
+      AppShell.tsx                                       NEW
+      JobWorkspaceShell.tsx                              NEW
   features/
     portfolio/
-      api/usePortfolioSummary.ts                       NEW
-      components/PortfolioTable.tsx                    NEW
+      api/usePortfolioSummary.ts                         NEW
+      components/PortfolioTable.tsx                      NEW
   pages/
     global/
-      PortfolioPage.tsx                                NEW
-      DataExplorerPage.tsx                             STUB (solo placeholder)
-      CvEditorPage.tsx                                 STUB
+      PortfolioDashboard.tsx                             NEW
+      DataExplorer.tsx                                   STUB
+      BaseCvEditor.tsx                                   STUB
     job/
-      JobFlowPage.tsx                                  STUB
-      ExtractPage.tsx                                  STUB
-      MatchPage.tsx                                    STUB
-      DocumentsPage.tsx                                STUB
+      JobFlowInspector.tsx                               STUB
+      ScrapeDiagnostics.tsx                              STUB
+      ExtractUnderstand.tsx                              STUB
+      Match.tsx                                          STUB
+      GenerateDocuments.tsx                              STUB
 ```
 
 ---
@@ -378,22 +451,14 @@ src/
 
 ```
 [ ] npm run dev arranca sin errores de TypeScript
-[ ] / → AppShell visible (LeftNav oscuro, fondo #0c0e10)
+[ ] / → AppShell con LeftNav oscuro (w-14, fondo #121416)
 [ ] / → PortfolioTable muestra los 2 jobs del mock (201397 + 999001)
-[ ] Badge de status renderiza con color correcto (cyan=paused, green=completed)
-[ ] NavLink activo en LeftNav → icon con tactical-glow
-[ ] /jobs/tu_berlin/201397 → JobWorkspaceShell con breadcrumb correcto
-[ ] Rutas desconocidas → no crash (404 handler pendiente)
-[ ] Tooltips del LeftNav aparecen al hover
-[ ] VITE_MOCK=false → el fetch falla gracefully (no crash de import)
+[ ] Badge status: paused_review=secondary(amber), completed=success(cyan-dim), running=primary
+[ ] Click en fila → navega a /jobs/tu_berlin/201397
+[ ] /jobs/tu_berlin/201397 → Pipeline TopBar visible con FLOW·SCRAPE·EXTRACT·MATCH·SCULPT
+[ ] NavLink activo en Pipeline TopBar resalta con border-b border-primary
+[ ] NavLink activo en LeftNav → tactical-glow
+[ ] Tooltip del LeftNav aparece al hover
+[ ] Rutas stub muestran placeholder sin crash
+[ ] Sandbox /sandbox/intelligent_editor → sin LeftNav
 ```
-
----
-
-## Dudas abiertas
-
-1. **LeftNav duplicado:** ¿`JobWorkspaceShell` hereda `AppShell` o tiene su propio nav?
-   Si se decide heredar, el router necesita un layout raíz único que envuelva todo.
-2. **Stub pages:** ¿Qué muestran las stubs? ¿`"Coming soon"` o un placeholder con el nombre de la vista?
-3. **Badge variants:** ¿`success/secondary/muted` son suficientes para todos los `StageStatus`, o se necesita un `danger` también?
-4. **`PortfolioSummary.jobs` shape:** Verificar que el mock fixture tiene el campo `jobs[]` con la forma que espera `PortfolioTable` antes de implementar.
