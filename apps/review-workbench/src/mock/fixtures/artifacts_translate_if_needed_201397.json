@@ -1,0 +1,11 @@
+{
+  "node_name": "translate_if_needed",
+  "files": [
+    {
+      "path": "nodes/translate_if_needed/approved/state.json",
+      "content_type": "json",
+      "content": "{\n  \"translated\": true,\n  \"original_language\": \"de\",\n  \"target_language\": \"en\",\n  \"chunks_processed\": 3,\n  \"char_count_original\": 1240,\n  \"char_count_translated\": 1190\n}",
+      "editable": false
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "node_name": "generate_documents",
+  "files": [
+    {
+      "path": "nodes/generate_documents/approved/state.json",
+      "content_type": "json",
+      "content": "{\n  \"cv_injections\": [\n    { \"section\": \"experience\", \"entry_id\": \"P_EXP_001\", \"bullet\": \"Developed EEG-based stress detection pipeline in PyTorch; submitted to NeurIPS workshop.\" }\n  ],\n  \"motivation_letter_deltas\": { \"tone\": \"formal\", \"focus_requirements\": [\"R1\", \"R3\"] },\n  \"email_body\": \"Dear Professor Lovelace,\\n\\nPlease find my application attached.\\n\\nBest regards,\\nJuan Pablo Ruiz Rodriguez\"\n}",
+      "editable": false
+    },
+    {
+      "path": "nodes/generate_documents/proposed/cv.md",
+      "content_type": "markdown",
+      "content": "# Juan Pablo Ruiz Rodriguez\n\nBerlin, Germany · jp.ruiz@example.com · github.com/jpcosec\n\n## Education\n\n**M.Sc. Electrical Engineering** — Computational Intelligence  \nTechnische Universität Berlin, 2021–2023\n\n**B.Sc. Electrical Engineering**  \nUniversidad de Chile, 2014–2020\n\n## Experience\n\n**Research Associate** — LAETEC Lab, TU Berlin *(2023–present)*  \nEEG-based stress detection using PyTorch; cognitive-state classification pipelines.\n\n**Research Associate** — AI-in-Education Project *(2022–2023)*  \nDesigned Intelligent Tutoring System with affective sensing and pedagogical decision logic.\n\n**Data Engineer** — Open Science Platform *(2021–2022)*  \nReproducible evaluation workflows; FAIR data principles; experiment metadata structuring.\n\n## Publications\n\n- *Affective State Classification from EEG Signals* — NeurIPS Workshop, 2023\n- *FAIR Pipelines for Neuroscience Data* — Peer-reviewed article, 2022\n\n## Skills\n\nPython · PyTorch · scikit-learn · LangGraph · Git · FAIR data principles  \nLanguages: Spanish (native), English (C1), German (B2)\n",
+      "editable": true
+    },
+    {
+      "path": "nodes/generate_documents/proposed/motivation_letter.md",
+      "content_type": "markdown",
+      "content": "Dear Professor Lovelace,\n\nI am writing to express my strong interest in the PhD Researcher position at your lab. With a background in Electrical Engineering specialising in Computational Intelligence and hands-on research experience spanning EEG signal processing, AI-in-education systems, and open science workflows, I am confident I can contribute meaningfully to your research agenda.\n\nDuring my time at LAETEC Lab, I developed a PyTorch pipeline for real-time EEG-based stress detection, producing two peer-reviewed contributions including a NeurIPS workshop paper. This work sharpened my ability to design end-to-end experimental and analytical workflows under the demanding standards of neuroscientific research.\n\nI am particularly drawn to this position because of its focus on human-AI interaction — a domain I have explored through my ITS project, where I integrated affective sensing with pedagogical decision logic.\n\nBest regards,  \nJuan Pablo Ruiz Rodriguez\n",
+      "editable": true
+    },
+    {
+      "path": "nodes/generate_documents/proposed/application_email.md",
+      "content_type": "markdown",
+      "content": "Subject: Application for PhD Researcher Position — TV-L E13\n\nDear Professor Lovelace,\n\nPlease find attached my application for the PhD Researcher position.\n\nBest regards,  \nJuan Pablo Ruiz Rodriguez  \njp.ruiz@example.com\n",
+      "editable": true
+    },
+    {
+      "path": "nodes/generate_documents/assist/proposed/view.md",
+      "content_type": "markdown",
+      "content": "# Generation Assist Report\n\n**Forbidden phrases check:** PASS  \n**Email length check:** PASS (2 lines body)  \n**CV length estimate:** ~420 words — within target\n",
+      "editable": false
+    }
+  ]
+}

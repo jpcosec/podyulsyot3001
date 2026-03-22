@@ -3,17 +3,17 @@
   "job_id": "201397",
   "thread_id": "tu_berlin_201397",
   "current_node": "review_match",
-  "status": "paused_review",
+  "status": "pending_hitl",
   "updated_at": "2026-03-05T10:32:00Z",
   "stages": [
-    { "stage": "scrape",               "status": "completed",     "artifact_ref": "nodes/scrape/approved/state.json" },
-    { "stage": "translate_if_needed",  "status": "completed",     "artifact_ref": "nodes/translate_if_needed/approved/state.json" },
-    { "stage": "extract_understand",   "status": "completed",     "artifact_ref": "nodes/extract_understand/approved/state.json" },
-    { "stage": "match",                "status": "completed",     "artifact_ref": "nodes/match/approved/state.json" },
-    { "stage": "review_match",         "status": "paused_review", "artifact_ref": "nodes/match/review/decision.md" },
-    { "stage": "generate_documents",   "status": "pending",       "artifact_ref": null },
-    { "stage": "render",               "status": "pending",       "artifact_ref": null },
-    { "stage": "package",              "status": "pending",       "artifact_ref": null }
+    { "name": "scrape",              "status": "approved",     "artifact_ref": "nodes/scrape/approved/state.json",              "updated_at": "2026-03-05T08:00:00Z" },
+    { "name": "translate_if_needed", "status": "approved",     "artifact_ref": "nodes/translate_if_needed/approved/state.json", "updated_at": "2026-03-05T08:05:00Z" },
+    { "name": "extract_understand",  "status": "approved",     "artifact_ref": "nodes/extract_understand/approved/state.json",  "updated_at": "2026-03-05T08:12:00Z" },
+    { "name": "match",               "status": "approved",     "artifact_ref": "nodes/match/approved/state.json",               "updated_at": "2026-03-05T09:50:00Z" },
+    { "name": "review_match",        "status": "needs_review", "artifact_ref": "nodes/match/review/decision.json",              "updated_at": "2026-03-05T10:32:00Z" },
+    { "name": "generate_documents",  "status": "pending",      "artifact_ref": null,                                            "updated_at": "" },
+    { "name": "render",              "status": "pending",      "artifact_ref": null,                                            "updated_at": "" },
+    { "name": "package",             "status": "pending",      "artifact_ref": null,                                            "updated_at": "" }
   ],
   "artifacts": {
     "scrape":             "nodes/scrape/approved/state.json",

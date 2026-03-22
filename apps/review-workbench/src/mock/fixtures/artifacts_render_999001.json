@@ -1,0 +1,29 @@
+{
+  "node_name": "render",
+  "files": [
+    {
+      "path": "nodes/render/approved/state.json",
+      "content_type": "json",
+      "content": "{\n  \"documents\": {\n    \"cv\":               { \"source_ref\": \"nodes/generate_documents/proposed/cv.md\",               \"rendered_ref\": \"nodes/render/proposed/cv.md\",               \"sha256\": \"d4f2a1b8c3e7\" },\n    \"motivation_letter\": { \"source_ref\": \"nodes/generate_documents/proposed/motivation_letter.md\", \"rendered_ref\": \"nodes/render/proposed/motivation_letter.md\", \"sha256\": \"9e1c5f0a2d6b\" },\n    \"application_email\": { \"source_ref\": \"nodes/generate_documents/proposed/application_email.md\", \"rendered_ref\": \"nodes/render/proposed/application_email.md\", \"sha256\": \"7b3d8e4c1f9a\" }\n  }\n}",
+      "editable": false
+    },
+    {
+      "path": "nodes/render/proposed/cv.md",
+      "content_type": "markdown",
+      "content": "# Juan Pablo Ruiz Rodriguez\n\nBerlin, Germany · jp.ruiz@example.com · github.com/jpcosec\n\n## Education\n\n**M.Sc. Electrical Engineering** — Computational Intelligence  \nTechnische Universität Berlin, 2021–2023\n\n## Experience\n\n**Research Associate** — LAETEC Lab, TU Berlin *(2023–present)*\n\n## Skills\n\nPython · PyTorch · scikit-learn · LangGraph · Git\n",
+      "editable": false
+    },
+    {
+      "path": "nodes/render/proposed/motivation_letter.md",
+      "content_type": "markdown",
+      "content": "Dear Professor Lovelace,\n\nI am writing to express my strong interest in the PhD Researcher position.\n\nBest regards,  \nJuan Pablo Ruiz Rodriguez\n",
+      "editable": false
+    },
+    {
+      "path": "nodes/render/proposed/application_email.md",
+      "content_type": "markdown",
+      "content": "Subject: Application for PhD Researcher Position — TV-L E13\n\nDear Professor Lovelace,\n\nPlease find attached my application.\n\nBest regards,  \nJuan Pablo Ruiz Rodriguez\n",
+      "editable": false
+    }
+  ]
+}

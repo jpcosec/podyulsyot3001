@@ -2,9 +2,10 @@
   "totals": {
     "jobs": 2,
     "completed": 1,
-    "pending_review": 1,
+    "pending_hitl": 1,
     "running": 0,
-    "failed": 0
+    "failed": 0,
+    "archived": 0
   },
   "jobs": [
     {
@@ -12,7 +13,7 @@
       "job_id": "201397",
       "thread_id": "tu_berlin_201397",
       "current_node": "review_match",
-      "status": "paused_review",
+      "status": "pending_hitl",
       "updated_at": "2026-03-05T10:32:00Z"
     },
     {

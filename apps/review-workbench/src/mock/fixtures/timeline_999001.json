@@ -6,14 +6,14 @@
   "status": "completed",
   "updated_at": "2026-03-10T14:20:00Z",
   "stages": [
-    { "stage": "scrape",              "status": "completed", "artifact_ref": "nodes/scrape/approved/canonical_scrape.json" },
-    { "stage": "translate_if_needed", "status": "completed", "artifact_ref": "nodes/translate_if_needed/approved/state.json" },
-    { "stage": "extract_understand",  "status": "completed", "artifact_ref": "nodes/extract_understand/approved/state.json" },
-    { "stage": "match",               "status": "completed", "artifact_ref": "nodes/match/approved/state.json" },
-    { "stage": "review_match",        "status": "completed", "artifact_ref": "nodes/match/review/decision.md" },
-    { "stage": "generate_documents",  "status": "completed", "artifact_ref": "nodes/generate_documents/approved/state.json" },
-    { "stage": "render",              "status": "completed", "artifact_ref": "nodes/render/approved/state.json" },
-    { "stage": "package",             "status": "completed", "artifact_ref": "nodes/package/approved/state.json" }
+    { "name": "scrape",              "status": "approved", "artifact_ref": "nodes/scrape/approved/canonical_scrape.json",       "updated_at": "2026-03-10T10:00:00Z" },
+    { "name": "translate_if_needed", "status": "approved", "artifact_ref": "nodes/translate_if_needed/approved/state.json",    "updated_at": "2026-03-10T10:05:00Z" },
+    { "name": "extract_understand",  "status": "approved", "artifact_ref": "nodes/extract_understand/approved/state.json",     "updated_at": "2026-03-10T10:15:00Z" },
+    { "name": "match",               "status": "approved", "artifact_ref": "nodes/match/approved/state.json",                  "updated_at": "2026-03-10T11:30:00Z" },
+    { "name": "review_match",        "status": "approved", "artifact_ref": "nodes/match/review/decision.json",                 "updated_at": "2026-03-10T12:00:00Z" },
+    { "name": "generate_documents",  "status": "approved", "artifact_ref": "nodes/generate_documents/approved/state.json",     "updated_at": "2026-03-10T13:00:00Z" },
+    { "name": "render",              "status": "approved", "artifact_ref": "nodes/render/approved/state.json",                 "updated_at": "2026-03-10T13:30:00Z" },
+    { "name": "package",             "status": "approved", "artifact_ref": "nodes/package/approved/state.json",                "updated_at": "2026-03-10T14:20:00Z" }
   ],
   "artifacts": {
     "scrape":             "nodes/scrape/approved/canonical_scrape.json",

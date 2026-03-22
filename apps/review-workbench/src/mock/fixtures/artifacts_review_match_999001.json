@@ -1,0 +1,11 @@
+{
+  "node_name": "review_match",
+  "files": [
+    {
+      "path": "nodes/match/review/decision.json",
+      "content_type": "json",
+      "content": "{\n  \"decision\": \"approve\",\n  \"feedback\": [],\n  \"reviewed_at\": \"2026-03-10T12:00:00Z\",\n  \"source_state_hash\": \"a3f9c12b\"\n}",
+      "editable": false
+    }
+  ]
+}
