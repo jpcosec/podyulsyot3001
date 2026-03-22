@@ -55,14 +55,11 @@ Future execution sequencing belongs in `plan/`, while official specs belong in `
 1. `docs/ui/node_editor_behavior_spec.md`
 2. `docs/ui/node_editor_customization_and_architecture.md`
 3. `docs/ui/node_editor_compliance_matrix.md`
-4. `apps/review-workbench/src/sandbox/README.md`
 
 ### 4) Planning and migration work
 
 1. `plan/index_checklist.md`
-2. `plan/01_ui/fase1_minimal_json_editor.md`
-3. `plan/02_langchain/fase1_llm_wrappers_y_structured_output.md`
-4. `plan/03_scrapper/json_first_scraping_migration.md`
+2. `plan/01_ui/specs/`
 
 ## Status rule
 

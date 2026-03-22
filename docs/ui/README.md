@@ -10,10 +10,4 @@ Heavy implementation detail should live close to code under `apps/review-workben
 - `node_editor_customization_and_architecture.md`
 - `node_editor_compliance_matrix.md`
 
-## Supporting assets
-
-- `prototypes/examples.html`
-- `prototypes/examples2.html`
-- `prototypes/examples3.html`
-
 Node-editor screenshots live under `docs/ui/images/node-editor/`.
