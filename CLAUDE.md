@@ -1,107 +1,102 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working on the UI redesign.
 
-## What this project is
+## Primeros Pasos
 
-PhD 2.0 is a graph-driven pipeline that produces PhD application artifacts (motivation letter, tailored CV, email) from job postings and a candidate profile knowledge base. It combines deterministic node contracts with LLM generation and mandatory human-in-the-loop review at each semantic gate.
+1. **Leer el plan:** `plan/README.md` y `plan/index_checklist.md`
+2. **Elegir spec:** buscar en `plan/01_ui/specs/` la fase actual
+3. **Revisar Migration Notes:** cada spec indica qué extraer del branch `dev`
+4. **Implementar:** seguir estructura de archivos del spec
+5. **Cerrar fase:** commit + changelog + checklist (obligatorio)
 
 ## Commands
 
 ```bash
-# Run all tests
-python -m pytest tests/ -q
+# Frontend development
+cd apps/review-workbench
+npm run dev          # con VITE_MOCK=true por defecto
 
-# Run tests for a specific module
-python -m pytest tests/core/tools -q
-python -m pytest tests/nodes/match -q
+# Con API real (mock=false)
+VITE_MOCK=false npm run dev
 
-# Run a single test file
-python -m pytest tests/core/tools/test_translation_service.py -q
-
-# Run the prep-match flow (scrape -> translate -> extract -> match -> review_match)
-python -m src.cli.run_prep_match \
-  --source tu_berlin \
-  --job-id 201399 \
-  --source-url <URL> \
-  --profile-evidence <path/to/evidence.json>
-
-# Resume after HITL review decision
-python -m src.cli.run_prep_match \
-  --source tu_berlin \
-  --job-id 201399 \
-  --resume
-
-# Select Gemini model (default: gemini-2.5-flash)
-PHD2_GEMINI_MODEL=gemini-2.0-flash python -m src.cli.run_prep_match ...
+# Tests
+cd apps/review-workbench && npm test
 ```
 
-## Architecture
+## Workflow
 
-### Three-layer source structure
-
-- `src/core/` — deterministic only: contracts, tools (scraping, translation), round management, I/O layer. **Must never import from `src/ai/`.**
-- `src/ai/` — LLM boundary: `LLMRuntime` (Gemini wrapper), `PromptManager` (Jinja2 template renderer).
-- `src/nodes/` — per-node packages (`contract.py`, `logic.py`); LLM nodes also have `prompt/system.md` and `prompt/user_template.md`.
-- `src/cli/` — operator entry points.
-- `src/graph.py` — LangGraph app assembly and routing.
-
-### Control plane vs. Data plane
-
-**Control plane** (`GraphState` TypedDict in `src/core/graph/state.py`): carries only routing signals — `source`, `job_id`, `run_id`, `current_node`, `status`, `review_decision`, `error_state`. No artifact payloads in state.
-
-**Data plane** (disk): all artifact content lives under `data/jobs/<source>/<job_id>/`. Each node writes to `nodes/<node>/{input,proposed,review,approved,meta}/`. JSON = machine truth, Markdown = human review surface.
-
-### Node shape
-
-Every node follows this package layout:
 ```
-src/nodes/<node_name>/
-  contract.py     # Pydantic input/output schemas
-  logic.py        # pure business logic; no LangGraph coupling
-  __init__.py
-  prompt/         # LLM nodes only
-    system.md
-    user_template.md   # Jinja2 template
+plan/01_ui/specs/<spec>.md
+    ↓
+Migration Notes (legacy source en dev)
+    ↓
+Implementar componentes en features/
+    ↓
+Verificar Definition of Done
+    ↓
+E2E Tests
+    ↓
+COMMIT (formato obligatorio)
+    ↓
+CHANGELOG + CHECKLIST
 ```
 
-`logic.py` exports `run_logic(state: Mapping) -> dict` and is the LangGraph node handler. Full nodes (target architecture) will separate into `node.py` (orchestration) + `logic.py` (pure logic) using `WorkspaceManager` / `ArtifactReader` / `ArtifactWriter` from `src/core/io/` (not yet implemented; nodes currently do inline path I/O).
+## Estructura del Frontend
 
-### Graph topology (`src/graph.py`)
+```
+apps/review-workbench/src/
+├── api/                    # Cliente API (mock o real)
+│   └── client.ts          # Toggle: VITE_MOCK=true/false
+├── mock/                  # Mock API con fixtures
+│   ├── client.ts         # Mock implementation
+│   └── fixtures/         # 32 JSON fixtures
+├── features/              # Feature-Sliced (negocio)
+│   ├── portfolio/
+│   │   ├── api/usePortfolioSummary.ts
+│   │   └── components/PortfolioTable.tsx
+│   └── job-pipeline/
+│       ├── api/useJobTimeline.ts
+│       └── components/
+├── components/            # Diseño Atómico
+│   ├── atoms/            # Button, Badge, Tag, Icon, Spinner, Kbd
+│   ├── molecules/        # SplitPane, ControlPanel
+│   └── layouts/          # AppShell, JobWorkspaceShell
+├── pages/
+│   ├── global/          # PortfolioDashboard, DataExplorer, BaseCvEditor
+│   └── job/             # JobFlowInspector, ExtractUnderstand, Match...
+└── types/
+    └── api.types.ts     # Contratos TypeScript
+```
 
-Full pipeline: `scrape -> translate_if_needed -> extract_understand -> match -> review_match -> build_application_context -> review_application_context -> generate_motivation_letter -> review_motivation_letter -> tailor_cv -> review_cv -> draft_email -> review_email -> render -> package`
+## Stack
 
-Review nodes have three branches: `approve` (continue), `request_regeneration` (loop back to generator), `reject` (end). Graph is checkpointed with SQLite (`langgraph.checkpoint.sqlite`). `thread_id` is `"{source}_{job_id}"`.
+- React 18 + TypeScript
+- Tailwind CSS (Terran Command tokens)
+- @tanstack/react-query
+- react-router-dom v6
+- lucide-react
+- @uiw/react-codemirror
+- @xyflow/react + @dagrejs/dagre
+- @dnd-kit/core
+- react-resizable-panels
 
-### HITL review loop
+## Key Resources
 
-1. Generator node writes `nodes/<node>/approved/state.json` and `nodes/<node>/review/decision.md`.
-2. Graph pauses (`interrupt_before` review node).
-3. Human edits `decision.md` in Obsidian or any editor.
-4. Human runs `--resume`; review node parses `decision.md`, validates `source_state_hash` against `proposed/state.json`, routes on `approve`/`request_regeneration`/`reject`.
+- **Specs:** `plan/01_ui/specs/`
+- **Design System:** `plan/01_ui/specs/00_design_system.md`
+- **Component Templates:** `plan/01_ui/proposals/component_templates.md`
+- **Migration Guide:** `plan/01_ui/proposals/migration_agent_prompt.md`
 
-The `RoundManager` (`src/core/round_manager.py`) tracks regeneration rounds under `nodes/match/review/rounds/round_<NNN>/`. Each regeneration round persists an immutable `decision.md` and `feedback.json`.
+## Progreso Actual
 
-### Prompt rendering
+Fase 0 y Fase 1 completadas (Foundation + JobFlowInspector).  
+Ver: `plan/index_checklist.md`
 
-`PromptManager` (`src/ai/prompt_manager.py`) loads node-local templates and renders them with Jinja2 (`StrictUndefined`). It validates required and optional XML tags (e.g. `<job_requirements>`, `<profile_evidence>`) in the rendered user prompt.
+## Reglas
 
-### Failure model
-
-Nodes must fail closed — no silent fallback-to-success. Failure types are defined in `GraphState.ErrorContext`: `MODEL_FAILURE`, `TOOL_FAILURE`, `IO_FAILURE`, `INPUT_MISSING`, `SCHEMA_INVALID`, `POLICY_VIOLATION`, `PARSER_REJECTED`, `REVIEW_LOCK_MISSING`, `INTERNAL_ERROR`.
-
-## Key documentation
-
-- Graph topology and node roles: `docs/runtime/graph_flow.md`
-- Node I/O contracts and artifact schemas: `docs/runtime/node_io_matrix.md`, `docs/reference/artifact_schemas.md`
-- Node template discipline: `docs/reference/node_template_discipline.md`
-- Core I/O layer spec (target): `docs/runtime/core_io_and_provenance.md`
-- `sync_json_md` review surface service spec: `docs/architecture/sync_json_md_spec.md`
-- Business rules: `docs/policy/claim_admissibility_and_policy.md`
-- Active planning checklist: `plan/index_checklist.md`
-
-## Implementation status
-
-The `core/io/` layer (`WorkspaceManager`, `ArtifactReader`, `ArtifactWriter`, `ProvenanceService`) now exists and is partially adopted. Some nodes still do inline path construction. When implementing new nodes, follow the target/shared pattern from `docs/runtime/core_io_and_provenance.md`.
-
-The currently implemented runnable flow is `prep_match`: scrape, translate_if_needed, extract_understand, match, review_match, generate_documents, render, package.
+1. **No hardcoded data** — todo del mock/API
+2. **Pages tontas** — solo useParams + hook + render
+3. **Lógica en features/** — nunca en pages/
+4. **cn()** para toda composición de clases Tailwind
+5. **Commit obligatorio** al cerrar fase — formato en `plan/README.md`

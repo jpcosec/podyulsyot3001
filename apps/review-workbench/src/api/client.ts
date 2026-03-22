@@ -18,6 +18,7 @@ import type {
   ViewName,
   ViewPayload,
 } from "../types/api.types";
+import { apiClient as _mockClient } from "../mock/client";
 
 const BASE = import.meta.env.VITE_REVIEW_API_BASE ?? "http://127.0.0.1:8010";
 const V2 = `${BASE}/api/v2`;
@@ -62,7 +63,7 @@ async function del<T>(path: string): Promise<T> {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const apiClient = {
+const _realClient = {
 
   query: {
 
@@ -171,3 +172,5 @@ export const apiClient = {
   },
 
 } as const;
+
+export const apiClient = import.meta.env.VITE_MOCK === "true" ? _mockClient : _realClient;

@@ -7,7 +7,10 @@
 
 ---
 
-## 1. Objetivo del Operador
+## Migration Notes
+
+**Legacy source:** `apps/review-workbench/src/views/` en branch `dev`  
+**To migrate:** extraer lógica de scrape outputs a `features/job-pipeline/` + aplicar estética Terran Command + conectar via `useArtifacts`
 
 Dos modos según el estado del job:
 
@@ -127,3 +130,32 @@ src/pages/job/
 2. Verificar que `<SourceTextPreview>` está colapsado (máx 20 líneas)
 3. Click en EXPAND → verificar que el texto completo es visible
 4. Click en ADVANCE → verificar navegación a `/jobs/tu_berlin/201397/extract`
+
+---
+
+## 8. Git Workflow
+
+### Commit al cerrar la fase
+
+```
+feat(ui): implement scrape diagnostics (B1)
+
+- ScrapeMetaCard with URL, timestamp, adapter, HTTP status
+- SourceTextPreview with collapsible text
+- ErrorScreenshot conditional display
+- ScrapeControlPanel with re-run and advance actions
+- Connected to useArtifacts hook
+```
+
+### Changelog entry (changelog.md)
+
+```markdown
+## YYYY-MM-DD
+
+- Implemented B1 Scrape Diagnostics: metadata card, collapsible source text preview,
+  error screenshot display, and scrape control panel.
+```
+
+### Checklist update (index_checklist.md)
+
+- [x] B1 Scrape Diagnostics

@@ -1,0 +1,978 @@
+[
+  {
+    "id": "TC001",
+    "title": "Pending HITL job shows heading, HITL banner, and metadata after loading completes",
+    "description": "Verifies the Job Flow Inspector renders the correct heading, HITL CTA banner, and JobMetaPanel fields for job 201397 after the loading state ends.",
+    "category": "Job Flow Inspector",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /jobs/tu_berlin/201397"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Loading...\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Wait for \"Loading...\" to disappear"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"201397\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"/ tu_berlin\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"HUMAN REVIEW REQUIRED — REVIEW_MATCH\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Thread ID\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"tu_berlin_201397\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC002",
+    "title": "Pending HITL job shows pipeline stages list and mixed status indicators",
+    "description": "Verifies the pipeline timeline lists all expected stage rows and shows both approved (filled dot) and pending (empty dot) indicators for job 201397.",
+    "category": "Job Flow Inspector",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /jobs/tu_berlin/201397"
+      },
+      {
+        "type": "action",
+        "description": "Wait for \"Loading...\" to disappear"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"scrape\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"translate_if_needed\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"extract_understand\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"review_match\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"package\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"●\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"○\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "HITL CTA button routes to the match subview for the pending HITL job",
+    "description": "Verifies clicking the \"GO TO REVIEW →\" button from the HITL banner navigates to the match sub-route for job 201397.",
+    "category": "Job Flow Inspector",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /jobs/tu_berlin/201397"
+      },
+      {
+        "type": "action",
+        "description": "Wait for \"Loading...\" to disappear"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"HUMAN REVIEW REQUIRED — REVIEW_MATCH\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click \"GO TO REVIEW →\" button"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/jobs/tu_berlin/201397/match\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"match\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "JobMetaPanel displays status and updated timestamp label for pending HITL job",
+    "description": "Verifies the JobMetaPanel includes the expected status value and an Updated At label for job 201397.",
+    "category": "Job Flow Inspector",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /jobs/tu_berlin/201397"
+      },
+      {
+        "type": "action",
+        "description": "Wait for \"Loading...\" to disappear"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Status\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"pending_hitl\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Updated At\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"JobMetaPanel\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "Completed job shows heading and does not show the HITL banner",
+    "description": "Verifies that job 999001 renders correctly and does not display the HITL CTA banner because the job is completed.",
+    "category": "Job Flow Inspector",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /jobs/tu_berlin/999001"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Loading...\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Wait for \"Loading...\" to disappear"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"999001\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"/ tu_berlin\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"HUMAN REVIEW REQUIRED — REVIEW_MATCH\" is not visible"
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "Completed job shows all stages as approved (filled dot only)",
+    "description": "Verifies the completed job timeline displays stage rows and indicates approval with filled dots, without showing pending empty-dot indicators.",
+    "category": "Job Flow Inspector",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /jobs/tu_berlin/999001"
+      },
+      {
+        "type": "action",
+        "description": "Wait for \"Loading...\" to disappear"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"scrape\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"match\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"package\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"●\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"○\" is not visible"
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "Clicking a stage name navigates to its corresponding sub-route (completed job)",
+    "description": "Verifies stage-name navigation works by clicking the \"match\" stage for job 999001 and confirming route change to the match subview.",
+    "category": "Job Flow Inspector",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /jobs/tu_berlin/999001"
+      },
+      {
+        "type": "action",
+        "description": "Wait for \"Loading...\" to disappear"
+      },
+      {
+        "type": "action",
+        "description": "Click stage name \"match\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/jobs/tu_berlin/999001/match\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"match\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Page content area\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "Scrolling keeps pipeline and metadata discoverable for long timelines",
+    "description": "Verifies the user can scroll the Job Flow Inspector view and still see key sections like the pipeline stages and JobMetaPanel.",
+    "category": "Job Flow Inspector",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /jobs/tu_berlin/201397"
+      },
+      {
+        "type": "action",
+        "description": "Wait for \"Loading...\" to disappear"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Pipeline timeline\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Scroll to \"JobMetaPanel\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Thread ID\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Scroll to \"pipeline timeline\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"review_match\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Portfolio Dashboard loads and shows portfolio table with both mock jobs",
+    "description": "Verifies the Portfolio Dashboard renders the heading and displays rows for jobs 201397 and 999001 after loading.",
+    "category": "Portfolio Dashboard",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Application Portfolio\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"201397\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"999001\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"portfolio table\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "Open job workspace by clicking job 201397 row",
+    "description": "Verifies clicking the 201397 row navigates to the Job Flow Inspector for that job.",
+    "category": "Portfolio Dashboard",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"201397\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on the table row containing text \"201397\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/jobs/\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"201397\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "Open job workspace by clicking job 999001 row",
+    "description": "Verifies clicking the 999001 row navigates to the Job Flow Inspector for that job.",
+    "category": "Portfolio Dashboard",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"999001\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on the table row containing text \"999001\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/jobs/\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"999001\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "Portfolio table shows status badges for listed jobs",
+    "description": "Verifies that each job row presents a visible status badge indicating job state.",
+    "category": "Portfolio Dashboard",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"201397\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"status badge for job 201397\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"999001\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"status badge for job 999001\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "Portfolio page remains usable while data is loading (no blank screen)",
+    "description": "Verifies that the dashboard shows a stable layout with heading while the portfolio summary is still loading.",
+    "category": "Portfolio Dashboard",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Application Portfolio\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"table area\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Wait for element \"portfolio table\" to be visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"201397\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC014",
+    "title": "Graceful handling when portfolio summary fails or returns empty (empty/error state)",
+    "description": "Verifies the table area shows an empty or error message and offers a Retry action if present.",
+    "category": "Portfolio Dashboard",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Wait for element \"table area\" to be visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"empty state or error message in the table area\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Retry\" if it is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"portfolio table\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC015",
+    "title": "Left sidebar is visible on Portfolio and can navigate to Portfolio root",
+    "description": "Verifies the fixed left navigation is present and the Portfolio icon navigates to the Application Portfolio page.",
+    "category": "Global Left Navigation",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"left sidebar\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Portfolio icon\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Explorer icon\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Base CV icon\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Portfolio\" icon in the left sidebar"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Application Portfolio\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC016",
+    "title": "Navigate from Portfolio to Explorer using left sidebar",
+    "description": "Verifies the Explorer icon navigates to the Data Explorer page and the stub message is shown.",
+    "category": "Global Left Navigation",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Explorer\" icon in the left sidebar"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/explorer\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"left sidebar\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"not yet implemented\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC017",
+    "title": "Navigate from Explorer to Base CV using left sidebar",
+    "description": "Verifies the Base CV icon navigates to the Base CV page and the stub message is shown.",
+    "category": "Global Left Navigation",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /explorer"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Base CV\" icon in the left sidebar"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/cv\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"left sidebar\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"not yet implemented\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC018",
+    "title": "Navigate from Base CV back to Portfolio using left sidebar",
+    "description": "Verifies the Portfolio icon returns the user to the Application Portfolio page from another top-level route.",
+    "category": "Global Left Navigation",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /cv"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Portfolio\" icon in the left sidebar"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"left sidebar\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Application Portfolio\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC019",
+    "title": "Left sidebar persists on a job inspector route",
+    "description": "Verifies the left navigation remains visible when viewing a job pipeline inspector page.",
+    "category": "Global Left Navigation",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click on the job row for job ID \"201397\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"left sidebar\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"201397\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Explorer\" icon in the left sidebar"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/explorer\""
+      }
+    ]
+  },
+  {
+    "id": "TC020",
+    "title": "Left sidebar navigation works when repeatedly switching between top-level pages",
+    "description": "Verifies the user can switch multiple times between Portfolio, Explorer, and Base CV without losing the left navigation.",
+    "category": "Global Left Navigation",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Explorer\" icon in the left sidebar"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/explorer\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Base CV\" icon in the left sidebar"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/cv\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Portfolio\" icon in the left sidebar"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Application Portfolio\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC021",
+    "title": "Job workspace shell loads for a pending HITL job and shows breadcrumb + step tabs",
+    "description": "Verifies the job workspace shell renders correctly with breadcrumb and all pipeline step tabs on initial job load.",
+    "category": "Job Workspace Shell",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"201397\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on the job row or link that contains text \"201397\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/jobs/\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"breadcrumb\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Portfolio\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"tu_berlin\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"201397\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC022",
+    "title": "Pipeline step tabs are visible in the job workspace shell",
+    "description": "Verifies the top pipeline bar shows all expected step tabs for the job workspace.",
+    "category": "Job Workspace Shell",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click on the job row or link that contains text \"201397\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Flow\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Scrape\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Extract\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Match\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Sculpt\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Deployment\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC023",
+    "title": "Navigate from Flow to Match using the pipeline step tab",
+    "description": "Verifies clicking the Match tab changes the view and updates the URL accordingly.",
+    "category": "Job Workspace Shell",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click on the job row or link that contains text \"201397\""
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Match\" tab"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/jobs/\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/match\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"breadcrumb\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"201397\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC024",
+    "title": "Navigate from Flow to Scrape using the pipeline step tab and see the stub content",
+    "description": "Verifies clicking the Scrape tab navigates to the scrape sub-page and shows placeholder/stub content.",
+    "category": "Job Workspace Shell",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click on the job row or link that contains text \"201397\""
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Scrape\" tab"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/scrape\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"breadcrumb\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Scrape\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC025",
+    "title": "Use breadcrumb Portfolio link to return from a job sub-page back to the portfolio",
+    "description": "Verifies the breadcrumb provides a working Portfolio link that returns the user to the portfolio dashboard.",
+    "category": "Job Workspace Shell",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click on the job row or link that contains text \"201397\""
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Scrape\" tab"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/scrape\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Portfolio\" in the breadcrumb"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Application portfolio\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC026",
+    "title": "Breadcrumb shows correct job context after navigating between tabs",
+    "description": "Verifies breadcrumb retains the correct source and jobId as the user moves across pipeline step tabs.",
+    "category": "Job Workspace Shell",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click on the job row or link that contains text \"201397\""
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Extract\" tab"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/extract\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"tu_berlin\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"201397\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Deployment\" tab"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/deployment\""
+      }
+    ]
+  },
+  {
+    "id": "TC027",
+    "title": "Job workspace shell works for a completed job as well (999001)",
+    "description": "Verifies the job workspace shell renders for a different job and shows breadcrumb + step tabs with the correct jobId.",
+    "category": "Job Workspace Shell",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"999001\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on the job row or link that contains text \"999001\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/jobs/\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"breadcrumb\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"tu_berlin\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"999001\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Flow\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC028",
+    "title": "Rapid tab switching keeps navigation consistent (Scrape -> Match -> Flow)",
+    "description": "Verifies the user can switch between step tabs and the URL updates correctly each time without losing the workspace shell.",
+    "category": "Job Workspace Shell",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /"
+      },
+      {
+        "type": "action",
+        "description": "Click on the job row or link that contains text \"201397\""
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Scrape\" tab"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/scrape\""
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Match\" tab"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/match\""
+      },
+      {
+        "type": "action",
+        "description": "Click on the \"Flow\" tab"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/jobs/\""
+      }
+    ]
+  }
+]

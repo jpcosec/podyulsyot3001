@@ -7,6 +7,14 @@
 
 ---
 
+## Migration Notes
+
+**Legacy source:** `apps/review-workbench/src/pages/` en branch `dev`  
+**Legacy components:** extraer lógica de `PortfolioPage.tsx` si existe  
+**To migrate:** extraer a `features/portfolio/` + aplicar estética Terran Command + conectar via `usePortfolioSummary`
+
+---
+
 ## 1. Objetivo del Operador
 
 Pantalla de inicio. El operador debe poder:
@@ -128,3 +136,32 @@ src/components/atoms/
 2. Verificar que la fila de job `201397` tiene Badge `pending_hitl`
 3. Hacer click en la fila de `201397` → verificar navegación a `/jobs/tu_berlin/201397`
 4. Volver a `/` → verificar que el sidebar derecho tiene sección de deadlines visible
+
+---
+
+## 8. Git Workflow
+
+### Commit al cerrar la fase
+
+```
+feat(ui): implement portfolio dashboard (A1)
+
+- PortfolioTable with job list and status badges
+- DeadlineSidebar with urgency color coding
+- RecentArtifacts 3-card panel
+- SystemStatus decorative component
+- Connected to usePortfolioSummary hook
+```
+
+### Changelog entry (changelog.md)
+
+```markdown
+## YYYY-MM-DD
+
+- Implemented A1 Portfolio Dashboard: job list table with status badges,
+  deadline sidebar, recent artifacts panel, and system status indicator.
+```
+
+### Checklist update (index_checklist.md)
+
+- [x] A1 Portfolio Dashboard

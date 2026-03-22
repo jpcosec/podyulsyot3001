@@ -5,6 +5,12 @@
 **Librerías:** `@tanstack/react-query` · `lucide-react`
 **Fase:** 10 (**backend no implementado — spec especulativo**)
 
+---
+
+## Migration Notes
+
+**Status:** ⚠️ BLOCKED — requiere backend con `build_application_context` y `review_application_context` implementados
+
 > **Estado:** Los nodos `build_application_context` y `review_application_context` están
 > definidos en `src/graph.py` pero sin implementación. Este spec documenta el intent inferido
 > y marca explícitamente las dudas abiertas. No implementar hasta que el backend exista.
@@ -123,3 +129,31 @@ src/pages/job/
 1. Verificar que `<ContextBrief>` muestra el narrative del mock
 2. Verificar que `<MatchReferencePanel>` muestra scores de los reqs
 3. Click APPROVE_CONTEXT → verificar navegación al siguiente gate
+
+---
+
+## 8. Git Workflow
+
+### Commit al cerrar la fase
+
+```
+feat(ui): implement application context gate (B3b)
+
+- ContextBrief with narrative review panel
+- MatchReferencePanel with approved match scores
+- ContextDecisionBar with approve/regen options
+- Connected to useApplicationContext and useContextDecision hooks
+```
+
+### Changelog entry (changelog.md)
+
+```markdown
+## YYYY-MM-DD
+
+- Implemented B3b Application Context Gate: narrative brief review panel,
+  match reference sidebar, and context decision bar.
+```
+
+### Checklist update (index_checklist.md)
+
+- [x] B3b Application Context Gate

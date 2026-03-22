@@ -7,7 +7,11 @@
 
 ---
 
-## 1. Objetivo del Operador
+## Migration Notes
+
+**Legacy source:** `apps/review-workbench/src/` en branch `dev`  
+**Legacy reference:** extraer lógica de deployment de pages existentes  
+**To migrate:** crear `features/job-pipeline/` components + conectar via `usePackageFiles`
 
 El pipeline completó. El operador hace el checklist final y descarga el paquete:
 - Verificar que todos los artefactos están en verde (rendered, packaged)
@@ -148,3 +152,32 @@ src/pages/job/
 3. Verificar que `<PackageFileList>` muestra 3 archivos con botones de download
 4. Click en "MARK AS DEPLOYED" → verificar que aparece confirm dialog
 5. Confirmar → verificar navegación a `/`
+
+---
+
+## 8. Git Workflow
+
+### Commit al cerrar la fase
+
+```
+feat(ui): implement package & deployment (B5)
+
+- MissionSummaryCard with job metadata and score
+- PipelineChecklist with stage completion indicators
+- PackageFileList with download buttons
+- DeploymentCta full-width button
+- Connected to usePackageFiles hook
+```
+
+### Changelog entry (changelog.md)
+
+```markdown
+## YYYY-MM-DD
+
+- Implemented B5 Package & Deployment: mission summary, pipeline checklist,
+  downloadable package files, and deployment CTA.
+```
+
+### Checklist update (index_checklist.md)
+
+- [x] B5 Package & Deployment

@@ -7,7 +7,11 @@
 
 ---
 
-## 1. Objetivo del Operador
+## Migration Notes
+
+**Legacy source:** `apps/review-workbench/src/views/ViewOneGraphExplorer.tsx` en branch `dev`  
+**Legacy reference:** extraer shape del JSON de `view_match_*.json` y `evidence_bank.json` fixtures  
+**To migrate:** mover lógica a `features/job-pipeline/` + aplicar ReactFlow + conectar via `useMatchState`
 
 El LLM emparejó requerimientos del job con evidencia del perfil. El operador debe:
 - Ver el grafo de conexiones (requerimientos ↔ evidencias) con scores y reasoning
@@ -126,6 +130,23 @@ borde izquierdo:
 ```
 src/features/job-pipeline/
   api/
+    useMatchState.ts              useQuery(['view', 'match', source, jobId])
+    useMatchSave.ts              useMutation → PUT /commands/.../state/match
+    useMatchDecide.ts            useMutation → POST /commands/.../gates/:gate/decide
+    useJobRun.ts                 useMutation → POST /commands/.../run
+  components/
+    MatchGraphCanvas.tsx          ReactFlow + dagre + custom nodes/edges
+    RequirementNode.tsx           custom node con score bar
+    ProfileNode.tsx               custom node compacto
+    EdgeScoreBadge.tsx            foreignObject midpoint badge
+    EvidenceBankPanel.tsx         left sidebar dnd-kit draggables
+    MatchControlPanel.tsx         right panel con JSON readout
+    MatchDecisionModal.tsx        modal approve/regen/reject
+src/pages/job/
+  Match.tsx                       TONTO: useParams + hooks + render
+```
+src/features/job-pipeline/
+  api/
     useViewMatch.ts               useQuery(['view', 'match', source, jobId])
     useEditorState.ts             useMutation → PUT /commands/.../state/match
     useGateDecide.ts              useMutation → POST /commands/.../gates/:gate/decide
@@ -170,3 +191,35 @@ src/pages/job/
 3. Click en un nodo `RequirementNode` → verificar que `<MatchControlPanel>` muestra el JSON
 4. Presionar `Ctrl+Enter` → verificar que `<MatchDecisionModal>` aparece
 5. Click en "APPROVE" → verificar que el modal se cierra y useMutation fue llamado
+
+---
+
+## 8. Git Workflow
+
+### Commit al cerrar la fase
+
+```
+feat(ui): implement match view (B3)
+
+- MatchGraphCanvas with ReactFlow, dagre layout, and custom nodes
+- RequirementNode with score bar and status indicators
+- ProfileNode compact display
+- EdgeScoreBadge on graph edges
+- EvidenceBankPanel with dnd-kit draggables
+- MatchControlPanel with JSON readout
+- MatchDecisionModal with approve/regen/reject options
+- Connected to useMatchState, useMatchSave, useMatchDecide hooks
+```
+
+### Changelog entry (changelog.md)
+
+```markdown
+## YYYY-MM-DD
+
+- Implemented B3 Match: ReactFlow graph with requirement/profile nodes,
+  edge score badges, evidence bank drag-and-drop, and decision modal.
+```
+
+### Checklist update (index_checklist.md)
+
+- [x] B3 Match

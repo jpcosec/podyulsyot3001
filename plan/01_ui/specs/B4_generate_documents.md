@@ -5,14 +5,13 @@
 **Librerías:** `react-resizable-panels` · `@uiw/react-codemirror` · `@tanstack/react-query` · `lucide-react`
 **Fase:** 6
 
-> **Nota PREP_MATCH vs DEFAULT:** Este spec describe la vista de PREP_MATCH donde los 3 documentos
-> se generan y revisan juntos en un solo gate (3 tabs simultáneos). En el **DEFAULT pipeline**,
-> cada documento tiene su propio gate HITL separado — ver **spec B4b**. La UI base es la misma:
-> solo cambia qué tabs están activos/locked a la vez.
-
 ---
 
-## 1. Objetivo del Operador
+## Migration Notes
+
+**Legacy source:** `apps/review-workbench/src/views/ViewThreeGraphToDoc.tsx` en branch `dev`  
+**Legacy reference:** extraer shape del JSON de `view_documents_*.json` fixtures  
+**To migrate:** mover lógica a `features/job-pipeline/` + aplicar CodeMirror + conectar via `useDocumentsState`
 
 El LLM generó los tres documentos de aplicación. El operador debe:
 - Leer el CV adaptado, la cover letter y el email propuestos
@@ -105,6 +104,20 @@ Sin editar:          [CV]   → text-on-muted
 ```
 src/features/job-pipeline/
   api/
+    useDocumentsState.ts          useQuery(['view', 'documents', source, jobId])
+    useDocumentSave.ts            useMutation → PUT /commands/.../documents/:doc_key
+    useDocumentsDecide.ts         useMutation → POST /commands/.../gates/.../decide
+  components/
+    DocumentTabs.tsx              tab bar con estados de aprobación
+    DocumentEditor.tsx            CodeMirror markdown editable
+    ContextPanel.tsx              mini-grafo + lista de evidencias
+    DocApproveBar.tsx             sticky bottom save/approve
+    RegenModal.tsx                modal feedback + re-run
+src/pages/job/
+  GenerateDocuments.tsx           TONTO: useParams + hooks + render
+```
+src/features/job-pipeline/
+  api/
     useViewDocuments.ts           useQuery(['view', 'documents', source, jobId])
     useDocumentSave.ts            useMutation → PUT /commands/.../documents/:doc_key
     useGateDecide.ts              useMutation → POST /commands/.../gates/.../decide
@@ -148,3 +161,33 @@ src/pages/job/
 5. Presionar `Ctrl+S` → verificar que el dot desaparece (guardado)
 6. Presionar `Ctrl+Enter` → verificar que el tab muestra ✓
 7. Click en "REQUEST REGEN" → verificar que `<RegenModal>` aparece con textarea
+
+---
+
+## 8. Git Workflow
+
+### Commit al cerrar la fase
+
+```
+feat(ui): implement generate documents (B4)
+
+- DocumentTabs with CV/COVER_LETTER/EMAIL and status indicators
+- DocumentEditor with CodeMirror markdown editing
+- ContextPanel with mini match graph and evidence list
+- DocApproveBar with Ctrl+S/Ctrl+Enter shortcuts
+- RegenModal with feedback textarea
+- Connected to useDocumentsState, useDocumentSave, useDocumentsDecide hooks
+```
+
+### Changelog entry (changelog.md)
+
+```markdown
+## YYYY-MM-DD
+
+- Implemented B4 Generate Documents: three-tab document editor with CodeMirror,
+  context panel with evidence visualization, and regeneration modal.
+```
+
+### Checklist update (index_checklist.md)
+
+- [x] B4 Generate Documents (PREP_MATCH)

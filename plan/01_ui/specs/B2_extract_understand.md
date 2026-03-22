@@ -7,7 +7,11 @@
 
 ---
 
-## 1. Objetivo del Operador
+## Migration Notes
+
+**Legacy source:** `apps/review-workbench/src/views/ViewTwoDocToGraph.tsx` en branch `dev`  
+**Legacy reference:** extraer shape del JSON de `view_extract_*.json` fixtures  
+**To migrate:** mover lógica a `features/job-pipeline/` + aplicar CodeMirror + conectar via `useExtractState`
 
 El LLM extrajo los requerimientos del job posting. El operador debe:
 - Leer el texto fuente y ver qué fragmentos corresponden a cada requerimiento
@@ -102,8 +106,7 @@ nice → bg-outline/10 text-on-muted border border-outline/30       [NICE]
 ```
 src/features/job-pipeline/
   api/
-    useViewExtract.ts             useQuery(['view', 'extract', source, jobId])
-    useEditorState.ts             useMutation → PUT /commands/.../state/extract_understand
+    useExtractState.ts            useQuery + useMutation → PUT /commands/.../state/extract_understand
   components/
     SourceTextPane.tsx            CodeMirror read-only + span decorations
     RequirementList.tsx           organismo: lista de items editables
@@ -141,3 +144,32 @@ src/pages/job/
 3. Click en un req → verificar que el `<ExtractControlPanel>` muestra el JSON del req seleccionado
 4. Editar el texto de un req + presionar `Ctrl+S` → verificar que no hay errores en consola
 5. Presionar `Ctrl+Enter` → verificar navegación a `/jobs/tu_berlin/201397/match`
+
+---
+
+## 8. Git Workflow
+
+### Commit al cerrar la fase
+
+```
+feat(ui): implement extract & understand (B2)
+
+- SourceTextPane with CodeMirror and span highlight decorations
+- RequirementList with editable RequirementItems
+- ExtractControlPanel with JSON readout and stage actions
+- Span hover interaction for requirement selection
+- Connected to useExtractState hook
+```
+
+### Changelog entry (changelog.md)
+
+```markdown
+## YYYY-MM-DD
+
+- Implemented B2 Extract & Understand: source text pane with span highlighting,
+  editable requirement list, and extract control panel.
+```
+
+### Checklist update (index_checklist.md)
+
+- [x] B2 Extract & Understand

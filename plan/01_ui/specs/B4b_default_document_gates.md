@@ -5,6 +5,12 @@
 **Librerías:** `react-resizable-panels` · `@uiw/react-codemirror` · `@tanstack/react-query` · `lucide-react`
 **Fase:** 8 (**backend no implementado — spec especulativo**)
 
+---
+
+## Migration Notes
+
+**Status:** ⚠️ BLOCKED — requiere backend con `generate_motivation_letter`, `review_motivation_letter`, `tailor_cv`, `review_cv`, `draft_email`, `review_email` implementados
+
 > **Estado:** Los nodos `generate_motivation_letter`, `review_motivation_letter`, `tailor_cv`,
 > `review_cv`, `draft_email`, `review_email` están definidos en `src/graph.py` pero sin
 > implementación. Este spec documenta el intent inferido. No implementar hasta que el backend exista.
@@ -171,3 +177,30 @@ src/pages/job/
 3. Verificar que tooltip en tab pending es visible al hover
 4. Click en APPROVE_LETTER → verificar navegación al Gate C.2 con tab CV activo
 5. En Gate C.3: verificar que el CTA tiene clase `bg-primary` y es visualmente más prominente
+
+---
+
+## 8. Git Workflow
+
+### Commit al cerrar la fase
+
+```
+feat(ui): implement default document gates (B4b)
+
+- Extended GenerateDocuments with mode="default_gate"
+- Tab locking per gate (C.1 letter, C.2 CV, C.3 email)
+- Connected to useDocumentGate and useGateDecision hooks
+```
+
+### Changelog entry (changelog.md)
+
+```markdown
+## YYYY-MM-DD
+
+- Implemented B4b Default Document Gates: sequential document approval flow
+  with locked tabs and per-gate decision handling.
+```
+
+### Checklist update (index_checklist.md)
+
+- [x] B4b Default Document Gates

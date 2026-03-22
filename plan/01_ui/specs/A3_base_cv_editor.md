@@ -7,7 +7,11 @@
 
 ---
 
-## 1. Objetivo del Operador
+## Migration Notes
+
+**Legacy source:** `apps/review-workbench/src/sandbox/pages/CvGraphEditorPage.tsx` en branch `dev`  
+**Legacy components:** extraer CvGraphCanvas, EntryNode, SkillNode del sandbox  
+**To migrate:** mover a `features/base-cv/` + aplicar estética Terran Command + conectar via `useCvProfileGraph`
 
 Vista global para gestionar el "arsenal" de experiencias y habilidades maestras — el perfil canónico que el pipeline usa como fuente para generar aplicaciones. El operador puede:
 - Ver todos sus entries (experiencias, educación, publicaciones, idiomas) y skills como grafo visual
@@ -147,3 +151,32 @@ src/pages/global/
 2. Hacer click en un nodo de entry → verificar que `<NodeInspector>` aparece con el título del nodo
 3. Editar el campo de título en el inspector → presionar `Ctrl+S` → verificar que no hay error en consola
 4. Click fuera de cualquier nodo → verificar que `<ProfileStats>` vuelve a aparecer
+
+---
+
+## 8. Git Workflow
+
+### Commit al cerrar la fase
+
+```
+feat(ui): implement base CV editor (A3)
+
+- CvGraphCanvas with ReactFlow + dagre layout
+- EntryNode and SkillNode custom components
+- NodeInspector sidebar for editing
+- ProfileStats dashboard when nothing selected
+- Connected to useCvProfileGraph hook
+```
+
+### Changelog entry (changelog.md)
+
+```markdown
+## YYYY-MM-DD
+
+- Implemented A3 Base CV Editor: ReactFlow graph with Entry/Skill nodes,
+  inspector sidebar, and demonstrates edges visualization.
+```
+
+### Checklist update (index_checklist.md)
+
+- [x] A3 Base CV Editor

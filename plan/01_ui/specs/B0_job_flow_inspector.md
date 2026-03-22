@@ -3,11 +3,15 @@
 **Feature:** `src/features/job-pipeline/`
 **Page:** `src/pages/job/JobFlowInspector.tsx`
 **Librerías:** `@tanstack/react-query` · `lucide-react`
-**Fase:** 2
+**Fase:** 1
 
 ---
 
-## 1. Objetivo del Operador
+## Migration Notes
+
+**Legacy source:** extraer lógica de pages/job en branch `dev`  
+**To migrate:** components ya creados en `features/job-pipeline/components/`  
+**Status:** ✅ Implementado — solo requiere aplicar estético final y conectar a API real si no está hecho
 
 Hub de navegación del job. El operador ve:
 - En qué etapa está el pipeline y el estado de cada una
@@ -136,3 +140,32 @@ src/pages/job/
 3. Verificar que `<HitlCtaBanner>` está visible con botón "GO TO REVIEW"
 4. Click en "GO TO REVIEW" → verificar navegación a `/jobs/tu_berlin/201397/match`
 5. Navegar a `/jobs/tu_berlin/999001` → verificar que HitlCtaBanner NO aparece (status=completed)
+
+---
+
+## 8. Git Workflow
+
+### Commit al cerrar la fase
+
+```
+feat(ui): implement job flow inspector (B0)
+
+- PipelineTimeline vertical stage visualization
+- StageRow with status dot and artifact links
+- HitlCtaBanner for pending HITL intervention
+- JobMetaPanel with score/deadline/thread_id
+- Connected to useJobTimeline hook
+```
+
+### Changelog entry (changelog.md)
+
+```markdown
+## YYYY-MM-DD
+
+- Implemented B0 Job Flow Inspector: pipeline timeline with stage dots,
+  HITL CTA banner, and job metadata panel.
+```
+
+### Checklist update (index_checklist.md)
+
+- [x] B0 Job Flow Inspector

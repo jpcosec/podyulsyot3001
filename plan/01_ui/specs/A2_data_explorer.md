@@ -3,11 +3,15 @@
 **Feature:** `src/features/explorer/`
 **Page:** `src/pages/global/DataExplorer.tsx`
 **Librerías:** `react-resizable-panels` · `@uiw/react-codemirror` · `lucide-react`
-**Fase:** 8
+**Fase:** 2
 
 ---
 
-## 1. Objetivo del Operador
+## Migration Notes
+
+**Legacy source:** `apps/review-workbench/src/views/ViewTwoDocToGraph.tsx` en branch `dev`  
+**Legacy reference:** extraer shape del JSON de `view_extract_*.json` fixtures  
+**To migrate:** extraer lógica de browse a `features/explorer/` + aplicar estética Terran Command + conectar via `useExplorerBrowse`
 
 Navegar el filesystem de `data/jobs/` para inspeccionar artefactos crudos — JSONs aprobados, propuestos, trazas de error, screenshots. No es una vista de edición; es diagnóstico y auditoría.
 
@@ -130,3 +134,32 @@ src/pages/global/
 2. Expandir la carpeta `tu_berlin/` en el árbol → verificar que aparece `201397/`
 3. Navegar hasta `nodes/match/approved/` → hacer click en `state.json` → verificar que CodeMirror carga JSON con colores
 4. Click en breadcrumb `match` → verificar que el panel derecho vuelve al directorio
+
+---
+
+## 8. Git Workflow
+
+### Commit al cerrar la fase
+
+```
+feat(ui): implement data explorer (A2)
+
+- ExplorerTree recursive collapsible file browser
+- BreadcrumbNav with clickable path segments
+- FilePreview dispatcher for JSON/MD/image/binary
+- JsonPreview with CodeMirror syntax highlighting
+- Connected to useExplorerBrowse hook
+```
+
+### Changelog entry (changelog.md)
+
+```markdown
+## YYYY-MM-DD
+
+- Implemented A2 Data Explorer: recursive file tree with JSON/MD/image preview
+  and CodeMirror syntax highlighting.
+```
+
+### Checklist update (index_checklist.md)
+
+- [x] A2 Data Explorer
