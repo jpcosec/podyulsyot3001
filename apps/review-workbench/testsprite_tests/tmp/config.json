@@ -2,17 +2,19 @@
   "status": "commited",
   "type": "frontend",
   "scope": "codebase",
-  "localEndpoint": "http://localhost:5180",
+  "localEndpoint": "http://localhost:5173",
   "executionArgs": {
     "projectName": "review-workbench",
     "projectPath": "/home/jp/phd-workspaces/dev/.worktrees/ui-redesign/apps/review-workbench",
-    "testIds": [],
-    "additionalInstruction": "Always wait for Loading... to disappear before asserting (80ms mock delay). Job 201397 has status pending_hitl and shows HitlCtaBanner. Job 999001 has status completed and has NO HitlCtaBanner. Stage dots: ● for approved/completed, ○ for pending.",
+    "testIds": [
+      "TC044"
+    ],
+    "additionalInstruction": "DataExplorer now pre-loads children for all root-level folders when the explorer mounts. So when the user clicks tu_berlin, the children (including index.json) are already populated in childrenMap without any async delay.",
     "serverMode": "production",
     "envs": {
       "API_KEY": "sk-user-3CV7lW8KqGN8pvNKLzuInJ3nwyeopNOUVjuvozYREFWoFl9irNLXFjYowoLKfkrM1QKnSO49Fx3Uo8ACP7qsMcQep298I9zDzAeLN0BdTst8AfoAv7AFh0ICkQZXFMaZLU0"
     }
   },
-  "serverPort": 36519,
-  "proxy": "http://bc0bacb2-567f-4719-a4e2-65b443e1ba7e:2GTr6qOqetB6S4XeTacbm15j4iZbQmLs@tun.testsprite.com:8080"
+  "serverPort": 39343,
+  "proxy": "http://691fda20-e575-4dbe-9575-8e3fc146a679:9ZXJ3K4yhOxiqSZKNeKVLDrNW2xxeoDH@tun.testsprite.com:8080"
 }

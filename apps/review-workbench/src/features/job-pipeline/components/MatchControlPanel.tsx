@@ -22,9 +22,10 @@ export function MatchControlPanel({ selectedNode, selectedEdge, onOpenDecisionMo
       <div className="flex-1 overflow-y-auto p-4">
         {selected ? (
           <div>
-            <p className="font-mono text-[10px] text-on-muted uppercase mb-2">
+            <p className="font-mono text-[10px] text-on-muted uppercase mb-1">
               {selectedNode ? 'Selected Node' : 'Selected Edge'}
             </p>
+            <p className="font-mono text-[10px] text-primary uppercase mb-2">JSON readout</p>
             <pre className="bg-surface-container border border-outline/20 p-2 font-mono text-[9px] text-on-surface overflow-auto whitespace-pre-wrap text-xs">
               {JSON.stringify(selected, null, 2)}
             </pre>

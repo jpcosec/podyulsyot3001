@@ -1,26 +1,49 @@
+import { useState, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { SplitPane } from '../../components/molecules/SplitPane';
 import { BreadcrumbNav } from '../../features/explorer/components/BreadcrumbNav';
 import { ExplorerTree } from '../../features/explorer/components/ExplorerTree';
 import { FilePreview } from '../../features/explorer/components/FilePreview';
 import { useExplorerBrowse } from '../../features/explorer/api/useExplorerBrowse';
+import type { ExplorerEntry } from '../../types/api.types';
+import { apiClient } from '../../api/client';
 
 export function DataExplorer() {
   const [searchParams, setSearchParams] = useSearchParams();
   const activePath = searchParams.get('path') ?? '';
+  const [childrenMap, setChildrenMap] = useState<Record<string, ExplorerEntry[]>>({});
 
-  // Always browse the parent directory for the tree
-  const parentPath = activePath.includes('/')
-    ? activePath.split('/').slice(0, -1).join('/')
-    : '';
-  const treeQuery = useExplorerBrowse(parentPath);
+  const rootQuery = useExplorerBrowse('');
   const previewQuery = useExplorerBrowse(activePath);
 
   const handleNavigate = (path: string) => {
     setSearchParams(path ? { path } : {});
   };
 
-  const treeEntries = treeQuery.data?.entries ?? [];
+  const handleLoadChildren = useCallback(async (path: string) => {
+    if (childrenMap[path] !== undefined) return;
+    try {
+      const result = await apiClient.query.explorer.browse(path);
+      setChildrenMap(prev => ({ ...prev, [path]: result.entries ?? [] }));
+    } catch {
+      setChildrenMap(prev => ({ ...prev, [path]: [] }));
+    }
+  }, [childrenMap]);
+
+  // Pre-load children for all root-level directories so they're ready before user expands
+  useEffect(() => {
+    if (!rootQuery.data?.entries) return;
+    rootQuery.data.entries
+      .filter(e => e.is_dir)
+      .forEach(async e => {
+        const result = await apiClient.query.explorer.browse(e.path);
+        setChildrenMap(prev =>
+          prev[e.path] !== undefined ? prev : { ...prev, [e.path]: result.entries ?? [] }
+        );
+      });
+  }, [rootQuery.data]);
+
+  const rootEntries = rootQuery.data?.entries ?? [];
 
   return (
     <div className="flex flex-col h-full">
@@ -35,9 +58,11 @@ export function DataExplorer() {
             <BreadcrumbNav path={activePath} onNavigate={handleNavigate} />
             <div className="flex-1 overflow-auto">
               <ExplorerTree
-                entries={treeEntries}
+                entries={rootEntries}
                 activePath={activePath}
                 onSelect={handleNavigate}
+                onLoadChildren={handleLoadChildren}
+                childrenMap={childrenMap}
               />
             </div>
           </div>
@@ -49,8 +74,8 @@ export function DataExplorer() {
             <div className="flex-1 overflow-auto bg-surface">
               <FilePreview
                 data={previewQuery.data}
-                isLoading={activePath ? previewQuery.isLoading : treeQuery.isLoading}
-                isError={activePath ? previewQuery.isError : treeQuery.isError}
+                isLoading={activePath ? previewQuery.isLoading : rootQuery.isLoading}
+                isError={activePath ? previewQuery.isError : rootQuery.isError}
                 activePath={activePath}
                 onNavigate={handleNavigate}
               />

@@ -12,17 +12,13 @@ export function BaseCvEditor() {
   const query = useCvProfileGraph();
   const saveMutation = useSaveCvGraph();
 
-  const [entries, setEntries] = useState<CvEntry[]>([]);
-  const [skills, setSkills] = useState<CvSkill[]>([]);
+  const [editedEntries, setEditedEntries] = useState<CvEntry[] | null>(null);
+  const [editedSkills, setEditedSkills] = useState<CvSkill[] | null>(null);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [selectedNodeType, setSelectedNodeType] = useState<NodeType | null>(null);
 
-  useEffect(() => {
-    if (query.data) {
-      setEntries(query.data.entries);
-      setSkills(query.data.skills);
-    }
-  }, [query.data]);
+  const entries = editedEntries ?? query.data?.entries ?? [];
+  const skills = editedSkills ?? query.data?.skills ?? [];
 
   const handleNodeClick = useCallback((id: string, type: NodeType) => {
     setSelectedNodeId(id);
@@ -30,28 +26,32 @@ export function BaseCvEditor() {
   }, []);
 
   const handleEntryChange = useCallback((id: string, field: string, value: string) => {
-    setEntries(prev => prev.map(e =>
-      e.id === id ? { ...e, fields: { ...e.fields, [field]: value } } : e
-    ));
-  }, []);
+    setEditedEntries(prev => {
+      const base = prev ?? query.data!.entries;
+      return base.map(e => e.id === id ? { ...e, fields: { ...e.fields, [field]: value } } : e);
+    });
+  }, [query.data]);
 
   const handleSkillChange = useCallback((id: string, field: 'label' | 'level', value: string) => {
-    setSkills(prev => prev.map(s =>
-      s.id === id ? { ...s, [field]: value || null } : s
-    ));
-  }, []);
+    setEditedSkills(prev => {
+      const base = prev ?? query.data!.skills;
+      return base.map(s => s.id === id ? { ...s, [field]: value || null } : s);
+    });
+  }, [query.data]);
 
   const handleToggleEssential = useCallback((id: string, type: NodeType) => {
     if (type === 'entry') {
-      setEntries(prev => prev.map(e =>
-        e.id === id ? { ...e, essential: !e.essential } : e
-      ));
+      setEditedEntries(prev => {
+        const base = prev ?? query.data!.entries;
+        return base.map(e => e.id === id ? { ...e, essential: !e.essential } : e);
+      });
     } else {
-      setSkills(prev => prev.map(s =>
-        s.id === id ? { ...s, essential: !s.essential } : s
-      ));
+      setEditedSkills(prev => {
+        const base = prev ?? query.data!.skills;
+        return base.map(s => s.id === id ? { ...s, essential: !s.essential } : s);
+      });
     }
-  }, []);
+  }, [query.data]);
 
   const handleSave = useCallback(() => {
     if (!query.data) return;

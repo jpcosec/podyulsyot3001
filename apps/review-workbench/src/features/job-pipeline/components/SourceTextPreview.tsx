@@ -10,8 +10,9 @@ export function SourceTextPreview({ files }: Props) {
   const sourceFile = files.find(f => f.path.includes('source_text'));
   const content = sourceFile?.content ?? '';
   const lines = content.split('\n');
-  const visibleLines = expanded ? lines : lines.slice(0, 20);
-  const hasMore = lines.length > 20;
+  const PREVIEW_LINES = 10;
+  const visibleLines = expanded ? lines : lines.slice(0, PREVIEW_LINES);
+  const hasMore = lines.length > PREVIEW_LINES;
 
   return (
     <div className="bg-surface-container-low border border-outline/20 p-4">

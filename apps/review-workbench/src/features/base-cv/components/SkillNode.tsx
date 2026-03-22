@@ -5,6 +5,7 @@ import type { CvSkill } from '../../../types/api.types';
 interface SkillNodeData {
   skill: CvSkill;
   selected: boolean;
+  onSelect?: (id: string, type: 'entry' | 'skill') => void;
 }
 
 interface Props {
@@ -13,12 +14,13 @@ interface Props {
 }
 
 export function SkillNode({ data, selected: propSelected }: Props) {
-  const { skill, selected: dataSelected } = data;
+  const { skill, selected: dataSelected, onSelect } = data;
   const isSelected = propSelected || dataSelected;
 
   return (
     <div
       style={{ width: 160 }}
+      onClick={() => onSelect?.(skill.id, 'skill')}
       className={cn(
         'bg-surface-container border border-outline/30 px-2 py-1.5 relative',
         isSelected ? 'border-primary' : 'border-outline/30'

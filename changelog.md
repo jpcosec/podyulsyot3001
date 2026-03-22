@@ -4,6 +4,18 @@
 
 ## 2026-03-22
 
+### UI Redesign — E2E test fixes (all TestSprite tests passing)
+
+- **TC044 (Explorer JSON preview)**: Fixed two issues: (1) `ExplorerTree.toggleFolder` was calling `onLoadChildren` inside `setExpanded` updater function (React anti-pattern causing side-effect in state updater); moved call outside. (2) `DataExplorer` now eagerly pre-loads children for all root-level folders on mount so they're already in `childrenMap` when user clicks to expand.
+- **TC049 (NodeInspector)**: Fixed `BaseCvEditor` using `useState([]) + useEffect` for entries/skills — caused `CvGraphCanvas` to initialize `useNodesState([])` on first render before `useEffect` fired. Replaced with derived state: `editedEntries: CvEntry[] | null` where `entries = editedEntries ?? query.data?.entries ?? []`, so graph initializes with real data on first render after loading.
+- **TC001/TC003 (Portfolio deadlines)**: Created `DeadlineSidebar` component with urgency color-coding.
+- **TC013 (SourceTextPreview expand)**: Lowered `PREVIEW_LINES` threshold from 20 to 10.
+- **TC025 (JSON readout label)**: Added "JSON readout" label to `MatchControlPanel`.
+- **TC037 (DeploymentCta confirmation)**: Redesigned confirmation to show a separate div with Cancel/Confirm buttons instead of just changing button text.
+- **TC041 (ExplorerTree expand/collapse)**: Full rewrite with chevron icons and local `expanded: Set<string>` state.
+- **NodeInspector header**: Added "Node Inspector" section header to both entry and skill inspector panels.
+- **EntryNode/SkillNode**: Added `onSelect` callback in node data for direct click handling (bypasses ReactFlow event bubbling issues).
+
 ### UI Redesign — Fase 9 (A3 Base CV Editor)
 
 - Implemented `useCvProfileGraph` (useQuery) and `useSaveCvGraph` (useMutation) connected to `apiClient.query.profile.getCvProfileGraph` / `apiClient.commands.profile.saveCvProfileGraph`.

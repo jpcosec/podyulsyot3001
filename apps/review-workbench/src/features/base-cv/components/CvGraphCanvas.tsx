@@ -61,15 +61,15 @@ export function CvGraphCanvas({ entries, skills, demonstrates, selectedNodeId, o
       id: entry.id,
       type: 'entry' as const,
       position: { x: 0, y: 0 },
-      data: { entry, selected: entry.id === selectedNodeId },
+      data: { entry, selected: entry.id === selectedNodeId, onSelect: onNodeClick },
     })),
     ...skills.map(skill => ({
       id: skill.id,
       type: 'skill' as const,
       position: { x: 0, y: 0 },
-      data: { skill, selected: skill.id === selectedNodeId },
+      data: { skill, selected: skill.id === selectedNodeId, onSelect: onNodeClick },
     })),
-  ], [entries, skills, selectedNodeId]);
+  ], [entries, skills, selectedNodeId, onNodeClick]);
 
   const initialEdges: Edge[] = useMemo(() => demonstrates.map(d => {
     const sourceEntry = entries.find(e => e.id === d.source);

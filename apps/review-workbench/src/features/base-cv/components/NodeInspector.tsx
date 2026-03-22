@@ -83,6 +83,9 @@ export function NodeInspector({
 
     return (
       <div className="p-4 overflow-y-auto h-full">
+        <p className="font-mono text-[10px] text-on-muted uppercase tracking-widest mb-3 border-b border-outline/20 pb-2">
+          Node Inspector
+        </p>
         <p className="font-mono text-[9px] text-primary uppercase tracking-widest mb-1">
           Entry
         </p>
@@ -116,6 +119,9 @@ export function NodeInspector({
 
     return (
       <div className="p-4 overflow-y-auto h-full">
+        <p className="font-mono text-[10px] text-on-muted uppercase tracking-widest mb-3 border-b border-outline/20 pb-2">
+          Node Inspector
+        </p>
         <p className="font-mono text-[9px] text-primary uppercase tracking-widest mb-1">
           Skill
         </p>

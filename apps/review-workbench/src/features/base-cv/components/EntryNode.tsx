@@ -5,6 +5,7 @@ import type { CvEntry } from '../../../types/api.types';
 interface EntryNodeData {
   entry: CvEntry;
   selected: boolean;
+  onSelect?: (id: string, type: 'entry' | 'skill') => void;
 }
 
 interface Props {
@@ -43,7 +44,7 @@ function secondFieldValue(fields: Record<string, unknown>): string | null {
 }
 
 export function EntryNode({ data, selected: propSelected }: Props) {
-  const { entry, selected: dataSelected } = data;
+  const { entry, selected: dataSelected, onSelect } = data;
   const isSelected = propSelected || dataSelected;
   const title = firstFieldValue(entry.fields) || entry.id;
   const sub = secondFieldValue(entry.fields);
@@ -51,6 +52,7 @@ export function EntryNode({ data, selected: propSelected }: Props) {
   return (
     <div
       style={{ width: 280 }}
+      onClick={() => onSelect?.(entry.id, 'entry')}
       className={cn(
         'bg-surface-container border border-outline/30 border-l-4 px-3 py-2 relative',
         categoryBorder(entry.category),

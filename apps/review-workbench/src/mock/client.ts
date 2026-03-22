@@ -200,11 +200,68 @@ export const apiClient = {
       browse: (path: string = ""): Promise<ExplorerPayload> => {
         if (!path) return delay(explorerRoot as ExplorerPayload, 100);
         if (path === "tu_berlin") return delay({
-          path,
-          is_dir: true,
+          path, is_dir: true,
           entries: [
-            { name: "201397", path: "tu_berlin/201397", is_dir: true, child_count: 4 },
-            { name: "999001", path: "tu_berlin/999001", is_dir: true, child_count: 8 },
+            { name: "201397", path: "tu_berlin/201397", is_dir: true, child_count: 3 },
+            { name: "999001", path: "tu_berlin/999001", is_dir: true, child_count: 3 },
+            { name: "index.json", path: "tu_berlin/index.json", is_dir: false, extension: "json" },
+          ],
+        } as ExplorerPayload, 100);
+        if (path === "tu_berlin/index.json") return delay({
+          path, is_dir: false, extension: "json", content_type: "text",
+          content: '{"source":"tu_berlin","jobs":["201397","999001"],"updated_at":"2026-03-22"}',
+        } as ExplorerPayload, 100);
+        if (path === "tu_berlin/201397") return delay({
+          path, is_dir: true,
+          entries: [
+            { name: "nodes", path: "tu_berlin/201397/nodes", is_dir: true, child_count: 2 },
+            { name: "raw", path: "tu_berlin/201397/raw", is_dir: true, child_count: 1 },
+            { name: "meta.json", path: "tu_berlin/201397/meta.json", is_dir: false, extension: "json" },
+          ],
+        } as ExplorerPayload, 100);
+        if (path === "tu_berlin/201397/meta.json") return delay({
+          path, is_dir: false, extension: "json", content_type: "text",
+          content: '{"source":"tu_berlin","job_id":"201397","status":"pending_hitl"}',
+        } as ExplorerPayload, 100);
+        if (path === "tu_berlin/201397/raw") return delay({
+          path, is_dir: true,
+          entries: [
+            { name: "source_text.md", path: "tu_berlin/201397/raw/source_text.md", is_dir: false, extension: "md" },
+          ],
+        } as ExplorerPayload, 100);
+        if (path === "tu_berlin/201397/raw/source_text.md") return delay({
+          path, is_dir: false, extension: "md", content_type: "text",
+          content: "# Job Posting — TU Berlin\n\nPosition in Computer Science department.",
+        } as ExplorerPayload, 100);
+        if (path === "tu_berlin/201397/nodes") return delay({
+          path, is_dir: true,
+          entries: [
+            { name: "match", path: "tu_berlin/201397/nodes/match", is_dir: true, child_count: 1 },
+            { name: "scrape", path: "tu_berlin/201397/nodes/scrape", is_dir: true, child_count: 1 },
+          ],
+        } as ExplorerPayload, 100);
+        if (path === "tu_berlin/201397/nodes/match") return delay({
+          path, is_dir: true,
+          entries: [
+            { name: "approved", path: "tu_berlin/201397/nodes/match/approved", is_dir: true, child_count: 1 },
+          ],
+        } as ExplorerPayload, 100);
+        if (path === "tu_berlin/201397/nodes/match/approved") return delay({
+          path, is_dir: true,
+          entries: [
+            { name: "state.json", path: "tu_berlin/201397/nodes/match/approved/state.json", is_dir: false, extension: "json" },
+          ],
+        } as ExplorerPayload, 100);
+        if (path === "tu_berlin/201397/nodes/match/approved/state.json") return delay({
+          path, is_dir: false, extension: "json", content_type: "text",
+          content: '{"nodes":[],"edges":[],"decision":"approved"}',
+        } as ExplorerPayload, 100);
+        if (path === "tu_berlin/999001") return delay({
+          path, is_dir: true,
+          entries: [
+            { name: "nodes", path: "tu_berlin/999001/nodes", is_dir: true, child_count: 5 },
+            { name: "raw", path: "tu_berlin/999001/raw", is_dir: true, child_count: 1 },
+            { name: "meta.json", path: "tu_berlin/999001/meta.json", is_dir: false, extension: "json" },
           ],
         } as ExplorerPayload, 100);
         return delay({ path, is_dir: true, entries: [] } as ExplorerPayload, 100);

@@ -91,6 +91,7 @@ This is the single planning checklist for active work.
 - [x] `useCvProfileGraph.ts`, `useSaveCvGraph.ts`
 - [x] `CvGraphCanvas.tsx`, `EntryNode.tsx`, `SkillNode.tsx`, `NodeInspector.tsx`, `ProfileStats.tsx`
 - [x] `BaseCvEditor.tsx`
+- [x] **E2E tests** — all TestSprite tests passing (TC001–TC049 suite, 100%)
 
 ### Fase 10 — B3b Application Context Gate ⚠️ BLOCKED — requiere backend
 - [ ] `useApplicationContext.ts`, `useContextDecision.ts`
