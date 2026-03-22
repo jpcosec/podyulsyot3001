@@ -19,10 +19,11 @@ export function SourceTextPane({ markdown, highlight }: Props) {
           {lines.map((line, i) => {
             const lineNum = i + 1;
             const isHighlighted =
-              highlight?.start_line !== null &&
-              highlight?.end_line !== null &&
-              lineNum >= (highlight.start_line ?? 0) &&
-              lineNum <= (highlight.end_line ?? 0);
+              highlight !== null &&
+              highlight.start_line !== null &&
+              highlight.end_line !== null &&
+              lineNum >= highlight.start_line &&
+              lineNum <= highlight.end_line;
 
             return (
               <div

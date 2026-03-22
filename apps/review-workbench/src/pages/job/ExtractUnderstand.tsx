@@ -17,7 +17,7 @@ export function ExtractUnderstand() {
   const [requirements, setRequirements] = useState<RequirementItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredReq, setHoveredReq] = useState<RequirementItem | null>(null);
-  const [isDirty, setIsDirty] = useState(false);
+  const [, setIsDirty] = useState(false);
 
   useEffect(() => {
     if (extractQuery.data?.view === 'extract') {

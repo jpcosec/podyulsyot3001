@@ -1,5 +1,4 @@
 import type { EvidenceItem } from '../../../types/api.types';
-import { cn } from '../../../utils/cn';
 
 interface Props {
   items: EvidenceItem[];
