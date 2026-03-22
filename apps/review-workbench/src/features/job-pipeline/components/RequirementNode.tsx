@@ -5,15 +5,21 @@ interface RequirementNodeData {
   label: string;
   score?: number;
   priority?: string;
+  dimmed?: boolean;
+  highlighted?: boolean;
 }
 
 interface Props {
   data: RequirementNodeData;
   selected?: boolean;
+  dimmed?: boolean;
+  highlighted?: boolean;
 }
 
 export function RequirementNode({ data, selected }: Props) {
   const score = data.score ?? 0;
+  const dimmed = data.dimmed;
+  const highlighted = data.highlighted;
   const borderColor = score >= 0.7
     ? 'border-l-primary'
     : score >= 0.3
@@ -24,7 +30,9 @@ export function RequirementNode({ data, selected }: Props) {
     <div className={cn(
       'bg-surface-container border border-outline/30 border-l-4 px-3 py-2 min-w-[200px] max-w-[240px]',
       borderColor,
-      selected && 'border-primary/60 shadow-[0_0_8px_rgba(0,242,255,0.3)]'
+      selected && 'border-primary/60 shadow-[0_0_8px_rgba(0,242,255,0.3)]',
+      highlighted && 'ring-1 ring-primary/60',
+      dimmed && 'opacity-30'
     )}>
       <Handle type="target" position={Position.Left} className="!bg-primary !border-primary/50 !w-2 !h-2" />
       <p className="font-mono text-[9px] text-on-muted uppercase mb-1">{data.priority ?? 'must'}</p>

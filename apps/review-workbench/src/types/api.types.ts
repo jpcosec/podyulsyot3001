@@ -71,6 +71,8 @@ export interface GraphNode {
   id: string;
   label: string;
   kind: string;
+  score?: number;
+  priority?: string;
 }
 
 export interface GraphEdge {

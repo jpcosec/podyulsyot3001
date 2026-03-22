@@ -56,9 +56,11 @@ interface Props {
   onNodeClick: (node: GraphNode) => void;
   onEdgeClick: (edge: GraphEdge) => void;
   onAddEdge: (connection: { source: string; target: string }) => void;
+  searchQuery: string;
+  focusedNodeId: string | null;
 }
 
-export function MatchGraphCanvas({ graphNodes, graphEdges, onNodeClick, onEdgeClick, onAddEdge }: Props) {
+export function MatchGraphCanvas({ graphNodes, graphEdges, onNodeClick, onEdgeClick, onAddEdge, searchQuery, focusedNodeId }: Props) {
   // Calculate max score per requirement for border color
   const reqScores = useMemo(() => {
     const scores: Record<string, number> = {};
@@ -70,15 +72,26 @@ export function MatchGraphCanvas({ graphNodes, graphEdges, onNodeClick, onEdgeCl
     return scores;
   }, [graphEdges]);
 
-  const initialNodes: Node[] = useMemo(() => graphNodes.map(n => ({
-    id: n.id,
-    type: n.kind === 'requirement' ? 'requirement' : 'profile',
-    position: { x: 0, y: 0 },
-    data: {
-      label: n.label,
-      score: n.kind === 'requirement' ? (reqScores[n.id] ?? 0) : undefined,
-    },
-  })), [graphNodes, reqScores]);
+  const initialNodes: Node[] = useMemo(() => {
+    const q = searchQuery.toLowerCase();
+    return graphNodes.map(n => {
+      const labelLower = n.label.toLowerCase();
+      const matchesSearch = q.length > 0 && labelLower.includes(q);
+      const dimmed = q.length > 0 && !matchesSearch;
+      const highlighted = matchesSearch || focusedNodeId === n.id;
+      return {
+        id: n.id,
+        type: n.kind === 'requirement' ? 'requirement' : 'profile',
+        position: { x: 0, y: 0 },
+        data: {
+          label: n.label,
+          score: n.kind === 'requirement' ? (reqScores[n.id] ?? 0) : undefined,
+          dimmed,
+          highlighted,
+        },
+      };
+    });
+  }, [graphNodes, reqScores, searchQuery, focusedNodeId]);
 
   const initialEdges: Edge[] = useMemo(() => graphEdges.map((e, i) => ({
     id: `edge-${i}`,
