@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import type { ArtifactFile } from '../../../types/api.types';
-import { Button } from '../../../components/atoms/Button';
 
 interface Props {
   files: ArtifactFile[];

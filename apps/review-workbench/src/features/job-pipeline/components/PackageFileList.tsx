@@ -1,6 +1,5 @@
 import { FileType, FileText } from 'lucide-react';
 import type { PackageFile } from '../../../types/api.types';
-import { cn } from '../../../utils/cn';
 
 interface Props {
   files: PackageFile[];
