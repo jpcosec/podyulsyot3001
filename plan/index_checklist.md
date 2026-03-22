@@ -2,103 +2,109 @@
 
 This is the single planning checklist for active work.
 
+## Workflow Rules
+
+1. **Commit OBLIGATORIO** al cerrar cada fase — seguir formato:
+   ```
+   feat(ui): implement <view name> (<spec-id>)
+   
+   - <component 1>
+   - <component 2>
+   ...
+   - Connected to <hook names>
+   ```
+2. **Changelog** — agregar entrada en `changelog.md`
+3. **Checklist** — marcar `[x]` en este archivo
+
 ## 01 UI — ui-redesign branch (Terran Command design system)
 
-### Fase 0 — Foundation (Router + Layouts + Portfolio)
-- [ ] `utils/cn.ts` — clsx + tailwind-merge helper
-- [ ] `main.tsx` — QueryClientProvider wrapper
-- [ ] `AppShell.tsx` — LeftNav + `<Outlet />`
-- [ ] `JobWorkspaceShell.tsx` — Pipeline TopBar + nested `<Outlet />`
-- [ ] `Badge.tsx` atom — forwardRef, cn(), variant prop
-- [ ] `usePortfolioSummary.ts` + `PortfolioDashboard.tsx` stub
-- [ ] Stub pages para todas las rutas (DataExplorer, BaseCvEditor, JobFlowInspector, Scrape, Extract, Match, Sculpt, Deployment)
-- [ ] Mock toggle: `VITE_MOCK=true` via vite alias
-- [ ] Mock fixtures: `portfolio.json`, `timeline_201397.json`, `timeline_999001.json`
-- [ ] `types/api.types.ts` — PortfolioSummary, ViewOnePayload, ViewTwoPayload, ViewThreePayload, GraphNode, GraphEdge, etc.
-- [ ] `types/ui.types.ts` — tipos internos de ReactFlow, DnD, editor state
+### Fase 0 — Foundation (Router + Layouts + Portfolio) ✅
+- [x] `utils/cn.ts` — clsx + tailwind-merge helper
+- [x] `main.tsx` — QueryClientProvider wrapper
+- [x] `AppShell.tsx` — LeftNav + `<Outlet />`
+- [x] `JobWorkspaceShell.tsx` — Pipeline TopBar + nested `<Outlet />`
+- [x] `Badge.tsx` atom — forwardRef, cn(), variant prop
+- [x] `types/api.types.ts` — PortfolioSummary, ViewPayload, GraphNode, GraphEdge, etc.
+- [x] `types/ui.types.ts` — MatchNodeData, ExtractEditorState, DocumentDraft, ExplorerTreeNode, GateDecisionState
+- [x] Mock fixtures y client
 
-### Fase 1 — Job Flow Inspector (B0)
-- [ ] `useJobTimeline.ts`
-- [ ] `JobFlowInspector.tsx` — timeline visual con pipeline stages
+### Fase 0 — A1 Portfolio Dashboard ✅
+- [x] `usePortfolioSummary.ts`
+- [x] `PortfolioTable.tsx`
+- [x] `DeadlineSidebar.tsx`, `RecentArtifacts.tsx`, `SystemStatus.tsx`
+- [x] `PortfolioDashboard.tsx`
 
-### Fase 2 — Data Explorer (A2)
-- [ ] `useBrowseExplorer.ts`
-- [ ] `DataExplorer.tsx` — file tree + raw content viewer
+### Fase 1 — B0 Job Flow Inspector ✅
+- [x] `useJobTimeline.ts`
+- [x] `JobFlowInspector.tsx` — timeline visual con pipeline stages
+- [x] `HitlCtaBanner.tsx`, `JobMetaPanel.tsx`, `PipelineTimeline.tsx`, `StageRow.tsx`
 
-### Fase 3 — Scrape Diagnostics (B1)
-- [ ] `useStageOutputs.ts`
-- [ ] `ScrapeDiagnostics.tsx` — metadata + texto extraído
+### Atoms pre-Fase 2 ✅
+- [x] `Button.tsx` — variant: primary|ghost|danger, size: sm|md, loading?: boolean
+- [x] `Icon.tsx` — Lucide wrapper, name prop, size: xs|sm|md
+- [x] `Spinner.tsx` — CSS spinner, size: xs|sm|md, color primario
+- [x] `SplitPane.tsx` (molecule) — wrapper de react-resizable-panels
 
-### Fase 4 — Extract & Understand (B2)
-- [ ] `useViewTwo.ts` + `useExtractState.ts`
-- [ ] `SourceTextPane.tsx` + `RequirementList.tsx` + `RequirementItem.tsx`
-- [ ] `ExtractControlPanel.tsx`
+### Fase 2 — A2 Data Explorer ⏳
+- [ ] `useExplorerBrowse.ts`
+- [ ] `ExplorerTree.tsx`, `BreadcrumbNav.tsx`, `FilePreview.tsx`, `JsonPreview.tsx`, `MarkdownPreview.tsx`, `ImagePreview.tsx`
+- [ ] `DataExplorer.tsx`
+
+### Fase 3 — B1 Scrape Diagnostics ⏳
+- [ ] `useArtifacts.ts`
+- [ ] `ScrapeMetaCard.tsx`, `SourceTextPreview.tsx`, `ErrorScreenshot.tsx`, `ScrapeControlPanel.tsx`
+- [ ] `ScrapeDiagnostics.tsx`
+
+### Atoms pre-Fase 4 ⏳
+- [ ] `Tag.tsx` — inline span, category: skill|req|risk, border-l-2 color-coded
+
+### Fase 4 — B2 Extract & Understand ⏳
+- [ ] `useExtractState.ts`
+- [ ] `SourceTextPane.tsx`, `RequirementList.tsx`, `RequirementItem.tsx`, `ExtractControlPanel.tsx`
 - [ ] `ExtractUnderstand.tsx`
 
-### Fase 5 — Match (B3)
-- [ ] `useViewOne.ts` + `useMatchState.ts`
-- [ ] `MatchGraphCanvas.tsx` (ReactFlow + dagre)
-- [ ] `RequirementNode.tsx` + `ProfileNode.tsx` + `EdgeScoreBadge.tsx`
-- [ ] `EvidenceBankPanel.tsx` + `MatchControlPanel.tsx` + `MatchDecisionModal.tsx`
+### Fase 5 — B3 Match ⏳
+- [ ] `useMatchState.ts`, `useMatchSave.ts`, `useMatchDecide.ts`, `useJobRun.ts`
+- [ ] `MatchGraphCanvas.tsx`, `RequirementNode.tsx`, `ProfileNode.tsx`, `EdgeScoreBadge.tsx`
+- [ ] `EvidenceBankPanel.tsx`, `MatchControlPanel.tsx`, `MatchDecisionModal.tsx`
 - [ ] `Match.tsx`
 
-### Fase 6 — Generate Documents PREP_MATCH (B4)
-- [ ] `useViewThree.ts` + `useDocumentSave.ts`
-- [ ] `DocumentTabs.tsx` + `DocumentEditor.tsx` + `ContextPanel.tsx`
-- [ ] `DocApproveBar.tsx` + `RegenModal.tsx`
+### Atoms pre-Fase 6 ⏳
+- [ ] `Kbd.tsx` — keyboard shortcut display, keys: string[], estilo mono
+
+### Fase 6 — B4 Generate Documents ⏳
+- [ ] `useDocumentsState.ts`, `useDocumentSave.ts`, `useDocumentsDecide.ts`
+- [ ] `DocumentTabs.tsx`, `DocumentEditor.tsx`, `ContextPanel.tsx`
+- [ ] `DocApproveBar.tsx`, `RegenModal.tsx`
 - [ ] `GenerateDocuments.tsx`
 
-### Fase 7 — Package & Deployment (B5)
+### Fase 7 — B5 Package & Deployment ⏳
 - [ ] `usePackageFiles.ts`
-- [ ] `MissionSummaryCard.tsx` + `PipelineChecklist.tsx`
-- [ ] `PackageFileList.tsx` + `DeploymentCta.tsx`
+- [ ] `MissionSummaryCard.tsx`, `PipelineChecklist.tsx`, `PackageFileList.tsx`, `DeploymentCta.tsx`
 - [ ] `PackageDeployment.tsx`
 
-### Fase 8 — Default Document Gates (B4b) ⚠️ BLOCKED — requiere backend
-- [ ] `useDocumentGate.ts` + `useGateDecision.ts`
+### Fase 8 — B4b Default Document Gates ⚠️ BLOCKED — requiere backend
+- [ ] `useDocumentGate.ts`, `useGateDecision.ts`
 - [ ] Prop `mode="default_gate"` en `GenerateDocuments.tsx`
 
-### Fase 9 — Base CV Editor (A3)
-- [ ] `useCvProfileGraph.ts` + `useSaveCvGraph.ts`
-- [ ] `CvGraphEditor.tsx` (ReactFlow)
+### Fase 9 — A3 Base CV Editor ⏳
+- [ ] `useCvProfileGraph.ts`, `useSaveCvGraph.ts`
+- [ ] `CvGraphCanvas.tsx`, `EntryNode.tsx`, `SkillNode.tsx`, `NodeInspector.tsx`, `ProfileStats.tsx`
 - [ ] `BaseCvEditor.tsx`
 
-### Fase 10 — Application Context Gate (B3b) ⚠️ BLOCKED — requiere backend
-- [ ] `useApplicationContext.ts` + `useContextDecision.ts`
-- [ ] `ContextBrief.tsx` + `MatchReferencePanel.tsx` + `ContextDecisionBar.tsx`
+### Fase 10 — B3b Application Context Gate ⚠️ BLOCKED — requiere backend
+- [ ] `useApplicationContext.ts`, `useContextDecision.ts`
+- [ ] `ContextBrief.tsx`, `MatchReferencePanel.tsx`, `ContextDecisionBar.tsx`
 - [ ] `ApplicationContext.tsx`
-
-### Reglas globales
-- Sin datos hardcodeados — todo dato sale del mock/API
-- Todos los E2E via TestSprite
-- Componentes dumb en `pages/`, lógica en `features/`
-- `cn()` para toda composición de clases Tailwind
-
----
-
-## 02 AI — Phase 1: LLM Wrappers and Structured Output ✅
-
-- [x] ChatGoogleGenerativeAI.with_structured_output() for extract_understand
-- [x] contact_info stable extraction
-- [x] salary_grade strictly optional
-- [x] Deterministic TextSpan via resolve_span (no LLM offsets)
-- [x] LangSmith structured config (LLMConfig + trace_section)
-- [x] LangSmith traces for extract_understand and match stages
-
-## 03 Scrapper — Phase 1: Robust Scraping ✅
-
-- [x] PlaywrightFetcher with try/except
-- [x] error_screenshot.png on failures
-- [x] bot_profile persistent directory
-- [x] HTTP -> Playwright -> LLM fallback cascade
-- [x] Artifacts under nodes/scrape/ and raw/source_text.md
 
 ---
 
 ## Rules
 
 - Mark a phase complete only when code, verification, and changelog agree.
-- Archive obsolete planning docs instead of letting them drift in active folders.
-- Put subsystem specs in `docs/`, not in `plan/`.
+- **Commit message is OBLIGATORY** — follow format in `README.md`
+- **Changelog entry is OBLIGATORY** — add to `changelog.md`
 - All E2E tests via TestSprite — never raw Playwright test files.
 - No hardcoded data in components — data always from API/mock fixtures.
+- Components dumb in `pages/`, logic in `features/`
+- `cn()` for all Tailwind class composition
