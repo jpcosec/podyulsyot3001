@@ -20,11 +20,12 @@ Hub de navegación del job. El operador ve:
 ## 2. Contrato de Datos (API I/O)
 
 **Lectura:**
-- `GET /api/v1/jobs/:source/:jobId/timeline` → `JobTimeline`
+- `GET /api/v2/query/jobs/:source/:job_id/timeline` → `JobTimeline`
   ```ts
   {
-    source, job_id, thread_id, current_node, status,
-    stages: StageItem[],   // { stage, status, artifact_ref }
+    source, job_id, thread_id, current_node,
+    status: 'running' | 'pending_hitl' | 'completed' | 'failed' | 'archived',
+    stages: { name, status, artifact_ref, updated_at }[],
     artifacts: Record<string, string>,
     updated_at
   }
@@ -42,13 +43,13 @@ Hub de navegación del job. El operador ve:
 ┌─────────────── Main (flex-1, max-w-2xl mx-auto) ───────────────┐
 │  [Job header: título + institución + status badge]              │
 │                                                                  │
-│  [HitlCtaBanner — solo si paused_review]                        │
+│  [HitlCtaBanner — solo si pending_hitl]                        │
 │                                                                  │
 │  [PipelineTimeline vertical]                                     │
 │  ● SCRAPE ────── completed ── [artifact link]                   │
 │  ● EXTRACT ───── completed ── [artifact link]                   │
 │  ● MATCH ──────── completed ── [artifact link]                  │
-│  ◉ REVIEW_MATCH ─ paused_review ── [→ GO TO REVIEW]           │← CTA
+│  ◉ REVIEW_MATCH ─ pending_hitl ── [→ GO TO REVIEW]           │← CTA
 │  ○ GENERATE ───── pending                                       │
 │  ○ RENDER ──────── pending                                      │
 │  ○ PACKAGE ──────── pending                                     │
@@ -61,12 +62,12 @@ Hub de navegación del job. El operador ve:
 - `<PipelineTimeline>` — lista vertical de etapas con conector
 - `<StageRow>` — dot (colored) + nombre + Badge status + artifact link
 - `<JobMetaPanel>` — tarjeta con score, deadline, thread_id, updated_at
-- `<HitlCtaBanner>` — banner amber prominente cuando `status === "paused_review"`
+- `<HitlCtaBanner>` — banner amber prominente cuando `status === "pending_hitl"`
 
 **Stage dot colors:**
 ```
 completed     → text-primary (●)
-paused_review → text-secondary animate-pulse (◉)
+pending_hitl → text-secondary animate-pulse (◉)
 running       → text-secondary (●)
 failed        → text-error (●)
 pending       → text-on-muted border border-outline (○)
@@ -116,7 +117,7 @@ src/pages/job/
 ```
 [ ] JobFlowInspector renderiza sin errores para job 201397 (mock)
 [ ] PipelineTimeline muestra todas las etapas con dots del color correcto
-[ ] HitlCtaBanner visible cuando status=paused_review
+[ ] HitlCtaBanner visible cuando status=pending_hitl
 [ ] Click en etapa completada navega a la ruta correspondiente
 [ ] JobMetaPanel muestra thread_id y updated_at del mock
 [ ] Estado loading muestra Spinner
@@ -131,7 +132,7 @@ src/pages/job/
 **URL:** `/jobs/tu_berlin/201397`
 
 1. Verificar que `<PipelineTimeline>` renderiza con las etapas del job
-2. Verificar que el dot de `review_match` tiene clase `animate-pulse` (paused_review)
+2. Verificar que el dot de `review_match` tiene clase `animate-pulse` (pending_hitl)
 3. Verificar que `<HitlCtaBanner>` está visible con botón "GO TO REVIEW"
 4. Click en "GO TO REVIEW" → verificar navegación a `/jobs/tu_berlin/201397/match`
 5. Navegar a `/jobs/tu_berlin/999001` → verificar que HitlCtaBanner NO aparece (status=completed)

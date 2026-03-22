@@ -344,9 +344,11 @@ import type { PortfolioSummary } from '../../../types/models';
 import { Badge } from '../../../components/atoms/Badge';
 
 const STATUS_VARIANT: Record<string, 'primary' | 'secondary' | 'success' | 'danger' | 'muted'> = {
-  completed:     'success',
-  paused_review: 'secondary',
-  running:       'primary',
+  completed:    'success',
+  pending_hitl: 'secondary',
+  running:      'primary',
+  failed:       'danger',
+  archived:     'muted',
   failed:        'danger',
 };
 
@@ -457,7 +459,7 @@ src/
 [ ] npm run dev arranca sin errores de TypeScript
 [ ] / → AppShell con LeftNav oscuro (w-14, fondo #121416)
 [ ] / → PortfolioTable muestra los 2 jobs del mock (201397 + 999001)
-[ ] Badge status: paused_review=secondary(amber), completed=success(cyan-dim), running=primary
+[ ] Badge status: pending_hitl=secondary(amber), completed=success(cyan-dim), running=primary
 [ ] Click en fila → navega a /jobs/tu_berlin/201397
 [ ] /jobs/tu_berlin/201397 → Pipeline TopBar visible con FLOW·SCRAPE·EXTRACT·MATCH·SCULPT
 [ ] NavLink activo en Pipeline TopBar resalta con border-b border-primary

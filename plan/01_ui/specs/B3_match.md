@@ -22,17 +22,25 @@ El LLM emparejó requerimientos del job con evidencia del perfil. El operador de
 ## 2. Contrato de Datos (API I/O)
 
 **Lectura:**
-- `GET /api/v1/jobs/:source/:jobId/view1` → `ViewOnePayload`
+- `GET /api/v2/query/jobs/:source/:job_id/views/match` → `ViewPayload<'match'>`
   ```ts
   {
-    source, job_id,
-    nodes: GraphNode[],    // { id, label, kind: "requirement" | "profile" }
-    edges: GraphEdge[]     // { source, target, label, score, reasoning, evidence_id }
+    view: 'match', source, job_id,
+    data: {
+      nodes: GraphNode[],    // { id, label, kind: "requirement" | "profile" }
+      edges: GraphEdge[]     // { source, target, label, score, reasoning, evidence_id }
+    }
   }
   ```
+- `GET /api/v2/query/jobs/:source/:job_id/evidence-bank` → `EvidenceBankPayload`
 
 **Escritura:**
-- `PUT /api/v1/jobs/:source/:jobId/editor/match/state`
+- `PUT /api/v2/commands/jobs/:source/:job_id/state/match` — guarda correcciones al grafo
+- `POST /api/v2/commands/jobs/:source/:job_id/gates/review_match/decide` — cierra el gate HITL
+  ```ts
+  { decision: 'approve' | 'request_regeneration' | 'reject', feedback?: string[] }
+  ```
+- `POST /api/v2/commands/jobs/:source/:job_id/run` → `{ resume_from_hitl: true }` — reanuda LangGraph
 
 ---
 
@@ -118,8 +126,10 @@ borde izquierdo:
 ```
 src/features/job-pipeline/
   api/
-    useViewOne.ts                 useQuery(['view1', source, jobId])
-    useMatchState.ts              useMutation para saveEditorState
+    useViewMatch.ts               useQuery(['view', 'match', source, jobId])
+    useEditorState.ts             useMutation → PUT /commands/.../state/match
+    useGateDecide.ts              useMutation → POST /commands/.../gates/:gate/decide
+    useJobRun.ts                  useMutation → POST /commands/.../run
   components/
     MatchGraphCanvas.tsx          ReactFlow + dagre + custom nodes/edges
     RequirementNode.tsx           custom node con score bar

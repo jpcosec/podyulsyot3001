@@ -26,19 +26,21 @@ El LLM generó los tres documentos de aplicación. El operador debe:
 ## 2. Contrato de Datos (API I/O)
 
 **Lectura:**
-- `GET /api/v1/jobs/:source/:jobId/view3` → `ViewThreePayload`
+- `GET /api/v2/query/jobs/:source/:job_id/views/documents` → `ViewPayload<'documents'>`
   ```ts
   {
-    source, job_id,
-    documents: { cv: string, motivation_letter: string, application_email: string },
-    nodes: GraphNode[],
-    edges: GraphEdge[]
+    view: 'documents', source, job_id,
+    data: {
+      documents: { cv: string, motivation_letter: string, application_email: string },
+      nodes: GraphNode[],
+      edges: GraphEdge[]
+    }
   }
   ```
-- `GET /api/v1/jobs/:source/:jobId/documents/:docKey`
 
 **Escritura:**
-- `PUT /api/v1/jobs/:source/:jobId/documents/:docKey` → `{ content: string }`
+- `PUT /api/v2/commands/jobs/:source/:job_id/documents/:doc_key` → `{ markdown: string }` — edita contenido
+- `POST /api/v2/commands/jobs/:source/:job_id/gates/review_match/decide` — APPROVE_ALL (PREP_MATCH)
 
 ---
 
@@ -103,8 +105,9 @@ Sin editar:          [CV]   → text-on-muted
 ```
 src/features/job-pipeline/
   api/
-    useViewThree.ts               useQuery(['view3', source, jobId])
-    useDocumentSave.ts            useMutation para saveDocument
+    useViewDocuments.ts           useQuery(['view', 'documents', source, jobId])
+    useDocumentSave.ts            useMutation → PUT /commands/.../documents/:doc_key
+    useGateDecide.ts              useMutation → POST /commands/.../gates/.../decide
   components/
     DocumentTabs.tsx              tab bar con estados de aprobación
     DocumentEditor.tsx            CodeMirror markdown editable

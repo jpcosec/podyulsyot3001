@@ -20,8 +20,8 @@ El pipeline completó. El operador hace el checklist final y descarga el paquete
 ## 2. Contrato de Datos (API I/O)
 
 **Lectura:**
-- `GET /api/v1/jobs/:source/:jobId/timeline` → `JobTimeline` (para checklist)
-- `GET /api/v1/jobs/:source/:jobId/package/files` → `PackageFilesPayload`
+- `GET /api/v2/query/jobs/:source/:job_id/timeline` → `JobTimeline` (para checklist de stages)
+- `GET /api/v2/query/jobs/:source/:job_id/package/files` → `PackageFilesPayload`
   ```ts
   {
     source, job_id,
@@ -29,7 +29,8 @@ El pipeline completó. El operador hace el checklist final y descarga el paquete
   }
   ```
 
-**Escritura:** Ninguna desde la UI (deployed marking será CLI o endpoint futuro).
+**Escritura:**
+- `POST /api/v2/commands/jobs/:source/:job_id/archive` — futuro: marca como deployed + comprime
 
 ---
 

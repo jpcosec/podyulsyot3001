@@ -20,13 +20,14 @@ Pantalla de inicio. El operador debe poder:
 ## 2. Contrato de Datos (API I/O)
 
 **Lectura:**
-- `GET /api/v1/portfolio/summary` → `PortfolioSummary`
+- `GET /api/v2/query/portfolio/summary` → `PortfolioSummary`
   ```ts
   {
-    totals: { jobs, completed, pending_review, running, failed },
+    totals: { jobs, completed, pending_hitl, running, failed, archived },
     jobs: JobListItem[]  // { source, job_id, thread_id, current_node, status, updated_at }
   }
   ```
+  Status values: `running` · `pending_hitl` · `completed` · `failed` · `archived`
 
 **Escritura:** Ninguna. Vista de solo lectura.
 
@@ -107,7 +108,7 @@ src/components/atoms/
 ```
 [ ] PortfolioDashboard renderiza sin errores de consola ni TS
 [ ] Tabla muestra los 2 jobs del mock (201397, 999001)
-[ ] Badge: paused_review=secondary(amber), completed=success, running=primary, failed=danger
+[ ] Badge: pending_hitl=secondary(amber), completed=success, running=primary, failed=danger
 [ ] Click en fila navega a /jobs/tu_berlin/201397
 [ ] Estado vacío muestra NO_ACTIVE_MISSIONS si jobs=[]
 [ ] Estado cargando muestra Spinner
@@ -124,6 +125,6 @@ src/components/atoms/
 **URL:** `/`
 
 1. Verificar que `<PortfolioTable>` renderiza con al menos 2 filas
-2. Verificar que la fila de job `201397` tiene Badge `paused_review`
+2. Verificar que la fila de job `201397` tiene Badge `pending_hitl`
 3. Hacer click en la fila de `201397` → verificar navegación a `/jobs/tu_berlin/201397`
 4. Volver a `/` → verificar que el sidebar derecho tiene sección de deadlines visible

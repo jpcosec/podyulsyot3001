@@ -20,16 +20,17 @@ Dos modos según el estado del job:
 ## 2. Contrato de Datos (API I/O)
 
 **Lectura:**
-- `GET /api/v1/jobs/:source/:jobId/stage/scrape/outputs` → `StageOutputsPayload`
+- `GET /api/v2/query/jobs/:source/:job_id/artifacts/scrape` → `ArtifactListPayload`
   ```ts
   {
-    source, job_id, stage: "scrape",
-    files: StageOutputFile[]   // canonical_scrape.json, raw.html, error_screenshot.png...
+    source, job_id, node_name: "scrape",
+    files: { path, content_type, content, editable }[]
+    // paths: fetch_metadata.json · canonical_scrape.json · raw/source_text.md · error_screenshot.png
   }
   ```
 
 **Escritura (Setup mode):**
-- `POST /api/v1/jobs` → `{ source_url, source, adapter }` (**futuro — no implementado**)
+- `POST /api/v2/commands/jobs/scrape` → `{ url, source, adapter? }` (**futuro — no implementado**)
 - Por ahora: modo diagnóstico solamente con datos del mock.
 
 ---
@@ -91,7 +92,7 @@ Dos modos según el estado del job:
 ```
 src/features/job-pipeline/
   api/
-    useStageOutputs.ts            useQuery(['stage-outputs', source, jobId, 'scrape'])
+    useArtifacts.ts               useQuery(['artifacts', source, jobId, 'scrape'])
   components/
     ScrapeMetaCard.tsx            URL, timestamp, HTTP status
     SourceTextPreview.tsx         texto colapsable

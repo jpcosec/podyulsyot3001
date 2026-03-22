@@ -22,17 +22,20 @@ El LLM extrajo los requerimientos del job posting. El operador debe:
 ## 2. Contrato de Datos (API I/O)
 
 **Lectura:**
-- `GET /api/v1/jobs/:source/:jobId/view2` → `ViewTwoPayload`
+- `GET /api/v2/query/jobs/:source/:job_id/views/extract` → `ViewPayload<'extract'>`
   ```ts
   {
-    source, job_id,
-    source_markdown: string,
-    requirements: RequirementItem[]   // { id, text, priority, spans, text_span }
+    view: 'extract', source, job_id,
+    data: {
+      source_markdown: string,
+      requirements: RequirementItem[]   // { id, text, priority, spans, text_span }
+    }
   }
   ```
 
 **Escritura:**
-- `PUT /api/v1/jobs/:source/:jobId/editor/extract_understand/state`
+- `PUT /api/v2/commands/jobs/:source/:job_id/state/extract_understand` — guarda borrador
+- `POST /api/v2/commands/jobs/:source/:job_id/gates/review_match/decide` — no aplica a esta vista (extract no tiene gate propio actualmente)
 
 ---
 
@@ -99,8 +102,8 @@ nice → bg-outline/10 text-on-muted border border-outline/30       [NICE]
 ```
 src/features/job-pipeline/
   api/
-    useViewTwo.ts                 useQuery(['view2', source, jobId])
-    useExtractState.ts            useMutation para saveEditorState
+    useViewExtract.ts             useQuery(['view', 'extract', source, jobId])
+    useEditorState.ts             useMutation → PUT /commands/.../state/extract_understand
   components/
     SourceTextPane.tsx            CodeMirror read-only + span decorations
     RequirementList.tsx           organismo: lista de items editables
