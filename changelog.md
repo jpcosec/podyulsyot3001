@@ -2,6 +2,17 @@
 
 > Historical note: older entries may reference paths or planning structures that no longer exist after later cleanups. Treat each entry as accurate for its date.
 
+## 2026-03-22 (C2)
+
+### UI — C2 Match Editor enrichment (Phase 2, Bring-Back Migration)
+
+- ShortcutsModal atom: reusable keyboard shortcuts overlay with `<kbd>` styling, dark backdrop, Escape/click-outside to close.
+- Match.tsx: undo/redo history stack for manual edges (Ctrl+Z/Y/Shift+Z), `searchQuery` state with "/" shortcut to focus search input, Arrow Up/Down cycles through visible nodes, "?" key toggles ShortcutsModal, Escape clears search + closes modal + deselects.
+- MatchGraphCanvas: `searchQuery` + `focusedNodeId` props; computes `dimmed` (non-matching) and `highlighted` (matching or focused) per node and passes them as node data.
+- ProfileNode / RequirementNode: `dimmed` (opacity-30) and `highlighted` (ring-1 ring-primary/60) props from node data.
+- MatchControlPanel: replaced raw JSON dump with structured display — RequirementDetail (priority badge + score bar + text), ProfileDetail (evidence ID + category chip), EdgeDetail (score bar + reasoning text).
+- api.types.ts: added `score?` and `priority?` to GraphNode for structured panel display.
+
 ## 2026-03-22 (C1)
 
 ### UI — C1 CV Graph Editor enrichment (Phase 2, Bring-Back Migration)
