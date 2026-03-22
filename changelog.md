@@ -2,6 +2,19 @@
 
 > Historical note: older entries may reference paths or planning structures that no longer exist after later cleanups. Treat each entry as accurate for its date.
 
+## 2026-03-22 (C1)
+
+### UI — C1 CV Graph Editor enrichment (Phase 2, Bring-Back Migration)
+
+- Ported collapsible GroupNode containers from dev sandbox: each CV category renders as an expand/collapse group with entry count, "Add entry" button, and dropzone highlight.
+- SkillBallNode with mastery color coding: `masteryColorForCategory()` colors each skill ball by category hue + mastery intensity (teal=expert, amber=mid, red=beginner).
+- ProxyEdge: dashed-when-collapsed edge rendering (proxy flag collapses entry→skill edges to group→group when group is collapsed).
+- EntryNode inline expand panel: click card to expand descriptions list (weight H/P/S/F), essential toggle, category input, and connected skills preview.
+- SkillPalette sidebar: when an entry is focused, skills split into "Related" (has demonstrates edge) and "Unrelated" buckets; inline skill editor with mastery select.
+- NodeInspector extended: skills now show mastery `<select>` with MASTERY_SCALE options + mastery color dot; group header selection shows reorder panel with ↑/↓ buttons.
+- CvGraphCanvas rebuilt with `buildGraphViewNodes` + `applyTopLevelDagreLayout` ported from sandbox — group-based dagre LR layout, ReactFlow parentId sub-nodes for entries/skills.
+- BaseCvEditor extended: added `editedDemonstrates`, `expandedGroups`, `focusedEntryId`, `selectedSkillId`, `selectedGroupCategory`, `activeDropzoneCategory` state, plus 8 new mutation handlers including `handleConnectEdge` for demonstrates edge creation.
+
 ## 2026-03-22
 
 ### UI Redesign — E2E test fixes (all TestSprite tests passing)
