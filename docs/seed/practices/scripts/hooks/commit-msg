@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# PhD 2.0 Commit Message Validator
+# Blocks commits that don't follow the mandatory format and lack test evidence
+
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(cat $COMMIT_MSG_FILE)
+
+# 1. Validate standard format: feat/fix/docs(domain): message (spec-id)
+if ! echo "$COMMIT_MSG" | grep -qE "^(feat|fix|docs|refactor)\([a-z_-]+\): .* \([a-zA-Z0-9_-]+\)"; then
+  echo "❌ ERROR: Commit does not follow PhD 2.0 format."
+  echo "Valid example: feat(ui): implement strategy form (spec-123)"
+  echo ""
+  echo "Required format: <type>(<domain>): <description> (<spec-id>)"
+  echo "Types: feat, fix, docs, refactor"
+  echo "Domain examples: ui, api, pipeline, core, data, policy"
+  exit 1
+fi
+
+# 2. Validate TestSprite evidence (Phase 3)
+if ! echo "$COMMIT_MSG" | grep -qE "TestSprite: (Passed|URL|ID-[0-9]+)"; then
+  echo "❌ ERROR: No TestSprite evidence in commit message."
+  echo "You must include a line like: 'TestSprite: Passed' or 'TestSprite: ID-123'"
+  echo ""
+  echo "Example valid commit:"
+  echo "  feat(ui): implement strategy form (spec-123)"
+  echo ""
+  echo "  - StrategyForm component"
+  echo "  - DeltaEditor component"
+  echo "  - Connected to useDelta hook"
+  echo "  TestSprite: Passed"
+  exit 1
+fi
+
+echo "✅ PhD 2.0: Commit message validated"

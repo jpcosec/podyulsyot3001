@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# PhD 2.0 Pre-Push Hook
+# Blocks push if local tests fail
+
+echo "🚦 PhD 2.0: Running mandatory validation suite (Phase 3)..."
+
+# 1. Run Core deterministic tests (Backend)
+echo "Running Core tests..."
+pytest src/core/tests/ --tb=short
+if [ $? -ne 0 ]; then
+  echo "❌ ERROR: Core tests failed. Push aborted."
+  exit 1
+fi
+
+# 2. Run TypeScript type checking (Frontend)
+echo "Running TypeScript checks..."
+cd apps/review-workbench && npm run typecheck
+if [ $? -ne 0 ]; then
+  echo "❌ ERROR: TypeScript checks failed. Push aborted."
+  exit 1
+fi
+
+# 3. Run linting (Frontend)
+echo "Running linter..."
+cd apps/review-workbench && npm run lint
+if [ $? -ne 0 ]; then
+  echo "❌ ERROR: Linting failed. Push aborted."
+  exit 1
+fi
+
+echo "✅ All validations passed. Pushing code..."
