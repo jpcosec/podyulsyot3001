@@ -4,6 +4,16 @@
 
 ## 2026-03-22
 
+### UI Redesign — Fase 9 (A3 Base CV Editor)
+
+- Implemented `useCvProfileGraph` (useQuery) and `useSaveCvGraph` (useMutation) connected to `apiClient.query.profile.getCvProfileGraph` / `apiClient.commands.profile.saveCvProfileGraph`.
+- `CvGraphCanvas.tsx`: ReactFlow canvas with dagre LR layout; entry nodes (280×80) on left, skill nodes (160×50) on right; demonstrates edges rendered as dashed cyan with animation for essential sources.
+- `EntryNode.tsx`: category-based left border color (experience→primary/cyan, education→outline, publication→secondary/amber, language→error), essential green dot, title/institution display, font-mono ID.
+- `SkillNode.tsx`: compact node with label, level badge (amber), category (muted mono), selection highlight.
+- `NodeInspector.tsx`: right w-80 panel with editable string fields + essential toggle for selected entry/skill.
+- `ProfileStats.tsx`: counts for total/essential entries and skills, entries grouped by category.
+- `BaseCvEditor.tsx`: dumb page wiring hook + local editable state, Ctrl+S save, selection state, right panel switching between NodeInspector and ProfileStats.
+
 ### UI Redesign — Fase 2–7 (Terran Command design system, ui-redesign branch)
 
 - **Fase 2 — A2 Data Explorer**: Implemented `useExplorerBrowse.ts`, file tree components (`ExplorerTree`, `BreadcrumbNav`), preview components (`JsonPreview`, `MarkdownPreview`, `ImagePreview`, `FilePreview`), and `DataExplorer.tsx` page with SplitPane 30/70 layout and URL-based path state.

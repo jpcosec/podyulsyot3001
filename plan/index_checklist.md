@@ -87,10 +87,10 @@ This is the single planning checklist for active work.
 - [ ] `useDocumentGate.ts`, `useGateDecision.ts`
 - [ ] Prop `mode="default_gate"` en `GenerateDocuments.tsx`
 
-### Fase 9 — A3 Base CV Editor ⏳
-- [ ] `useCvProfileGraph.ts`, `useSaveCvGraph.ts`
-- [ ] `CvGraphCanvas.tsx`, `EntryNode.tsx`, `SkillNode.tsx`, `NodeInspector.tsx`, `ProfileStats.tsx`
-- [ ] `BaseCvEditor.tsx`
+### Fase 9 — A3 Base CV Editor ✅
+- [x] `useCvProfileGraph.ts`, `useSaveCvGraph.ts`
+- [x] `CvGraphCanvas.tsx`, `EntryNode.tsx`, `SkillNode.tsx`, `NodeInspector.tsx`, `ProfileStats.tsx`
+- [x] `BaseCvEditor.tsx`
 
 ### Fase 10 — B3b Application Context Gate ⚠️ BLOCKED — requiere backend
 - [ ] `useApplicationContext.ts`, `useContextDecision.ts`
