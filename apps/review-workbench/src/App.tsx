@@ -4,6 +4,7 @@ import { JobWorkspaceShell } from './components/layouts/JobWorkspaceShell';
 import { PortfolioDashboard } from './pages/global/PortfolioDashboard';
 import { DataExplorer } from './pages/global/DataExplorer';
 import { BaseCvEditor } from './pages/global/BaseCvEditor';
+import { KnowledgeGraph } from './pages/global/KnowledgeGraph';
 import { JobFlowInspector } from './pages/job/JobFlowInspector';
 import { ScrapeDiagnostics } from './pages/job/ScrapeDiagnostics';
 import { ExtractUnderstand } from './pages/job/ExtractUnderstand';
@@ -18,6 +19,7 @@ const router = createBrowserRouter([
       { index: true,      element: <PortfolioDashboard /> },
       { path: 'explorer', element: <DataExplorer /> },
       { path: 'cv',       element: <BaseCvEditor /> },
+      { path: 'graph',    element: <KnowledgeGraph /> },
       {
         path: 'jobs/:source/:jobId',
         element: <JobWorkspaceShell />,
