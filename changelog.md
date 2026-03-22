@@ -2,6 +2,17 @@
 
 > Historical note: older entries may reference paths or planning structures that no longer exist after later cleanups. Treat each entry as accurate for its date.
 
+## 2026-03-22 (C3)
+
+### UI — C3 Extract Tagger enrichment (Phase 2, Bring-Back Migration)
+
+- `text-offsets.ts` utility: `toOffset(root, node, offset)` for character-level span tracking via TreeWalker.
+- `SourceTextPane`: extended with `buildSegments()` for char-level `<mark>` highlights (must=secondary, nice=outline), `onMouseUp` selection capture, floating keyboard hint ("1=MUST · 2=NICE · Esc=cancel") shown while text is selected. Falls back to original line-level highlighting when no char spans exist.
+- `RequirementItem`: replaced always-visible form with collapsed/expanded toggle — collapsed shows single-line preview; expanded shows priority select, editable text field (double-click), notes textarea, char span info, and delete button. Notes field added to `onChange` signature.
+- `RequirementList`: added real-time search/filter input in header; count updates to show `filtered/total` when filtered.
+- `ExtractUnderstand`: added `onSpanSelect` callback to `SourceTextPane`; keyboard handler for "1" (MUST) and "2" (NICE) creates a new requirement pre-filled with selected text and `char_start`/`char_end`; Escape cancels selection. `handleChange` handles `'text' | 'priority' | 'notes'` field.
+- `api.types.ts`: added `char_start?`, `char_end?`, `notes?` to `RequirementItem`.
+
 ## 2026-03-22 (C2)
 
 ### UI — C2 Match Editor enrichment (Phase 2, Bring-Back Migration)

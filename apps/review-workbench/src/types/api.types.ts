@@ -105,6 +105,9 @@ export interface RequirementItem {
   priority: string;
   spans: TextSpanItem[];
   text_span: RequirementTextSpan | null;
+  char_start?: number | null;
+  char_end?: number | null;
+  notes?: string;
 }
 
 export interface MatchViewData {

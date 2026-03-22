@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useViewExtract } from '../../features/job-pipeline/api/useViewExtract';
 import { useEditorState } from '../../features/job-pipeline/api/useEditorState';
@@ -9,6 +9,10 @@ import { ExtractControlPanel } from '../../features/job-pipeline/components/Extr
 import { Spinner } from '../../components/atoms/Spinner';
 import type { RequirementItem } from '../../types/api.types';
 
+function uniqueReqId() {
+  return `req_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
+}
+
 export function ExtractUnderstand() {
   const { source, jobId } = useParams<{ source: string; jobId: string }>();
   const extractQuery = useViewExtract(source!, jobId!);
@@ -18,6 +22,10 @@ export function ExtractUnderstand() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [hoveredReq, setHoveredReq] = useState<RequirementItem | null>(null);
   const [, setIsDirty] = useState(false);
+
+  // Text selection state for keyboard tagging
+  const pendingSpanRef = useRef<{ start: number; end: number; text: string } | null>(null);
+  const [hasSelection, setHasSelection] = useState(false);
 
   useEffect(() => {
     if (extractQuery.data?.view === 'extract') {
@@ -30,15 +38,58 @@ export function ExtractUnderstand() {
     setIsDirty(false);
   }, [saveState, requirements]);
 
+  // Keyboard shortcuts: Ctrl+S, "1"/"2" tagging, Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key === 's') { e.preventDefault(); handleSave(); }
+      if (e.ctrlKey && e.key === 's') {
+        e.preventDefault();
+        handleSave();
+        return;
+      }
+
+      if (!pendingSpanRef.current) return;
+
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return;
+
+      if (e.key === '1' || e.key === '2') {
+        e.preventDefault();
+        const span = pendingSpanRef.current;
+        const priority = e.key === '1' ? 'must' : 'nice';
+        const newReq: RequirementItem = {
+          id: uniqueReqId(),
+          text: span.text,
+          priority,
+          spans: [],
+          text_span: null,
+          char_start: span.start,
+          char_end: span.end,
+        };
+        setRequirements(prev => [...prev, newReq]);
+        setSelectedId(newReq.id);
+        setIsDirty(true);
+        pendingSpanRef.current = null;
+        setHasSelection(false);
+        window.getSelection()?.removeAllRanges();
+        return;
+      }
+
+      if (e.key === 'Escape') {
+        pendingSpanRef.current = null;
+        setHasSelection(false);
+        window.getSelection()?.removeAllRanges();
+      }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [handleSave]);
 
-  const handleChange = (id: string, field: 'text' | 'priority', value: string) => {
+  const handleSpanSelect = useCallback((range: { start: number; end: number; text: string }) => {
+    pendingSpanRef.current = range;
+    setHasSelection(true);
+  }, []);
+
+  const handleChange = (id: string, field: 'text' | 'priority' | 'notes', value: string) => {
     setRequirements(prev => prev.map(r => r.id === id ? { ...r, [field]: value } : r));
     setIsDirty(true);
   };
@@ -52,7 +103,7 @@ export function ExtractUnderstand() {
 
   const handleAdd = () => {
     const newReq: RequirementItem = {
-      id: `req_${Date.now()}`,
+      id: uniqueReqId(),
       text: 'New requirement',
       priority: 'nice',
       spans: [],
@@ -78,7 +129,12 @@ export function ExtractUnderstand() {
     <div className="flex h-full">
       <div className="flex-1 min-w-0">
         <SplitPane orientation="horizontal" defaultSizes={[50, 50]}>
-          <SourceTextPane markdown={source_markdown} highlight={highlight} />
+          <SourceTextPane
+            markdown={source_markdown}
+            highlight={highlight}
+            requirements={requirements}
+            onSpanSelect={handleSpanSelect}
+          />
           <RequirementList
             requirements={requirements}
             selectedId={selectedId}
@@ -97,6 +153,15 @@ export function ExtractUnderstand() {
         onSave={handleSave}
         isSaving={saveState.isPending}
       />
+
+      {/* Floating keyboard hint when text is selected */}
+      {hasSelection && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 font-mono text-[10px] bg-surface-container border border-primary/30 px-3 py-1.5 z-50 shadow-md pointer-events-none">
+          Press <kbd className="font-mono bg-surface border border-outline/30 px-1">1</kbd> = MUST &nbsp;·&nbsp;
+          <kbd className="font-mono bg-surface border border-outline/30 px-1">2</kbd> = NICE &nbsp;·&nbsp;
+          <kbd className="font-mono bg-surface border border-outline/30 px-1">Esc</kbd> = cancel
+        </div>
+      )}
     </div>
   );
 }
