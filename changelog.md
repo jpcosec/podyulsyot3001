@@ -2,6 +2,18 @@
 
 > Historical note: older entries may reference paths or planning structures that no longer exist after later cleanups. Treat each entry as accurate for its date.
 
+## 2026-03-22
+
+### UI Redesign — Fase 2–7 (Terran Command design system, ui-redesign branch)
+
+- **Fase 2 — A2 Data Explorer**: Implemented `useExplorerBrowse.ts`, file tree components (`ExplorerTree`, `BreadcrumbNav`), preview components (`JsonPreview`, `MarkdownPreview`, `ImagePreview`, `FilePreview`), and `DataExplorer.tsx` page with SplitPane 30/70 layout and URL-based path state.
+- **Fase 3 — B1 Scrape Diagnostics**: Implemented `useArtifacts.ts`, diagnostic components (`ScrapeMetaCard`, `SourceTextPreview`, `ErrorScreenshot`, `ScrapeControlPanel`), and updated `ScrapeDiagnostics.tsx` page.
+- **Atoms**: Added `Tag.tsx` (skill|req|risk category, border-l-2 color-coded) and `Kbd.tsx` (keyboard shortcut display, mono style).
+- **Fase 4 — B2 Extract & Understand**: Implemented `useViewExtract.ts`, editor components (`SourceTextPane` with line highlighting, `RequirementItem` inline editable, `RequirementList`, `ExtractControlPanel`), and `ExtractUnderstand.tsx` page with Ctrl+S save.
+- **Fase 5 — B3 Match**: Implemented `useViewMatch.ts`, `useEvidenceBank.ts`, `useGateDecide.ts`, `useEditorState.ts`, ReactFlow graph components (`MatchGraphCanvas` with dagre LR layout, `RequirementNode`, `ProfileNode`, `EdgeScoreBadge`), side panels (`EvidenceBankPanel`, `MatchControlPanel`, `MatchDecisionModal`), and `Match.tsx` page.
+- **Fase 6 — B4 Generate Documents**: Implemented `useViewDocuments.ts`, `useDocumentSave.ts`, document editor components (`DocumentTabs`, `DocumentEditor` CodeMirror markdown, `ContextPanel`, `DocApproveBar`, `RegenModal`), and `GenerateDocuments.tsx` page with SplitPane 70/30 and per-document state tracking.
+- **Fase 7 — B5 Package & Deployment**: Implemented `usePackageFiles.ts`, deployment components (`MissionSummaryCard`, `PipelineChecklist`, `PackageFileList`, `DeploymentCta` with 2-click confirm), and `PackageDeployment.tsx` page with MISSION_COMPLETE header.
+
 ## 2026-03-21 (continued)
 
 - Completed minimal viable architecture plan across all 3 tracks (UI, AI, Scraper).

@@ -45,43 +45,43 @@ This is the single planning checklist for active work.
 - [x] `Spinner.tsx` — CSS spinner, size: xs|sm|md, color primario
 - [x] `SplitPane.tsx` (molecule) — wrapper de react-resizable-panels
 
-### Fase 2 — A2 Data Explorer ⏳
-- [ ] `useExplorerBrowse.ts`
-- [ ] `ExplorerTree.tsx`, `BreadcrumbNav.tsx`, `FilePreview.tsx`, `JsonPreview.tsx`, `MarkdownPreview.tsx`, `ImagePreview.tsx`
-- [ ] `DataExplorer.tsx`
+### Fase 2 — A2 Data Explorer ✅
+- [x] `useExplorerBrowse.ts`
+- [x] `ExplorerTree.tsx`, `BreadcrumbNav.tsx`, `FilePreview.tsx`, `JsonPreview.tsx`, `MarkdownPreview.tsx`, `ImagePreview.tsx`
+- [x] `DataExplorer.tsx`
 
-### Fase 3 — B1 Scrape Diagnostics ⏳
-- [ ] `useArtifacts.ts`
-- [ ] `ScrapeMetaCard.tsx`, `SourceTextPreview.tsx`, `ErrorScreenshot.tsx`, `ScrapeControlPanel.tsx`
-- [ ] `ScrapeDiagnostics.tsx`
+### Fase 3 — B1 Scrape Diagnostics ✅
+- [x] `useArtifacts.ts`
+- [x] `ScrapeMetaCard.tsx`, `SourceTextPreview.tsx`, `ErrorScreenshot.tsx`, `ScrapeControlPanel.tsx`
+- [x] `ScrapeDiagnostics.tsx`
 
-### Atoms pre-Fase 4 ⏳
-- [ ] `Tag.tsx` — inline span, category: skill|req|risk, border-l-2 color-coded
+### Atoms pre-Fase 4 ✅
+- [x] `Tag.tsx` — inline span, category: skill|req|risk, border-l-2 color-coded
 
-### Fase 4 — B2 Extract & Understand ⏳
-- [ ] `useExtractState.ts`
-- [ ] `SourceTextPane.tsx`, `RequirementList.tsx`, `RequirementItem.tsx`, `ExtractControlPanel.tsx`
-- [ ] `ExtractUnderstand.tsx`
+### Fase 4 — B2 Extract & Understand ✅
+- [x] `useViewExtract.ts`
+- [x] `SourceTextPane.tsx`, `RequirementList.tsx`, `RequirementItem.tsx`, `ExtractControlPanel.tsx`
+- [x] `ExtractUnderstand.tsx`
 
-### Fase 5 — B3 Match ⏳
-- [ ] `useMatchState.ts`, `useMatchSave.ts`, `useMatchDecide.ts`, `useJobRun.ts`
-- [ ] `MatchGraphCanvas.tsx`, `RequirementNode.tsx`, `ProfileNode.tsx`, `EdgeScoreBadge.tsx`
-- [ ] `EvidenceBankPanel.tsx`, `MatchControlPanel.tsx`, `MatchDecisionModal.tsx`
-- [ ] `Match.tsx`
+### Fase 5 — B3 Match ✅
+- [x] `useViewMatch.ts`, `useEvidenceBank.ts`, `useGateDecide.ts`, `useEditorState.ts`
+- [x] `MatchGraphCanvas.tsx`, `RequirementNode.tsx`, `ProfileNode.tsx`, `EdgeScoreBadge.tsx`
+- [x] `EvidenceBankPanel.tsx`, `MatchControlPanel.tsx`, `MatchDecisionModal.tsx`
+- [x] `Match.tsx`
 
-### Atoms pre-Fase 6 ⏳
-- [ ] `Kbd.tsx` — keyboard shortcut display, keys: string[], estilo mono
+### Atoms pre-Fase 6 ✅
+- [x] `Kbd.tsx` — keyboard shortcut display, keys: string[], estilo mono
 
-### Fase 6 — B4 Generate Documents ⏳
-- [ ] `useDocumentsState.ts`, `useDocumentSave.ts`, `useDocumentsDecide.ts`
-- [ ] `DocumentTabs.tsx`, `DocumentEditor.tsx`, `ContextPanel.tsx`
-- [ ] `DocApproveBar.tsx`, `RegenModal.tsx`
-- [ ] `GenerateDocuments.tsx`
+### Fase 6 — B4 Generate Documents ✅
+- [x] `useViewDocuments.ts`, `useDocumentSave.ts`, `useGateDecide.ts`
+- [x] `DocumentTabs.tsx`, `DocumentEditor.tsx`, `ContextPanel.tsx`
+- [x] `DocApproveBar.tsx`, `RegenModal.tsx`
+- [x] `GenerateDocuments.tsx`
 
-### Fase 7 — B5 Package & Deployment ⏳
-- [ ] `usePackageFiles.ts`
-- [ ] `MissionSummaryCard.tsx`, `PipelineChecklist.tsx`, `PackageFileList.tsx`, `DeploymentCta.tsx`
-- [ ] `PackageDeployment.tsx`
+### Fase 7 — B5 Package & Deployment ✅
+- [x] `usePackageFiles.ts`
+- [x] `MissionSummaryCard.tsx`, `PipelineChecklist.tsx`, `PackageFileList.tsx`, `DeploymentCta.tsx`
+- [x] `PackageDeployment.tsx`
 
 ### Fase 8 — B4b Default Document Gates ⚠️ BLOCKED — requiere backend
 - [ ] `useDocumentGate.ts`, `useGateDecision.ts`
