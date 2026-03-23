@@ -108,6 +108,17 @@ This is the single planning checklist for active work.
 - [x] `CvGraphCanvas` — kept as-is (uses parentId/extent, incompatible with generic GraphCanvas)
 - [x] **E2E tests** — Full suite on production build: 86.67% pass (26/30); 4 remaining are test limitations (TC008 mock error, TC013 test bug, TC015 mock limitation, TC046 bogus assertion)
 
+### C1 — Graph Editor Redesign ✅
+- [x] `styles.css` — fix 5 hardcoded light `.ne-*` values + `.react-flow__node` transparent override
+- [x] `KnowledgeGraph.tsx` — Terran dark CATEGORY_COLORS, GroupNode, SubFlowEdge, Document template, initialNodes/initialEdges/onSave/onChange props
+- [x] `features/base-cv/lib/cvToGraph.ts` — adapter with meta passthrough (cvProfileToGraph / graphToCvProfile)
+- [x] `pages/global/BaseCvEditor.tsx` — thin KnowledgeGraph wrapper (37 lines)
+- [x] `types/api.types.ts` — add `category?: string` to `GraphNode`
+- [x] `mock/fixtures/view_match_*.json` — add `category` to all nodes
+- [x] `features/job-pipeline/lib/matchToGraph.ts` — adapter + MatchEdits type
+- [x] `features/job-pipeline/components/UnmappedSkillsPanel.tsx` — collapsible right rail
+- [x] `pages/job/Match.tsx` — KnowledgeGraph 2-column layout + UnmappedSkillsPanel + MatchDecisionModal
+
 ### Fase 10 — B3b Application Context Gate ⚠️ BLOCKED — requiere backend
 - [ ] `useApplicationContext.ts`, `useContextDecision.ts`
 - [ ] `ContextBrief.tsx`, `MatchReferencePanel.tsx`, `ContextDecisionBar.tsx`

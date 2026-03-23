@@ -2,6 +2,42 @@
 
 > Historical note: older entries may reference paths or planning structures that no longer exist after later cleanups. Treat each entry as accurate for its date.
 
+## 2026-03-23 (C1 — Graph Editor Redesign)
+
+### C1-A: KnowledgeGraph Terran Theme Fix + Sub-flows + Document Template
+
+- Replaced light pastel `CATEGORY_COLORS` with Terran dark `{ border, bg }` pairs per category
+- Fixed 5 hardcoded white/light `.ne-*` CSS backgrounds (`.ne-section`, `.ne-section-toggle`, `.ne-template-chip`, `.ne-node-child`, `.ne-node-free`)
+- Added `.react-flow__node { background: transparent !important }` to suppress ReactFlow's white node injection
+- Exported `SimpleNodeData`, `SimpleEdgeData`, `SimpleNode`, `SimpleEdge` types from `KnowledgeGraph.tsx`
+- Added `meta?: unknown` to `SimpleNodeData` for opaque round-trip passthrough
+- Added `GroupNode` — resizable parent container with dashed border + category color label
+- Added `SubFlowEdge` — reuses FloatingEdge bezier with ReactFlow's already-absolute `positionAbsolute`
+- Added `document`, `section`, `entry` to `CATEGORY_OPTIONS` and `NODE_TEMPLATES`
+- Document template drop creates 3-level nested structure (Document→Section×2→Entry×2)
+- Added `initialNodes`, `initialEdges`, `onSave`, `onChange` props to `KnowledgeGraph`
+
+### C1-B: CV Editor → KnowledgeGraph
+
+- Created `features/base-cv/lib/cvToGraph.ts` adapter:
+  - `cvProfileToGraph`: maps `CvProfileGraphPayload` → nested GroupNode/SimpleNode graph; `CvEntry.fields/descriptions/essential` stored in `node.data.meta` for faithful round-trip
+  - `graphToCvProfile`: reconstructs `CvProfileGraphPayload` from graph nodes/edges
+- Replaced `BaseCvEditor.tsx` (376 lines, custom ReactFlow canvas) with 37-line thin wrapper
+
+### C1-C: Match View → KnowledgeGraph
+
+- Added `category?: string` to `GraphNode` in `api.types.ts`
+- Updated `view_match_201397.json` and `view_match_999001.json` with category on all nodes
+- Created `features/job-pipeline/lib/matchToGraph.ts` adapter:
+  - Requirements → left column (x=0), grouped by category as GroupNodes
+  - Profile nodes → right column (x=700), grouped by category as GroupNodes
+  - Match edges as `subflow` type with `score%` label
+  - `graphToMatchEdits` produces `MatchEdits` (addedEdges, removedEdges, addedNodes)
+- Created `UnmappedSkillsPanel` — collapsible right rail listing profile nodes with no edges
+- Replaced `Match.tsx` with KnowledgeGraph + `UnmappedSkillsPanel` + floating DECIDE button + `MatchDecisionModal`
+
+---
+
 ## 2026-03-23 (Fase 11)
 
 ### UI — Fase 11 Component Map Compliance
