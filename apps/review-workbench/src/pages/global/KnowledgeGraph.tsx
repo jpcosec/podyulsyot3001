@@ -1,4 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { cn } from "../../utils/cn";
 import {
   addEdge,
   BaseEdge,
@@ -260,12 +261,12 @@ function SidebarSection({
   children: JSX.Element | JSX.Element[] | null;
 }): JSX.Element {
   return (
-    <section className="ne-section">
-      <button type="button" className="ne-section-toggle" onClick={onToggle}>
+    <section className="border border-outline-variant rounded-xl overflow-hidden">
+      <button type="button" className="flex items-center justify-between w-full px-3 py-2 font-mono text-[10px] text-on-muted hover:text-on-surface bg-transparent" onClick={onToggle}>
         <span>{title}</span>
         <span>{open ? "-" : "+"}</span>
       </button>
-      {open ? <div className="ne-section-body">{children}</div> : null}
+      {open ? <div className="px-3 pb-3 flex flex-col gap-2">{children}</div> : null}
     </section>
   );
 }
@@ -373,7 +374,7 @@ function PropertyValueInput({
   if (pair.dataType === "text_markdown") {
     return (
       <textarea
-        className="ne-input ne-input-textarea"
+        className="border border-outline-variant bg-surface-low text-on-surface text-[0.78rem] px-2 py-1 w-full min-h-[80px] resize-y"
         placeholder="value"
         value={pair.value}
         onChange={(event) => onChange(event.target.value)}
@@ -384,7 +385,7 @@ function PropertyValueInput({
   if (pair.dataType === "number") {
     return (
       <input
-        className="ne-input"
+        className="border border-outline-variant bg-surface-low text-on-surface text-[0.78rem] px-2 py-1 w-full"
         type="number"
         placeholder="value"
         value={pair.value}
@@ -396,7 +397,7 @@ function PropertyValueInput({
   if (pair.dataType === "date") {
     return (
       <input
-        className="ne-input"
+        className="border border-outline-variant bg-surface-low text-on-surface text-[0.78rem] px-2 py-1 w-full"
         type="date"
         value={pair.value}
         onChange={(event) => onChange(event.target.value)}
@@ -407,7 +408,7 @@ function PropertyValueInput({
   if (pair.dataType === "datetime") {
     return (
       <input
-        className="ne-input"
+        className="border border-outline-variant bg-surface-low text-on-surface text-[0.78rem] px-2 py-1 w-full"
         type="datetime-local"
         value={pair.value}
         onChange={(event) => onChange(event.target.value)}
@@ -417,7 +418,7 @@ function PropertyValueInput({
 
   if (pair.dataType === "boolean") {
     return (
-      <label className="ne-checkbox-inline">
+      <label className="flex items-center gap-2 cursor-pointer text-[0.8rem]">
         <input
           type="checkbox"
           checked={pair.value === "true"}
@@ -430,7 +431,7 @@ function PropertyValueInput({
 
   if (pair.dataType === "enum") {
     return (
-      <select className="ne-input" value={pair.value} onChange={(event) => onChange(event.target.value)}>
+      <select className="border border-outline-variant bg-surface-low text-on-surface text-[0.78rem] px-2 py-1 w-full" value={pair.value} onChange={(event) => onChange(event.target.value)}>
         <option value="">select...</option>
         <option value="low">low</option>
         <option value="medium">medium</option>
@@ -441,7 +442,7 @@ function PropertyValueInput({
 
   return (
     <input
-      className="ne-input"
+      className="border border-outline-variant bg-surface-low text-on-surface text-[0.78rem] px-2 py-1 w-full"
       placeholder={pair.dataType === "enum_open" ? "value (free enum)" : "value"}
       value={pair.value}
       onChange={(event) => onChange(event.target.value)}
@@ -459,18 +460,24 @@ const SimpleNodeCard = memo(function SimpleNodeCard({ data, selected }: NodeProp
   };
   return (
     <div
-      className={`ne-node-simple ${selected ? "ne-node-simple-selected" : ""}`}
-      style={{ borderLeft: `4px solid ${color.border}`, background: color.bg, color: 'var(--text-main)' }}
+      className={cn(
+        "group border-2 border-outline-variant rounded-[10px] px-4 py-2.5 text-[0.83rem] font-medium text-center min-w-[110px] relative",
+        selected && "ring-2 ring-primary/40",
+      )}
+      style={{ borderLeft: `4px solid ${color.border}`, background: color.bg, color: '#e2e2e5' }}
       title={tooltipFromProperties(nodeData.properties)}
     >
-      <Handle id="top" type="source" position={Position.Top} className="ne-node-handle" />
-      <Handle id="right" type="source" position={Position.Right} className="ne-node-handle" />
-      <Handle id="bottom" type="source" position={Position.Bottom} className="ne-node-handle" />
-      <Handle id="left" type="source" position={Position.Left} className="ne-node-handle" />
+      <Handle id="top" type="source" position={Position.Top} className="opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity" />
+      <Handle id="right" type="source" position={Position.Right} className="opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity" />
+      <Handle id="bottom" type="source" position={Position.Bottom} className="opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity" />
+      <Handle id="left" type="source" position={Position.Left} className="opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity" />
       <span>{nodeData.name}</span>
       <button
         type="button"
-        className={`ne-node-edit-chip ${selected ? "ne-node-edit-chip-visible" : ""}`}
+        className={cn(
+          "absolute -top-2 -right-2 text-[0.65rem] bg-surface border border-outline-variant px-1 py-0.5 transition-opacity",
+          selected ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto",
+        )}
         onMouseDown={(event) => event.stopPropagation()}
         onClick={(event) => {
           event.stopPropagation();
@@ -498,10 +505,10 @@ const GroupNode = memo(function GroupNode({ data, selected }: NodeProps<SimpleNo
         outline: selected ? `2px solid ${color.border}` : undefined,
       }}
     >
-      <Handle id="top" type="source" position={Position.Top} className="ne-node-handle" />
-      <Handle id="right" type="source" position={Position.Right} className="ne-node-handle" />
-      <Handle id="bottom" type="source" position={Position.Bottom} className="ne-node-handle" />
-      <Handle id="left" type="source" position={Position.Left} className="ne-node-handle" />
+      <Handle id="top" type="source" position={Position.Top} className="opacity-0 hover:opacity-100 transition-opacity" />
+      <Handle id="right" type="source" position={Position.Right} className="opacity-0 hover:opacity-100 transition-opacity" />
+      <Handle id="bottom" type="source" position={Position.Bottom} className="opacity-0 hover:opacity-100 transition-opacity" />
+      <Handle id="left" type="source" position={Position.Left} className="opacity-0 hover:opacity-100 transition-opacity" />
       <div
         style={{
           position: 'absolute',
@@ -620,7 +627,7 @@ const SubFlowEdge = memo(function SubFlowEdge({ id, source, target, style, marke
     <BaseEdge
       id={id}
       path={path}
-      style={{ stroke: 'var(--accent)', strokeWidth: 1.5, ...style }}
+      style={{ stroke: '#00f2ff', strokeWidth: 1.5, ...style }}
       markerEnd={markerEnd}
     />
   );
@@ -1216,7 +1223,7 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
               nodeId: node.id,
               onEditNode: openNodeEditor,
             },
-            className: active ? "ne-node-focused" : "ne-node-dimmed",
+            className: active ? "opacity-100" : "opacity-30",
             draggable: active,
             selectable: active,
           };
@@ -1265,7 +1272,7 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
         }
         return {
           ...baseEdge,
-          className: active ? "ne-edge-focused" : "ne-edge-dimmed",
+          className: active ? "opacity-100" : "opacity-30",
           animated: active,
           style: active ? { stroke: "#123c69", strokeWidth: 2.4 } : undefined,
         };
@@ -1276,7 +1283,7 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
       }
       return {
         ...baseEdge,
-        className: connected ? "" : "ne-edge-dimmed",
+        className: connected ? "" : "opacity-30",
         animated: connected,
       };
     });
@@ -2083,16 +2090,19 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
   }, [editorState, onUnfocus]);
 
   return (
-    <div className="ne-workspace">
-      <aside className={`ne-sidebar ${sidebarOpen ? "" : "ne-sidebar-collapsed"}`}>
-        <button type="button" className="ne-sidebar-toggle" onClick={() => setSidebarOpen((prev) => !prev)}>
+    <div className="flex h-screen">
+      <aside className={cn(
+        "bg-surface border-r border-outline-variant overflow-y-auto transition-all duration-200 shrink-0 flex flex-col gap-3 py-3",
+        sidebarOpen ? "w-[280px] px-4" : "w-10 overflow-hidden px-1",
+      )}>
+        <button type="button" className="w-full text-left font-mono text-[10px] text-on-muted/60 py-1 hover:text-on-muted" onClick={() => setSidebarOpen((prev) => !prev)}>
           {sidebarOpen ? "\u25C0" : "\u25B6"}
         </button>
         {sidebarOpen ? (
-          <div className="ne-sidebar-content">
-            <div className="ne-state-section">
-              <span className="ne-state-badge">{stateLabel}</span>
-              <span className={`ne-dirty-dot ${dirty ? "ne-dirty-dot-on" : ""}`} title={dirty ? "Unsaved" : "Saved"} />
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2 py-1">
+              <span className="font-mono text-[10px] text-on-muted border border-outline-variant px-2 py-0.5">{stateLabel}</span>
+              <span className={cn("w-2 h-2 rounded-full border", dirty ? "bg-secondary border-secondary" : "bg-surface border-outline-variant")} title={dirty ? "Unsaved" : "Saved"} />
             </div>
 
             <SidebarSection
@@ -2101,36 +2111,36 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
               onToggle={() => setSectionOpen((prev) => ({ ...prev, actions: !prev.actions }))}
             >
               <>
-                <div className="ne-selection-summary">
+                <div className="flex flex-col gap-0.5 text-[0.8rem]">
                   <strong>Selected</strong>
                   <span>{selectedItemLabel}</span>
                 </div>
 
-                <div className="ne-control-row">
-                  <button type="button" className="ne-btn ne-btn-primary" disabled={!dirty} onClick={onSaveWorkspace}>
+                <div className="flex gap-1 flex-wrap">
+                  <button type="button" className="border border-primary bg-primary text-surface text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:bg-primary/90 disabled:opacity-45 disabled:cursor-default" disabled={!dirty} onClick={onSaveWorkspace}>
                     Save workspace
                   </button>
-                  <button type="button" className="ne-btn" disabled={!dirty} onClick={onDiscardWorkspace}>
+                  <button type="button" className="border border-outline-variant text-on-surface text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:border-primary bg-transparent disabled:opacity-45 disabled:cursor-default" disabled={!dirty} onClick={onDiscardWorkspace}>
                     Discard
                   </button>
                 </div>
 
-                <div className="ne-control-row">
-                  <button type="button" className="ne-btn" onClick={onUndo} disabled={undoStack.length === 0}>
+                <div className="flex gap-1 flex-wrap">
+                  <button type="button" className="border border-outline-variant text-on-surface text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:border-primary bg-transparent disabled:opacity-45 disabled:cursor-default" onClick={onUndo} disabled={undoStack.length === 0}>
                     Undo
                   </button>
-                  <button type="button" className="ne-btn" onClick={onRedo} disabled={redoStack.length === 0}>
+                  <button type="button" className="border border-outline-variant text-on-surface text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:border-primary bg-transparent disabled:opacity-45 disabled:cursor-default" onClick={onRedo} disabled={redoStack.length === 0}>
                     Redo
                   </button>
                 </div>
 
-                <div className="ne-control-row">
-                  <button type="button" className="ne-btn" onClick={onCopyFocusedNode} disabled={editorState !== "focus"}>
+                <div className="flex gap-1 flex-wrap">
+                  <button type="button" className="border border-outline-variant text-on-surface text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:border-primary bg-transparent disabled:opacity-45 disabled:cursor-default" onClick={onCopyFocusedNode} disabled={editorState !== "focus"}>
                     Copy
                   </button>
                   <button
                     type="button"
-                    className="ne-btn"
+                    className="border border-outline-variant text-on-surface text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:border-primary bg-transparent disabled:opacity-45 disabled:cursor-default"
                     onClick={onPasteCopiedNode}
                     disabled={editorState !== "focus" || !copiedNode}
                   >
@@ -2138,10 +2148,10 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
                   </button>
                 </div>
 
-                <div className="ne-control-row">
+                <div className="flex gap-1 flex-wrap">
                   <button
                     type="button"
-                    className="ne-btn"
+                    className="border border-outline-variant text-on-surface text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:border-primary bg-transparent disabled:opacity-45 disabled:cursor-default"
                     onClick={() => focusedNodeId && openNodeEditor(focusedNodeId)}
                     disabled={editorState !== "focus" || !focusedNodeId}
                   >
@@ -2149,7 +2159,7 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
                   </button>
                   <button
                     type="button"
-                    className="ne-btn"
+                    className="border border-outline-variant text-on-surface text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:border-primary bg-transparent disabled:opacity-45 disabled:cursor-default"
                     onClick={() => focusedRelationId && openEdgeEditor(focusedRelationId)}
                     disabled={editorState !== "focus_relation" || !focusedRelationId}
                   >
@@ -2157,10 +2167,10 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
                   </button>
                 </div>
 
-                <div className="ne-control-row ne-control-row-single">
+                <div className="flex gap-1 flex-wrap">
                   <button
                     type="button"
-                    className="ne-btn"
+                    className="border border-outline-variant text-on-surface text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:border-primary bg-transparent disabled:opacity-45 disabled:cursor-default"
                     onClick={requestDeleteFocusedSelection}
                     disabled={editorState !== "focus" && editorState !== "focus_relation"}
                   >
@@ -2168,9 +2178,9 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
                   </button>
                 </div>
 
-                <div className="ne-inline-note">Shortcuts: Ctrl/Cmd+C, Ctrl/Cmd+V, Ctrl/Cmd+Z, Ctrl/Cmd+U</div>
+                <div className="font-mono text-[10px] text-on-muted/60 mt-1">Shortcuts: Ctrl/Cmd+C, Ctrl/Cmd+V, Ctrl/Cmd+Z, Ctrl/Cmd+U</div>
 
-                <div className="ne-stats">
+                <div className="flex flex-col gap-0.5 text-[0.78rem] text-on-muted">
                   <p>
                     Nodes: <strong>{nodes.length}</strong>
                   </p>
@@ -2182,11 +2192,11 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
                   </p>
                 </div>
 
-                <div className="ne-filter-section">
+                <div className="flex flex-col gap-1.5">
                   <h3>Relations</h3>
                   {relationTypes.length > 0 ? (
                     relationTypes.map((relationType) => (
-                      <label key={relationType} className="ne-checkbox-label">
+                      <label key={relationType} className="flex items-center gap-2 text-[0.8rem] cursor-pointer">
                         <input
                           type="checkbox"
                           checked={!hiddenRelationTypes.includes(relationType)}
@@ -2207,18 +2217,18 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
                       </label>
                     ))
                   ) : (
-                    <p className="ne-empty-note">No relation types available.</p>
+                    <p className="font-mono text-[10px] text-on-muted/50 italic">No relation types available.</p>
                   )}
                 </div>
 
-                <div className="ne-filter-section">
+                <div className="flex flex-col gap-1.5">
                   <h3>Action history</h3>
                   {undoStack.length === 0 ? (
-                    <p className="ne-empty-note">No tracked actions yet.</p>
+                    <p className="font-mono text-[10px] text-on-muted/50 italic">No tracked actions yet.</p>
                   ) : (
-                    <div className="ne-history-list">
+                    <div className="flex flex-col gap-0.5 max-h-[120px] overflow-y-auto">
                       {undoStack.slice(0, 8).map((action) => (
-                        <div key={action.id} className="ne-history-item">
+                        <div key={action.id} className="text-[0.75rem] text-on-muted border-l border-outline-variant pl-2 py-0.5">
                           {action.label}
                         </div>
                       ))}
@@ -2234,16 +2244,16 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
               onToggle={() => setSectionOpen((prev) => ({ ...prev, filters: !prev.filters }))}
             >
               <>
-                <div className="ne-filter-section">
+                <div className="flex flex-col gap-1.5">
                   <h3>Filter nodes</h3>
                   <input
-                    className="ne-input"
+                    className="border border-outline-variant bg-surface-low text-on-surface text-[0.78rem] px-2 py-1 w-full"
                     placeholder="Filter by name"
                     value={filterText}
                     onChange={(event) => setFilterText(event.target.value)}
                   />
                   <select
-                    className="ne-input"
+                    className="border border-outline-variant bg-surface-low text-on-surface text-[0.78rem] px-2 py-1 w-full"
                     value={attributeFilterKey}
                     onChange={(event) => setAttributeFilterKey(event.target.value)}
                   >
@@ -2255,7 +2265,7 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
                     ))}
                   </select>
                   <input
-                    className="ne-input"
+                    className="border border-outline-variant bg-surface-low text-on-surface text-[0.78rem] px-2 py-1 w-full"
                     placeholder="Property value contains"
                     value={attributeFilterValue}
                     onChange={(event) => setAttributeFilterValue(event.target.value)}
@@ -2263,7 +2273,7 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
                   />
                   <button
                     type="button"
-                    className="ne-btn ne-btn-small"
+                    className="border border-outline-variant text-on-surface text-[0.7rem] px-1.5 py-0.5 cursor-pointer hover:border-primary bg-transparent disabled:opacity-45 disabled:cursor-default"
                     onClick={() => {
                       setFilterText("");
                       setAttributeFilterKey("");
@@ -2283,33 +2293,33 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
               onToggle={() => setSectionOpen((prev) => ({ ...prev, space: !prev.space }))}
             >
               <>
-                <div className="ne-control-row">
-                  <button type="button" className="ne-btn" disabled={editorState === "browse"} onClick={onUnfocus}>
+                <div className="flex gap-1 flex-wrap">
+                  <button type="button" className="border border-outline-variant text-on-surface text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:border-primary bg-transparent disabled:opacity-45 disabled:cursor-default" disabled={editorState === "browse"} onClick={onUnfocus}>
                     Unfocus
                   </button>
-                  <span className="ne-inline-note">Edit is on-node</span>
+                  <span className="font-mono text-[10px] text-on-muted/60 mt-1">Edit is on-node</span>
                 </div>
 
-                <div className="ne-control-row">
-                  <button type="button" className="ne-btn" onClick={onLayoutAll}>
+                <div className="flex gap-1 flex-wrap">
+                  <button type="button" className="border border-outline-variant text-on-surface text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:border-primary bg-transparent disabled:opacity-45 disabled:cursor-default" onClick={onLayoutAll}>
                     Layout all
                   </button>
                   <button
                     type="button"
-                    className="ne-btn"
+                    className="border border-outline-variant text-on-surface text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:border-primary bg-transparent disabled:opacity-45 disabled:cursor-default"
                     onClick={onLayoutFocusNeighborhood}
                     disabled={!focusedNodeId}
                   >
                     Layout focus
                   </button>
-                  <button type="button" className="ne-btn" onClick={onLayoutCustom} disabled={!customLayoutPositions}>
+                  <button type="button" className="border border-outline-variant text-on-surface text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:border-primary bg-transparent disabled:opacity-45 disabled:cursor-default" onClick={onLayoutCustom} disabled={!customLayoutPositions}>
                     Layout custom
                   </button>
                 </div>
 
-                <div className="ne-filter-section">
+                <div className="flex flex-col gap-1.5">
                   <h3>View options</h3>
-                  <label className="ne-checkbox-label">
+                  <label className="flex items-center gap-2 text-[0.8rem] cursor-pointer">
                     <input
                       type="checkbox"
                       checked={hideNonNeighbors}
@@ -2327,28 +2337,28 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
               onToggle={() => setSectionOpen((prev) => ({ ...prev, creation: !prev.creation }))}
             >
               <>
-                <div className="ne-control-row ne-control-row-single">
-                  <button type="button" className="ne-btn" onClick={onAddNode}>
+                <div className="flex gap-1 flex-wrap">
+                  <button type="button" className="border border-outline-variant text-on-surface text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:border-primary bg-transparent disabled:opacity-45 disabled:cursor-default" onClick={onAddNode}>
                     + Add node
                   </button>
                 </div>
 
-                <div className="ne-filter-section">
+                <div className="flex flex-col gap-1.5">
                   <h3>Drag palette</h3>
-                  <div className="ne-template-list">
+                  <div className="flex flex-wrap gap-1">
                     {NODE_TEMPLATES.map((template) => (
                       <button
                         key={template.name}
                         type="button"
                         draggable
-                        className="ne-template-chip"
+                        className="bg-surface border border-outline-variant text-on-surface text-[0.78rem] px-2 py-0.5 cursor-grab hover:border-primary active:cursor-grabbing"
                         onDragStart={(event) => onTemplateDragStart(event, template)}
                       >
                         + {template.name}
                       </button>
                     ))}
                   </div>
-                  <p className="ne-template-hint">Drag a template into the canvas to create a node.</p>
+                  <p className="font-mono text-[10px] text-on-muted/50 mt-1">Drag a template into the canvas to create a node.</p>
                 </div>
               </>
             </SidebarSection>
@@ -2360,21 +2370,21 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
             >
               <>
                 {inFocusModes && hideNonNeighbors ? (
-                  <p className="ne-empty-note">Hidden non-neighbors can still be linked from this drawer.</p>
+                  <p className="font-mono text-[10px] text-on-muted/50 italic">Hidden non-neighbors can still be linked from this drawer.</p>
                 ) : null}
                 {!focusedNodeId ? (
-                  <p className="ne-empty-note">Focus a node to see candidate connection targets.</p>
+                  <p className="font-mono text-[10px] text-on-muted/50 italic">Focus a node to see candidate connection targets.</p>
                 ) : hiddenRelationTypes.includes("linked") ? (
-                  <p className="ne-empty-note">Enable relation type `linked` to create new node-to-node links.</p>
+                  <p className="font-mono text-[10px] text-on-muted/50 italic">Enable relation type `linked` to create new node-to-node links.</p>
                 ) : vacantCandidateNodes.length === 0 ? (
-                  <p className="ne-empty-note">No vacant candidates under current filters.</p>
+                  <p className="font-mono text-[10px] text-on-muted/50 italic">No vacant candidates under current filters.</p>
                 ) : (
-                  <div className="ne-connect-list ne-connect-list-scroll">
+                  <div className="flex flex-col gap-0.5 max-h-[200px] overflow-y-auto">
                     {vacantCandidateNodes.map((node) => (
                       <button
                         key={node.id}
                         type="button"
-                        className="ne-connect-item"
+                        className="text-left px-2 py-1 text-[0.8rem] text-on-surface hover:bg-primary/10 hover:text-primary"
                         onClick={() => onConnectFromVacantDrawer(node.id)}
                       >
                         {(node.data as SimpleNodeData).name}
@@ -2388,7 +2398,7 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
         ) : null}
       </aside>
 
-      <div className="ne-canvas-wrap" ref={canvasRef}>
+      <div className="flex-1 relative" ref={canvasRef}>
         <ReactFlow<SimpleNode, SimpleEdge>
           onDrop={onDropOnCanvas}
           onDragOver={onDragOverCanvas}
@@ -2421,7 +2431,7 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
         </ReactFlow>
         <button
           type="button"
-          className="ne-mode-badge"
+          className="absolute bottom-3 right-3 z-50 font-mono text-[10px] border border-outline-variant px-2 py-1 text-on-muted bg-surface/80 hover:text-on-surface disabled:opacity-50 disabled:cursor-default"
           onClick={onModeBadgeClick}
           title={
             editorState === "edit_node" || editorState === "edit_relation"
@@ -2433,24 +2443,24 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
           Mode: {stateLabel}
         </button>
         {connectMenu?.open ? (
-          <div className="ne-connect-menu" style={{ left: connectMenu.x, top: connectMenu.y }}>
+          <div className="absolute z-50 bg-surface border border-outline-variant p-3 flex flex-col gap-2 shadow-xl min-w-[200px]" style={{ left: connectMenu.x, top: connectMenu.y }}>
             <h4>Connect from {connectMenu.sourceNodeId}</h4>
-            <button type="button" className="ne-btn ne-btn-small" onClick={onCreateAndConnectNode}>
+            <button type="button" className="border border-outline-variant text-on-surface text-[0.7rem] px-1.5 py-0.5 cursor-pointer hover:border-primary bg-transparent disabled:opacity-45" onClick={onCreateAndConnectNode}>
               + Create new and connect
             </button>
-            <div className="ne-connect-list">
+            <div className="flex flex-col gap-0.5 max-h-[200px] overflow-y-auto">
               {connectCandidates.map((node) => (
                 <button
                   key={node.id}
                   type="button"
-                  className="ne-connect-item"
+                  className="text-left px-2 py-1 text-[0.8rem] text-on-surface hover:bg-primary/10 hover:text-primary"
                   onClick={() => onConnectToExistingNode(node.id)}
                 >
                   {(node.data as SimpleNodeData).name}
                 </button>
               ))}
             </div>
-            <button type="button" className="ne-btn" onClick={() => setConnectMenu(null)}>
+            <button type="button" className="border border-outline-variant text-on-surface text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:border-primary bg-transparent" onClick={() => setConnectMenu(null)}>
               Cancel
             </button>
           </div>
@@ -2458,15 +2468,15 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
       </div>
 
       {pendingDeleteTarget ? (
-        <div className="ne-modal-backdrop">
-          <div className="ne-modal-card ne-modal-card-confirm">
+        <div className="fixed inset-0 bg-slate-900/35 backdrop-blur-[2px] flex items-center justify-center z-50">
+          <div className="bg-surface border border-outline-variant p-6 flex flex-col gap-4 w-[360px] max-h-[90vh] overflow-y-auto">
             <h2>{pendingDeleteTarget.title}</h2>
-            <p className="ne-confirm-copy">{pendingDeleteTarget.description}</p>
-            <div className="ne-modal-actions">
-              <button type="button" className="ne-btn ne-btn-danger" onClick={onConfirmDeleteSelection}>
+            <p className="text-[0.88rem] text-on-muted">{pendingDeleteTarget.description}</p>
+            <div className="flex gap-2 justify-end">
+              <button type="button" className="border border-error text-error text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:bg-error/10 bg-transparent" onClick={onConfirmDeleteSelection}>
                 Delete
               </button>
-              <button type="button" className="ne-btn" onClick={() => setPendingDeleteTarget(null)}>
+              <button type="button" className="border border-outline-variant text-on-surface text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:border-primary bg-transparent" onClick={() => setPendingDeleteTarget(null)}>
                 Cancel
               </button>
             </div>
@@ -2475,21 +2485,21 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
       ) : null}
 
       {editorState === "edit_node" && nodeDraft ? (
-        <div className="ne-modal-backdrop">
-          <div className="ne-modal-card">
+        <div className="fixed inset-0 bg-slate-900/35 backdrop-blur-[2px] flex items-center justify-center z-50">
+          <div className="bg-surface border border-outline-variant p-6 flex flex-col gap-4 w-[500px] max-h-[90vh] overflow-y-auto">
             <h2>Edit node</h2>
-            <label className="ne-field">
+            <label className="flex flex-col gap-1 text-[0.83rem]">
               <span>Name</span>
               <input
-                className="ne-input"
+                className="border border-outline-variant bg-surface-low text-on-surface text-[0.78rem] px-2 py-1 w-full"
                 value={nodeDraft.name}
                 onChange={(event) => setNodeDraft((prev) => (prev ? { ...prev, name: event.target.value } : prev))}
               />
             </label>
-            <label className="ne-field">
+            <label className="flex flex-col gap-1 text-[0.83rem]">
               <span>Category</span>
               <select
-                className="ne-input"
+                className="border border-outline-variant bg-surface-low text-on-surface text-[0.78rem] px-2 py-1 w-full"
                 value={nodeDraft.category}
                 onChange={(event) => setNodeDraft((prev) => (prev ? { ...prev, category: event.target.value } : prev))}
               >
@@ -2501,16 +2511,16 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
               </select>
             </label>
 
-            <div className="ne-field">
+            <div className="flex flex-col gap-1 text-[0.83rem]">
               <span>Relations</span>
-              <div className="ne-relation-pill-list">
+              <div className="flex flex-col gap-1 max-h-[120px] overflow-y-auto">
                 {nodeRelationPills.length > 0 ? (
                   nodeRelationPills.map((pill) => (
-                    <div key={pill.id} className="ne-relation-pill-row">
-                      <span className="ne-relation-pill-text">{pill.text}</span>
+                    <div key={pill.id} className="flex items-center gap-1">
+                      <span className="text-[0.78rem] text-on-muted flex-1">{pill.text}</span>
                       <button
                         type="button"
-                        className="ne-remove-btn"
+                        className="text-error text-[0.8rem] hover:text-error/80 px-1 py-0.5"
                         title="Remove relation"
                         onClick={() => onRemoveRelationFromNodeModal(pill.id)}
                       >
@@ -2519,24 +2529,24 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
                     </div>
                   ))
                 ) : (
-                  <p className="ne-empty-note">No relations for this node yet.</p>
+                  <p className="font-mono text-[10px] text-on-muted/50 italic">No relations for this node yet.</p>
                 )}
               </div>
             </div>
 
-            <div className="ne-field">
+            <div className="flex flex-col gap-1 text-[0.83rem]">
               <span>Properties</span>
-              <div className="ne-property-list">
+              <div className="flex flex-col gap-1">
                 {nodeDraft.properties.map((pair, index) => (
-                  <div key={`${index}-${pair.key}`} className="ne-property-row">
+                  <div key={`${index}-${pair.key}`} className="flex gap-1 items-start">
                     <input
-                      className="ne-input"
+                      className="border border-outline-variant bg-surface-low text-on-surface text-[0.78rem] px-2 py-1 w-full"
                       placeholder="key"
                       value={pair.key}
                       onChange={(event) => onUpdateNodeDraftProperty(index, "key", event.target.value)}
                     />
                     <select
-                      className="ne-input"
+                      className="border border-outline-variant bg-surface-low text-on-surface text-[0.78rem] px-2 py-1 w-full"
                       value={pair.dataType}
                       onChange={(event) =>
                         onUpdateNodeDraftProperty(index, "dataType", event.target.value as AttributeType)
@@ -2552,22 +2562,22 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
                       pair={pair}
                       onChange={(value) => onUpdateNodeDraftProperty(index, "value", value)}
                     />
-                    <button type="button" className="ne-remove-btn" onClick={() => onRemoveNodeDraftProperty(index)}>
+                    <button type="button" className="text-error text-[0.8rem] hover:text-error/80 px-1 py-0.5" onClick={() => onRemoveNodeDraftProperty(index)}>
                       x
                     </button>
                   </div>
                 ))}
               </div>
-              <button type="button" className="ne-btn ne-btn-small" onClick={onAddNodeDraftProperty}>
+              <button type="button" className="border border-outline-variant text-on-surface text-[0.7rem] px-1.5 py-0.5 cursor-pointer hover:border-primary bg-transparent" onClick={onAddNodeDraftProperty}>
                 + Add property
               </button>
             </div>
 
-            <div className="ne-modal-actions">
-              <button type="button" className="ne-btn ne-btn-primary" onClick={onSaveNodeDraft}>
+            <div className="flex gap-2 justify-end">
+              <button type="button" className="border border-primary bg-primary text-surface text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:bg-primary/90" onClick={onSaveNodeDraft}>
                 Save node
               </button>
-              <button type="button" className="ne-btn" onClick={onDiscardNodeDraft}>
+              <button type="button" className="border border-outline-variant text-on-surface text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:border-primary bg-transparent" onClick={onDiscardNodeDraft}>
                 Discard
               </button>
             </div>
@@ -2576,13 +2586,13 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
       ) : null}
 
       {editorState === "edit_relation" && edgeDraft ? (
-        <div className="ne-modal-backdrop">
-          <div className="ne-modal-card">
+        <div className="fixed inset-0 bg-slate-900/35 backdrop-blur-[2px] flex items-center justify-center z-50">
+          <div className="bg-surface border border-outline-variant p-6 flex flex-col gap-4 w-[500px] max-h-[90vh] overflow-y-auto">
             <h2>Edit relation</h2>
-            <label className="ne-field">
+            <label className="flex flex-col gap-1 text-[0.83rem]">
               <span>Type</span>
               <input
-                className="ne-input"
+                className="border border-outline-variant bg-surface-low text-on-surface text-[0.78rem] px-2 py-1 w-full"
                 value={edgeDraft.relationType}
                 onChange={(event) =>
                   setEdgeDraft((prev) => (prev ? { ...prev, relationType: event.target.value } : prev))
@@ -2590,19 +2600,19 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
               />
             </label>
 
-            <div className="ne-field">
+            <div className="flex flex-col gap-1 text-[0.83rem]">
               <span>Relation properties</span>
-              <div className="ne-property-list">
+              <div className="flex flex-col gap-1">
                 {edgeDraft.properties.map((pair, index) => (
-                  <div key={`${index}-${pair.key}`} className="ne-property-row">
+                  <div key={`${index}-${pair.key}`} className="flex gap-1 items-start">
                     <input
-                      className="ne-input"
+                      className="border border-outline-variant bg-surface-low text-on-surface text-[0.78rem] px-2 py-1 w-full"
                       placeholder="key"
                       value={pair.key}
                       onChange={(event) => onUpdateEdgeDraftProperty(index, "key", event.target.value)}
                     />
                     <select
-                      className="ne-input"
+                      className="border border-outline-variant bg-surface-low text-on-surface text-[0.78rem] px-2 py-1 w-full"
                       value={pair.dataType}
                       onChange={(event) =>
                         onUpdateEdgeDraftProperty(index, "dataType", event.target.value as AttributeType)
@@ -2618,22 +2628,22 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
                       pair={pair}
                       onChange={(value) => onUpdateEdgeDraftProperty(index, "value", value)}
                     />
-                    <button type="button" className="ne-remove-btn" onClick={() => onRemoveEdgeDraftProperty(index)}>
+                    <button type="button" className="text-error text-[0.8rem] hover:text-error/80 px-1 py-0.5" onClick={() => onRemoveEdgeDraftProperty(index)}>
                       x
                     </button>
                   </div>
                 ))}
               </div>
-              <button type="button" className="ne-btn ne-btn-small" onClick={onAddEdgeDraftProperty}>
+              <button type="button" className="border border-outline-variant text-on-surface text-[0.7rem] px-1.5 py-0.5 cursor-pointer hover:border-primary bg-transparent" onClick={onAddEdgeDraftProperty}>
                 + Add property
               </button>
             </div>
 
-            <div className="ne-modal-actions">
-              <button type="button" className="ne-btn ne-btn-primary" onClick={onSaveEdgeDraft}>
+            <div className="flex gap-2 justify-end">
+              <button type="button" className="border border-primary bg-primary text-surface text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:bg-primary/90" onClick={onSaveEdgeDraft}>
                 Save relation
               </button>
-              <button type="button" className="ne-btn" onClick={onDiscardEdgeDraft}>
+              <button type="button" className="border border-outline-variant text-on-surface text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:border-primary bg-transparent" onClick={onDiscardEdgeDraft}>
                 Discard
               </button>
             </div>
@@ -2646,7 +2656,7 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
 
 export function KnowledgeGraph(props: KnowledgeGraphProps): JSX.Element {
   return (
-    <section className="ne-page">
+    <section className="m-0 min-h-screen">
       <ReactFlowProvider>
         <NodeEditorInner {...props} />
       </ReactFlowProvider>
