@@ -2,6 +2,25 @@
 
 > Historical note: older entries may reference paths or planning structures that no longer exist after later cleanups. Treat each entry as accurate for its date.
 
+## 2026-03-23 (CSS migration — legacy ne-* → Tailwind Terran)
+
+### Migrate all legacy CSS to Tailwind Terran tokens
+
+- Audited entire codebase: all 64 `ne-*` class usages were isolated to `KnowledgeGraph.tsx`; all other files were already pure Tailwind
+- Replaced every `ne-*` className in `KnowledgeGraph.tsx` with equivalent Tailwind Terran utilities:
+  - Sidebar: `w-[280px] bg-surface border-r border-outline-variant …`
+  - Nodes: `group border-2 rounded-[10px] …` with `group-hover:opacity-100` handle pattern
+  - Modals: `fixed inset-0 bg-slate-900/35 backdrop-blur-[2px] …`
+  - Buttons: `border border-outline-variant … hover:border-primary disabled:opacity-45`
+  - Focus/dim states: `opacity-100` / `opacity-30` replacing `ne-node-focused`/`ne-node-dimmed`
+- Replaced 2 inline `var(--text-main)` / `var(--accent)` with literal Terran hex values
+- Added `cn()` import for conditional class composition
+- Stripped entire legacy CSS block (lines 96–1464) from `styles.css` — moved to `legacy.css` then deleted
+- Removed legacy `:root` variable bridge (`--panel`, `--line`, `--accent`, etc.) from `styles.css`
+- `styles.css` is now exclusively Tailwind v4 `@theme` + `@layer base/utilities` + ReactFlow override
+
+---
+
 ## 2026-03-23 (C1 — Graph Editor Redesign)
 
 ### C1-A: KnowledgeGraph Terran Theme Fix + Sub-flows + Document Template

@@ -108,6 +108,14 @@ This is the single planning checklist for active work.
 - [x] `CvGraphCanvas` — kept as-is (uses parentId/extent, incompatible with generic GraphCanvas)
 - [x] **E2E tests** — Full suite on production build: 86.67% pass (26/30); 4 remaining are test limitations (TC008 mock error, TC013 test bug, TC015 mock limitation, TC046 bogus assertion)
 
+### CSS Migration — legacy ne-* → Tailwind Terran ✅
+- [x] Audit all ne-* usages (Haiku agent — LEGACY_CSS_AUDIT.md)
+- [x] Migrate all 64 ne-* classes in `KnowledgeGraph.tsx` to Tailwind Terran utilities
+- [x] Replace 2 inline `var()` references with Terran hex values
+- [x] Remove legacy CSS block from `styles.css` + delete `legacy.css`
+- [x] Remove `:root` variable bridge from `styles.css`
+- [x] Verify no legacy conventions remain in any `.tsx`/`.ts` files
+
 ### C1 — Graph Editor Redesign ✅
 - [x] `styles.css` — fix 5 hardcoded light `.ne-*` values + `.react-flow__node` transparent override
 - [x] `KnowledgeGraph.tsx` — Terran dark CATEGORY_COLORS, GroupNode, SubFlowEdge, Document template, initialNodes/initialEdges/onSave/onChange props
