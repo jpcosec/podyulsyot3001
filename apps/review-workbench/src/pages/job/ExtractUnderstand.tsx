@@ -123,15 +123,12 @@ export function ExtractUnderstand() {
 
   const { source_markdown } = extractQuery.data.data;
   const selectedReq = requirements.find(r => r.id === selectedId) ?? null;
-  const highlight = (hoveredReq ?? selectedReq)?.text_span ?? null;
-
   return (
     <div className="flex h-full">
       <div className="flex-1 min-w-0">
         <SplitPane orientation="horizontal" defaultSizes={[50, 50]}>
           <SourceTextPane
             markdown={source_markdown}
-            highlight={highlight}
             requirements={requirements}
             onSpanSelect={handleSpanSelect}
           />
