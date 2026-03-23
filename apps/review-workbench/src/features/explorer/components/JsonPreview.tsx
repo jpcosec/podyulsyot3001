@@ -1,6 +1,4 @@
-import CodeMirror from '@uiw/react-codemirror';
-import { json } from '@codemirror/lang-json';
-import { oneDark } from '@codemirror/theme-one-dark';
+import { IntelligentEditor } from '../../../components/organisms/IntelligentEditor';
 
 interface Props {
   content: string;
@@ -8,13 +6,8 @@ interface Props {
 
 export function JsonPreview({ content }: Props) {
   return (
-    <CodeMirror
-      value={content}
-      extensions={[json()]}
-      theme={oneDark}
-      editable={false}
-      basicSetup={{ lineNumbers: true, foldGutter: true }}
-      className="text-xs h-full overflow-auto"
-    />
+    <div className="h-full overflow-hidden">
+      <IntelligentEditor mode="fold" content={content} language="json" readOnly />
+    </div>
   );
 }

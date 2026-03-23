@@ -1,6 +1,4 @@
-import CodeMirror from '@uiw/react-codemirror';
-import { markdown } from '@codemirror/lang-markdown';
-import { oneDark } from '@codemirror/theme-one-dark';
+import { IntelligentEditor } from '../../../components/organisms/IntelligentEditor';
 
 interface Props {
   content: string;
@@ -8,13 +6,8 @@ interface Props {
 
 export function MarkdownPreview({ content }: Props) {
   return (
-    <CodeMirror
-      value={content}
-      extensions={[markdown()]}
-      theme={oneDark}
-      editable={false}
-      basicSetup={{ lineNumbers: true }}
-      className="text-xs h-full overflow-auto"
-    />
+    <div className="h-full overflow-hidden">
+      <IntelligentEditor mode="fold" content={content} language="markdown" readOnly />
+    </div>
   );
 }
