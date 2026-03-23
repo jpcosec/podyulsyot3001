@@ -90,9 +90,17 @@ export function FilePreview({ data, isLoading, isError, activePath, onNavigate }
   const content = data.content ?? '';
   if (ext === 'json') return <JsonPreview content={content} />;
   if (ext === 'md') return <MarkdownPreview content={content} />;
+  if (ext === 'txt' || ext === 'log' || ext === 'yaml' || ext === 'yml' || ext === 'toml') {
+    return (
+      <pre className="p-4 font-mono text-xs text-on-surface whitespace-pre-wrap overflow-auto">
+        {content}
+      </pre>
+    );
+  }
   return (
-    <pre className="p-4 font-mono text-xs text-on-surface whitespace-pre-wrap overflow-auto">
-      {content}
-    </pre>
+    <div className="flex flex-col items-center justify-center h-full gap-2">
+      <p className="font-mono text-xs text-on-muted uppercase">Preview not available</p>
+      <p className="font-mono text-[10px] text-on-muted/60">.{ext} files cannot be previewed</p>
+    </div>
   );
 }

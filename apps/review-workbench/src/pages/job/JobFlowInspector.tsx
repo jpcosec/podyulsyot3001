@@ -16,10 +16,17 @@ export function JobFlowInspector() {
   if (isError || !data) {
     return (
       <div className="p-6">
-        <p className="font-mono text-error text-sm">NOT_FOUND</p>
+        <p className="font-mono text-xs text-on-muted uppercase tracking-widest mb-2">Timeline</p>
+        <p className="font-mono text-error text-sm mb-3">Unable to load timeline</p>
         <Link to="/" className="font-mono text-[10px] text-primary hover:underline">
           ← PORTFOLIO
         </Link>
+        <button
+          onClick={() => window.location.reload()}
+          className="ml-4 font-mono text-[10px] text-on-muted hover:text-on-surface underline"
+        >
+          Retry
+        </button>
       </div>
     );
   }

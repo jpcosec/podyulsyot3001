@@ -40,6 +40,7 @@ export function EntryNode(props: NodeProps): JSX.Element {
         )}
         onClick={(event) => {
           event.stopPropagation();
+          data.onSelect?.(id);
           data.onToggleExpand(id);
         }}
       >

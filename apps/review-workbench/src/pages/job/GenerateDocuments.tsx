@@ -28,6 +28,7 @@ export function GenerateDocuments() {
     application_email: { content: '', isDirty: false, isApproved: false },
   });
   const [isRegenOpen, setIsRegenOpen] = useState(false);
+  const [regenSuccess, setRegenSuccess] = useState(false);
 
   useEffect(() => {
     if (docsQuery.data?.view === 'documents') {
@@ -79,7 +80,7 @@ export function GenerateDocuments() {
   const handleRegen = (feedback: string) => {
     gateDecide.mutate(
       { decision: 'request_regeneration', feedback: feedback ? [feedback] : [] },
-      { onSuccess: () => { setIsRegenOpen(false); } },
+      { onSuccess: () => { setIsRegenOpen(false); setRegenSuccess(true); setTimeout(() => setRegenSuccess(false), 4000); } },
     );
   };
 
@@ -99,6 +100,11 @@ export function GenerateDocuments() {
 
   return (
     <div className="flex flex-col h-full">
+      {regenSuccess && (
+        <div className="px-4 py-2 bg-primary/10 border-b border-primary/20 font-mono text-xs text-primary">
+          Regeneration requested
+        </div>
+      )}
       <SplitPane orientation="horizontal" defaultSizes={[70, 30]}>
         {/* Left: Editor */}
         <div className="flex flex-col h-full overflow-hidden">

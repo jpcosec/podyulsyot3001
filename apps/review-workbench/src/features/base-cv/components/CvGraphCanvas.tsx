@@ -153,6 +153,7 @@ interface BuildParams {
   onAddDescription: (entryId: string) => void;
   onSelectSkill: (skillId: string) => void;
   onAddSkill: () => void;
+  onSelectEntry: (entryId: string) => void;
 }
 
 function buildGraphViewNodes(params: BuildParams): { nodes: FlowNode[]; edges: FlowEdge[] } {
@@ -161,7 +162,7 @@ function buildGraphViewNodes(params: BuildParams): { nodes: FlowNode[]; edges: F
     expandedGroups, focusedEntryId, activeDropzoneCategory, selectedGroupCategory,
     onToggleGroup, onSelectGroup, onAddEntry,
     onToggleExpand, onUpdateCategory, onToggleEssential,
-    onUpdateDescription, onAddDescription, onSelectSkill, onAddSkill,
+    onUpdateDescription, onAddDescription, onSelectSkill, onAddSkill, onSelectEntry,
   } = params;
 
   const nodes: FlowNode[] = [];
@@ -230,6 +231,7 @@ function buildGraphViewNodes(params: BuildParams): { nodes: FlowNode[]; edges: F
         descriptions: entry.descriptions,
         expanded: focusedEntryId === entry.id,
         connectedSkillLabels: connectedSkillLabels.get(entry.id) ?? [],
+        onSelect: onSelectEntry,
         onToggleExpand,
         onUpdateCategory,
         onToggleEssential,
@@ -462,18 +464,22 @@ export function CvGraphCanvas({
   onToggleEssential, onUpdateDescription, onAddDescription,
   onSelectSkill, onConnect,
 }: Props) {
+  const onSelectEntry = useCallback((id: string) => onNodeClick(id, 'entry'), [onNodeClick]);
+
   const { nodes: rawNodes, edges: rawEdges } = useMemo(() => buildGraphViewNodes({
     entries, skills, demonstrates,
     expandedGroups, focusedEntryId, activeDropzoneCategory, selectedGroupCategory,
     onToggleGroup, onSelectGroup, onAddEntry,
     onToggleExpand, onUpdateCategory, onToggleEssential,
     onUpdateDescription, onAddDescription, onSelectSkill, onAddSkill,
+    onSelectEntry,
   }), [
     entries, skills, demonstrates,
     expandedGroups, focusedEntryId, activeDropzoneCategory, selectedGroupCategory,
     onToggleGroup, onSelectGroup, onAddEntry,
     onToggleExpand, onUpdateCategory, onToggleEssential,
     onUpdateDescription, onAddDescription, onSelectSkill, onAddSkill,
+    onSelectEntry,
   ]);
 
   const laidOutNodes = useMemo(

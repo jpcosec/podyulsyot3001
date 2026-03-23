@@ -6,6 +6,18 @@
       "content_type": "json",
       "content": "{\n  \"translated\": true,\n  \"original_language\": \"de\",\n  \"target_language\": \"en\",\n  \"chunks_processed\": 3,\n  \"char_count_original\": 1240,\n  \"char_count_translated\": 1190\n}",
       "editable": false
+    },
+    {
+      "path": "raw/source_original.md",
+      "content_type": "markdown",
+      "content": "# Wissenschaftliche/r Mitarbeiter/in - 0,75 Stelle\n\n**Technische Universität Berlin**\nPosting V-67/26\n\nWir suchen eine/n wissenschaftliche/n Mitarbeiter/in (0,75 FTE) für das Brains, Bots, and Minds Lab an der TU Berlin.\n\n## Anforderungen\n\n- Abgeschlossenes wissenschaftliches Hochschulstudium (Diplom, Master oder Äquivalent) in Psychologie, kognitiven oder sozialen Neurowissenschaften, Computational Neuroscience oder verwandten Bereichen\n- Erfahrung in der Programmierung von Experimenten (PsychoPy oder Matlab PsychtoolBox)\n- Statistische Auswertung von Verhaltens- und neurowissenschaftlichen Daten in R (oder Äquivalent)\n- Erfahrung in der Erhebung und Auswertung von EEG-Daten\n- Nachgewiesene Fähigkeit zu eigenständiger und verantwortungsvoller wissenschaftlicher Arbeit gemäß ethischer Richtlinien\n\n## Bedingungen\n\n- Gehalt: Entgeltgruppe 13 TV-L (75%)\n- Beginn: April 2026\n- Kontakt: Prof. Dr. Eva Wiese — sekretariat@kke.tu-berlin.de",
+      "editable": false
+    },
+    {
+      "path": "approved/source_translated.md",
+      "content_type": "markdown",
+      "content": "# Research Assistant - 0.75 FTE\n\n**Technische Universität Berlin**\nPosting V-67/26\n\nWe are looking for a Research Assistant (0.75 FTE) to join the Brains, Bots, and Minds Lab at TU Berlin.\n\n## Requirements\n\n- Successfully completed academic university degree (Diplom, Master or equivalent) in psychology, cognitive or social neurosciences, computational neurosciences, or related areas\n- Experience with programming experiments (PsychoPy or Matlab PsychtoolBox)\n- Statistical analysis of behavioral and neuroscientific data in R (or equivalent)\n- Experience with collecting and analyzing EEG data\n- Proven ability to do independent and responsible scientific work in accordance with ethical guidelines\n\n## Conditions\n\n- Salary: TV-L E13 (75%)\n- Start: April 2026\n- Contact: Prof. Dr. Eva Wiese — sekretariat@kke.tu-berlin.de",
+      "editable": false
     }
   ]
 }

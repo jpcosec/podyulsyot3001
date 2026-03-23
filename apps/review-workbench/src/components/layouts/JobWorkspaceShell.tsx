@@ -5,6 +5,7 @@ import { cn } from '../../utils/cn';
 const PIPELINE_STEPS = [
   { label: 'Flow',       path: '' },
   { label: 'Scrape',     path: 'scrape' },
+  { label: 'Translate',  path: 'translate' },
   { label: 'Extract',    path: 'extract' },
   { label: 'Match',      path: 'match' },
   { label: 'Sculpt',     path: 'sculpt' },

@@ -8,6 +8,7 @@ import { KnowledgeGraph } from './pages/global/KnowledgeGraph';
 import { JobFlowInspector } from './pages/job/JobFlowInspector';
 import { ScrapeDiagnostics } from './pages/job/ScrapeDiagnostics';
 import { ExtractUnderstand } from './pages/job/ExtractUnderstand';
+import { TranslateDiagnostics } from './pages/job/TranslateDiagnostics';
 import { Match } from './pages/job/Match';
 import { GenerateDocuments } from './pages/job/GenerateDocuments';
 import { PackageDeployment } from './pages/job/PackageDeployment';
@@ -26,6 +27,7 @@ const router = createBrowserRouter([
         children: [
           { index: true,          element: <JobFlowInspector /> },
           { path: 'scrape',       element: <ScrapeDiagnostics /> },
+          { path: 'translate',    element: <TranslateDiagnostics /> },
           { path: 'extract',      element: <ExtractUnderstand /> },
           { path: 'match',        element: <Match /> },
           { path: 'sculpt',       element: <GenerateDocuments /> },

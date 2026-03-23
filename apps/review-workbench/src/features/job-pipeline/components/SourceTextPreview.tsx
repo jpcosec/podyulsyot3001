@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import type { ArtifactFile } from '../../../types/api.types';
 
 interface Props {
@@ -10,9 +12,7 @@ export function SourceTextPreview({ files }: Props) {
   const sourceFile = files.find(f => f.path.includes('source_text'));
   const content = sourceFile?.content ?? '';
   const lines = content.split('\n');
-  const PREVIEW_LINES = 10;
-  const visibleLines = expanded ? lines : lines.slice(0, PREVIEW_LINES);
-  const hasMore = lines.length > PREVIEW_LINES;
+  const hasMore = lines.length > 15;
 
   return (
     <div className="bg-surface-container-low border border-outline/20 p-4">
@@ -29,12 +29,11 @@ export function SourceTextPreview({ files }: Props) {
           </button>
         )}
       </div>
-      <pre className="font-mono text-xs text-on-surface bg-surface-low border border-outline/20 p-3 overflow-x-auto whitespace-pre-wrap max-h-96 overflow-y-auto">
-        {visibleLines.join('\n')}
-        {!expanded && hasMore && (
-          <span className="text-on-muted"> …{lines.length - 20} more lines</span>
-        )}
-      </pre>
+      <div className={`bg-surface-low border border-outline/20 p-3 overflow-auto ${!expanded ? 'max-h-96' : ''}`}>
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+          {expanded ? content : lines.slice(0, 15).join('\n')}
+        </ReactMarkdown>
+      </div>
     </div>
   );
 }

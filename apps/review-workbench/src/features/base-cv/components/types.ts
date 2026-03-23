@@ -14,6 +14,7 @@ export interface EntryNodeData extends BaseGraphNodeData {
   descriptions: CvDescription[];
   expanded: boolean;
   connectedSkillLabels: string[];
+  onSelect?: (entryId: string) => void;
   onToggleExpand: (entryId: string) => void;
   onUpdateCategory: (entryId: string, category: string) => void;
   onToggleEssential: (entryId: string, next: boolean) => void;

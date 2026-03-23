@@ -11,7 +11,7 @@ interface Props {
 
 const STAGE_ROUTE_MAP: Record<string, string> = {
   scrape: 'scrape',
-  translate_if_needed: 'scrape',
+  translate_if_needed: 'translate',
   extract_understand: 'extract',
   match: 'match',
   review_match: 'match',

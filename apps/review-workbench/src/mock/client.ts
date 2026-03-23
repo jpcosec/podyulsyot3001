@@ -204,8 +204,13 @@ export const apiClient = {
           entries: [
             { name: "201397", path: "tu_berlin/201397", is_dir: true, child_count: 3 },
             { name: "999001", path: "tu_berlin/999001", is_dir: true, child_count: 3 },
+            { name: "report.pdf", path: "tu_berlin/report.pdf", is_dir: false, extension: "pdf" },
             { name: "index.json", path: "tu_berlin/index.json", is_dir: false, extension: "json" },
           ],
+        } as ExplorerPayload, 100);
+        if (path === "tu_berlin/report.pdf") return delay({
+          path, is_dir: false, extension: "pdf", content_type: "text",
+          content: "",
         } as ExplorerPayload, 100);
         if (path === "tu_berlin/index.json") return delay({
           path, is_dir: false, extension: "json", content_type: "text",
