@@ -2,6 +2,23 @@
 
 > Historical note: older entries may reference paths or planning structures that no longer exist after later cleanups. Treat each entry as accurate for its date.
 
+## 2026-03-23 (Fase 11)
+
+### UI — Fase 11 Component Map Compliance
+
+Refactored all remaining feature components to use the organisms and molecules defined in `component_map.md`. No page-level logic changed — only internal rendering delegated to generic organisms.
+
+- **IntelligentEditor** (`components/organisms/`): fixed broken decoration code (was using `EditorView.decorations.compute` with async Promise — replaced with synchronous `StateField` + `RangeSetBuilder`). Added `onSpanSelect` prop via `EditorView.domEventHandlers`.
+- **SourceTextPane**: replaced custom DOM-based text selection + `<pre>` segment renderer with `IntelligentEditor` (tag-hover mode). Highlights driven by `requirements` prop.
+- **DocumentEditor**: replaced inline CodeMirror with `IntelligentEditor` (fold mode, editable markdown).
+- **ScrapeControlPanel**, **ExtractControlPanel**, **MatchControlPanel**: all now use generic `ControlPanel` molecule. Custom detail views (requirement/profile/edge detail) passed as `children`.
+- **GraphCanvas** (`components/organisms/`): added `onConnect` prop for manual edge creation (delegates to ReactFlow `addEdge`).
+- **MatchGraphCanvas**: now uses `GraphCanvas` organism internally with custom `nodeTypes`/`edgeTypes`. Search/focus logic stays in MatchGraphCanvas.
+- **ExplorerTree**: now delegates to `FileTree` organism via adapter function `toFileNodes` (ExplorerEntry → FileTreeNode).
+- **JsonPreview**, **MarkdownPreview**: replaced inline CodeMirror with `IntelligentEditor` (fold mode, respective language).
+- **CvGraphCanvas**: kept as direct ReactFlow consumer — uses `parentId`/`extent` for grouped child nodes and per-node styles that are incompatible with GraphCanvas's generic interface.
+- **TestSprite E2E**: component-level tests all passing (TC011 scrape DiagnosticCard, TC012 source text expand, TC019 extract control panel, TC025 generate documents tabs, TC007 match navigation). Other failures attributed to dev-server rendering timeouts.
+
 ## 2026-03-22 (C3)
 
 ### UI — C3 Extract Tagger enrichment (Phase 2, Bring-Back Migration)

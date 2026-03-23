@@ -93,6 +93,21 @@ This is the single planning checklist for active work.
 - [x] `BaseCvEditor.tsx`
 - [x] **E2E tests** — all TestSprite tests passing (TC001–TC049 suite, 100%)
 
+### Fase 11 — Component Map Compliance ✅
+- [x] `IntelligentEditor` — fixed decorations (StateField), added `onSpanSelect` prop
+- [x] `SourceTextPane` → uses IntelligentEditor (tag-hover mode)
+- [x] `DocumentEditor` → uses IntelligentEditor (fold mode)
+- [x] `ScrapeControlPanel` → uses ControlPanel molecule
+- [x] `ExtractControlPanel` → uses ControlPanel molecule
+- [x] `MatchControlPanel` → uses ControlPanel molecule (with children for detail pane)
+- [x] `GraphCanvas` → added `onConnect` prop
+- [x] `MatchGraphCanvas` → uses GraphCanvas organism
+- [x] `ExplorerTree` → delegates to FileTree organism
+- [x] `JsonPreview` → uses IntelligentEditor (fold/json)
+- [x] `MarkdownPreview` → uses IntelligentEditor (fold/markdown)
+- [x] `CvGraphCanvas` — kept as-is (uses parentId/extent, incompatible with generic GraphCanvas)
+- [x] **E2E tests** — TestSprite suite run; refactored-component tests passing (TC011, TC012, TC019, TC025, TC007)
+
 ### Fase 10 — B3b Application Context Gate ⚠️ BLOCKED — requiere backend
 - [ ] `useApplicationContext.ts`, `useContextDecision.ts`
 - [ ] `ContextBrief.tsx`, `MatchReferencePanel.tsx`, `ContextDecisionBar.tsx`
