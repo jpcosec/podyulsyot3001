@@ -1,52 +1,45 @@
 import { useNavigate } from 'react-router-dom';
-import { Button } from '../../../components/atoms/Button';
+import { ControlPanel } from '../../../components/molecules/ControlPanel';
+import { cn } from '../../../utils/cn';
 
 interface Props {
   source: string;
   jobId: string;
   hasData: boolean;
+  url?: string;
+  adapter?: string;
+  httpStatus?: number;
+  fetchedAt?: string;
 }
 
-export function ScrapeControlPanel({ source, jobId, hasData }: Props) {
+export function ScrapeControlPanel({ source, jobId, hasData, url, adapter, httpStatus, fetchedAt }: Props) {
   const navigate = useNavigate();
 
+  const httpColor = httpStatus
+    ? httpStatus >= 200 && httpStatus < 300 ? 'text-primary' : 'text-error'
+    : '';
+
   return (
-    <div className="w-80 bg-background border-l border-secondary/20 p-4 flex flex-col gap-4">
-      <div>
-        <p className="font-mono text-[10px] text-secondary uppercase tracking-[0.2em] mb-1">Phase</p>
-        <p className="font-headline font-bold text-on-surface uppercase tracking-widest text-sm">Scrape</p>
-      </div>
-
-      <div className="border-t border-outline/20 pt-4 space-y-2 font-mono text-xs">
-        <div className="flex justify-between">
-          <span className="text-on-muted">SOURCE</span>
-          <span className="text-on-surface uppercase">{source}</span>
+    <ControlPanel
+      title="Scrape"
+      phaseColor="secondary"
+      status={{ label: 'Status', value: hasData ? 'COMPLETED' : 'PENDING', variant: hasData ? 'primary' : 'muted' }}
+      fields={[
+        ...(adapter ? [{ label: 'Adapter', value: adapter.toUpperCase(), mono: true }] : []),
+        ...(httpStatus ? [{ label: 'HTTP', value: <span className={cn('font-mono', httpColor)}>{httpStatus}</span> }] : []),
+        ...(fetchedAt ? [{ label: 'Fetched', value: new Date(fetchedAt).toLocaleString() }] : []),
+      ]}
+      actions={[
+        { label: 'RE-RUN SCRAPE', variant: 'ghost', disabled: true, onClick: () => {} },
+        { label: 'ADVANCE →', variant: 'primary', onClick: () => navigate(`/jobs/${source}/${jobId}/translate`) },
+      ]}
+    >
+      {url && (
+        <div>
+          <p className="font-mono text-[10px] text-on-muted uppercase tracking-wider mb-1">URL</p>
+          <p className="font-mono text-[9px] text-on-surface break-all leading-relaxed">{url}</p>
         </div>
-        <div className="flex justify-between">
-          <span className="text-on-muted">STATUS</span>
-          <span className="text-primary">{hasData ? 'COMPLETED' : 'PENDING'}</span>
-        </div>
-      </div>
-
-      <div className="border-t border-outline/20 pt-4 space-y-2 mt-auto">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full justify-center"
-          disabled
-          title="Backend required"
-        >
-          RE-RUN SCRAPE
-        </Button>
-        <Button
-          variant="primary"
-          size="sm"
-          className="w-full justify-center"
-          onClick={() => navigate(`/jobs/${source}/${jobId}/extract`)}
-        >
-          ADVANCE →
-        </Button>
-      </div>
-    </div>
+      )}
+    </ControlPanel>
   );
 }
