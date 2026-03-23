@@ -106,7 +106,7 @@ This is the single planning checklist for active work.
 - [x] `JsonPreview` → uses IntelligentEditor (fold/json)
 - [x] `MarkdownPreview` → uses IntelligentEditor (fold/markdown)
 - [x] `CvGraphCanvas` — kept as-is (uses parentId/extent, incompatible with generic GraphCanvas)
-- [x] **E2E tests** — TestSprite suite run; refactored-component tests passing (TC011, TC012, TC019, TC025, TC007)
+- [x] **E2E tests** — Full suite on production build: 86.67% pass (26/30); 4 remaining are test limitations (TC008 mock error, TC013 test bug, TC015 mock limitation, TC046 bogus assertion)
 
 ### Fase 10 — B3b Application Context Gate ⚠️ BLOCKED — requiere backend
 - [ ] `useApplicationContext.ts`, `useContextDecision.ts`

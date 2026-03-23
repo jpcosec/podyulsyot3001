@@ -17,7 +17,13 @@ Refactored all remaining feature components to use the organisms and molecules d
 - **ExplorerTree**: now delegates to `FileTree` organism via adapter function `toFileNodes` (ExplorerEntry → FileTreeNode).
 - **JsonPreview**, **MarkdownPreview**: replaced inline CodeMirror with `IntelligentEditor` (fold mode, respective language).
 - **CvGraphCanvas**: kept as direct ReactFlow consumer — uses `parentId`/`extent` for grouped child nodes and per-node styles that are incompatible with GraphCanvas's generic interface.
-- **TestSprite E2E**: component-level tests all passing (TC011 scrape DiagnosticCard, TC012 source text expand, TC019 extract control panel, TC025 generate documents tabs, TC007 match navigation). Other failures attributed to dev-server rendering timeouts.
+- **TestSprite E2E (production build)**: 46.67% → 86.67% (26/30). Fixed by switching to `vite preview` + targeted code fixes:
+  - TC011: Added `Timestamp` field (`fetched_at`) to ScrapeDiagnostics DiagnosticCard
+  - TC047: `EntryNode` click now calls `onSelect` callback → NodeInspector opens
+  - TC044: Added "Preview not available" for unsupported file types in FilePreview; added `report.pdf` to explorer mock
+  - TC008: Added error state ("Unable to load timeline" + Retry) to JobFlowInspector
+  - Regen modal: Shows "Regeneration requested" banner for 4s after confirm
+  - Remaining 4 failures: test bugs (TC013, TC046) or mock limitations (TC008, TC015)
 
 ## 2026-03-22 (C3)
 
