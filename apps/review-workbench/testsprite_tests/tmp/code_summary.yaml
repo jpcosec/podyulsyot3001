@@ -3,102 +3,121 @@ type: frontend
 tech_stack:
   - language: TypeScript
   - framework: React 18 + Vite
-  - ui_library: Tailwind CSS v4 (Terran Command design system)
-  - other: react-router-dom v6, @tanstack/react-query v5, @xyflow/react v12, @dagrejs/dagre, @uiw/react-codemirror, react-resizable-panels, lucide-react
-
+  - ui_library: Tailwind CSS (Terran Command design system)
+  - other: react-router-dom v6, @tanstack/react-query, @xyflow/react, @uiw/react-codemirror, lucide-react, react-resizable-panels
 routes:
   - path: /
     file: src/pages/global/PortfolioDashboard.tsx
     auth_required: false
-    description: Portfolio dashboard showing all jobs with status badges and deadline sidebar
+    description: Portfolio dashboard with job list and status badges
   - path: /explorer
     file: src/pages/global/DataExplorer.tsx
     auth_required: false
-    description: File system explorer with tree navigation and JSON/Markdown/image preview
+    description: File system explorer with tree nav and file preview
   - path: /cv
     file: src/pages/global/BaseCvEditor.tsx
     auth_required: false
-    description: Base CV editor with ReactFlow graph of entries and skills
+    description: Base CV graph editor with entries, skills, and demonstrates edges
+  - path: /graph
+    file: src/pages/global/KnowledgeGraph.tsx
+    auth_required: false
+    description: Knowledge graph visualization
   - path: /jobs/:source/:jobId
     file: src/pages/job/JobFlowInspector.tsx
     auth_required: false
-    description: Job flow inspector with pipeline timeline and HITL CTA
+    description: Job pipeline flow inspector with timeline of stages
   - path: /jobs/:source/:jobId/scrape
     file: src/pages/job/ScrapeDiagnostics.tsx
     auth_required: false
-    description: Scrape diagnostics with metadata card, source text preview, and advance button
+    description: Scrape diagnostics with metadata card and source text preview
+  - path: /jobs/:source/:jobId/translate
+    file: src/pages/job/TranslateDiagnostics.tsx
+    auth_required: false
+    description: Translation diagnostics with status and comparison cards
   - path: /jobs/:source/:jobId/extract
     file: src/pages/job/ExtractUnderstand.tsx
     auth_required: false
-    description: Extract and understand view with source text pane and editable requirement list
+    description: Extract and understand view with source text and requirements list
   - path: /jobs/:source/:jobId/match
     file: src/pages/job/Match.tsx
     auth_required: false
-    description: Match view with ReactFlow graph canvas, evidence bank, and decision modal
+    description: Match graph editor with requirement/profile nodes and edge scores
   - path: /jobs/:source/:jobId/sculpt
     file: src/pages/job/GenerateDocuments.tsx
     auth_required: false
-    description: Generate documents view with 3-tab editor and context panel
+    description: Generate documents editor with CV, motivation letter, email tabs
   - path: /jobs/:source/:jobId/deployment
     file: src/pages/job/PackageDeployment.tsx
     auth_required: false
-    description: Package and deployment view with mission summary, checklist, and deploy CTA
-
+    description: Package and deployment view with file list and deployment CTA
 features:
   - name: Portfolio Dashboard
-    description: Displays all jobs in a table with status badges; right sidebar shows deadlines
+    description: View all jobs with status badges, deadlines, and recent artifacts
     files:
       - src/pages/global/PortfolioDashboard.tsx
       - src/features/portfolio/api/usePortfolioSummary.ts
       - src/features/portfolio/components/PortfolioTable.tsx
-      - src/features/portfolio/components/DeadlineSidebar.tsx
     entry_route: /
     user_interactions:
-      - View job list table with status badges
-      - Click a job row to navigate to job detail
-      - View deadline sidebar on the right
+      - View table of jobs with status badges
+      - See deadline sidebar
+      - Click a job row to navigate to Job Flow Inspector
     api_calls:
       - method: GET
-        endpoint: /query/portfolio/summary
+        endpoint: /api/v2/query/portfolio/summary
     auth_required: false
-
   - name: Job Flow Inspector
-    description: Pipeline timeline with stage status dots and HITL CTA banner
+    description: Timeline of pipeline stages for a specific job
     files:
       - src/pages/job/JobFlowInspector.tsx
       - src/features/job-pipeline/api/useJobTimeline.ts
       - src/features/job-pipeline/components/PipelineTimeline.tsx
-      - src/features/job-pipeline/components/HitlCtaBanner.tsx
+      - src/features/job-pipeline/components/StageRow.tsx
     entry_route: /jobs/tu_berlin/201397
     user_interactions:
-      - View pipeline timeline with stage status dots
-      - See pulsing animation on pending_hitl stage
-      - Click GO TO REVIEW button to navigate to review stage
+      - View pipeline stages as timeline rows with status badges
+      - Click GO TO REVIEW button on active HITL stage
     api_calls:
       - method: GET
-        endpoint: /query/jobs/:source/:jobId/timeline
+        endpoint: /api/v2/query/jobs/:source/:job_id/timeline
     auth_required: false
-
   - name: Scrape Diagnostics
-    description: Scrape metadata card, collapsible source text, error screenshot, and advance button
+    description: Scrape metadata card, source text preview, and advance to translate
     files:
       - src/pages/job/ScrapeDiagnostics.tsx
       - src/features/job-pipeline/api/useArtifacts.ts
       - src/features/job-pipeline/components/ScrapeMetaCard.tsx
       - src/features/job-pipeline/components/SourceTextPreview.tsx
+      - src/features/job-pipeline/components/ScrapeControlPanel.tsx
     entry_route: /jobs/tu_berlin/201397/scrape
     user_interactions:
-      - View scrape metadata (URL, HTTP status, timestamp)
-      - View collapsed source text (max 20 lines)
-      - Click EXPAND to see full source text
-      - Click ADVANCE to navigate to extract stage
+      - View fetch metadata card with adapter and HTTP status
+      - See source text preview collapsed by default with max lines
+      - Expand source text to see full content
+      - Click ADVANCE button to go to translate page
     api_calls:
       - method: GET
-        endpoint: /query/jobs/:source/:jobId/artifacts/:nodeName
+        endpoint: /api/v2/query/jobs/:source/:job_id/artifacts/scrape
     auth_required: false
-
+  - name: Translate Diagnostics
+    description: Translation status badge and comparison with advance to extract
+    files:
+      - src/pages/job/TranslateDiagnostics.tsx
+      - src/features/job-pipeline/api/useArtifacts.ts
+      - src/features/job-pipeline/components/TranslateStatusCard.tsx
+      - src/features/job-pipeline/components/TranslationComparison.tsx
+    entry_route: /jobs/tu_berlin/201397/translate
+    user_interactions:
+      - View translation status badge showing TRANSLATED or NO_TRANSLATION_NEEDED
+      - See language pair in control panel
+      - View side-by-side translation comparison
+      - Click ADVANCE button to go to extract page
+    api_calls:
+      - method: GET
+        endpoint: /api/v2/query/jobs/:source/:job_id/artifacts/translate_if_needed
+    auth_required: false
   - name: Extract and Understand
-    description: Split pane with source text and editable requirements list; hover highlights source spans
+    description: Tag requirements from source text using CodeMirror editor with highlights
     files:
       - src/pages/job/ExtractUnderstand.tsx
       - src/features/job-pipeline/api/useViewExtract.ts
@@ -107,138 +126,229 @@ features:
       - src/features/job-pipeline/components/ExtractControlPanel.tsx
     entry_route: /jobs/tu_berlin/201397/extract
     user_interactions:
-      - View source text with line numbers on left
-      - View requirement list on right
-      - Hover requirement to highlight corresponding source span
-      - Click requirement to see JSON in control panel
-      - Edit requirement text inline
-      - Press Ctrl+S to save
+      - View source text in CodeMirror left pane with requirement highlights
+      - See requirements list in right pane with priority badges
+      - Click a requirement to select and inspect JSON in control panel
+      - Click SAVE DRAFT to save requirements
+      - Click COMMIT to advance to match stage
     api_calls:
       - method: GET
-        endpoint: /query/jobs/:source/:jobId/view/extract
-      - method: POST
-        endpoint: /commands/jobs/:source/:jobId/editor-state/:nodeName
+        endpoint: /api/v2/query/jobs/:source/:job_id/view/extract
     auth_required: false
-
-  - name: Match
-    description: ReactFlow graph with score edges; EvidenceBank sidebar; gate decision modal
+  - name: Match Graph Editor
+    description: Graph of requirement-to-evidence matches with score badges
     files:
       - src/pages/job/Match.tsx
       - src/features/job-pipeline/api/useViewMatch.ts
       - src/features/job-pipeline/components/MatchGraphCanvas.tsx
-      - src/features/job-pipeline/components/MatchDecisionModal.tsx
+      - src/features/job-pipeline/components/MatchControlPanel.tsx
       - src/features/job-pipeline/components/EvidenceBankPanel.tsx
     entry_route: /jobs/tu_berlin/201397/match
     user_interactions:
-      - View ReactFlow graph with requirement and profile nodes
-      - View score badges on edges
-      - Click a node to see JSON in control panel
-      - Press Ctrl+Enter to open decision modal
-      - Click APPROVE in modal to submit gate decision
+      - View graph with requirement nodes and profile nodes
+      - See edge score badges with match percentages
+      - Click a node to see details in control panel
+      - Click COMMIT MATCH to open decision modal
     api_calls:
       - method: GET
-        endpoint: /query/jobs/:source/:jobId/view/match
-      - method: POST
-        endpoint: /commands/jobs/:source/:jobId/gate/:gateName/decide
+        endpoint: /api/v2/query/jobs/:source/:job_id/view/match
     auth_required: false
-
   - name: Generate Documents
-    description: Three-tab markdown editor with context panel and regen modal
+    description: Edit CV, motivation letter, application email in CodeMirror tabs
     files:
       - src/pages/job/GenerateDocuments.tsx
       - src/features/job-pipeline/api/useViewDocuments.ts
       - src/features/job-pipeline/components/DocumentTabs.tsx
       - src/features/job-pipeline/components/DocumentEditor.tsx
-      - src/features/job-pipeline/components/ContextPanel.tsx
-      - src/features/job-pipeline/components/RegenModal.tsx
-    entry_route: /jobs/tu_berlin/999001/sculpt
+    entry_route: /jobs/tu_berlin/201397/sculpt
     user_interactions:
-      - View 3 document tabs (cv, motivation_letter, application_email)
-      - Switch tabs to load different document content
-      - Edit text in CodeMirror markdown editor
-      - See dirty indicator amber dot after editing
-      - Press Ctrl+S to save and clear dirty indicator
-      - Press Ctrl+Enter to approve tab with check mark
-      - Click REQUEST REGEN to open regeneration modal
-      - Fill textarea in regen modal and submit
+      - View document tabs for CV, Motivation Letter, Application Email
+      - Switch between document tabs
+      - Edit document content in editor
+      - See dirty indicator when document is edited
+      - Click SAVE to save current document
     api_calls:
       - method: GET
-        endpoint: /query/jobs/:source/:jobId/view/documents
-      - method: POST
-        endpoint: /commands/jobs/:source/:jobId/documents/:docKey
+        endpoint: /api/v2/query/jobs/:source/:job_id/view/documents
     auth_required: false
-
-  - name: Package and Deployment
-    description: Mission complete header, pipeline checklist, package files, and two-step deploy CTA
-    files:
-      - src/pages/job/PackageDeployment.tsx
-      - src/features/job-pipeline/api/usePackageFiles.ts
-      - src/features/job-pipeline/components/MissionSummaryCard.tsx
-      - src/features/job-pipeline/components/PipelineChecklist.tsx
-      - src/features/job-pipeline/components/PackageFileList.tsx
-      - src/features/job-pipeline/components/DeploymentCta.tsx
-    entry_route: /jobs/tu_berlin/999001/deployment
-    user_interactions:
-      - View MISSION_COMPLETE header with cyan glow
-      - View pipeline checklist with completion checkmarks
-      - View list of package files
-      - Click MARK AS DEPLOYED button
-      - Confirm deployment in two-step confirmation
-      - Navigate to / after confirmation
-    api_calls:
-      - method: GET
-        endpoint: /query/jobs/:source/:jobId/package/files
-    auth_required: false
-
   - name: Data Explorer
-    description: File browser with collapsible tree and preview panel for JSON, Markdown, and images
+    description: File system tree navigator with syntax-highlighted file preview
     files:
       - src/pages/global/DataExplorer.tsx
       - src/features/explorer/api/useExplorerBrowse.ts
       - src/features/explorer/components/ExplorerTree.tsx
-      - src/features/explorer/components/BreadcrumbNav.tsx
       - src/features/explorer/components/FilePreview.tsx
-      - src/features/explorer/components/JsonPreview.tsx
     entry_route: /explorer
     user_interactions:
-      - View split pane with file tree on left and preview on right
-      - Click folder to expand and see children
-      - Click file to preview content
-      - View JSON with CodeMirror syntax highlighting
-      - Click breadcrumb segment to navigate to parent directory
+      - View file tree in left pane
+      - Expand folders by clicking them
+      - Click a file to see preview with syntax highlighting in right pane
     api_calls:
       - method: GET
-        endpoint: /query/explorer/browse
+        endpoint: /api/v2/query/explorer/browse
     auth_required: false
-
   - name: Base CV Editor
-    description: ReactFlow graph of CV entries and skills with inspector panel for editing
+    description: Graph-based CV editor with entry groups and skill nodes
     files:
       - src/pages/global/BaseCvEditor.tsx
       - src/features/base-cv/api/useCvProfileGraph.ts
       - src/features/base-cv/components/CvGraphCanvas.tsx
-      - src/features/base-cv/components/EntryNode.tsx
-      - src/features/base-cv/components/SkillNode.tsx
       - src/features/base-cv/components/NodeInspector.tsx
-      - src/features/base-cv/components/ProfileStats.tsx
     entry_route: /cv
     user_interactions:
-      - View ReactFlow canvas with entry and skill nodes
-      - Click entry node to open NodeInspector on the right
-      - Edit fields in NodeInspector
-      - Press Ctrl+S to save
-      - Click canvas background to deselect and see ProfileStats
+      - View CV graph with grouped entry nodes and skill nodes
+      - Click a group header to expand or collapse entries
+      - Click an entry node to see details in inspector sidebar
+      - Press Ctrl+S to save changes
     api_calls:
       - method: GET
-        endpoint: /query/profile/cv-profile-graph
-      - method: PUT
-        endpoint: /commands/profile/cv-profile-graph
+        endpoint: /api/v2/query/profile/cv-graph
+    auth_required: false
+known_limitations:
+  - issue: All data served from mock fixtures (VITE_MOCK=true) - no real backend in dev
+    location: src/mock/client.ts
+    impact: All writes are no-ops, data resets on reload
+  - issue: B4b Default Document Gates and B3b Application Context require backend - blocked
+    location: plan/index_checklist.md
+    impact: These phases are not implemented
+  - ui_library: Tailwind CSS v4 (Terran Command tokens)
+  - other: TanStack React Query, React Router DOM v6, ReactFlow (@xyflow/react), Dagre, Lucide React
+
+routes:
+  - path: /
+    file: src/pages/global/PortfolioDashboard.tsx
+    auth_required: false
+    description: Portfolio dashboard showing all jobs with status badges
+  - path: /explorer
+    file: src/pages/global/DataExplorer.tsx
+    auth_required: false
+    description: Raw data explorer for browsing job artifacts
+  - path: /cv
+    file: src/pages/global/BaseCvEditor.tsx
+    auth_required: false
+    description: CV profile graph editor with collapsible groups and skill balls
+  - path: /graph
+    file: src/pages/global/KnowledgeGraph.tsx
+    auth_required: false
+    description: Full-purpose knowledge graph editor (nodes, edges, undo/redo, filter, templates)
+  - path: /jobs/:source/:jobId
+    file: src/pages/job/JobFlowInspector.tsx
+    auth_required: false
+    description: Job pipeline flow inspector showing stage statuses
+  - path: /jobs/:source/:jobId/scrape
+    file: src/pages/job/ScrapeDiagnostics.tsx
+    auth_required: false
+    description: Scrape diagnostics with screenshot viewer
+  - path: /jobs/:source/:jobId/extract
+    file: src/pages/job/ExtractUnderstand.tsx
+    auth_required: false
+    description: Extract & understand editor — source text pane + requirement cards
+  - path: /jobs/:source/:jobId/match
+    file: src/pages/job/Match.tsx
+    auth_required: false
+    description: Match editor — bipartite graph with manual edge drawing and undo/redo
+  - path: /jobs/:source/:jobId/sculpt
+    file: src/pages/job/GenerateDocuments.tsx
+    auth_required: false
+    description: Document sculpting view for CV, motivation letter, and email
+  - path: /jobs/:source/:jobId/deployment
+    file: src/pages/job/PackageDeployment.tsx
+    auth_required: false
+    description: Deployment view showing package status and routing
+
+features:
+  - name: Portfolio Dashboard
+    description: List all jobs with status, source, and navigation to job workspace
+    files:
+      - src/pages/global/PortfolioDashboard.tsx
+      - src/features/portfolio/api/usePortfolioSummary.ts
+    entry_route: /
+    user_interactions:
+      - View job list with status badges (running, pending_hitl, completed, failed)
+      - Click a job row to navigate to its workspace
+    api_calls:
+      - method: GET
+        endpoint: /api/v2/query/portfolio/summary
+    auth_required: false
+
+  - name: Knowledge Graph Editor
+    description: Generic knowledge graph viewer and editor with ReactFlow. Supports node/edge CRUD, undo/redo, filter, templates, drag-and-drop, focus mode.
+    files:
+      - src/pages/global/KnowledgeGraph.tsx
+    entry_route: /graph
+    user_interactions:
+      - View graph with 6 sample nodes and 3 edges
+      - Click a node to focus it (neighbors highlighted)
+      - Double-click a node to open edit form
+      - Click Edit node button in sidebar to edit node name/category/properties
+      - Click + Add node to create a new node
+      - Drag a template chip onto the canvas
+      - Filter nodes by name
+      - Use Undo/Redo buttons or Ctrl+Z/Ctrl+U
+      - Click Layout all to re-run dagre layout
+      - Click Save workspace to persist state
+      - Click Delete selected to remove node/edge
+    api_calls: []
+    auth_required: false
+
+  - name: Extract Tagger
+    description: Source text pane + requirement list with collapse/expand cards, notes, search/filter, keyboard tagging
+    files:
+      - src/pages/job/ExtractUnderstand.tsx
+      - src/features/job-pipeline/components/SourceTextPane.tsx
+      - src/features/job-pipeline/components/RequirementList.tsx
+      - src/features/job-pipeline/components/RequirementItem.tsx
+    entry_route: /jobs/tu_berlin/999001/extract
+    user_interactions:
+      - View source text on left pane with line numbers
+      - View 3 extracted requirements on right pane collapsed by default
+      - Click a requirement card to expand it
+      - Type in search bar to filter cards
+      - Click + ADD to add a blank requirement
+      - Press Ctrl+S to save draft
+    api_calls:
+      - method: GET
+        endpoint: /api/v2/query/jobs/tu_berlin/999001/views/extract
+    auth_required: false
+
+  - name: Match Editor
+    description: Bipartite graph matching profile nodes to requirement nodes with undo/redo, search, keyboard nav, shortcuts modal
+    files:
+      - src/pages/job/Match.tsx
+      - src/features/job-pipeline/components/MatchGraphCanvas.tsx
+      - src/features/job-pipeline/components/MatchControlPanel.tsx
+    entry_route: /jobs/tu_berlin/201397/match
+    user_interactions:
+      - View bipartite graph with profile and requirement nodes
+      - Click a node to select it
+      - Press / to focus search bar
+      - Press ? to open shortcuts modal
+      - Press Ctrl+S to save
+      - Click COMMIT MATCH to open decision modal
+    api_calls:
+      - method: GET
+        endpoint: /api/v2/query/jobs/tu_berlin/201397/views/match
+    auth_required: false
+
+  - name: CV Graph Editor
+    description: CV profile editor with collapsible category groups, mastery-colored skill balls, inline entry editing
+    files:
+      - src/pages/global/BaseCvEditor.tsx
+      - src/features/base-cv/components/CvGraphCanvas.tsx
+    entry_route: /cv
+    user_interactions:
+      - View CV groups as collapsible containers
+      - Click group header to expand/collapse entries
+      - Press Ctrl+S to save
+    api_calls:
+      - method: GET
+        endpoint: /api/v2/query/portfolio/cv-profile-graph
     auth_required: false
 
 known_limitations:
-  - issue: All data served from mock fixtures (VITE_MOCK=true), no real backend
-    location: src/mock/client.ts
-    impact: Save and mutate operations are no-ops returning mock data
-  - issue: Deploy CTA navigates to / without real deployment
-    location: src/features/job-pipeline/components/DeploymentCta.tsx
-    impact: Confirmation flow is UI-only
+  - issue: All API calls use mock data (VITE_MOCK=true) — no real backend connection
+    location: src/api/client.ts
+    impact: Data is read-only fixtures; mutations update local state only
+  - issue: KnowledgeGraph uses hardcoded sample data
+    location: src/pages/global/KnowledgeGraph.tsx
+    impact: Save workspace only updates in-memory state, not persisted to API

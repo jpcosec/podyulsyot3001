@@ -2,19 +2,17 @@
   "status": "commited",
   "type": "frontend",
   "scope": "codebase",
-  "localEndpoint": "http://localhost:5173",
+  "localEndpoint": "http://localhost:5175",
   "executionArgs": {
     "projectName": "review-workbench",
     "projectPath": "/home/jp/phd-workspaces/dev/.worktrees/ui-redesign/apps/review-workbench",
-    "testIds": [
-      "TC044"
-    ],
-    "additionalInstruction": "DataExplorer now pre-loads children for all root-level folders when the explorer mounts. So when the user clicks tu_berlin, the children (including index.json) are already populated in childrenMap without any async delay.",
+    "testIds": [],
+    "additionalInstruction": "Running on production build (vite preview) on port 5175.",
     "serverMode": "production",
     "envs": {
       "API_KEY": "sk-user-3CV7lW8KqGN8pvNKLzuInJ3nwyeopNOUVjuvozYREFWoFl9irNLXFjYowoLKfkrM1QKnSO49Fx3Uo8ACP7qsMcQep298I9zDzAeLN0BdTst8AfoAv7AFh0ICkQZXFMaZLU0"
     }
   },
-  "serverPort": 39343,
-  "proxy": "http://691fda20-e575-4dbe-9575-8e3fc146a679:9ZXJ3K4yhOxiqSZKNeKVLDrNW2xxeoDH@tun.testsprite.com:8080"
+  "serverPort": 40821,
+  "proxy": "http://7ddbcbf8-78ba-4645-8d49-35ff688d3c2e:YxzaUNdmKjvHvJI0ehnsZmMB1IkfYbbD@tun.testsprite.com:8080"
 }

@@ -46,14 +46,13 @@ Dos modos según el estado del job:
 ┌──────────────── Main ─────────────────────┬── Control Panel ──┐
 │  [SCRAPE_DIAGNOSTICS header]              │ [PHASE: SCRAPE]   │
 │                                           │                   │
-│  ┌── Fetch Metadata ──────────────────┐  │ URL configurada   │
-│  │ URL: https://...                   │  │ Adapter: tu_berlin│
-│  │ Retrieved: 2026-03-05T04:50:18Z   │  │ Status: completed │
-│  │ Adapter: tu_berlin  HTTP: 200      │  │                   │
-│  └────────────────────────────────────┘  │ [RE-RUN SCRAPE]   │
-│                                           │ [ADVANCE →]       │
-│  ┌── Source Text Preview ─────────────┐  │                   │
-│  │ [20 líneas collapsable]            │  │                   │
+│  ┌── Fetch Metadata ──────────────────┐  │ Status: COMPLETED│
+│  │ URL: https://...                     │  │ Adapter: tu_berlin│
+│  │ Adapter: tu_berlin  HTTP: 200        │  │ HTTP: 200        │
+│  └────────────────────────────────────┘  │                   │
+│                                           │ [RE-RUN SCRAPE]   │
+│  ┌── Source Text Preview ─────────────┐  │ [ADVANCE →]       │
+│  │ [markdown formatted text]           │  │                   │
 │  │ [EXPAND button]                    │  │                   │
 │  └────────────────────────────────────┘  │                   │
 │                                           │                   │
@@ -64,10 +63,11 @@ Dos modos según el estado del job:
 ```
 
 **Componentes Core:**
-- `<ScrapeMetaCard>` — URL, timestamp, adapter, HTTP status
-- `<SourceTextPreview>` — texto colapsable (20 líneas → expand full)
+- `<DiagnosticCard>` (molecule) — wrapper para todas las cards
+- `<ControlPanel>` (molecule) — panel de control genérico
+- `<SourceTextPreview>` — texto colapsable con markdown rendering
 - `<ErrorScreenshot>` — imagen inline si existe `error_screenshot.png`
-- `<ScrapeControlPanel>` — re-run + advance actions
+- `<ScrapeControlPanel>` — deprecated, usar `<ControlPanel>`
 
 ---
 

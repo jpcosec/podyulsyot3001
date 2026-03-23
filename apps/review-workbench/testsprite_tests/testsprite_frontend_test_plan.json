@@ -1,18 +1,22 @@
 [
   {
     "id": "TC001",
-    "title": "Portfolio dashboard loads with job table and status badges",
-    "description": "Verifies the dashboard renders the job list table with visible status badges and the deadline sidebar.",
+    "title": "Portfolio dashboard loads with job table, status badges, and deadline sidebar",
+    "description": "Verifies the dashboard renders the job list table with visible status badges and the right-hand deadline sidebar.",
     "category": "Portfolio Dashboard",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /"
+        "description": "Navigate to \"/\""
       },
       {
         "type": "assertion",
-        "description": "Verify text \"Portfolio\" is visible"
+        "description": "Verify page title contains \"Portfolio\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Deadline\" is visible"
       },
       {
         "type": "assertion",
@@ -30,14 +34,14 @@
   },
   {
     "id": "TC002",
-    "title": "Open a job from the dashboard by clicking a job row",
-    "description": "Verifies a user can click a job row to reach the Job Flow Inspector page for that job.",
+    "title": "Navigate from a job row to the Job Flow Inspector",
+    "description": "Verifies clicking a job row routes to the Job Flow Inspector page and shows the pipeline timeline.",
     "category": "Portfolio Dashboard",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /"
+        "description": "Navigate to \"/\""
       },
       {
         "type": "assertion",
@@ -49,24 +53,69 @@
       },
       {
         "type": "assertion",
-        "description": "Verify text \"Job Flow Inspector\" is visible"
+        "description": "Verify URL contains \"/jobs/\""
       },
       {
         "type": "assertion",
         "description": "Verify element \"pipeline timeline\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"scrape\" is visible"
       }
     ]
   },
   {
     "id": "TC003",
-    "title": "Deadline sidebar shows upcoming items for quick triage",
-    "description": "Verifies the right-hand sidebar is present and shows deadline-related content that a user can review at a glance.",
+    "title": "Dashboard table shows multiple job statuses",
+    "description": "Verifies the job list visually contains status badges indicating different pipeline states.",
     "category": "Portfolio Dashboard",
     "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /"
+        "description": "Navigate to \"/\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"job list table\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"status badge\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"scrape\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"extract\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"match\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "Deadline sidebar renders upcoming items and remains visible after scrolling the job list",
+    "description": "Verifies the deadline sidebar is present and still visible after scrolling through the dashboard content.",
+    "category": "Portfolio Dashboard",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to \"/\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"deadline sidebar\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Scroll to \"bottom of the job list\""
       },
       {
         "type": "assertion",
@@ -77,190 +126,29 @@
         "description": "Verify text \"Deadline\" is visible"
       },
       {
-        "type": "assertion",
-        "description": "Verify element \"deadline list\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"deadline list item\" is visible"
-      }
-    ]
-  },
-  {
-    "id": "TC004",
-    "title": "Dashboard table displays job status information consistently across rows",
-    "description": "Verifies multiple rows show status badges (not just a single row), indicating the summary list rendered correctly.",
-    "category": "Portfolio Dashboard",
-    "priority": "Medium",
-    "steps": [
-      {
         "type": "action",
-        "description": "Navigate to /"
+        "description": "Scroll to \"top of the job list\""
       },
       {
         "type": "assertion",
         "description": "Verify element \"job list table\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"status badge\" is visible"
-      },
-      {
-        "type": "action",
-        "description": "Scroll to the bottom of the job list table"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"status badge\" is visible"
       }
     ]
   },
   {
     "id": "TC005",
-    "title": "From dashboard, selecting a job still works after scrolling",
-    "description": "Verifies that clicking a job row after scrolling the list still navigates correctly to the Job Flow Inspector.",
-    "category": "Portfolio Dashboard",
-    "priority": "Medium",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"job list table\" is visible"
-      },
-      {
-        "type": "action",
-        "description": "Scroll to the bottom of the job list table"
-      },
-      {
-        "type": "action",
-        "description": "Click a job row to navigate to job detail"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"Job Flow Inspector\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"pipeline timeline\" is visible"
-      }
-    ]
-  },
-  {
-    "id": "TC006",
-    "title": "Job Flow Inspector renders pipeline timeline with stage status dots",
-    "description": "Verifies the Job Flow Inspector page loads and shows a visible pipeline timeline with stage status indicators.",
+    "title": "Load Job Flow Inspector and render pipeline timeline with stage status dots",
+    "description": "Verifies the Job Flow Inspector page loads and shows the pipeline timeline with visible stage statuses.",
     "category": "Job Flow Inspector",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"Portfolio\" is visible"
-      },
-      {
-        "type": "action",
-        "description": "Click on the job entry for \"tu_berlin\" with job ID \"201397\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/jobs/tu_berlin/201397\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"Pipeline\" is visible"
+        "description": "Navigate to /jobs/tu_berlin/201397"
       },
       {
         "type": "assertion",
         "description": "Verify element \"Pipeline timeline\" is visible"
-      }
-    ]
-  },
-  {
-    "id": "TC007",
-    "title": "Pending HITL stage is highlighted with pulsing indicator",
-    "description": "Verifies a pending human-in-the-loop stage is visually indicated as pending and draws attention.",
-    "category": "Job Flow Inspector",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /"
-      },
-      {
-        "type": "action",
-        "description": "Click on the job entry for \"tu_berlin\" with job ID \"201397\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/jobs/tu_berlin/201397\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"pending_hitl\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"pulsing\" indicator is visible"
-      }
-    ]
-  },
-  {
-    "id": "TC008",
-    "title": "GO TO REVIEW CTA navigates to Match review stage",
-    "description": "Verifies the GO TO REVIEW call-to-action takes the user to the Match stage review page.",
-    "category": "Job Flow Inspector",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /"
-      },
-      {
-        "type": "action",
-        "description": "Click on the job entry for \"tu_berlin\" with job ID \"201397\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/jobs/tu_berlin/201397\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"GO TO REVIEW\" is visible"
-      },
-      {
-        "type": "action",
-        "description": "Click on \"GO TO REVIEW\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/jobs/tu_berlin/201397/match\""
-      }
-    ]
-  },
-  {
-    "id": "TC009",
-    "title": "Pipeline timeline shows expected stage labels",
-    "description": "Verifies the timeline includes the main pipeline stage labels so users can understand progression.",
-    "category": "Job Flow Inspector",
-    "priority": "Medium",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /"
-      },
-      {
-        "type": "action",
-        "description": "Click on the job entry for \"tu_berlin\" with job ID \"201397\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/jobs/tu_berlin/201397\""
       },
       {
         "type": "assertion",
@@ -285,64 +173,89 @@
     ]
   },
   {
-    "id": "TC010",
-    "title": "Timeline view remains usable after refresh-like reload via in-app retry (if present)",
-    "description": "Verifies that if a Retry control is shown, using it results in the timeline becoming visible and the error state clearing.",
+    "id": "TC006",
+    "title": "Pending HITL stage is visually indicated on the timeline",
+    "description": "Verifies the timeline communicates a pending human-in-the-loop stage via a visible pulsing/attention indicator.",
     "category": "Job Flow Inspector",
-    "priority": "Medium",
+    "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /"
-      },
-      {
-        "type": "action",
-        "description": "Click on the job entry for \"tu_berlin\" with job ID \"201397\""
+        "description": "Navigate to /jobs/tu_berlin/201397"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/jobs/tu_berlin/201397\""
-      },
-      {
-        "type": "action",
-        "description": "Wait for element \"Retry\" to appear"
-      },
-      {
-        "type": "action",
-        "description": "Click on \"Retry\""
+        "description": "Verify element \"pending_hitl\" is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify element \"Pipeline timeline\" is visible"
+        "description": "Verify element \"Pending review\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"GO TO REVIEW\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Attention indicator\" is visible"
       }
     ]
   },
   {
-    "id": "TC011",
-    "title": "Error banner is displayed when timeline fails to load (if error state is surfaced)",
-    "description": "Verifies the UI surfaces a visible error banner/message when the pipeline timeline cannot be loaded.",
+    "id": "TC007",
+    "title": "GO TO REVIEW CTA navigates to Match review stage",
+    "description": "Verifies clicking the GO TO REVIEW button routes the user to the review stage page for the job.",
     "category": "Job Flow Inspector",
-    "priority": "Medium",
+    "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /"
-      },
-      {
-        "type": "action",
-        "description": "Click on the job entry for \"tu_berlin\" with job ID \"201397\""
+        "description": "Navigate to /jobs/tu_berlin/201397"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/jobs/tu_berlin/201397\""
+        "description": "Verify element \"GO TO REVIEW\" is visible"
       },
       {
         "type": "action",
-        "description": "Wait for element \"Error\" to appear"
+        "description": "Click on \"GO TO REVIEW\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/jobs/tu_berlin/201397/match\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Match\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Evidence\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "Timeline error state shows an error banner when timeline fails",
+    "description": "Verifies that a visible error banner is presented when the timeline cannot be loaded.",
+    "category": "Job Flow Inspector",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /jobs/tu_berlin/201397"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Timeline\" is visible"
       },
       {
         "type": "assertion",
         "description": "Verify element \"Error\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Unable to load timeline\" is visible"
       },
       {
         "type": "assertion",
@@ -351,23 +264,27 @@
     ]
   },
   {
-    "id": "TC012",
-    "title": "GO TO REVIEW CTA remains visible alongside timeline content",
-    "description": "Verifies the HITL CTA banner/button is visible on the inspector page while the timeline is present, ensuring discoverability.",
+    "id": "TC009",
+    "title": "Retry reloads timeline after an error and returns to normal timeline view",
+    "description": "Verifies the Retry action (when shown) attempts to reload and the timeline becomes visible again.",
     "category": "Job Flow Inspector",
-    "priority": "Low",
+    "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to /"
-      },
-      {
-        "type": "action",
-        "description": "Click on the job entry for \"tu_berlin\" with job ID \"201397\""
+        "description": "Navigate to /jobs/tu_berlin/201397"
       },
       {
         "type": "assertion",
-        "description": "Verify URL contains \"/jobs/tu_berlin/201397\""
+        "description": "Verify element \"Retry\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Retry\""
+      },
+      {
+        "type": "action",
+        "description": "Wait for element \"Pipeline timeline\" to appear"
       },
       {
         "type": "assertion",
@@ -375,14 +292,47 @@
       },
       {
         "type": "assertion",
-        "description": "Verify element \"GO TO REVIEW\" is visible"
+        "description": "Verify element \"Error\" is not visible"
       }
     ]
   },
   {
-    "id": "TC013",
-    "title": "Scrape Diagnostics shows metadata and collapsed source text on initial load",
-    "description": "Verifies the scrape diagnostics page renders the scrape metadata card and a collapsed source text preview by default.",
+    "id": "TC010",
+    "title": "HITL CTA banner is present only when a review stage is pending",
+    "description": "Verifies that the review CTA/banner is visible when there is a pending review stage and does not appear as a generic element otherwise.",
+    "category": "Job Flow Inspector",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /jobs/tu_berlin/201397"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"GO TO REVIEW\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"review\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"GO TO REVIEW\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/jobs/tu_berlin/201397/match\"},{"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"GO TO REVIEW\" is not visible"
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "Scrape diagnostics shows metadata and collapsed source preview by default",
+    "description": "Verifies the scrape diagnostics page loads and displays the scrape metadata card and a collapsed source text preview.",
     "category": "Scrape Diagnostics",
     "priority": "High",
     "steps": [
@@ -412,14 +362,14 @@
       },
       {
         "type": "assertion",
-        "description": "Verify element \"Source text preview\" is visible"
+        "description": "Verify element \"source text preview\" is visible"
       }
     ]
   },
   {
-    "id": "TC014",
-    "title": "Expand source text preview to view full content",
-    "description": "Verifies the source text preview can be expanded from collapsed state to show full content.",
+    "id": "TC012",
+    "title": "Expand source text preview to show full content",
+    "description": "Verifies clicking EXPAND reveals the full source text preview content area.",
     "category": "Scrape Diagnostics",
     "priority": "High",
     "steps": [
@@ -437,21 +387,17 @@
       },
       {
         "type": "assertion",
-        "description": "Verify element \"Expanded source text preview\" is visible"
+        "description": "Verify element \"expanded source text preview\" is visible"
       },
       {
         "type": "assertion",
         "description": "Verify text \"ADVANCE\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"URL\" is visible"
       }
     ]
   },
   {
-    "id": "TC015",
-    "title": "Advance from Scrape Diagnostics to Extract stage",
+    "id": "TC013",
+    "title": "Advance from scrape to extract stage",
     "description": "Verifies the ADVANCE action navigates from scrape diagnostics to the extract stage page.",
     "category": "Scrape Diagnostics",
     "priority": "High",
@@ -479,46 +425,9 @@
     ]
   },
   {
-    "id": "TC016",
-    "title": "Metadata card remains visible after expanding source text",
-    "description": "Verifies expanding the source text does not hide or remove scrape metadata from view.",
-    "category": "Scrape Diagnostics",
-    "priority": "Medium",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /jobs/tu_berlin/201397/scrape"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"URL\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"HTTP\" is visible"
-      },
-      {
-        "type": "action",
-        "description": "Click \"EXPAND\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"URL\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"HTTP\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"Timestamp\" is visible"
-      }
-    ]
-  },
-  {
-    "id": "TC017",
-    "title": "Error/placeholder is shown when source text is not available",
-    "description": "Verifies an appropriate placeholder is displayed when the source text artifact is missing or unavailable.",
+    "id": "TC014",
+    "title": "Expand shows source-not-available placeholder when artifacts are missing",
+    "description": "Verifies that when source text is not available, expanding shows a visible placeholder message instead of normal content.",
     "category": "Scrape Diagnostics",
     "priority": "Medium",
     "steps": [
@@ -537,17 +446,13 @@
       {
         "type": "assertion",
         "description": "Verify text \"ADVANCE\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"URL\" is visible"
       }
     ]
   },
   {
-    "id": "TC018",
-    "title": "ADVANCE is disabled or shows validation feedback when required scrape artifacts are missing",
-    "description": "Verifies the UI prevents advancing (disabled button or visible validation message) when scrape prerequisites are not met.",
+    "id": "TC015",
+    "title": "Advance is blocked when required source text is unavailable",
+    "description": "Verifies ADVANCE is disabled or shows a validation error when source is not available.",
     "category": "Scrape Diagnostics",
     "priority": "High",
     "steps": [
@@ -564,12 +469,12 @@
         "description": "Verify text \"source not available\" is visible"
       },
       {
-        "type": "assertion",
-        "description": "Verify element \"ADVANCE button\" is visible"
+        "type": "action",
+        "description": "Click \"ADVANCE\""
       },
       {
         "type": "assertion",
-        "description": "Verify text \"Validation\" is visible"
+        "description": "Verify text \"validation\" is visible"
       },
       {
         "type": "assertion",
@@ -578,23 +483,15 @@
     ]
   },
   {
-    "id": "TC019",
-    "title": "Error screenshot placeholder is visible when scrape has an error",
-    "description": "Verifies an error screenshot section (or placeholder) is shown when scrape error evidence exists.",
+    "id": "TC016",
+    "title": "Scrape metadata values are present (not blank placeholders)",
+    "description": "Verifies the scrape metadata card shows populated values for URL, HTTP status, and timestamp.",
     "category": "Scrape Diagnostics",
-    "priority": "Low",
+    "priority": "Medium",
     "steps": [
       {
         "type": "action",
         "description": "Navigate to /jobs/tu_berlin/201397/scrape"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"Error\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"Error screenshot\" is visible"
       },
       {
         "type": "assertion",
@@ -602,14 +499,26 @@
       },
       {
         "type": "assertion",
-        "description": "Verify text \"ADVANCE\" is visible"
+        "description": "Verify text \"http\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"HTTP\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"200\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Timestamp\" is visible"
       }
     ]
   },
   {
-    "id": "TC020",
-    "title": "Scrape Diagnostics content is scrollable and ADVANCE remains discoverable",
-    "description": "Verifies the user can scroll through the page after expansion and still find the ADVANCE control.",
+    "id": "TC017",
+    "title": "Error screenshot/placeholder appears when scrape artifact indicates an error",
+    "description": "Verifies an error visual (screenshot or placeholder) is visible when the scrape has an error state.",
     "category": "Scrape Diagnostics",
     "priority": "Low",
     "steps": [
@@ -618,27 +527,23 @@
         "description": "Navigate to /jobs/tu_berlin/201397/scrape"
       },
       {
-        "type": "action",
-        "description": "Click \"EXPAND\""
+        "type": "assertion",
+        "description": "Verify text \"error\" is visible"
       },
       {
-        "type": "action",
-        "description": "Scroll to \"ADVANCE\""
+        "type": "assertion",
+        "description": "Verify element \"error screenshot\" is visible"
       },
       {
         "type": "assertion",
         "description": "Verify text \"ADVANCE\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"Expanded source text preview\" is visible"
       }
     ]
   },
   {
-    "id": "TC021",
-    "title": "Load Extract and Understand view and verify both panes render",
-    "description": "Verifies the Extract and Understand page loads and shows the source text pane and requirement list pane.",
+    "id": "TC018",
+    "title": "Extract page renders source text pane with line numbers and requirements list",
+    "description": "Verifies the Extract and Understand view loads and shows the split-pane layout with line-numbered source text and a requirements list.",
     "category": "Extract and Understand",
     "priority": "High",
     "steps": [
@@ -652,11 +557,15 @@
       },
       {
         "type": "assertion",
-        "description": "Verify element \"source text pane\" is visible"
+        "description": "Verify element \"source text\" is visible"
       },
       {
         "type": "assertion",
         "description": "Verify element \"line numbers\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"requirements\" is visible"
       },
       {
         "type": "assertion",
@@ -665,9 +574,9 @@
     ]
   },
   {
-    "id": "TC022",
-    "title": "Clicking a requirement shows its JSON details in the control panel",
-    "description": "Verifies selecting a requirement reveals a JSON/details view in the control panel.",
+    "id": "TC019",
+    "title": "Clicking a requirement shows its JSON/details in the control panel",
+    "description": "Verifies that selecting a requirement updates the control panel to show requirement details (JSON).",
     "category": "Extract and Understand",
     "priority": "High",
     "steps": [
@@ -677,7 +586,40 @@
       },
       {
         "type": "assertion",
-        "description": "Verify element \"requirements list\" is visible"
+        "description": "Verify element \"control panel\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on the first requirement item"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"JSON\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"requirement details\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"JSON viewer\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC020",
+    "title": "Source pane remains visible while interacting with requirements and control panel",
+    "description": "Verifies the split-pane remains stable and the source text pane stays visible while selecting and editing requirements.",
+    "category": "Extract and Understand",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /jobs/tu_berlin/201397/extract"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"source text\" is visible"
       },
       {
         "type": "action",
@@ -688,56 +630,23 @@
         "description": "Verify element \"control panel\" is visible"
       },
       {
-        "type": "assertion",
-        "description": "Verify text \"JSON\" is visible"
+        "type": "action",
+        "description": "Click into the requirement text editor for the selected requirement"
       },
       {
         "type": "assertion",
-        "description": "Verify element \"JSON details\" is visible"
+        "description": "Verify element \"source text\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"line numbers\" is visible"
       }
     ]
   },
   {
-    "id": "TC023",
-    "title": "Switching selection between two requirements updates the control panel content",
-    "description": "Verifies clicking different requirements changes the visible details/JSON shown in the control panel.",
-    "category": "Extract and Understand",
-    "priority": "Medium",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /jobs/tu_berlin/201397/extract"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"requirements list\" is visible"
-      },
-      {
-        "type": "action",
-        "description": "Click on the first requirement item"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"JSON details\" is visible"
-      },
-      {
-        "type": "action",
-        "description": "Click on the second requirement item"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"JSON details\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"id\" is visible"
-      }
-    ]
-  },
-  {
-    "id": "TC024",
+    "id": "TC021",
     "title": "Match graph renders with nodes and score badges",
-    "description": "Verifies the Match page loads and shows the ReactFlow graph with nodes and score badges on edges.",
+    "description": "Verifies the Match page loads and shows the ReactFlow graph with nodes and visible score badges on edges.",
     "category": "Match",
     "priority": "High",
     "steps": [
@@ -747,7 +656,11 @@
       },
       {
         "type": "assertion",
-        "description": "Verify page title contains \"Match\""
+        "description": "Verify URL contains \"/jobs/tu_berlin/201397/match\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Match\" is visible"
       },
       {
         "type": "assertion",
@@ -764,9 +677,9 @@
     ]
   },
   {
-    "id": "TC025",
-    "title": "Clicking a node shows its JSON in the control panel",
-    "description": "Verifies selecting a node updates the control panel with JSON details for that node.",
+    "id": "TC022",
+    "title": "Clicking a graph node shows JSON in the control panel",
+    "description": "Verifies selecting a node updates the control panel with node JSON details.",
     "category": "Match",
     "priority": "High",
     "steps": [
@@ -780,7 +693,7 @@
       },
       {
         "type": "action",
-        "description": "Click on a requirement or profile node in the graph"
+        "description": "Click on a requirement node in the graph"
       },
       {
         "type": "assertion",
@@ -792,14 +705,14 @@
       },
       {
         "type": "assertion",
-        "description": "Verify text \"{\" is visible"
+        "description": "Verify text \"id\" is visible"
       }
     ]
   },
   {
-    "id": "TC026",
-    "title": "EvidenceBank panel is visible and shows evidence content list",
-    "description": "Verifies the EvidenceBank sidebar renders and displays evidence-related content for review.",
+    "id": "TC023",
+    "title": "EvidenceBank panel is visible and shows evidence list content",
+    "description": "Verifies the EvidenceBank sidebar is present and contains visible evidence content for review.",
     "category": "Match",
     "priority": "Medium",
     "steps": [
@@ -825,14 +738,47 @@
       },
       {
         "type": "assertion",
-        "description": "Verify element \"evidence details\" is visible"
+        "description": "Verify text \"Source\" is visible"
       }
     ]
   },
   {
-    "id": "TC027",
-    "title": "Open Generate Documents and verify the three document tabs are visible",
-    "description": "Validates the sculpt page loads and the three document tabs are present for the job.",
+    "id": "TC024",
+    "title": "Graph displays both requirement and profile nodes",
+    "description": "Verifies the graph includes at least one requirement node and at least one profile node as distinct visible items.",
+    "category": "Match",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /jobs/tu_berlin/201397/match"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"ReactFlow graph canvas\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Requirement\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Profile\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on a profile node in the graph"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"control panel\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC025",
+    "title": "Load Generate Documents and verify the three document tabs are visible",
+    "description": "Verifies the Generate Documents page loads and shows the three expected document tabs.",
     "category": "Generate Documents",
     "priority": "High",
     "steps": [
@@ -854,14 +800,14 @@
       },
       {
         "type": "assertion",
-        "description": "Verify element \"CodeMirror markdown editor\" is visible"
+        "description": "Verify element \"markdown editor\" is visible"
       }
     ]
   },
   {
-    "id": "TC028",
-    "title": "Switch between document tabs and confirm content area updates",
-    "description": "Ensures each document tab can be selected and the editor shows the selected document content.",
+    "id": "TC026",
+    "title": "Switch between document tabs and confirm content changes",
+    "description": "Verifies tab switching loads the corresponding document content in the editor.",
     "category": "Generate Documents",
     "priority": "High",
     "steps": [
@@ -875,7 +821,7 @@
       },
       {
         "type": "assertion",
-        "description": "Verify element \"CodeMirror markdown editor\" is visible"
+        "description": "Verify element \"markdown editor\" is visible"
       },
       {
         "type": "action",
@@ -883,7 +829,7 @@
       },
       {
         "type": "assertion",
-        "description": "Verify element \"CodeMirror markdown editor\" is visible"
+        "description": "Verify element \"markdown editor\" is visible"
       },
       {
         "type": "action",
@@ -891,14 +837,14 @@
       },
       {
         "type": "assertion",
-        "description": "Verify element \"CodeMirror markdown editor\" is visible"
+        "description": "Verify element \"markdown editor\" is visible"
       }
     ]
   },
   {
-    "id": "TC029",
-    "title": "Edit document and verify dirty indicator appears",
-    "description": "Validates that editing the markdown sets the document into a dirty state with an amber indicator.",
+    "id": "TC027",
+    "title": "Edit markdown and see dirty state indicator appear",
+    "description": "Verifies editing a document sets the dirty indicator (amber dot) on the active tab.",
     "category": "Generate Documents",
     "priority": "High",
     "steps": [
@@ -908,26 +854,26 @@
       },
       {
         "type": "action",
-        "description": "Click into the \"CodeMirror markdown editor\""
+        "description": "Click on the \"cv\" tab"
       },
       {
         "type": "action",
-        "description": "Type \"\\n\\nTest edit: add a new line.\" into the \"CodeMirror markdown editor\""
+        "description": "Click inside the markdown editor"
+      },
+      {
+        "type": "action",
+        "description": "Type \"\\n\\nTest edit - dirty state\" into the markdown editor"
       },
       {
         "type": "assertion",
         "description": "Verify element \"dirty indicator amber dot\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"CodeMirror markdown editor\" is visible"
       }
     ]
   },
   {
-    "id": "TC030",
+    "id": "TC028",
     "title": "Open regeneration modal and cancel/close without submitting",
-    "description": "Ensures REQUEST REGEN opens the modal and it can be dismissed safely.",
+    "description": "Verifies the regeneration modal opens and can be dismissed without changes.",
     "category": "Generate Documents",
     "priority": "Medium",
     "steps": [
@@ -945,7 +891,7 @@
       },
       {
         "type": "action",
-        "description": "Press Escape"
+        "description": "Click on \"Cancel\" in the regeneration modal"
       },
       {
         "type": "assertion",
@@ -954,9 +900,9 @@
     ]
   },
   {
-    "id": "TC031",
-    "title": "Submit regeneration request and verify success message is shown",
-    "description": "Validates regen flow submits user instructions and shows a visible success confirmation in the UI.",
+    "id": "TC029",
+    "title": "Submit regeneration request and see success message",
+    "description": "Verifies submitting the regen modal shows a visible success confirmation message.",
     "category": "Generate Documents",
     "priority": "High",
     "steps": [
@@ -974,7 +920,7 @@
       },
       {
         "type": "action",
-        "description": "Type \"Please regenerate with a more concise tone and emphasize leadership.\" into the \"regen modal textarea\""
+        "description": "Type \"Please regenerate with stronger impact and clearer structure.\" into the regeneration modal textarea"
       },
       {
         "type": "action",
@@ -987,9 +933,9 @@
     ]
   },
   {
-    "id": "TC032",
-    "title": "Attempt regeneration submission with empty instructions and verify validation/error message",
-    "description": "Checks regen modal prevents or errors on empty input and shows a visible message.",
+    "id": "TC030",
+    "title": "Regeneration modal validation: submitting empty prompt shows an error",
+    "description": "Verifies the regen modal requires input and shows a validation message when submitted empty.",
     "category": "Generate Documents",
     "priority": "Medium",
     "steps": [
@@ -1011,55 +957,14 @@
       },
       {
         "type": "assertion",
-        "description": "Verify text \"error\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"regeneration modal\" is visible"
+        "description": "Verify text \"required\" is visible"
       }
     ]
   },
   {
-    "id": "TC033",
-    "title": "Dirty state should remain when switching tabs after edit without saving",
-    "description": "Ensures unsaved changes are indicated when the user edits then navigates away to another document tab.",
-    "category": "Generate Documents",
-    "priority": "Medium",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /jobs/tu_berlin/999001/sculpt"
-      },
-      {
-        "type": "action",
-        "description": "Click on the \"cv\" tab"
-      },
-      {
-        "type": "action",
-        "description": "Click into the \"CodeMirror markdown editor\""
-      },
-      {
-        "type": "action",
-        "description": "Type \"\\nUnsaved changes before tab switch.\" into the \"CodeMirror markdown editor\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"dirty indicator amber dot\" is visible"
-      },
-      {
-        "type": "action",
-        "description": "Click on the \"motivation_letter\" tab"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"dirty indicator amber dot\" is visible"
-      }
-    ]
-  },
-  {
-    "id": "TC034",
-    "title": "Deployment page renders mission summary, checklist, and package files list",
-    "description": "Verifies that the deployment page shows the mission summary header, pipeline checklist, and package files list for the job.",
+    "id": "TC031",
+    "title": "Package and Deployment page renders mission summary, checklist, and package files",
+    "description": "Verifies the deployment page loads and shows the mission header, pipeline checklist, and package file list for the job.",
     "category": "Package and Deployment",
     "priority": "High",
     "steps": [
@@ -1073,7 +978,7 @@
       },
       {
         "type": "assertion",
-        "description": "Verify element \"Mission summary\" is visible"
+        "description": "Verify element \"Mission summary header\" is visible"
       },
       {
         "type": "assertion",
@@ -1081,65 +986,7 @@
       },
       {
         "type": "assertion",
-        "description": "Verify element \"Package files\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"MARK AS DEPLOYED\" is visible"
-      }
-    ]
-  },
-  {
-    "id": "TC035",
-    "title": "Pipeline checklist shows completion state on deployment page",
-    "description": "Verifies that the pipeline checklist is present and displays completed steps with visible checkmarks.",
-    "category": "Package and Deployment",
-    "priority": "Medium",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /jobs/tu_berlin/999001/deployment"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"Pipeline checklist\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"scrape\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"extract\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"match\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"sculpt\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"Completion checkmark\" is visible"
-      }
-    ]
-  },
-  {
-    "id": "TC036",
-    "title": "Package file list is visible and contains file entries",
-    "description": "Verifies that the package file list renders and shows at least one file entry.",
-    "category": "Package and Deployment",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /jobs/tu_berlin/999001/deployment"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"Package files\" is visible"
+        "description": "Verify element \"Completion checkmarks\" is visible"
       },
       {
         "type": "assertion",
@@ -1147,22 +994,14 @@
       },
       {
         "type": "assertion",
-        "description": "Verify element \"Package file row\" is visible"
-      },
-      {
-        "type": "action",
-        "description": "Scroll to \"Package file list\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"Package file row\" is visible"
+        "description": "Verify element \"At least one package file row\" is visible"
       }
     ]
   },
   {
-    "id": "TC037",
-    "title": "Start deploy flow opens first confirmation step",
-    "description": "Verifies that clicking MARK AS DEPLOYED starts the two-step confirmation flow by showing the initial confirmation UI.",
+    "id": "TC032",
+    "title": "Mark as deployed happy path navigates back to dashboard",
+    "description": "Verifies the two-step MARK AS DEPLOYED confirmation completes and returns the user to the portfolio dashboard.",
     "category": "Package and Deployment",
     "priority": "High",
     "steps": [
@@ -1179,23 +1018,27 @@
         "description": "Verify text \"Confirm\" is visible"
       },
       {
-        "type": "assertion",
-        "description": "Verify element \"Deployment confirmation step 1\" is visible"
+        "type": "action",
+        "description": "Click on \"Confirm\""
       },
       {
         "type": "assertion",
-        "description": "Verify element \"Cancel\" is visible"
+        "description": "Verify text \"Confirm\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Confirm\""
       },
       {
         "type": "assertion",
-        "description": "Verify element \"Continue\" is visible"
+        "description": "Verify URL contains \"/\""
       }
     ]
   },
   {
-    "id": "TC038",
-    "title": "Complete two-step deploy confirmation navigates back to dashboard",
-    "description": "Verifies that completing both confirmation steps results in navigation to the portfolio dashboard (/).",
+    "id": "TC033",
+    "title": "Deployment confirmation shows mock/UI-only simulation messaging",
+    "description": "Verifies the app communicates that deployment is simulated/UI-only due to mock backend after confirming deployment.",
     "category": "Package and Deployment",
     "priority": "High",
     "steps": [
@@ -1209,44 +1052,7 @@
       },
       {
         "type": "action",
-        "description": "Click on \"Continue\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"Deployment confirmation step 2\" is visible"
-      },
-      {
-        "type": "action",
         "description": "Click on \"Confirm\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify URL contains \"/\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify page title contains \"Portfolio\""
-      }
-    ]
-  },
-  {
-    "id": "TC039",
-    "title": "Deploy flow shows simulated deployment messaging in mock mode",
-    "description": "Verifies that the UI communicates deployment is simulated/UI-only due to the mock backend during or after confirmation.",
-    "category": "Package and Deployment",
-    "priority": "Medium",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to /jobs/tu_berlin/999001/deployment"
-      },
-      {
-        "type": "action",
-        "description": "Click on \"MARK AS DEPLOYED\""
-      },
-      {
-        "type": "action",
-        "description": "Click on \"Continue\""
       },
       {
         "type": "action",
@@ -1262,20 +1068,160 @@
       },
       {
         "type": "assertion",
-        "description": "Verify text \"mock\" is visible"
+        "description": "Verify URL contains \"/\""
       }
     ]
   },
   {
-    "id": "TC040",
-    "title": "Open Data Explorer and verify split-pane layout renders",
-    "description": "Verifies the Data Explorer loads and shows the left file tree and right preview pane.",
+    "id": "TC034",
+    "title": "User can cancel out of the two-step confirmation without navigating away",
+    "description": "Verifies cancelling the deploy confirmation keeps the user on the deployment page and does not complete the flow.",
+    "category": "Package and Deployment",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /jobs/tu_berlin/999001/deployment"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"MARK AS DEPLOYED\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"Confirm\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Cancel\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/jobs/tu_berlin/999001/deployment\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Mission summary header\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC035",
+    "title": "Package file list content is visible when scrolled",
+    "description": "Verifies package file list remains accessible and visible after scrolling within the page.",
+    "category": "Package and Deployment",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /jobs/tu_berlin/999001/deployment"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Package file list\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Scroll to \"Package file list\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"At least one package file row\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Scroll to \"MARK AS DEPLOYED\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"MARK AS DEPLOYED\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC036",
+    "title": "Checklist shows completion state on deployment page",
+    "description": "Verifies the pipeline checklist displays completed items with checkmarks on the deployment page.",
+    "category": "Package and Deployment",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /jobs/tu_berlin/999001/deployment"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Pipeline checklist\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"Completion checkmarks\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"scrape\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"extract\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"match\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"sculpt\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC037",
+    "title": "Repeated deploy attempt is handled (no crash)",
+    "description": "Verifies the UI remains stable if the user completes the deploy flow and then returns and attempts it again.",
+    "category": "Package and Deployment",
+    "priority": "Low",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /jobs/tu_berlin/999001/deployment"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"MARK AS DEPLOYED\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Confirm\""
+      },
+      {
+        "type": "action",
+        "description": "Click on \"Confirm\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/\""
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /jobs/tu_berlin/999001/deployment"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"MARK AS DEPLOYED\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC038",
+    "title": "Open Data Explorer and verify split-pane layout is visible",
+    "description": "Verifies the Data Explorer loads and shows the tree (left) and preview (right) panes.",
     "category": "Data Explorer",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to \"/explorer\""
+        "description": "Navigate to /explorer"
       },
       {
         "type": "assertion",
@@ -1296,44 +1242,110 @@
     ]
   },
   {
-    "id": "TC041",
-    "title": "Expand a folder from the tree to reveal child items",
-    "description": "Verifies folders can be expanded in the tree and show nested children.",
+    "id": "TC039",
+    "title": "Expand a folder in the tree to reveal child items",
+    "description": "Verifies that clicking a folder expands it and displays its children in the tree.",
     "category": "Data Explorer",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to \"/explorer\""
+        "description": "Navigate to /explorer"
       },
       {
         "type": "action",
-        "description": "Click on the first visible folder in the file tree"
+        "description": "Click folder to expand and see children"
       },
       {
         "type": "assertion",
-        "description": "Verify element \"child items under the selected folder\" is visible"
+        "description": "Verify element \"expanded folder\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"child item in tree\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"breadcrumb\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC040",
+    "title": "Preview a Markdown file and verify rendered preview content appears",
+    "description": "Verifies that selecting a Markdown file displays readable content in the preview panel.",
+    "category": "Data Explorer",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /explorer"
       },
       {
         "type": "action",
-        "description": "Click on the same folder again"
+        "description": "Click folder to expand and see children"
+      },
+      {
+        "type": "action",
+        "description": "Click file to preview content"
       },
       {
         "type": "assertion",
-        "description": "Verify element \"child items under the selected folder\" is not visible"
+        "description": "Verify element \"preview\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"markdown preview\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"breadcrumb\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC041",
+    "title": "Preview a JSON file and verify CodeMirror JSON preview is shown",
+    "description": "Verifies that selecting a JSON file shows the JSON preview using the CodeMirror viewer.",
+    "category": "Data Explorer",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /explorer"
+      },
+      {
+        "type": "action",
+        "description": "Click folder to expand and see children"
+      },
+      {
+        "type": "action",
+        "description": "Click file to preview content"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify text \"JSON\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"CodeMirror\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"preview\" is visible"
       }
     ]
   },
   {
     "id": "TC042",
-    "title": "Preview a Markdown file from the tree",
-    "description": "Verifies clicking a Markdown file shows a readable preview in the right pane.",
+    "title": "Preview an image file and verify image is displayed in the preview panel",
+    "description": "Verifies that selecting an image displays an image preview rather than a text placeholder.",
     "category": "Data Explorer",
     "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to \"/explorer\""
+        "description": "Navigate to /explorer"
       },
       {
         "type": "action",
@@ -1341,7 +1353,11 @@
       },
       {
         "type": "action",
-        "description": "Click on a file with a name ending in \".md\""
+        "description": "Click file to preview content"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"image preview\" is visible"
       },
       {
         "type": "assertion",
@@ -1349,49 +1365,20 @@
       },
       {
         "type": "assertion",
-        "description": "Verify element \"Markdown preview\" is visible"
+        "description": "Verify element \"breadcrumb\" is visible"
       }
     ]
   },
   {
     "id": "TC043",
-    "title": "Preview an image file from the tree",
-    "description": "Verifies clicking an image file shows an image preview in the right pane.",
-    "category": "Data Explorer",
-    "priority": "Medium",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to \"/explorer\""
-      },
-      {
-        "type": "action",
-        "description": "Click folder to expand and see children"
-      },
-      {
-        "type": "action",
-        "description": "Click on a file with a name ending in \".png\" or \".jpg\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"preview\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"image preview\" is visible"
-      }
-    ]
-  },
-  {
-    "id": "TC044",
-    "title": "Preview a JSON file and verify CodeMirror-styled JSON view appears",
-    "description": "Verifies clicking a JSON file displays a JSON preview area consistent with CodeMirror highlighting.",
+    "title": "Use breadcrumb navigation to return to a parent directory",
+    "description": "Verifies that clicking a breadcrumb segment navigates to the parent folder and updates the tree/preview state.",
     "category": "Data Explorer",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to \"/explorer\""
+        "description": "Navigate to /explorer"
       },
       {
         "type": "action",
@@ -1399,48 +1386,15 @@
       },
       {
         "type": "action",
-        "description": "Click on a file with a name ending in \".json\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"JSON preview\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"CodeMirror editor\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"{\" is visible"
-      }
-    ]
-  },
-  {
-    "id": "TC045",
-    "title": "Breadcrumb navigation: move to a parent directory from a nested path",
-    "description": "Verifies breadcrumb segments are clickable and navigate to a parent directory while updating the tree/preview context.",
-    "category": "Data Explorer",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to \"/explorer\""
+        "description": "Click file to preview content"
       },
       {
         "type": "action",
-        "description": "Click folder to expand and see children"
-      },
-      {
-        "type": "action",
-        "description": "Click folder to expand and see children"
+        "description": "Click breadcrumb segment to navigate to parent directory"
       },
       {
         "type": "assertion",
         "description": "Verify element \"breadcrumb\" is visible"
-      },
-      {
-        "type": "action",
-        "description": "Click on a breadcrumb segment that is not the last segment"
       },
       {
         "type": "assertion",
@@ -1448,20 +1402,20 @@
       },
       {
         "type": "assertion",
-        "description": "Verify element \"breadcrumb\" is visible"
+        "description": "Verify element \"preview\" is visible"
       }
     ]
   },
   {
-    "id": "TC046",
-    "title": "Unsupported preview shows 'Preview not available' placeholder",
-    "description": "Verifies the preview pane shows a clear placeholder when a file type is unsupported.",
+    "id": "TC044",
+    "title": "Unsupported file preview shows a 'Preview not available' placeholder",
+    "description": "Verifies that selecting an unsupported file type shows a clear placeholder message instead of crashing or showing stale content.",
     "category": "Data Explorer",
-    "priority": "Medium",
+    "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to \"/explorer\""
+        "description": "Navigate to /explorer"
       },
       {
         "type": "action",
@@ -1469,7 +1423,7 @@
       },
       {
         "type": "action",
-        "description": "Click on a file that is not JSON, Markdown, or an image (for example, a file ending in \".txt\" or \".csv\" if present)"
+        "description": "Click file to preview content"
       },
       {
         "type": "assertion",
@@ -1482,15 +1436,15 @@
     ]
   },
   {
-    "id": "TC047",
-    "title": "Graceful failure: preview error banner appears when a file cannot be previewed",
-    "description": "Verifies the UI presents an error banner/notice in the preview pane for a failed preview attempt.",
+    "id": "TC045",
+    "title": "Switch between two files and verify the preview updates accordingly",
+    "description": "Verifies that selecting a different file replaces the current preview with the newly selected file's preview.",
     "category": "Data Explorer",
-    "priority": "Low",
+    "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to \"/explorer\""
+        "description": "Navigate to /explorer"
       },
       {
         "type": "action",
@@ -1502,84 +1456,113 @@
       },
       {
         "type": "assertion",
-        "description": "Verify element \"error banner\" is visible"
+        "description": "Verify element \"preview\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click file to preview content"
       },
       {
         "type": "assertion",
-        "description": "Verify text \"Preview\" is visible"
+        "description": "Verify element \"preview\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"breadcrumb\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC046",
+    "title": "Open Base CV Editor and verify the CV graph canvas loads with nodes",
+    "description": "Verifies the /cv page renders the ReactFlow canvas and shows entry and skill nodes.",
+    "category": "Base CV Editor",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to \"/cv\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify URL contains \"/cv\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"ReactFlow canvas\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"an entry node in the graph\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"a skill node in the graph\" is visible"
+      }
+    ]
+  },
+  {
+    "id": "TC047",
+    "title": "Open NodeInspector by selecting an entry node",
+    "description": "Verifies clicking an entry node opens the NodeInspector panel on the right with editable fields.",
+    "category": "Base CV Editor",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to \"/cv\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"an entry node in the graph\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"an entry node\""
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"NodeInspector panel on the right\" is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify element \"an editable text field in NodeInspector\" is visible"
       }
     ]
   },
   {
     "id": "TC048",
-    "title": "Open Base CV Editor and verify canvas renders with nodes",
-    "description": "Verifies the Base CV Editor page loads and the ReactFlow canvas shows entry and skill nodes.",
+    "title": "Deselect graph to show ProfileStats after inspecting a node",
+    "description": "Verifies clicking the canvas background deselects the current node and shows the ProfileStats view.",
     "category": "Base CV Editor",
-    "priority": "High",
+    "priority": "Medium",
     "steps": [
       {
         "type": "action",
         "description": "Navigate to \"/cv\""
       },
       {
-        "type": "assertion",
-        "description": "Verify page title contains \"CV\""
+        "type": "action",
+        "description": "Click on \"an entry node\""
       },
       {
         "type": "assertion",
-        "description": "Verify text \"Profile\" is visible"
+        "description": "Verify element \"NodeInspector panel on the right\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"canvas background\""
       },
       {
         "type": "assertion",
-        "description": "Verify element \"ReactFlow canvas\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"entry node\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"skill node\" is visible"
+        "description": "Verify element \"ProfileStats\" is visible"
       }
     ]
   },
   {
     "id": "TC049",
-    "title": "Open NodeInspector by selecting an entry node",
-    "description": "Verifies clicking an entry node opens the NodeInspector sidebar on the right with editable fields.",
-    "category": "Base CV Editor",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to \"/cv\""
-      },
-      {
-        "type": "action",
-        "description": "Click on an \"entry node\" in the canvas"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"NodeInspector\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify text \"Inspector\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"Save\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"field editor\" is visible"
-      }
-    ]
-  },
-  {
-    "id": "TC050",
-    "title": "Deselect node to show ProfileStats on canvas background click",
-    "description": "Verifies clicking the canvas background deselects the active node and displays ProfileStats.",
+    "title": "Switch selection between two different entry nodes updates NodeInspector content",
+    "description": "Verifies selecting a different entry node changes what the NodeInspector shows, indicating selection state updates correctly.",
     "category": "Base CV Editor",
     "priority": "Medium",
     "steps": [
@@ -1589,56 +1572,23 @@
       },
       {
         "type": "action",
-        "description": "Click on an \"entry node\" in the canvas"
+        "description": "Click on \"a first entry node\""
       },
       {
         "type": "assertion",
-        "description": "Verify element \"NodeInspector\" is visible"
-      },
-      {
-        "type": "action",
-        "description": "Click on the \"canvas background\""
+        "description": "Verify element \"NodeInspector panel on the right\" is visible"
       },
       {
         "type": "assertion",
-        "description": "Verify element \"ProfileStats\" is visible"
+        "description": "Verify text \"Entry\" is visible"
+      },
+      {
+        "type": "action",
+        "description": "Click on \"a second entry node\""
       },
       {
         "type": "assertion",
-        "description": "Verify text \"Skills\" is visible"
-      }
-    ]
-  },
-  {
-    "id": "TC051",
-    "title": "Unsaved edit does not crash UI when switching selection away",
-    "description": "Verifies the UI remains stable when editing a field and then deselecting without saving.",
-    "category": "Base CV Editor",
-    "priority": "Medium",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Navigate to \"/cv\""
-      },
-      {
-        "type": "action",
-        "description": "Click on an \"entry node\" in the canvas"
-      },
-      {
-        "type": "action",
-        "description": "Type \"Transient Change\" into the \"Title\" field in NodeInspector"
-      },
-      {
-        "type": "action",
-        "description": "Click on the \"canvas background\""
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"ProfileStats\" is visible"
-      },
-      {
-        "type": "assertion",
-        "description": "Verify element \"ReactFlow canvas\" is visible"
+        "description": "Verify text \"Entry\" is visible"
       }
     ]
   }

@@ -79,9 +79,9 @@ src/
       DiagnosticCard.tsx
       ControlPanel.tsx
     organisms/
-      IntelligentEditor.tsx    ← migrar de sandbox/components/
-      GraphCanvas.tsx
-      FileTree.tsx
+      IntelligentEditor.tsx    ✅ implementado
+      GraphCanvas.tsx          ✅ implementado
+      FileTree.tsx            ✅ implementado
     layouts/
       AppShell.tsx             # LeftNav + <Outlet />
       JobWorkspaceShell.tsx    # Pipeline TopBar + <Outlet />
