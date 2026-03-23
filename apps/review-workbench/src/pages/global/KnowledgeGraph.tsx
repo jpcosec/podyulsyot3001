@@ -30,21 +30,22 @@ import "@xyflow/react/dist/style.css";
 
 type EditorState = "browse" | "focus" | "focus_relation" | "edit_node" | "edit_relation";
 
-interface SimpleNodeData extends Record<string, unknown> {
+export interface SimpleNodeData extends Record<string, unknown> {
   name: string;
   category: string;
   properties: Record<string, string>;
+  meta?: unknown;
   nodeId?: string;
   onEditNode?: (nodeId: string) => void;
 }
 
-interface SimpleEdgeData extends Record<string, unknown> {
+export interface SimpleEdgeData extends Record<string, unknown> {
   relationType: string;
   properties: Record<string, string>;
 }
 
-type SimpleNode = Node<SimpleNodeData>;
-type SimpleEdge = Edge<SimpleEdgeData>;
+export type SimpleNode = Node<SimpleNodeData>;
+export type SimpleEdge = Edge<SimpleEdgeData>;
 
 interface PropertyPair {
   key: string;
@@ -131,15 +132,18 @@ type HistoryAction =
 
 type SidebarSectionKey = "actions" | "filters" | "space" | "creation" | "vacant";
 
-const CATEGORY_COLORS: Record<string, string> = {
-  person: "#e8d5b7",
-  skill: "#d5e8b7",
-  project: "#b7d5e8",
-  publication: "#e8b7d5",
-  concept: "#d9d6f8",
+const CATEGORY_COLORS: Record<string, { border: string; bg: string }> = {
+  person:      { border: 'rgba(0,242,255,0.5)',   bg: 'rgba(0,242,255,0.07)' },
+  skill:       { border: 'rgba(255,170,0,0.5)',   bg: 'rgba(255,170,0,0.07)' },
+  project:     { border: 'rgba(0,242,255,0.25)',  bg: 'rgba(0,242,255,0.04)' },
+  publication: { border: 'rgba(255,180,171,0.5)', bg: 'rgba(255,180,171,0.07)' },
+  concept:     { border: 'rgba(116,117,120,0.5)', bg: 'rgba(116,117,120,0.07)' },
+  document:    { border: 'rgba(0,242,255,0.6)',   bg: 'rgba(0,242,255,0.06)' },
+  section:     { border: 'rgba(255,170,0,0.4)',   bg: 'rgba(255,170,0,0.05)' },
+  entry:       { border: 'rgba(116,117,120,0.4)', bg: 'rgba(30,32,34,0.9)' },
 };
 
-const CATEGORY_OPTIONS = ["person", "skill", "project", "publication", "concept"];
+const CATEGORY_OPTIONS = ["person", "skill", "project", "publication", "concept", "document", "section", "entry"];
 const ATTRIBUTE_TYPES: AttributeType[] = [
   "string",
   "text_markdown",
@@ -157,6 +161,9 @@ const NODE_TEMPLATES: NodeTemplate[] = [
   { name: "Project", category: "project", defaults: { stage: "draft" } },
   { name: "Publication", category: "publication", defaults: { year: "2026" } },
   { name: "Concept", category: "concept", defaults: { note: "new" } },
+  { name: "Document", category: "document", defaults: { title: "Untitled", type: "cv" } },
+  { name: "Section", category: "section", defaults: { title: "New Section" } },
+  { name: "Entry", category: "entry", defaults: { title: "", date: "" } },
 ];
 
 function createEntityId(prefix: string): string {
@@ -444,7 +451,7 @@ function PropertyValueInput({
 
 const SimpleNodeCard = memo(function SimpleNodeCard({ data, selected }: NodeProps<SimpleNode>) {
   const nodeData = data as unknown as SimpleNodeData;
-  const bg = CATEGORY_COLORS[nodeData.category] ?? "#e5e7eb";
+  const color = CATEGORY_COLORS[nodeData.category] ?? { border: 'rgba(116,117,120,0.4)', bg: 'rgba(30,32,34,0.9)' };
   const onEdit = () => {
     if (nodeData.onEditNode && nodeData.nodeId) {
       nodeData.onEditNode(nodeData.nodeId);
@@ -453,7 +460,7 @@ const SimpleNodeCard = memo(function SimpleNodeCard({ data, selected }: NodeProp
   return (
     <div
       className={`ne-node-simple ${selected ? "ne-node-simple-selected" : ""}`}
-      style={{ backgroundColor: bg }}
+      style={{ borderLeft: `4px solid ${color.border}`, background: color.bg, color: 'var(--text-main)' }}
       title={tooltipFromProperties(nodeData.properties)}
     >
       <Handle id="top" type="source" position={Position.Top} className="ne-node-handle" />
@@ -476,8 +483,49 @@ const SimpleNodeCard = memo(function SimpleNodeCard({ data, selected }: NodeProp
   );
 });
 
+const GroupNode = memo(function GroupNode({ data, selected }: NodeProps<SimpleNode>) {
+  const nodeData = data as unknown as SimpleNodeData;
+  const color = CATEGORY_COLORS[nodeData.category] ?? { border: 'rgba(116,117,120,0.4)', bg: 'rgba(30,32,34,0.9)' };
+  return (
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        border: `2px dashed ${color.border}`,
+        background: color.bg,
+        borderRadius: 8,
+        position: 'relative',
+        outline: selected ? `2px solid ${color.border}` : undefined,
+      }}
+    >
+      <Handle id="top" type="source" position={Position.Top} className="ne-node-handle" />
+      <Handle id="right" type="source" position={Position.Right} className="ne-node-handle" />
+      <Handle id="bottom" type="source" position={Position.Bottom} className="ne-node-handle" />
+      <Handle id="left" type="source" position={Position.Left} className="ne-node-handle" />
+      <div
+        style={{
+          position: 'absolute',
+          top: -20,
+          left: 0,
+          fontSize: '0.72rem',
+          fontWeight: 600,
+          color: color.border,
+          fontFamily: 'JetBrains Mono, monospace',
+          textTransform: 'uppercase',
+          letterSpacing: '0.08em',
+          whiteSpace: 'nowrap',
+          pointerEvents: 'none',
+        }}
+      >
+        {nodeData.name}
+      </div>
+    </div>
+  );
+});
+
 const nodeTypes: NodeTypes = {
   simple: SimpleNodeCard,
+  group: GroupNode,
 };
 
 function getNodeIntersection(sourceNode: InternalNode, targetNode: InternalNode): XYPosition {
@@ -551,8 +599,36 @@ const FloatingEdge = memo(function FloatingEdge({ id, source, target, style, mar
   return <BaseEdge id={id} path={path} style={style} markerEnd={markerEnd} />;
 });
 
+const SubFlowEdge = memo(function SubFlowEdge({ id, source, target, style, markerEnd }: EdgeProps) {
+  const sourceNode = useStore((store) => store.nodeLookup.get(source));
+  const targetNode = useStore((store) => store.nodeLookup.get(target));
+
+  if (!sourceNode || !targetNode) return null;
+
+  // ReactFlow stores positionAbsolute (canvas coords) for all nodes including children
+  const params = getFloatingEdgeParams(sourceNode, targetNode);
+  const [path] = getBezierPath({
+    sourceX: params.sx,
+    sourceY: params.sy,
+    sourcePosition: params.sourcePosition,
+    targetX: params.tx,
+    targetY: params.ty,
+    targetPosition: params.targetPosition,
+  });
+
+  return (
+    <BaseEdge
+      id={id}
+      path={path}
+      style={{ stroke: 'var(--accent)', strokeWidth: 1.5, ...style }}
+      markerEnd={markerEnd}
+    />
+  );
+});
+
 const edgeTypes = {
   floating: FloatingEdge,
+  subflow: SubFlowEdge,
 };
 
 function neighborsForNode(nodeId: string, edges: SimpleEdge[]): Set<string> {
@@ -669,8 +745,19 @@ function applySavedNodePositions(nodes: SimpleNode[], savedPositions: Record<str
   });
 }
 
-function NodeEditorInner(): JSX.Element {
-  const initial = useMemo(() => buildInitialGraph(), []);
+export interface KnowledgeGraphProps {
+  initialNodes?: SimpleNode[];
+  initialEdges?: SimpleEdge[];
+  onSave?: (nodes: SimpleNode[], edges: SimpleEdge[]) => void;
+  onChange?: (nodes: SimpleNode[], edges: SimpleEdge[]) => void;
+}
+
+function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: KnowledgeGraphProps): JSX.Element {
+  const initial = useMemo(
+    () => initialNodes ? { nodes: initialNodes, edges: initialEdges ?? [] } : buildInitialGraph(),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
   const [nodes, setNodes, onNodesChange] = useNodesState<SimpleNode>(initial.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<SimpleEdge>(initial.edges);
 
@@ -710,6 +797,13 @@ function NodeEditorInner(): JSX.Element {
 
   const currentSnapshot = useMemo(() => serializeGraph(nodes, edges), [nodes, edges]);
   const dirty = currentSnapshot !== savedSnapshot;
+
+  // Notify parent of any graph change (used by embedding pages like Match)
+  useEffect(() => {
+    onChange?.(nodes, edges);
+  // Intentionally omit onChange from deps to avoid infinite loops — callers must memoize it
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodes, edges]);
 
   const focusedNode = useMemo(() => {
     if (!focusedNodeId) {
@@ -1481,6 +1575,71 @@ function NodeEditorInner(): JSX.Element {
         return;
       }
       const flowPoint = screenToFlowPosition({ x: event.clientX, y: event.clientY });
+
+      // Document template creates a 3-level nested structure
+      if (template.category === "document") {
+        const docId = createEntityId("doc");
+        const sec1Id = createEntityId("sec");
+        const sec2Id = createEntityId("sec");
+        const ent1Id = createEntityId("entry");
+        const ent2Id = createEntityId("entry");
+        const newNodes: SimpleNode[] = [
+          {
+            id: docId,
+            type: "group",
+            position: flowPoint,
+            style: { width: 600, height: 420 },
+            data: { name: "Untitled CV", category: "document", properties: { type: "cv" } },
+          },
+          {
+            id: sec1Id,
+            type: "group",
+            parentId: docId,
+            extent: "parent",
+            position: { x: 20, y: 60 },
+            style: { width: 560, height: 160 },
+            data: { name: "Introduction", category: "section", properties: {} },
+          },
+          {
+            id: sec2Id,
+            type: "group",
+            parentId: docId,
+            extent: "parent",
+            position: { x: 20, y: 240 },
+            style: { width: 560, height: 160 },
+            data: { name: "Body", category: "section", properties: {} },
+          },
+          {
+            id: ent1Id,
+            type: "simple",
+            parentId: sec1Id,
+            extent: "parent",
+            position: { x: 20, y: 50 },
+            data: { name: "Entry 1", category: "entry", properties: { date: "" } },
+          },
+          {
+            id: ent2Id,
+            type: "simple",
+            parentId: sec2Id,
+            extent: "parent",
+            position: { x: 20, y: 50 },
+            data: { name: "Entry 2", category: "entry", properties: { date: "" } },
+          },
+        ];
+        setNodes((prev) => [...prev, ...newNodes]);
+        pushHistoryAction({
+          id: createEntityId("history"),
+          kind: "create_elements",
+          label: "Created Document template",
+          nodes: newNodes,
+          edges: [],
+        });
+        setFocusedNodeId(docId);
+        setFocusedRelationId(null);
+        setEditorState("focus");
+        return;
+      }
+
       const id = createEntityId("n-new");
       const nextName = `${template.name} ${nodes.length + 1}`;
       const nextNode: SimpleNode = {
@@ -1533,7 +1692,8 @@ function NodeEditorInner(): JSX.Element {
 
   const onSaveWorkspace = useCallback(() => {
     setSavedSnapshot(currentSnapshot);
-  }, [currentSnapshot]);
+    onSave?.(nodes, edges);
+  }, [currentSnapshot, onSave, nodes, edges]);
 
   const onDiscardWorkspace = useCallback(() => {
     const parsed = JSON.parse(savedSnapshot) as { nodes: SimpleNode[]; edges: SimpleEdge[] };
@@ -2254,7 +2414,7 @@ function NodeEditorInner(): JSX.Element {
           <MiniMap
             pannable
             zoomable
-            nodeColor={(node) => CATEGORY_COLORS[(node.data as SimpleNodeData)?.category] ?? "#d1d5db"}
+            nodeColor={(node) => CATEGORY_COLORS[(node.data as SimpleNodeData)?.category]?.bg ?? "#1e2022"}
           />
           <Controls />
           <Background gap={20} size={1} />
@@ -2484,11 +2644,11 @@ function NodeEditorInner(): JSX.Element {
   );
 }
 
-export function KnowledgeGraph(): JSX.Element {
+export function KnowledgeGraph(props: KnowledgeGraphProps): JSX.Element {
   return (
     <section className="ne-page">
       <ReactFlowProvider>
-        <NodeEditorInner />
+        <NodeEditorInner {...props} />
       </ReactFlowProvider>
     </section>
   );

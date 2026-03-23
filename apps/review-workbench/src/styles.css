@@ -429,7 +429,7 @@ p {
 .ne-template-chip {
   border: 1px dashed var(--accent-soft);
   border-radius: 999px;
-  background: #f8fbff;
+  background: var(--panel);
   color: var(--accent);
   font-size: 0.76rem;
   font-weight: 600;
@@ -504,7 +504,7 @@ p {
 }
 
 .ne-node-child {
-  background: #fff;
+  background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 6px 14px;
@@ -540,7 +540,7 @@ p {
 .ne-section {
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(0, 242, 255, 0.03);
   overflow: hidden;
 }
 
@@ -548,7 +548,7 @@ p {
   width: 100%;
   border: 0;
   border-bottom: 1px solid var(--line);
-  background: linear-gradient(180deg, #fff, #f6f3ed);
+  background: var(--panel);
   color: var(--text-main);
   display: flex;
   justify-content: space-between;
@@ -1458,3 +1458,7 @@ p {
 .dev-section summary:hover {
   color: var(--text-main);
 }
+
+/* Suppress ReactFlow white node background injection */
+.react-flow__node { background: transparent !important; }
+.ne-node-free     { background: transparent; }
