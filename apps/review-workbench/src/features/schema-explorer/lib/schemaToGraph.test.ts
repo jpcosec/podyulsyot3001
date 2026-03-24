@@ -1,6 +1,7 @@
 import { describe, test, expect } from 'vitest';
 import cvSchema from '../../../schemas/cv.schema.json';
 import type { DocumentSchema } from '../../../schemas/types';
+import { schemaToGraph } from './schemaToGraph';
 
 const schema = cvSchema as DocumentSchema;
 
@@ -41,5 +42,47 @@ describe('cv.schema.json shape', () => {
     for (const t of schema.node_types) {
       expect(tokens.has(t.color_token), `node ${t.id}.color_token="${t.color_token}" not in visual_encoding`).toBe(true);
     }
+  });
+});
+
+describe('schemaToGraph', () => {
+  const { nodes, edges } = schemaToGraph(schema);
+
+  test('produces one node per non-attribute type', () => {
+    const nonAttr = schema.node_types.filter(t => t.render_as !== 'attribute');
+    expect(nodes).toHaveLength(nonAttr.length);
+  });
+
+  test('attribute types are not in nodes', () => {
+    const attrIds = schema.node_types.filter(t => t.render_as === 'attribute').map(t => t.id);
+    for (const id of attrIds) {
+      expect(nodes.find(n => n.id === id)).toBeUndefined();
+    }
+  });
+
+  test('each node has a name and category from schema', () => {
+    for (const node of nodes) {
+      expect(typeof node.data.name).toBe('string');
+      expect(typeof node.data.category).toBe('string');
+    }
+  });
+
+  test('edges are produced for each edge_type', () => {
+    expect(edges.length).toBeGreaterThanOrEqual(schema.edge_types.length);
+  });
+
+  test('variant_of types get an extends edge to their parent', () => {
+    const variantTypes = schema.node_types.filter(t => t.variant_of);
+    for (const vt of variantTypes) {
+      const extendsEdge = edges.find(
+        e => e.source === vt.id && e.target === vt.variant_of
+      );
+      expect(extendsEdge, `no extends edge for ${vt.id}`).toBeDefined();
+    }
+  });
+
+  test('color from visual_encoding is stored in node meta', () => {
+    const rootNode = nodes.find(n => n.id === schema.document.root_type);
+    expect(rootNode?.data.meta).toBeDefined();
   });
 });
