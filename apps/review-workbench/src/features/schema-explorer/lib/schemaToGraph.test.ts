@@ -1,0 +1,45 @@
+import { describe, test, expect } from 'vitest';
+import cvSchema from '../../../schemas/cv.schema.json';
+import type { DocumentSchema } from '../../../schemas/types';
+
+const schema = cvSchema as DocumentSchema;
+
+describe('cv.schema.json shape', () => {
+  test('has required top-level keys', () => {
+    expect(schema.document).toBeDefined();
+    expect(schema.node_types).toBeInstanceOf(Array);
+    expect(schema.edge_types).toBeInstanceOf(Array);
+    expect(schema.visual_encoding).toBeDefined();
+  });
+
+  test('root_type exists in node_types', () => {
+    const rootId = schema.document.root_type;
+    const root = schema.node_types.find(t => t.id === rootId);
+    expect(root).toBeDefined();
+    expect(root?.render_as).toBe('group');
+  });
+
+  test('all variant_of references point to existing types', () => {
+    const typeIds = new Set(schema.node_types.map(t => t.id));
+    for (const t of schema.node_types) {
+      if (t.variant_of) {
+        expect(typeIds.has(t.variant_of), `${t.id}.variant_of="${t.variant_of}" not found`).toBe(true);
+      }
+    }
+  });
+
+  test('all edge from/to point to existing types', () => {
+    const typeIds = new Set(schema.node_types.map(t => t.id));
+    for (const e of schema.edge_types) {
+      expect(typeIds.has(e.from), `edge ${e.id}.from="${e.from}" not found`).toBe(true);
+      expect(typeIds.has(e.to), `edge ${e.id}.to="${e.to}" not found`).toBe(true);
+    }
+  });
+
+  test('all color_tokens referenced in node_types exist in visual_encoding', () => {
+    const tokens = new Set(Object.keys(schema.visual_encoding.color_tokens));
+    for (const t of schema.node_types) {
+      expect(tokens.has(t.color_token), `node ${t.id}.color_token="${t.color_token}" not in visual_encoding`).toBe(true);
+    }
+  });
+});

@@ -1,0 +1,232 @@
+{
+  "document": {
+    "id": "cv_profile_graph",
+    "label": "CV Profile Graph",
+    "version": "1.0",
+    "description": "Structured CV with entries grouped by category, connected to skills via demonstrates edges.",
+    "root_type": "CvProfileGraphPayload"
+  },
+  "node_types": [
+    {
+      "id": "CvProfileGraphPayload",
+      "label": "CV Profile",
+      "render_as": "group",
+      "color_token": "root",
+      "attributes": [
+        { "name": "profile_id",       "type": "string", "required": true },
+        { "name": "snapshot_version", "type": "string", "required": true },
+        { "name": "captured_on",      "type": "date",   "required": true }
+      ],
+      "children": [
+        { "type": "CvEntry",            "via": "entries",      "group_by": "category" },
+        { "type": "CvSkill",            "via": "skills" },
+        { "type": "CvDemonstratesEdge", "via": "demonstrates" }
+      ]
+    },
+    {
+      "id": "CvEntry",
+      "label": "CV Entry",
+      "render_as": "node",
+      "color_token": "abstract",
+      "abstract": true,
+      "attributes": [
+        { "name": "id",        "type": "string",  "required": true },
+        { "name": "essential", "type": "boolean", "required": true }
+      ]
+    },
+    {
+      "id": "CvEntry.personal_data",
+      "label": "Personal Data",
+      "render_as": "node",
+      "color_token": "entity",
+      "variant_of": "CvEntry",
+      "attributes": [
+        { "name": "full_name",      "type": "string", "required": true  },
+        { "name": "preferred_name", "type": "string", "required": false },
+        { "name": "birth_date",     "type": "date",   "required": false },
+        { "name": "nationality",    "type": "string", "required": false }
+      ]
+    },
+    {
+      "id": "CvEntry.contact",
+      "label": "Contact",
+      "render_as": "node",
+      "color_token": "entity",
+      "variant_of": "CvEntry",
+      "attributes": [
+        { "name": "email",     "type": "string",   "required": true  },
+        { "name": "phone",     "type": "string",   "required": false },
+        { "name": "addresses", "type": "object[]", "required": false },
+        { "name": "links",     "type": "object",   "required": false }
+      ]
+    },
+    {
+      "id": "CvEntry.legal_status",
+      "label": "Legal Status",
+      "render_as": "node",
+      "color_token": "entity",
+      "variant_of": "CvEntry",
+      "attributes": [
+        { "name": "visa_type",               "type": "string",  "required": true },
+        { "name": "visa_status",             "type": "string",  "required": true },
+        { "name": "work_permission_germany", "type": "boolean", "required": true }
+      ]
+    },
+    {
+      "id": "CvEntry.education",
+      "label": "Education",
+      "render_as": "node",
+      "color_token": "entity",
+      "variant_of": "CvEntry",
+      "attributes": [
+        { "name": "degree",           "type": "string", "required": true  },
+        { "name": "specialization",   "type": "string", "required": false },
+        { "name": "institution",      "type": "string", "required": true  },
+        { "name": "location",         "type": "string", "required": false },
+        { "name": "start_date",       "type": "date",   "required": true  },
+        { "name": "end_date",         "type": "date",   "required": false },
+        { "name": "level_reference",  "type": "string", "required": false },
+        { "name": "equivalency_note", "type": "string", "required": false }
+      ]
+    },
+    {
+      "id": "CvEntry.job_experience",
+      "label": "Job Experience",
+      "render_as": "node",
+      "color_token": "entity",
+      "variant_of": "CvEntry",
+      "attributes": [
+        { "name": "role",         "type": "string", "required": true  },
+        { "name": "organization", "type": "string", "required": true  },
+        { "name": "location",     "type": "string", "required": false },
+        { "name": "start_date",   "type": "date",   "required": true  },
+        { "name": "end_date",     "type": "date",   "required": false }
+      ]
+    },
+    {
+      "id": "CvEntry.project",
+      "label": "Project",
+      "render_as": "node",
+      "color_token": "entity",
+      "variant_of": "CvEntry",
+      "attributes": [
+        { "name": "name",  "type": "string",   "required": true  },
+        { "name": "role",  "type": "string",   "required": false },
+        { "name": "stack", "type": "string[]", "required": false }
+      ]
+    },
+    {
+      "id": "CvEntry.publication",
+      "label": "Publication",
+      "render_as": "node",
+      "color_token": "entity",
+      "variant_of": "CvEntry",
+      "attributes": [
+        { "name": "year",  "type": "number", "required": true  },
+        { "name": "title", "type": "string", "required": true  },
+        { "name": "venue", "type": "string", "required": false },
+        { "name": "url",   "type": "string", "required": false }
+      ]
+    },
+    {
+      "id": "CvEntry.language",
+      "label": "Language",
+      "render_as": "node",
+      "color_token": "entity",
+      "variant_of": "CvEntry",
+      "attributes": [
+        { "name": "name",  "type": "string", "required": true  },
+        { "name": "level", "type": "string", "required": true  },
+        { "name": "note",  "type": "string", "required": false }
+      ]
+    },
+    {
+      "id": "CvDescription",
+      "label": "Description",
+      "render_as": "attribute",
+      "color_token": "value",
+      "attributes": [
+        { "name": "key",    "type": "string", "required": true },
+        { "name": "text",   "type": "string", "required": true },
+        { "name": "weight", "type": "enum",   "required": true,
+          "values": ["headline", "primary_detail", "supporting_detail", "footnote"] }
+      ]
+    },
+    {
+      "id": "CvSkill",
+      "label": "Skill",
+      "render_as": "node",
+      "color_token": "skill",
+      "attributes": [
+        { "name": "id",        "type": "string",  "required": true  },
+        { "name": "label",     "type": "string",  "required": true  },
+        { "name": "category",  "type": "string",  "required": true  },
+        { "name": "essential", "type": "boolean", "required": true  },
+        { "name": "level",     "type": "string",  "required": false }
+      ]
+    },
+    {
+      "id": "CvDemonstratesEdge",
+      "label": "Demonstrates",
+      "render_as": "node",
+      "color_token": "edge_node",
+      "attributes": [
+        { "name": "id",               "type": "string",   "required": true, "note": "CvEntry.id" },
+        { "name": "source",           "type": "string",   "required": true, "note": "CvEntry.id" },
+        { "name": "target",           "type": "string",   "required": true, "note": "CvSkill.id" },
+        { "name": "description_keys", "type": "string[]", "required": true, "note": "CvDescription.key values that are the evidence" }
+      ]
+    }
+  ],
+  "edge_types": [
+    {
+      "id": "extends",
+      "label": "variant of",
+      "from": "CvEntry.personal_data",
+      "to": "CvEntry",
+      "color_token": "structural",
+      "cardinality": "N:1",
+      "note": "Applies to all CvEntry.* variants. Edge direction: child → parent."
+    },
+    {
+      "id": "demonstrates",
+      "label": "demonstrates",
+      "from": "CvEntry",
+      "to": "CvSkill",
+      "color_token": "semantic",
+      "cardinality": "N:M",
+      "note": "Mediated by CvDemonstratesEdge."
+    },
+    {
+      "id": "demo_source",
+      "label": "source → entry",
+      "from": "CvDemonstratesEdge",
+      "to": "CvEntry",
+      "color_token": "structural",
+      "cardinality": "N:1"
+    },
+    {
+      "id": "demo_target",
+      "label": "target → skill",
+      "from": "CvDemonstratesEdge",
+      "to": "CvSkill",
+      "color_token": "semantic",
+      "cardinality": "N:1"
+    }
+  ],
+  "visual_encoding": {
+    "color_tokens": {
+      "root":     { "border": "rgba(255,255,255,0.5)",  "bg": "rgba(255,255,255,0.04)" },
+      "abstract": { "border": "rgba(116,117,120,0.4)",  "bg": "rgba(116,117,120,0.05)" },
+      "entity":   { "border": "rgba(0,242,255,0.5)",    "bg": "rgba(0,242,255,0.07)"   },
+      "skill":    { "border": "rgba(255,170,0,0.5)",    "bg": "rgba(255,170,0,0.07)"   },
+      "edge_node":{ "border": "rgba(255,180,171,0.5)",  "bg": "rgba(255,180,171,0.07)" },
+      "value":    { "border": "rgba(116,117,120,0.3)",  "bg": "rgba(116,117,120,0.03)" }
+    },
+    "edge_color_tokens": {
+      "structural": { "stroke": "rgba(116,117,120,0.5)" },
+      "semantic":   { "stroke": "rgba(255,170,0,0.6)"   },
+      "contains":   { "stroke": "rgba(0,242,255,0.3)"   }
+    }
+  }
+}
