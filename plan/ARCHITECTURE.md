@@ -26,15 +26,10 @@
 - Filtrado de negocio (ej. "Mostrar solo skills técnicos")
 - Inyectar datos limpios al Nivel 2
 
-### Componentes Típicos
-- `AppShell.tsx`, `JobWorkspaceShell.tsx`
-- `MatchControlPanel.tsx`, `EvidenceBankPanel.tsx`
-- Páginas orquestadoras (`Match.tsx`, `BaseCvEditor.tsx`)
-
-### Documentación Relacionada
-- `04_external_data_and_schema_integration.md` - Integración con APIs y esquemas
-- `04a_document_explorer.md` - Explorador de documentos
-- `05_validation_and_test_impact_map.md` - Validación y testing
+### Docs
+- `L1_ui_app/schema_integration.md`
+- `L1_ui_app/document_explorer.md`
+- `L1_ui_app/validation_testing.md`
 
 ---
 
@@ -49,18 +44,13 @@
 - Ejecutar el motor de Layout matemático (Dagre/ELK)
 - Emitir eventos de clic hacia el Nivel 1
 
-### Componentes Típicos
-- `<UniversalGraphCanvas>` (refactorizado desde `KnowledgeGraph.tsx`)
-- `<UniversalNodeShell>` y `<UniversalGroupShell>`
-- `<UniversalEdge>` y `<ProxyEdge>`
-
-### Documentación Relacionada
-- `01_graph_foundations.md` - Fundamentos del grafo
-- `01a_layout_and_view_presets.md` - Presets de layout
-- `01b_node_type_registry_and_modes.md` - Registro de tipos de nodo
-- `01c_editor_state_and_history_contract.md` - Estado y historial
-- `02_structured_documents_and_subflows.md` - Documentos estructurados
-- `02a_tree_mode_and_outline_sync.md` - Modo árbol
+### Docs
+- `L2_graph_viewer/graph_foundations.md`
+- `L2_graph_viewer/layout_presets.md`
+- `L2_graph_viewer/node_types.md`
+- `L2_graph_viewer/state_history.md`
+- `L2_graph_viewer/subflows.md`
+- `L2_graph_viewer/tree_mode.md`
 
 ---
 
@@ -73,19 +63,14 @@
 - Renderizar vistas colapsables internas
 - Manejar estados de edición locales
 
-### Componentes Típicos
-- `<IntelligentEditor mode="tag-hover">`
-- `<JsonPreview>`, `<MarkdownPreview>`, `<ImagePreview>`
-- Filas de atributos y `<RequirementItem>`
-
-### Documentación Relacionada
-- `03_rich_content_nodes.md` - Nodos de contenido rico
-- `03a_text_annotation_links.md` - Anotaciones de texto
-- `03b_markdown_formatted_editor.md` - Editor Markdown
-- `03c_json_yaml_views.md` - Vistas JSON/YAML
-- `03d_table_editor.md` - Editor de tablas
-- `03e_code_display_and_annotation.md` - Código
-- `03f_image_annotation.md` - Imágenes
+### Docs
+- `L3_internal_nodes/rich_content_nodes.md`
+- `L3_internal_nodes/text_annotation.md`
+- `L3_internal_nodes/markdown_editor.md`
+- `L3_internal_nodes/json_yaml_views.md`
+- `L3_internal_nodes/table_editor.md`
+- `L3_internal_nodes/code_annotation.md`
+- `L3_internal_nodes/image_annotation.md`
 
 ---
 
@@ -95,11 +80,8 @@
 
 ```typescript
 interface AppToCanvasProps {
-  // Datos
-  astNodes: ASTNode[];       // Nodos genéricos
-  astEdges: ASTEdge[];       // Conexiones topológicas
-  
-  // Settings
+  astNodes: ASTNode[];
+  astEdges: ASTEdge[];
   themeTokens: Record<string, StyleToken>;
   isReadOnly: boolean;
   layoutEngine: 'dagre' | 'manual';
@@ -129,72 +111,60 @@ interface NodeToCanvasEvents {
 }
 ```
 
-Ver documento completo: `06_flow_contract.md`
+Ver: `_meta/flow_contract.md`
 
 ---
 
-## Mapa de Documentación por Nivel
+## Estructura de Archivos
 
 ```
 plan/
-├── 00_status_matrix.md           # Estado general
+├── README.md
+├── ARCHITECTURE.md                    # Este archivo
 │
-├── # === NIVEL 2: Graph Viewer ===
-├── 01_graph_foundations.md
-├── 01a_layout_and_view_presets.md
-├── 01b_node_type_registry_and_modes.md
-├── 01c_editor_state_and_history_contract.md
-├── 02_structured_documents_and_subflows.md
-├── 02a_tree_mode_and_outline_sync.md
+├── L2_graph_viewer/                  # Motor Espacial
+│   ├── graph_foundations.md
+│   ├── layout_presets.md
+│   ├── node_types.md
+│   ├── state_history.md
+│   ├── subflows.md
+│   └── tree_mode.md
 │
-├── # === NIVEL 3: Internal Node ===
-├── 03_rich_content_nodes.md
-├── 03a_text_annotation_links.md
-├── 03b_markdown_formatted_editor.md
-├── 03c_json_yaml_views.md
-├── 03d_table_editor.md
-├── 03e_code_display_and_annotation.md
-├── 03f_image_annotation.md
+├── L3_internal_nodes/                # Contenido Rico
+│   ├── rich_content_nodes.md
+│   ├── text_annotation.md
+│   ├── markdown_editor.md
+│   ├── json_yaml_views.md
+│   ├── table_editor.md
+│   ├── code_annotation.md
+│   └── image_annotation.md
 │
-├── # === NIVEL 1: UI / APP ===
-├── 04_external_data_and_schema_integration.md
-├── 04a_document_explorer.md
+├── L1_ui_app/                        # Orquestación
+│   ├── schema_integration.md
+│   ├── document_explorer.md
+│   └── validation_testing.md
 │
-├── # === Cross-cutting ===
-├── 05_validation_and_test_impact_map.md
+├── _meta/                            # Arquitectura
+│   ├── flow_contract.md
+│   ├── ui_graph_architecture_layers.md
+│   └── AGENT_REVIEWER_ENTRYPOINT.md
 │
-├── # === Meta ===
-├── 06_ui_graph_architecture_layers.md
-├── 06_flow_contract.md
-│
-└── AGENT_REVIEWER_ENTRYPOINT.md
+└── _legacy/                          # Referencia
+    ├── 00_status_matrix.md
+    └── 2026-03-20-ui-plan-review-design.md
 ```
 
 ---
 
-## Orden de Implementación Recomendado
+## Orden de Implementación
 
-1. **L2 (Graph Viewer)** - Primero porque es el núcleo
-   - `01_graph_foundations.md`
-   - `01a_layout_and_view_presets.md`
-   - `01b_node_type_registry_and_modes.md`
-
-2. **L3 (Internal Node)** - Segundo, una vez estable L2
-   - `03_rich_content_nodes.md`
-   - `03b_markdown_formatted_editor.md`
-   - `03c_json_yaml_views.md`
-
-3. **L1 (UI / APP)** - Tercero, para integrar L2+L3
-   - `04_external_data_and_schema_integration.md`
-   - `04a_document_explorer.md`
-
-4. **Validación** - Final
-   - `05_validation_and_test_impact_map.md`
+1. **L2 (Graph Viewer)** - El núcleo
+2. **L3 (Internal Node)** - Una vez L2 estable
+3. **L1 (UI / APP)** - Para integrar todo
 
 ---
 
 ## Referencias
 
-- Documento base: `06_ui_graph_architecture_layers.md`
-- Contratos completos: `06_flow_contract.md`
-- Estado actual: `00_status_matrix.md`
+- `_meta/flow_contract.md` - Contratos completos
+- `_meta/ui_graph_architecture_layers.md` - Capas visuales
