@@ -2460,8 +2460,10 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange, readOnl
             pannable
             zoomable
             nodeColor={(node) => CATEGORY_COLORS[(node.data as SimpleNodeData)?.category]?.bg ?? "#1e2022"}
+            style={{ background: '#0d0f10', border: '1px solid rgba(255,255,255,0.08)' }}
+            maskColor="rgba(0,0,0,0.4)"
           />
-          <Controls />
+          <Controls style={{ background: '#0d0f10', border: '1px solid rgba(255,255,255,0.08)' }} />
           <Background gap={20} size={1} />
         </ReactFlow>
         <button
