@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "../../utils/cn";
 import {
   addEdge,
@@ -11,9 +11,12 @@ import {
   type InternalNode,
   MarkerType,
   MiniMap,
+  NodeResizer,
+  NodeToolbar,
   Position,
   ReactFlow,
   ReactFlowProvider,
+  useNodeId,
   useStore,
   useEdgesState,
   useNodesState,
@@ -36,9 +39,15 @@ export interface SimpleNodeData extends Record<string, unknown> {
   category: string;
   properties: Record<string, string>;
   meta?: unknown;
-  nodeId?: string;
-  onEditNode?: (nodeId: string) => void;
+  collapsed?: boolean;
 }
+
+interface KnowledgeGraphCtx {
+  openNodeEditor: (nodeId: string) => void;
+}
+const KnowledgeGraphContext = createContext<KnowledgeGraphCtx>({
+  openNodeEditor: () => {},
+});
 
 export interface SimpleEdgeData extends Record<string, unknown> {
   relationType: string;
@@ -294,63 +303,130 @@ const DAGRE_NODE_HEIGHT = 68;
 
 function buildInitialGraph(): { nodes: SimpleNode[]; edges: SimpleEdge[] } {
   const nodes: SimpleNode[] = [
+    // ── Level 1: Root group ──────────────────────────────────────────────
     {
-      id: "n-alice",
-      type: "simple",
-      position: { x: 40, y: 60 },
-      data: { name: "Alice", category: "person", properties: { role: "Engineer", location: "Berlin" } },
+      id: 'g-vehiculos',
+      type: 'group',
+      position: { x: 60, y: 60 },
+      style: { width: 1020, height: 520 },
+      data: { name: 'Vehículos', category: 'document', properties: { id_categoria: 'cat_raiz', fabricante_general: 'Varios', estado_sistema: 'Activo' } },
+    },
+    // ── Level 2: Category groups (positions relative to g-vehiculos) ─────
+    {
+      id: 'g-terrestres',
+      type: 'group',
+      position: { x: 20, y: 70 },
+      parentId: 'g-vehiculos',
+      extent: 'parent',
+      style: { width: 280, height: 360 },
+      data: { name: 'Terrestres', category: 'section', properties: { tipo_terreno: 'asfalto, tierra', max_inclinacion_grados: '35' } },
     },
     {
-      id: "n-python",
-      type: "simple",
-      position: { x: 360, y: 40 },
-      data: { name: "Python", category: "skill", properties: { level: "advanced" } },
+      id: 'g-aereos',
+      type: 'group',
+      position: { x: 370, y: 70 },
+      parentId: 'g-vehiculos',
+      extent: 'parent',
+      style: { width: 280, height: 360 },
+      data: { name: 'Aéreos', category: 'section', properties: { altitud_maxima_pies: '40000', presurizado: 'true' } },
     },
     {
-      id: "n-react",
-      type: "simple",
-      position: { x: 360, y: 150 },
-      data: { name: "React", category: "skill", properties: { level: "intermediate" } },
+      id: 'g-acuaticos',
+      type: 'group',
+      position: { x: 720, y: 70 },
+      parentId: 'g-vehiculos',
+      extent: 'parent',
+      style: { width: 260, height: 360 },
+      data: { name: 'Acuáticos', category: 'section', properties: { calado_metros: '5.2', resistencia_agua_salada: 'true' } },
+    },
+    // ── Level 3: Specific types (positions relative to their L2 group) ───
+    {
+      id: 'n-autos',
+      type: 'simple',
+      position: { x: 40, y: 80 },
+      parentId: 'g-terrestres',
+      extent: 'parent',
+      data: { name: 'Autos', category: 'entry', properties: { modelo: 'Sedán', capacidad_pasajeros: '5', peso_toneladas: '1.5', color: 'Rojo' } },
     },
     {
-      id: "n-graph",
-      type: "simple",
-      position: { x: 680, y: 80 },
-      data: { name: "Graph Editor", category: "project", properties: { stage: "prototype" } },
+      id: 'n-camiones',
+      type: 'simple',
+      position: { x: 40, y: 200 },
+      parentId: 'g-terrestres',
+      extent: 'parent',
+      data: { name: 'Camiones', category: 'entry', properties: { modelo: 'Carga Pesada', capacidad_pasajeros: '3', peso_toneladas: '12.0' } },
     },
     {
-      id: "n-paper",
-      type: "simple",
-      position: { x: 680, y: 220 },
-      data: { name: "Published Paper A", category: "publication", properties: { year: "2023" } },
+      id: 'n-aviones',
+      type: 'simple',
+      position: { x: 40, y: 80 },
+      parentId: 'g-aereos',
+      extent: 'parent',
+      data: { name: 'Aviones', category: 'concept', properties: { modelo: 'Comercial', capacidad_pasajeros: '150', altitud_maxima_pies: '40000' } },
     },
     {
-      id: "n-ux",
-      type: "simple",
-      position: { x: 360, y: 280 },
-      data: { name: "Node UX", category: "concept", properties: { status: "exploring" } },
+      id: 'n-helicopteros',
+      type: 'simple',
+      position: { x: 40, y: 200 },
+      parentId: 'g-aereos',
+      extent: 'parent',
+      data: { name: 'Helicópteros', category: 'concept', properties: { modelo: 'Rescate', capacidad_pasajeros: '6', peso_toneladas: '3.5' } },
+    },
+    {
+      id: 'n-lanchas',
+      type: 'simple',
+      position: { x: 30, y: 80 },
+      parentId: 'g-acuaticos',
+      extent: 'parent',
+      data: { name: 'Lanchas', category: 'entry', properties: { modelo: 'Deportiva', capacidad_pasajeros: '8', peso_toneladas: '1.2' } },
+    },
+    {
+      id: 'n-submarinos',
+      type: 'simple',
+      position: { x: 30, y: 200 },
+      parentId: 'g-acuaticos',
+      extent: 'parent',
+      data: { name: 'Submarinos', category: 'entry', properties: { modelo: 'Exploración', capacidad_pasajeros: '12', peso_toneladas: '850.0' } },
+    },
+    // ── External / transversal component nodes ───────────────────────────
+    {
+      id: 'n-rueda',
+      type: 'simple',
+      position: { x: 100, y: 680 },
+      data: { name: 'Rueda', category: 'skill', properties: { diametro_cm: '40', material_llanta: 'Aleación de aluminio', presion_ideal_psi: '32' } },
+    },
+    {
+      id: 'n-helice',
+      type: 'simple',
+      position: { x: 400, y: 680 },
+      data: { name: 'Hélice', category: 'skill', properties: { numero_aspas: '4', rpm_maximo: '3500', material: 'Fibra de carbono' } },
+    },
+    {
+      id: 'n-motor',
+      type: 'simple',
+      position: { x: 680, y: 680 },
+      data: { name: 'Motor', category: 'skill', properties: { caballos_fuerza: '300', tipo_combustible: 'Multicombustible', consumo_litros_hora: '15' } },
+    },
+    {
+      id: 'n-radar',
+      type: 'simple',
+      position: { x: 960, y: 680 },
+      data: { name: 'Radar', category: 'skill', properties: { alcance_km: '150', frecuencia_ghz: '9.5' } },
     },
   ];
 
   const edges: SimpleEdge[] = [
-    {
-      id: "e-a-py",
-      source: "n-alice",
-      target: "n-python",
-      data: { relationType: "linked", properties: { strength: "high" } },
-    },
-    {
-      id: "e-a-react",
-      source: "n-alice",
-      target: "n-react",
-      data: { relationType: "linked", properties: { strength: "medium" } },
-    },
-    {
-      id: "e-react-graph",
-      source: "n-react",
-      target: "n-graph",
-      data: { relationType: "linked", properties: { context: "frontend" } },
-    },
+    { id: 'e-rueda-autos',        source: 'n-rueda',   target: 'n-autos',        data: { relationType: 'uses', properties: {} } },
+    { id: 'e-rueda-camiones',     source: 'n-rueda',   target: 'n-camiones',     data: { relationType: 'uses', properties: {} } },
+    { id: 'e-helice-heli',        source: 'n-helice',  target: 'n-helicopteros', data: { relationType: 'uses', properties: {} } },
+    { id: 'e-helice-lanchas',     source: 'n-helice',  target: 'n-lanchas',      data: { relationType: 'uses', properties: {} } },
+    { id: 'e-motor-autos',        source: 'n-motor',   target: 'n-autos',        data: { relationType: 'uses', properties: {} } },
+    { id: 'e-motor-camiones',     source: 'n-motor',   target: 'n-camiones',     data: { relationType: 'uses', properties: {} } },
+    { id: 'e-motor-aviones',      source: 'n-motor',   target: 'n-aviones',      data: { relationType: 'uses', properties: {} } },
+    { id: 'e-motor-heli',         source: 'n-motor',   target: 'n-helicopteros', data: { relationType: 'uses', properties: {} } },
+    { id: 'e-motor-lanchas',      source: 'n-motor',   target: 'n-lanchas',      data: { relationType: 'uses', properties: {} } },
+    { id: 'e-radar-aviones',      source: 'n-radar',   target: 'n-aviones',      data: { relationType: 'uses', properties: {} } },
+    { id: 'e-radar-submarinos',   source: 'n-radar',   target: 'n-submarinos',   data: { relationType: 'uses', properties: {} } },
   ];
 
   return { nodes, edges };
@@ -470,12 +546,9 @@ function PropertyValueInput({
 
 const SimpleNodeCard = memo(function SimpleNodeCard({ data, selected }: NodeProps<SimpleNode>) {
   const nodeData = data as unknown as SimpleNodeData;
+  const id = useNodeId();
+  const { openNodeEditor } = useContext(KnowledgeGraphContext);
   const color = CATEGORY_COLORS[nodeData.category] ?? { border: 'rgba(116,117,120,0.4)', bg: 'rgba(30,32,34,0.9)' };
-  const onEdit = () => {
-    if (nodeData.onEditNode && nodeData.nodeId) {
-      nodeData.onEditNode(nodeData.nodeId);
-    }
-  };
   return (
     <div
       className={cn(
@@ -496,10 +569,10 @@ const SimpleNodeCard = memo(function SimpleNodeCard({ data, selected }: NodeProp
           "absolute -top-2 -right-2 text-[0.65rem] bg-surface border border-outline-variant px-1 py-0.5 transition-opacity",
           selected ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto",
         )}
-        onMouseDown={(event) => event.stopPropagation()}
-        onClick={(event) => {
-          event.stopPropagation();
-          onEdit();
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (id) openNodeEditor(id);
         }}
       >
         Edit
@@ -508,43 +581,114 @@ const SimpleNodeCard = memo(function SimpleNodeCard({ data, selected }: NodeProp
   );
 });
 
+export function deduplicateByEndpoints<T extends { source: string; target: string }>(edges: T[]): T[] {
+  const seen = new Set<string>();
+  return edges.filter((e) => {
+    const key = `${e.source}→${e.target}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 const GroupNode = memo(function GroupNode({ data, selected }: NodeProps<SimpleNode>) {
   const nodeData = data as unknown as SimpleNodeData;
+  const id = useNodeId()!;
+  const { setNodes, setEdges, getNodes, getEdges } = useReactFlow();
+  const collapsed = nodeData.collapsed ?? false;
   const color = CATEGORY_COLORS[nodeData.category] ?? { border: 'rgba(116,117,120,0.4)', bg: 'rgba(30,32,34,0.9)' };
+
+  const childCount = useStore(
+    useCallback(
+      (s) => [...s.nodeLookup.values()].filter((n) => (n as unknown as SimpleNode).parentId === id).length,
+      [id],
+    ),
+  );
+
+  const toggleCollapse = useCallback(() => {
+    const currentNode = getNodes().find((n) => n.id === id);
+    const currentCollapsed = (currentNode?.data as SimpleNodeData | undefined)?.collapsed ?? false;
+    const next = !currentCollapsed;
+    const childIds = new Set(getNodes().filter((n) => n.parentId === id).map((n) => n.id));
+
+    if (next) {
+      const proxyEdges = deduplicateByEndpoints(
+        getEdges()
+          .filter((e) => childIds.has(e.source) || childIds.has(e.target))
+          .map((e) => ({
+            ...e,
+            id: `proxy:${id}:${e.id}`,
+            source: childIds.has(e.source) ? id : e.source,
+            target: childIds.has(e.target) ? id : e.target,
+            data: { ...e.data, relationType: 'proxy' },
+            style: { strokeDasharray: '4 3', opacity: 0.5 },
+          })),
+      ).filter((e) => e.source !== e.target);
+
+      setEdges((all) => [
+        ...all.map((e) =>
+          childIds.has(e.source) || childIds.has(e.target) ? { ...e, hidden: true } : e,
+        ),
+        ...proxyEdges,
+      ]);
+    } else {
+      setEdges((all) =>
+        all
+          .filter((e) => !e.id.startsWith(`proxy:${id}:`))
+          .map((e) =>
+            childIds.has(e.source) || childIds.has(e.target) ? { ...e, hidden: false } : e,
+          ),
+      );
+    }
+
+    setNodes((all) =>
+      all.map((n) => {
+        if (n.parentId === id) return { ...n, hidden: next };
+        if (n.id === id) {
+          return {
+            ...n,
+            data: { ...n.data, collapsed: next },
+            style: next ? { ...n.style, height: 48 } : { ...n.style, height: undefined },
+          };
+        }
+        return n;
+      }),
+    );
+  }, [id, getNodes, getEdges, setNodes, setEdges]); // `collapsed` intentionally omitted — read live
+
   return (
-    <div
-      style={{
-        width: '100%',
-        height: '100%',
-        border: `2px dashed ${color.border}`,
-        background: color.bg,
-        borderRadius: 8,
-        position: 'relative',
-        outline: selected ? `2px solid ${color.border}` : undefined,
-      }}
-    >
-      <Handle id="top" type="source" position={Position.Top} className="opacity-0 hover:opacity-100 transition-opacity" />
-      <Handle id="right" type="source" position={Position.Right} className="opacity-0 hover:opacity-100 transition-opacity" />
-      <Handle id="bottom" type="source" position={Position.Bottom} className="opacity-0 hover:opacity-100 transition-opacity" />
-      <Handle id="left" type="source" position={Position.Left} className="opacity-0 hover:opacity-100 transition-opacity" />
+    <>
+      <NodeToolbar position={Position.Top} align="start" isVisible>
+        <div className="flex items-center gap-2 px-2 py-1 bg-surface border border-outline-variant rounded text-[0.7rem]">
+          <button
+            type="button"
+            className="text-primary hover:text-primary-dim transition-colors font-mono leading-none"
+            onClick={toggleCollapse}
+          >
+            {collapsed ? '▶' : '▼'}
+          </button>
+          <span className="font-semibold text-on-surface font-headline">{nodeData.name}</span>
+          <span className="text-on-muted">{childCount} nodes</span>
+        </div>
+      </NodeToolbar>
       <div
         style={{
-          position: 'absolute',
-          top: -20,
-          left: 0,
-          fontSize: '0.72rem',
-          fontWeight: 600,
-          color: color.border,
-          fontFamily: 'JetBrains Mono, monospace',
-          textTransform: 'uppercase',
-          letterSpacing: '0.08em',
-          whiteSpace: 'nowrap',
-          pointerEvents: 'none',
+          width: '100%',
+          height: '100%',
+          border: `2px dashed ${color.border}`,
+          background: color.bg,
+          borderRadius: 8,
+          position: 'relative',
+          outline: selected ? `2px solid ${color.border}` : undefined,
         }}
       >
-        {nodeData.name}
+        <NodeResizer isVisible={selected && !collapsed} minWidth={160} minHeight={60} />
+        <Handle id="top" type="source" position={Position.Top} className="opacity-0 hover:opacity-100 transition-opacity" />
+        <Handle id="right" type="source" position={Position.Right} className="opacity-0 hover:opacity-100 transition-opacity" />
+        <Handle id="bottom" type="source" position={Position.Bottom} className="opacity-0 hover:opacity-100 transition-opacity" />
+        <Handle id="left" type="source" position={Position.Left} className="opacity-0 hover:opacity-100 transition-opacity" />
       </div>
-    </div>
+    </>
   );
 });
 
@@ -1247,8 +1391,6 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange, readOnl
             ...node,
             data: {
               ...nodeData,
-              nodeId: node.id,
-              onEditNode: openNodeEditor,
             },
             className: active ? "opacity-100" : "opacity-30",
             draggable: active,
@@ -1259,8 +1401,6 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange, readOnl
           ...node,
           data: {
             ...nodeData,
-            nodeId: node.id,
-            onEditNode: openNodeEditor,
           },
           className: "",
           draggable: true,
@@ -1275,7 +1415,6 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange, readOnl
     hideNonNeighbors,
     inFocusModes,
     neighborIds,
-    openNodeEditor,
     editorState,
   ]);
 
@@ -2117,6 +2256,7 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange, readOnl
   }, [editorState, onUnfocus]);
 
   return (
+    <KnowledgeGraphContext.Provider value={{ openNodeEditor }}>
     <div className="flex h-screen">
       {!readOnly && <aside className={cn(
         "bg-surface border-r border-outline-variant overflow-y-auto transition-all duration-200 shrink-0 flex flex-col gap-3 py-3",
@@ -2730,6 +2870,7 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange, readOnl
         </div>
       ) : null}
     </div>
+    </KnowledgeGraphContext.Provider>
   );
 }
 
