@@ -1,118 +1,67 @@
-# UI Plan
+# Node Editor Plan
 
-This folder treats UI development as a dependency graph rather than a flat backlog.
+> **START HERE:** Lee primero `ARCHITECTURE.md` para entender el modelo de 3 capas.
 
-Each file is a graph node with:
+Este directorio contiene la planificación del editor de grafos como un grafo de dependencias, no como una lista plana.
 
-- scope
-- current status
-- dependencies
-- enables
-- what breaks if edited
-- candidate libraries
-- acceptance notes
+---
 
-## Current Context
+## Estructura de Documentación
 
-- Main generic graph sandbox: `apps/review-workbench/src/sandbox/pages/NodeEditorSandboxPage.tsx`
-- Structured graph/editor baseline: `apps/review-workbench/src/sandbox/pages/CvGraphEditorPage.tsx`
-- Text tagging baseline: `apps/review-workbench/src/sandbox/components/RichTextPane.tsx`
-- UI behavior docs: `docs/architecture/node_editor_behavior_spec.md`
+El sistema se organiza en **3 niveles de arquitectura**:
 
-## React Flow UI Notes
+| Nivel | Descripción | Docs Clave |
+|-------|-------------|------------|
+| **L1** | UI / App (Orquestación) | `04_*.md`, `ARCHITECTURE.md` |
+| **L2** | Graph Viewer (Motor Espacial) | `01_*.md`, `02_*.md` |
+| **L3** | Internal Node (Contenido Rico) | `03_*.md` |
 
-Reference checked: `https://reactflow.dev/ui`
+Ver `ARCHITECTURE.md` para el mapa completo y explicación detallada.
 
-- React Flow UI provides copyable components, not a black-box package.
-- It is designed around `shadcn/ui` + Tailwind.
-- Good candidates for reuse here:
-  - base node patterns
-  - labeled group node patterns
-  - database schema node patterns
-  - button/data edges
-  - node search / zoom controls
-- Recommendation: borrow patterns selectively, do not adopt wholesale before defining our node-type registry.
+---
 
-## Graph Overview
+## Quick Links
 
-```text
+- [Arquitectura Completa](./ARCHITECTURE.md)
+- [Contratos entre Capas](./06_flow_contract.md)
+- [Capas UI y Graph](./06_ui_graph_architecture_layers.md)
+- [Estado Actual](./00_status_matrix.md)
+
+---
+
+## Dependencias entre Docs
+
+```
 00_status_matrix
-  -> 01_graph_foundations
-  -> 04_external_data_and_schema_integration
-
-01_graph_foundations
-  -> 01a_layout_and_view_presets
-  -> 01b_node_type_registry_and_modes
-  -> 01c_editor_state_and_history_contract
-
-01a_layout_and_view_presets
-  -> 02_structured_documents_and_subflows
-  -> 04a_document_explorer
-
-01b_node_type_registry_and_modes
-  -> 03_rich_content_nodes
-  -> 02_structured_documents_and_subflows
-
-01c_editor_state_and_history_contract
-  -> 03_rich_content_nodes
-  -> 04_external_data_and_schema_integration
-
-02_structured_documents_and_subflows
-  -> 02a_tree_mode_and_outline_sync
-
-03_rich_content_nodes
-  -> 03a_text_annotation_links
-  -> 03b_markdown_formatted_editor
-  -> 03c_json_yaml_views
-  -> 03d_table_editor
-  -> 03e_code_display_and_annotation
-  -> 03f_image_annotation
-
-04_external_data_and_schema_integration
-  -> 04a_document_explorer
-  -> 05_validation_and_test_impact_map
-
-All nodes
-  -> AGENT_REVIEWER_ENTRYPOINT
+    │
+    ├─► 01_graph_foundations (L2)
+    │       ├─► 01a_layout_and_view_presets
+    │       ├─► 01b_node_type_registry_and_modes
+    │       └─► 01c_editor_state_and_history_contract
+    │
+    ├─► 02_structured_documents_and_subflows (L2)
+    │       └─► 02a_tree_mode_and_outline_sync
+    │
+    ├─► 03_rich_content_nodes (L3)
+    │       ├─► 03a_text_annotation_links
+    │       ├─► 03b_markdown_formatted_editor
+    │       ├─► 03c_json_yaml_views
+    │       ├─► 03d_table_editor
+    │       ├─► 03e_code_display_and_annotation
+    │       └─► 03f_image_annotation
+    │
+    └─► 04_external_data_and_schema_integration (L1)
+            ├─► 04a_document_explorer
+            └─► 05_validation_and_test_impact_map
 ```
 
-## Recommended Build Order
+---
 
-1. `00_status_matrix.md`
-2. `01_graph_foundations.md`
-3. `01a_layout_and_view_presets.md`
-4. `01b_node_type_registry_and_modes.md`
-5. `01c_editor_state_and_history_contract.md`
-6. `02_structured_documents_and_subflows.md`
-7. `02a_tree_mode_and_outline_sync.md`
-8. `03_rich_content_nodes.md`
-9. `03a_text_annotation_links.md`
-10. `03b_markdown_formatted_editor.md`
-11. `03c_json_yaml_views.md`
-12. `03d_table_editor.md`
-13. `03e_code_display_and_annotation.md`
-14. `03f_image_annotation.md`
-15. `04_external_data_and_schema_integration.md`
-16. `04a_document_explorer.md`
-17. `05_validation_and_test_impact_map.md`
-18. `AGENT_REVIEWER_ENTRYPOINT.md`
+## build Order
 
-## Library Summary
+1. **L2 primero** - Graph Viewer (el núcleo del sistema)
+2. **L3 segundo** - Internal Node (una vez L2 estable)
+3. **L3tercero** - UI/App (para integrar todo)
+4. **Validación** - Testing y validación
 
-- layout / compound graphs: `dagre` now, `elkjs` later
-- explorer trees: `react-arborist`
-- rich text / markdown: `Lexical` or `@tiptap/react`
-- code editor: `CodeMirror 6` first, `monaco-editor` only if IDE-grade features are needed
-- json tree: `@uiw/react-json-view`
-- yaml editor: `CodeMirror 6` + yaml mode or `monaco-yaml`
-- tables: `TanStack Table` first, `AG Grid` only if spreadsheet-grade workflows become mandatory
-- image annotation: `Annotorious` or `react-image-annotate`
-
-## Planning Rule
-
-Do not implement rich node content or explorer surfaces before stabilizing:
-
-- node type registry
-- editor state model
-- layout/view preset contract
-- persistence boundary
+Ver `ARCHITECTURE.md` para detalles completos.
