@@ -1,5 +1,18 @@
 # Propuesta: Separación del Monolito KnowledgeGraph.tsx
 
+> **Extiende:** `00_component_map.md` — Esta propuesta detallada cómo el componente `<GraphCanvas>` (vistas A3, B3) se separa internamente.
+
+## Relación con Component Map
+
+El Component Map define:
+- Vistas que usan `<GraphCanvas>`: **A3** (Base CV Editor), **B3** (Match)
+- Árbol target de archivos
+- Átomos y moléculas
+
+Esta propuesta detallada la **arquitectura interna** del `GraphCanvas` siguiendo el modelo de 3 capas.
+
+---
+
 ## Estado Actual
 
 ```
@@ -101,6 +114,17 @@ InternalNodeRouter (L3)
     ↓
 IntelligentEditor / JsonPreview (L3)
 ```
+
+## Mapping a Component Map
+
+| Component Map | Esta Propuesta |
+|--------------|----------------|
+| `<GraphCanvas>` | `UniversalGraphCanvas` (L2) |
+| `<NodeInspectorSidebar>` | `NodeEditorPage` (L1) |
+| Átomos `<Badge>`, `<Icon>` | Consumidos por NodeShell |
+| `IntelligentEditor` | `InternalNodeRouter` (L3) |
+
+Las vistas A3 y B3 del Component Map usan este mismo patrón.
 
 ## Notas
 
