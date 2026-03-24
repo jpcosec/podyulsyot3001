@@ -134,6 +134,7 @@ type HistoryAction =
 type SidebarSectionKey = "actions" | "filters" | "space" | "creation" | "vacant";
 
 const CATEGORY_COLORS: Record<string, { border: string; bg: string }> = {
+  // Base graph categories
   person:      { border: 'rgba(0,242,255,0.5)',   bg: 'rgba(0,242,255,0.07)' },
   skill:       { border: 'rgba(255,170,0,0.5)',   bg: 'rgba(255,170,0,0.07)' },
   project:     { border: 'rgba(0,242,255,0.25)',  bg: 'rgba(0,242,255,0.04)' },
@@ -142,6 +143,23 @@ const CATEGORY_COLORS: Record<string, { border: string; bg: string }> = {
   document:    { border: 'rgba(0,242,255,0.6)',   bg: 'rgba(0,242,255,0.06)' },
   section:     { border: 'rgba(255,170,0,0.4)',   bg: 'rgba(255,170,0,0.05)' },
   entry:       { border: 'rgba(116,117,120,0.4)', bg: 'rgba(30,32,34,0.9)' },
+  // Match view — requirement categories
+  technical:      { border: 'rgba(0,242,255,0.6)',   bg: 'rgba(0,242,255,0.07)' },
+  qualifications: { border: 'rgba(255,170,0,0.6)',   bg: 'rgba(255,170,0,0.07)' },
+  soft_skills:    { border: 'rgba(100,220,130,0.6)', bg: 'rgba(100,220,130,0.07)' },
+  communication:  { border: 'rgba(200,160,255,0.6)', bg: 'rgba(200,160,255,0.07)' },
+  languages:      { border: 'rgba(255,200,80,0.6)',  bg: 'rgba(255,200,80,0.07)' },
+  general:        { border: 'rgba(116,117,120,0.4)', bg: 'rgba(116,117,120,0.05)' },
+  // Match view — profile categories
+  education:      { border: 'rgba(255,170,0,0.7)',   bg: 'rgba(255,170,0,0.08)' },
+  experience:     { border: 'rgba(0,242,255,0.7)',   bg: 'rgba(0,242,255,0.08)' },
+  skills:         { border: 'rgba(100,220,130,0.7)', bg: 'rgba(100,220,130,0.08)' },
+  publications:   { border: 'rgba(255,180,171,0.7)', bg: 'rgba(255,180,171,0.08)' },
+  // Additional schema categories
+  root:      { border: 'rgba(255,255,255,0.5)',  bg: 'rgba(255,255,255,0.04)' },
+  abstract:  { border: 'rgba(116,117,120,0.4)',  bg: 'rgba(116,117,120,0.05)' },
+  edge_node: { border: 'rgba(255,180,171,0.5)',  bg: 'rgba(255,180,171,0.07)' },
+  value:     { border: 'rgba(116,117,120,0.3)',  bg: 'rgba(116,117,120,0.03)' },
 };
 
 const CATEGORY_OPTIONS = ["person", "skill", "project", "publication", "concept", "document", "section", "entry"];
@@ -757,9 +775,10 @@ export interface KnowledgeGraphProps {
   initialEdges?: SimpleEdge[];
   onSave?: (nodes: SimpleNode[], edges: SimpleEdge[]) => void;
   onChange?: (nodes: SimpleNode[], edges: SimpleEdge[]) => void;
+  readOnly?: boolean;
 }
 
-function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: KnowledgeGraphProps): JSX.Element {
+function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange, readOnly = false }: KnowledgeGraphProps): JSX.Element {
   const initial = useMemo(
     () => initialNodes ? { nodes: initialNodes, edges: initialEdges ?? [] } : buildInitialGraph(),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -2116,23 +2135,27 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
                   <span>{selectedItemLabel}</span>
                 </div>
 
-                <div className="flex gap-1 flex-wrap">
-                  <button type="button" className="border border-primary bg-primary text-surface text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:bg-primary/90 disabled:opacity-45 disabled:cursor-default" disabled={!dirty} onClick={onSaveWorkspace}>
-                    Save workspace
-                  </button>
-                  <button type="button" className="border border-outline-variant text-on-surface text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:border-primary bg-transparent disabled:opacity-45 disabled:cursor-default" disabled={!dirty} onClick={onDiscardWorkspace}>
-                    Discard
-                  </button>
-                </div>
+                {!readOnly && (
+                  <div className="flex gap-1 flex-wrap">
+                    <button type="button" className="border border-primary bg-primary text-surface text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:bg-primary/90 disabled:opacity-45 disabled:cursor-default" disabled={!dirty} onClick={onSaveWorkspace}>
+                      Save workspace
+                    </button>
+                    <button type="button" className="border border-outline-variant text-on-surface text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:border-primary bg-transparent disabled:opacity-45 disabled:cursor-default" disabled={!dirty} onClick={onDiscardWorkspace}>
+                      Discard
+                    </button>
+                  </div>
+                )}
 
-                <div className="flex gap-1 flex-wrap">
-                  <button type="button" className="border border-outline-variant text-on-surface text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:border-primary bg-transparent disabled:opacity-45 disabled:cursor-default" onClick={onUndo} disabled={undoStack.length === 0}>
-                    Undo
-                  </button>
-                  <button type="button" className="border border-outline-variant text-on-surface text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:border-primary bg-transparent disabled:opacity-45 disabled:cursor-default" onClick={onRedo} disabled={redoStack.length === 0}>
-                    Redo
-                  </button>
-                </div>
+                {!readOnly && (
+                  <div className="flex gap-1 flex-wrap">
+                    <button type="button" className="border border-outline-variant text-on-surface text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:border-primary bg-transparent disabled:opacity-45 disabled:cursor-default" onClick={onUndo} disabled={undoStack.length === 0}>
+                      Undo
+                    </button>
+                    <button type="button" className="border border-outline-variant text-on-surface text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:border-primary bg-transparent disabled:opacity-45 disabled:cursor-default" onClick={onRedo} disabled={redoStack.length === 0}>
+                      Redo
+                    </button>
+                  </div>
+                )}
 
                 <div className="flex gap-1 flex-wrap">
                   <button type="button" className="border border-outline-variant text-on-surface text-[0.8rem] px-2.5 py-1.5 cursor-pointer hover:border-primary bg-transparent disabled:opacity-45 disabled:cursor-default" onClick={onCopyFocusedNode} disabled={editorState !== "focus"}>
@@ -2379,18 +2402,20 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
                 ) : vacantCandidateNodes.length === 0 ? (
                   <p className="font-mono text-[10px] text-on-muted/50 italic">No vacant candidates under current filters.</p>
                 ) : (
-                  <div className="flex flex-col gap-0.5 max-h-[200px] overflow-y-auto">
-                    {vacantCandidateNodes.map((node) => (
-                      <button
-                        key={node.id}
-                        type="button"
-                        className="text-left px-2 py-1 text-[0.8rem] text-on-surface hover:bg-primary/10 hover:text-primary"
-                        onClick={() => onConnectFromVacantDrawer(node.id)}
-                      >
-                        {(node.data as SimpleNodeData).name}
-                      </button>
-                    ))}
-                  </div>
+                  !readOnly && (
+                    <div className="flex flex-col gap-0.5 max-h-[200px] overflow-y-auto">
+                      {vacantCandidateNodes.map((node) => (
+                        <button
+                          key={node.id}
+                          type="button"
+                          className="text-left px-2 py-1 text-[0.8rem] text-on-surface hover:bg-primary/10 hover:text-primary"
+                          onClick={() => onConnectFromVacantDrawer(node.id)}
+                        >
+                          {(node.data as SimpleNodeData).name}
+                        </button>
+                      ))}
+                    </div>
+                  )
                 )}
               </>
             </SidebarSection>
@@ -2406,9 +2431,9 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
           edges={displayEdges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          onConnectStart={onConnectStart}
-          onConnectEnd={onConnectEnd}
+          onConnect={readOnly ? () => {} : onConnect}
+          onConnectStart={readOnly ? () => {} : onConnectStart}
+          onConnectEnd={readOnly ? () => {} : onConnectEnd}
           onNodeClick={onNodeClick}
           onNodeDoubleClick={onNodeDoubleClick}
           onEdgeClick={onEdgeClick}
@@ -2420,6 +2445,8 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
           minZoom={0.1}
           fitView
           attributionPosition="bottom-left"
+          nodesDraggable={!readOnly}
+          nodesConnectable={!readOnly}
         >
           <MiniMap
             pannable
@@ -2484,7 +2511,7 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
         </div>
       ) : null}
 
-      {editorState === "edit_node" && nodeDraft ? (
+      {!readOnly && editorState === "edit_node" && nodeDraft ? (
         <div className="fixed inset-0 bg-slate-900/35 backdrop-blur-[2px] flex items-center justify-center z-50">
           <div className="bg-surface border border-outline-variant p-6 flex flex-col gap-4 w-[500px] max-h-[90vh] overflow-y-auto">
             <h2>Edit node</h2>
@@ -2585,7 +2612,7 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange }: Knowl
         </div>
       ) : null}
 
-      {editorState === "edit_relation" && edgeDraft ? (
+      {!readOnly && editorState === "edit_relation" && edgeDraft ? (
         <div className="fixed inset-0 bg-slate-900/35 backdrop-blur-[2px] flex items-center justify-center z-50">
           <div className="bg-surface border border-outline-variant p-6 flex flex-col gap-4 w-[500px] max-h-[90vh] overflow-y-auto">
             <h2>Edit relation</h2>
