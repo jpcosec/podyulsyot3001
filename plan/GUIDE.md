@@ -1,118 +1,107 @@
 # Guía de Navegación
 
-> Cómo leer y navegar la documentación del Node Editor.
+> Cómo leer esta documentación sin perder tiempo.
 
 ---
 
-## El Espiritu
+## Regla #1: No leas todo
 
-Esta documentación describe **cómo construir**, no qué construir. Asume que ya sabes lo que necesitas - aquí encuentras el cómo.
-
-**Principios:**
-- **Arquitectura primero** - Entender las capas antes de escribir código
-- **Contratos definidos** - Los tipos definen las interfaces entre niveles
-- **Ejemplos concretos** - Código real, no teoría abstracta
-- **Evolución continua** - Los docs crecen con el código
+Esta carpeta tiene ~25 documentos. No necesitas la mayoría. Usa esta guía para ir directo a lo que necesitas.
 
 ---
 
-## Estructura de Carpetas
+## Puntos de entrada según tu objetivo
+
+### "Quiero entender la arquitectura"
+
+1. **`ARCHITECTURE.md`** — El modelo de 3 capas (L1/L2/L3), los contratos TypeScript, y la regla Data Down / Events Up. Es el documento más importante.
+
+### "Quiero implementar algo"
+
+1. `ARCHITECTURE.md` → identifica en qué capa vive tu feature
+2. Ve al doc específico en `01_L1_ui_app/`, `02_L2_graph_viewer/`, o `03_L3_internal_nodes/`
+3. `_meta/implementation_example.md` → código real de las 3 capas trabajando juntas
+
+### "Quiero refactorizar KnowledgeGraph.tsx"
+
+→ `_meta/refactor_knowledgegraph.md` — Migración paso a paso del God Component a 3 archivos.
+
+### "Quiero entender los contratos entre capas"
+
+→ `_meta/06_flow_contract.md` — Contrato A (L1→L2) y Contrato B (L2→L3), con el ciclo de vida completo de una edición.
+
+### "Quiero usar un agente para revisar el plan"
+
+→ `_meta/AGENT_REVIEWER_ENTRYPOINT.md` — Prompt de entrada + preguntas de revisión + formato de output.
+
+### "Quiero entender la visión a futuro"
+
+→ `_meta/code_ide_as_graph.md` — El editor como IDE visual estilo Blueprints.
+→ `_meta/meta_ui_as_graph.md` — Representar la UI misma como grafo (documentación, no runtime).
+
+---
+
+## Mapa de dependencias entre docs
 
 ```
-plan/
-├── ARCHITECTURE.md      ← START HERE
-├── GUIDE.md
-│
-├── 01_L1_ui_app/       ← Orquestación (API, páginas)
-├── 02_L2_graph_viewer/  ← Motor espacial (ReactFlow)
-├── 03_L3_internal_nodes/ ← Contenido (editores, previews)
-│
-└── _meta/               ← Arquitectura, contratos, guías
+ARCHITECTURE.md (modelo mental)
+    │
+    ├── _meta/06_flow_contract.md (contratos formales)
+    ├── _meta/implementation_example.md (código concreto)
+    │
+    ├── 01_L1_ui_app/
+    │     └── schema_translation.md ← Motor schemaToGraph()
+    │         (depende de: flow_contract)
+    │
+    ├── 02_L2_graph_viewer/
+    │     └── graph_foundations.md ← Estado canónico del editor
+    │         (habilita: layout_presets, node_types, state_history)
+    │
+    └── 03_L3_internal_nodes/
+          └── rich_content_nodes.md ← Contrato de nodos ricos
+              (habilita: markdown, json, table, code, image editors)
 ```
 
----
-
-## Dónde Empezar
-
-### Si quieres entender la arquitectura general
-→ `ARCHITECTURE.md`
-
-### Si quieres implementar algo
-1. Lee `ARCHITECTURE.md` para entender el nivel
-2. Busca el doc específico en L1/L2/L3
-3. Consulta `_meta/implementation_example.md` para ejemplos de código
-
-### Si quieres refactorizar
-→ `_meta/refactor_knowledgegraph.md`
-
-### Si quieres entender el futuro (Code IDE)
-→ `_meta/code_ide_as_graph.md`
+Cada doc L2/L3 tiene secciones `Depends On` y `Enables` — úsalas para saber qué leer antes.
 
 ---
 
-## Niveles de Profundidad
+## Carpetas
 
-| Profundidad | Para | Docs |
-|-------------|------|------|
-| 1. Conceptos | Entender el modelo | `ARCHITECTURE.md`, `_meta/*` |
-| 2. Contratos | Integrar partes | `_meta/flow_contract.md` |
-| 3. Implementación | Escribir código | `L*_*/*.md`, `_meta/implementation_example.md` |
-
----
-
-## Orden de Lectura Recomendado
-
-1. **`ARCHITECTURE.md`** - Modelo de 3 capas (15 min)
-2. **`_meta/flow_contract.md`** - Cómo fluyen datos (10 min)
-3. **`_meta/implementation_example.md`** - Ejemplo completo (15 min)
-4. Doc específico del nivel que necesitas
+| Carpeta | Qué contiene | Cuándo la necesitas |
+|---------|-------------|---------------------|
+| `01_L1_ui_app/` | Schema engine, integración API, explorer, testing | Implementar fetching, traducción a AST, o páginas orquestadoras |
+| `02_L2_graph_viewer/` | Canvas, layout, tipos de nodo, subflows, historial | Implementar ReactFlow, posicionamiento, interacción espacial |
+| `03_L3_internal_nodes/` | Editores ricos: markdown, JSON, tablas, código, imágenes | Implementar contenido dentro de los nodos |
+| `_meta/` | Contratos, arquitectura visual, refactor, ejemplos | Entender el diseño global o iniciar refactorizaciones |
+| `_legacy/` | Status matrix original y review de diseño pre-reorganización | Solo referencia histórica — decisiones ya incorporadas en los docs actuales |
 
 ---
 
-## Mapa de Contenedores (Anidamiento)
+## Status de implementación por área
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│ 01_L1_ui_app (Orquestador, Fetching, Schema)                │
-│                                                             │
-│   ┌─────────────────────────────────────────────────────┐   │
-│   │ 02_L2_graph_viewer (ReactFlow, Dagre, Topología)    │   │
-│   │                                                     │   │
-│   │   ┌────────────────────────────────────────────┐   │   │
-│   │   │ 03_L3_internal_nodes (Carne, UI rica)      │   │   │
-│   │   └────────────────────────────────────────────┘   │   │
-│   └─────────────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────────────┘
-```
+Derivado de `_legacy/00_status_matrix.md` y los docs individuales:
 
----
-
-## Preguntas Frecuentes
-
-**¿Necesito leer todo?**
-No. Lee `ARCHITECTURE.md` y luego el doc específico de tu nivel.
-
-**¿Los docs tienen código?**
-Sí. Los docs en `_meta/` tienen ejemplos concretos en TypeScript.
-
-**¿Esto es para runtime?**
-No. Los docs son arquitectura y contratos. El runtime es el código en `src/`.
-
-**¿Cómo sugiero cambios?**
-Edita el doc correspondiente y haz PR. Los docs evolucionan con el código.
+| Área | Status |
+|------|--------|
+| Graph canvas + interacción | **Parcial** — existe en sandbox |
+| Layout/posicionamiento | **Parcial** — sin presets ni motor compartido |
+| Tipos de nodo + registry | **Parcial** — custom nodes sin registro formal |
+| Rich content nodes | **Missing** — sin contrato unificado |
+| Markdown editor | **Parcial** — solo textarea |
+| JSON/YAML, Tablas, Código, Imágenes | **Missing** |
+| Schema-driven rendering | **Parcial** — concepto definido, sin implementación |
+| Subflows / documentos anidados | **Parcial** — solo en CV graph |
+| Persistencia | **Fragmentada** — sandbox local vs CV API |
 
 ---
 
-## Glosario
+## Decisiones de diseño clave
 
-| Término | Significado |
-|---------|-------------|
-| AST | Abstract Syntax Tree - representación intermedia del grafo |
-| L1/L2/L3 | Niveles de arquitectura (App/Canvas/Node) |
-| Schema | JSON declarativo que dicta cómo un dominio se traduce a grafo |
-| Token | Referencia visual (color, borde) agnóstica al dominio |
-| Cascarón | Componente que envuelve contenido (NodeShell) |
-| Payload | La "carne" o datos crudos (markdown, json) que L3 renderiza |
-| Motor de Traducción | Función `schemaToGraph()` que convierte datos a AST |
-| Data Down | Información fluye hacia abajo como props/AST |
-| Events Up | Intenciones fluyen hacia arriba como callbacks |
+Documentadas en `_legacy/2026-03-20-ui-plan-review-design.md`:
+
+- **elkjs desde el inicio** (no dagre)
+- **Library-first** — React Flow, elkjs, zustand, FlexLayout, RJSF directamente, sin wrappers especulativos
+- **Representation Schema** — YAML/JSON por proyecto que mapea estructura a comportamiento visual
+- **CSS theming** — Obsidian-style con `data-*` attributes, tokens MD3
+- **Extension model** — `registry.register()` para todo tipo de extensión
