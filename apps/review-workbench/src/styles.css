@@ -1,53 +1,13 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* ============================================================
-   TERRAN COMMAND DESIGN SYSTEM — Tailwind v4 theme
-   Equivalente a tailwind.config.js { theme: { extend: { ... } } }
-   ============================================================ */
-@theme {
-  /* Colors */
-  --color-background: #0c0e10;
-  --color-surface: #121416;
-  --color-surface-low: #1a1c1e;
-  --color-surface-container: #1e2022;
-  --color-surface-high: #282a2c;
-  --color-surface-highest: #333537;
-  --color-primary: #00f2ff;
-  --color-primary-dim: #99f7ff;
-  --color-primary-on: #00363a;
-  --color-secondary: #ffaa00;
-  --color-secondary-dim: #fecb00;
-  --color-secondary-on: #452b00;
-  --color-error: #ffb4ab;
-  --color-error-container: #93000a;
-  --color-outline: #747578;
-  --color-outline-variant: #3a494b;
-  --color-on-surface: #e2e2e5;
-  --color-on-muted: #849495;
-
-  /* Typography */
-  --font-headline: "Space Grotesk", sans-serif;
-  --font-body: Inter, sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
-
-  /* Z-index */
-  --z-editor-overlay: 10;
-  --z-svg-lines: 20;
-  --z-floating-card: 50;
-}
-
-/* ============================================================
-   BASE
-   ============================================================ */
 @layer base {
   body {
     @apply bg-background text-on-surface font-body m-0 p-0;
   }
 }
 
-/* ============================================================
-   UTILITIES
-   ============================================================ */
 @layer utilities {
   .scanline-overlay {
     background:
@@ -76,10 +36,8 @@
   }
 }
 
-/* Suppress ReactFlow white node background injection */
 .react-flow__node { background: transparent !important; }
 
-/* Dark-theme overrides for MiniMap and Controls */
 .react-flow__minimap { background: #0d0f10 !important; }
 .react-flow__minimap-mask { fill: rgba(0,0,0,0.45) !important; }
 .react-flow__controls { background: #0d0f10 !important; border: 1px solid rgba(255,255,255,0.08) !important; box-shadow: none !important; }

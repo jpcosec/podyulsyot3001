@@ -923,8 +923,7 @@ export interface KnowledgeGraphProps {
 function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange, readOnly = false }: KnowledgeGraphProps): JSX.Element {
   const initial = useMemo(
     () => initialNodes ? { nodes: initialNodes, edges: initialEdges ?? [] } : buildInitialGraph(),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [initialNodes, initialEdges],
   );
   const [nodes, setNodes, onNodesChange] = useNodesState<SimpleNode>(initial.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState<SimpleEdge>(initial.edges);

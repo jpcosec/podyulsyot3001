@@ -1,9 +1,0 @@
-{
-  "source": "tu_berlin",
-  "job_id": "999001",
-  "files": [
-    { "name": "motivation_letter.pdf", "path": "final/motivation_letter.pdf", "size_kb": 84 },
-    { "name": "cv.pdf",                "path": "final/cv.pdf",                "size_kb": 62 },
-    { "name": "application_email.md",  "path": "final/application_email.md",  "size_kb": 2  }
-  ]
-}
