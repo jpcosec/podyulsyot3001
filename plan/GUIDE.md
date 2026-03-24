@@ -21,11 +21,11 @@ Esta documentación describe **cómo construir**, no qué construir. Asume que y
 ```
 plan/
 ├── ARCHITECTURE.md      ← START HERE
-├── README.md
+├── GUIDE.md
 │
-├── L2_graph_viewer/     ← Motor espacial (ReactFlow)
-├── L3_internal_nodes/   ← Contenido (editores, previews)
-├── L1_ui_app/          ← Orquestación (API, páginas)
+├── 01_L1_ui_app/       ← Orquestación (API, páginas)
+├── 02_L2_graph_viewer/  ← Motor espacial (ReactFlow)
+├── 03_L3_internal_nodes/ ← Contenido (editores, previews)
 │
 └── _meta/               ← Arquitectura, contratos, guías
 ```
@@ -69,25 +69,20 @@ plan/
 
 ---
 
-## Mapas de Dependencias
+## Mapa de Contenedores (Anidamiento)
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                        ARCHITECTURE                        │
-└─────────────────────────┬───────────────────────────────────┘
-                          │
-         ┌────────────────┼────────────────┐
-         ▼                ▼                ▼
-    L2_graph_viewer   L3_internal_nodes   L1_ui_app
-    (Motor espacial)   (Contenido)        (Orquestación)
-         │                │                │
-         └────────────────┴────────────────┘
-                          │
-                          ▼
-               ┌───────────────────────┐
-               │   _meta/            │
-               │ (Contratos, guías)  │
-               └───────────────────────┘
+│ 01_L1_ui_app (Orquestador, Fetching, Schema)                │
+│                                                             │
+│   ┌─────────────────────────────────────────────────────┐   │
+│   │ 02_L2_graph_viewer (ReactFlow, Dagre, Topología)    │   │
+│   │                                                     │   │
+│   │   ┌────────────────────────────────────────────┐   │   │
+│   │   │ 03_L3_internal_nodes (Carne, UI rica)      │   │   │
+│   │   └────────────────────────────────────────────┘   │   │
+│   └─────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -112,8 +107,12 @@ Edita el doc correspondiente y haz PR. Los docs evolucionan con el código.
 
 | Término | Significado |
 |---------|-------------|
-| AST | Abstract Syntax Tree - representación intermedia |
+| AST | Abstract Syntax Tree - representación intermedia del grafo |
 | L1/L2/L3 | Niveles de arquitectura (App/Canvas/Node) |
-| Schema | Contrato que define cómo renderizar datos |
-| Token | Referencia visual (color, borde) agnóstica |
+| Schema | JSON declarativo que dicta cómo un dominio se traduce a grafo |
+| Token | Referencia visual (color, borde) agnóstica al dominio |
 | Cascarón | Componente que envuelve contenido (NodeShell) |
+| Payload | La "carne" o datos crudos (markdown, json) que L3 renderiza |
+| Motor de Traducción | Función `schemaToGraph()` que convierte datos a AST |
+| Data Down | Información fluye hacia abajo como props/AST |
+| Events Up | Intenciones fluyen hacia arriba como callbacks |

@@ -14,6 +14,17 @@
 
 **Regla de Oro:** Un nivel no puede saltarse a otro ni conocer la lógica del otro.
 
+### El Contrato (Data Down, Events Up)
+
+- **Data Down:** La información fluye de afuera hacia adentro.
+  - L1 traduce datos crudos a **AST** y se lo pasa a L2
+  - L2 extrae el **payload** y se lo pasa a L3
+  
+- **Events Up:** Las intenciones fluyen de adentro hacia afuera.
+  - L3 emite `onContentMutate` (el usuario cambió contenido)
+  - L2 atrapa el evento, actualiza el AST y dispara `onTopologyMutate`
+  - L1 atrapa el nuevo AST y lo guarda en disco
+
 ---
 
 ## Nivel 1: UI / APP (El Orquestador)
@@ -121,9 +132,16 @@ Ver: `_meta/flow_contract.md`
 ```
 plan/
 ├── README.md
+├── GUIDE.md
 ├── ARCHITECTURE.md                    # Este archivo
 │
-├── L2_graph_viewer/                  # Motor Espacial
+├── 01_L1_ui_app/                     # Orquestación
+│   ├── schema_translation.md
+│   ├── schema_integration.md
+│   ├── document_explorer.md
+│   └── validation_testing.md
+│
+├── 02_L2_graph_viewer/               # Motor Espacial
 │   ├── graph_foundations.md
 │   ├── layout_presets.md
 │   ├── node_types.md
@@ -131,7 +149,7 @@ plan/
 │   ├── subflows.md
 │   └── tree_mode.md
 │
-├── L3_internal_nodes/                # Contenido Rico
+├── 03_L3_internal_nodes/             # Contenido Rico
 │   ├── rich_content_nodes.md
 │   ├── text_annotation.md
 │   ├── markdown_editor.md
@@ -139,12 +157,6 @@ plan/
 │   ├── table_editor.md
 │   ├── code_annotation.md
 │   └── image_annotation.md
-│
-├── L1_ui_app/                        # Orquestación
-│   ├── schema_translation.md          # Motor Schema→AST
-│   ├── schema_integration.md
-│   ├── document_explorer.md
-│   └── validation_testing.md
 │
 ├── _meta/                            # Arquitectura
 │   ├── flow_contract.md
