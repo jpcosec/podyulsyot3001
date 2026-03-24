@@ -1,5 +1,5 @@
 import { Outlet, NavLink } from 'react-router-dom';
-import { LayoutDashboard, FolderOpen, Network, GitGraph } from 'lucide-react';
+import { LayoutDashboard, FolderOpen, Network, GitGraph, Layers } from 'lucide-react';
 import { cn } from '../../utils/cn';
 
 const NAV_ITEMS = [
@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { to: '/explorer', icon: FolderOpen,      label: 'Explorer',  end: false },
   { to: '/cv',       icon: Network,         label: 'Base CV',   end: false },
   { to: '/graph',    icon: GitGraph,        label: 'Graph',     end: false },
+  { to: '/schema',   icon: Layers,          label: 'Schema',    end: false },
 ];
 
 export function AppShell() {
