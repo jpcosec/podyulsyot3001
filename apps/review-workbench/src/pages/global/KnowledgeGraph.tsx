@@ -44,9 +44,13 @@ export interface SimpleNodeData extends Record<string, unknown> {
 
 interface KnowledgeGraphCtx {
   openNodeEditor: (nodeId: string) => void;
+  openFocusMode: (nodeId: string) => void;
+  toggleGroupCollapse: (groupId: string) => void;
 }
 const KnowledgeGraphContext = createContext<KnowledgeGraphCtx>({
   openNodeEditor: () => {},
+  openFocusMode: () => {},
+  toggleGroupCollapse: () => {},
 });
 
 export interface SimpleEdgeData extends Record<string, unknown> {
@@ -547,36 +551,81 @@ function PropertyValueInput({
 const SimpleNodeCard = memo(function SimpleNodeCard({ data, selected }: NodeProps<SimpleNode>) {
   const nodeData = data as unknown as SimpleNodeData;
   const id = useNodeId();
-  const { openNodeEditor } = useContext(KnowledgeGraphContext);
+  const { openNodeEditor, openFocusMode } = useContext(KnowledgeGraphContext);
+  const [showAttrs, setShowAttrs] = useState(false);
   const color = CATEGORY_COLORS[nodeData.category] ?? { border: 'rgba(116,117,120,0.4)', bg: 'rgba(30,32,34,0.9)' };
+  const hasProps = Object.keys(nodeData.properties).length > 0;
+
   return (
     <div
       className={cn(
-        "group border-2 border-outline-variant rounded-[10px] px-4 py-2.5 text-[0.83rem] font-medium text-center min-w-[110px] relative",
+        "group border-2 border-outline-variant rounded-[10px] text-[0.83rem] font-medium relative",
         selected && "ring-2 ring-primary/40",
       )}
-      style={{ borderLeft: `4px solid ${color.border}`, background: color.bg, color: '#e2e2e5' }}
-      title={tooltipFromProperties(nodeData.properties)}
+      style={{ borderLeft: `4px solid ${color.border}`, background: color.bg, color: '#e2e2e5', minWidth: 110 }}
     >
       <Handle id="top" type="source" position={Position.Top} className="opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity" />
       <Handle id="right" type="source" position={Position.Right} className="opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity" />
       <Handle id="bottom" type="source" position={Position.Bottom} className="opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity" />
       <Handle id="left" type="source" position={Position.Left} className="opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity" />
-      <span>{nodeData.name}</span>
-      <button
-        type="button"
+
+      {/* Header row: name + attrs toggle */}
+      <div className="flex items-center gap-1 px-3 py-2">
+        <span className="flex-1 text-center">{nodeData.name}</span>
+        {hasProps && (
+          <button
+            type="button"
+            className="text-on-muted hover:text-on-surface text-[0.6rem] font-mono leading-none nodrag"
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); setShowAttrs((v) => !v); }}
+            title="Toggle attributes"
+          >
+            {showAttrs ? '▲' : '▼'}
+          </button>
+        )}
+      </div>
+
+      {/* Inline attributes */}
+      {showAttrs && (
+        <div
+          className="px-3 pb-2 border-t border-outline-variant/40 text-left space-y-0.5 text-[0.68rem] nodrag"
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          {Object.entries(nodeData.properties).map(([k, v]) => (
+            <div key={k} className="flex gap-1.5 items-baseline">
+              <span className="text-on-muted font-mono shrink-0">{k}:</span>
+              <span className="text-on-surface break-words">{v}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Action bar: visible on hover or when selected */}
+      <div
         className={cn(
-          "absolute -top-2 -right-2 text-[0.65rem] bg-surface border border-outline-variant px-1 py-0.5 transition-opacity",
+          "absolute -top-6 right-0 flex gap-0.5 transition-opacity",
           selected ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto",
         )}
-        onMouseDown={(e) => e.stopPropagation()}
-        onClick={(e) => {
-          e.stopPropagation();
-          if (id) openNodeEditor(id);
-        }}
       >
-        Edit
-      </button>
+        <button
+          type="button"
+          className="text-[0.6rem] bg-surface-low border border-outline-variant px-1.5 py-0.5 text-on-muted hover:text-primary rounded-sm nodrag"
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => { e.stopPropagation(); if (id) openFocusMode(id); }}
+          title="Focus neighbourhood"
+        >
+          ⬡
+        </button>
+        <button
+          type="button"
+          className="text-[0.6rem] bg-surface-low border border-outline-variant px-1.5 py-0.5 text-on-muted hover:text-primary rounded-sm nodrag"
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => { e.stopPropagation(); if (id) openNodeEditor(id); }}
+          title="Edit node"
+        >
+          Edit
+        </button>
+      </div>
     </div>
   );
 });
@@ -594,7 +643,7 @@ export function deduplicateByEndpoints<T extends { source: string; target: strin
 const GroupNode = memo(function GroupNode({ data, selected }: NodeProps<SimpleNode>) {
   const nodeData = data as unknown as SimpleNodeData;
   const id = useNodeId()!;
-  const { setNodes, setEdges, getNodes, getEdges } = useReactFlow();
+  const { toggleGroupCollapse } = useContext(KnowledgeGraphContext);
   const collapsed = nodeData.collapsed ?? false;
   const color = CATEGORY_COLORS[nodeData.category] ?? { border: 'rgba(116,117,120,0.4)', bg: 'rgba(30,32,34,0.9)' };
 
@@ -605,57 +654,6 @@ const GroupNode = memo(function GroupNode({ data, selected }: NodeProps<SimpleNo
     ),
   );
 
-  const toggleCollapse = useCallback(() => {
-    const currentNode = getNodes().find((n) => n.id === id);
-    const currentCollapsed = (currentNode?.data as SimpleNodeData | undefined)?.collapsed ?? false;
-    const next = !currentCollapsed;
-    const childIds = new Set(getNodes().filter((n) => n.parentId === id).map((n) => n.id));
-
-    if (next) {
-      const proxyEdges = deduplicateByEndpoints(
-        getEdges()
-          .filter((e) => childIds.has(e.source) || childIds.has(e.target))
-          .map((e) => ({
-            ...e,
-            id: `proxy:${id}:${e.id}`,
-            source: childIds.has(e.source) ? id : e.source,
-            target: childIds.has(e.target) ? id : e.target,
-            data: { ...e.data, relationType: 'proxy' },
-            style: { strokeDasharray: '4 3', opacity: 0.5 },
-          })),
-      ).filter((e) => e.source !== e.target);
-
-      setEdges((all) => [
-        ...all.map((e) =>
-          childIds.has(e.source) || childIds.has(e.target) ? { ...e, hidden: true } : e,
-        ),
-        ...proxyEdges,
-      ]);
-    } else {
-      setEdges((all) =>
-        all
-          .filter((e) => !e.id.startsWith(`proxy:${id}:`))
-          .map((e) =>
-            childIds.has(e.source) || childIds.has(e.target) ? { ...e, hidden: false } : e,
-          ),
-      );
-    }
-
-    setNodes((all) =>
-      all.map((n) => {
-        if (n.parentId === id) return { ...n, hidden: next };
-        if (n.id === id) {
-          return {
-            ...n,
-            data: { ...n.data, collapsed: next },
-            style: next ? { ...n.style, height: 48 } : { ...n.style, height: undefined },
-          };
-        }
-        return n;
-      }),
-    );
-  }, [id, getNodes, getEdges, setNodes, setEdges]); // `collapsed` intentionally omitted — read live
-
   return (
     <>
       <NodeToolbar position={Position.Top} align="start" isVisible>
@@ -663,7 +661,7 @@ const GroupNode = memo(function GroupNode({ data, selected }: NodeProps<SimpleNo
           <button
             type="button"
             className="text-primary hover:text-primary-dim transition-colors font-mono leading-none"
-            onClick={toggleCollapse}
+            onClick={() => toggleGroupCollapse(id)}
           >
             {collapsed ? '▶' : '▼'}
           </button>
@@ -1352,6 +1350,72 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange, readOnl
     [nodes],
   );
 
+  const openFocusMode = useCallback(
+    (nodeId: string) => {
+      setFocusedNodeId(nodeId);
+      setFocusedRelationId(null);
+      setEditorState("focus");
+      setTimeout(() => fitView({ nodes: [{ id: nodeId }], duration: 350, padding: 0.55 }), 50);
+    },
+    [fitView],
+  );
+
+  const toggleGroupCollapse = useCallback(
+    (groupId: string) => {
+      const currentNode = nodes.find((n) => n.id === groupId);
+      const currentCollapsed = (currentNode?.data as SimpleNodeData | undefined)?.collapsed ?? false;
+      const next = !currentCollapsed;
+      const childIds = new Set(nodes.filter((n) => n.parentId === groupId).map((n) => n.id));
+
+      if (next) {
+        // Collapsing: hide child edges, inject inherited proxy edges
+        const proxyEdges = deduplicateByEndpoints(
+          edges
+            .filter((e) => childIds.has(e.source) || childIds.has(e.target))
+            .map((e) => ({
+              ...e,
+              id: `proxy:${groupId}:${e.id}`,
+              source: childIds.has(e.source) ? groupId : e.source,
+              target: childIds.has(e.target) ? groupId : e.target,
+              data: { relationType: 'inherited', properties: e.data?.properties ?? {} },
+              style: { strokeDasharray: '3 4', opacity: 0.55 },
+            })),
+        ).filter((e) => e.source !== e.target);
+
+        setEdges((all) => [
+          ...all.map((e) =>
+            childIds.has(e.source) || childIds.has(e.target) ? { ...e, hidden: true } : e,
+          ),
+          ...proxyEdges,
+        ]);
+      } else {
+        // Expanding: remove proxy edges, restore child edges
+        setEdges((all) =>
+          all
+            .filter((e) => !e.id.startsWith(`proxy:${groupId}:`))
+            .map((e) =>
+              childIds.has(e.source) || childIds.has(e.target) ? { ...e, hidden: false } : e,
+            ),
+        );
+      }
+
+      setNodes((all) =>
+        all.map((n) => {
+          if (n.parentId === groupId) return { ...n, hidden: next };
+          if (n.id === groupId) {
+            return {
+              ...n,
+              data: { ...n.data, collapsed: next },
+              style: next ? { ...n.style, height: 48 } : { ...n.style, height: undefined },
+            };
+          }
+          return n;
+        }),
+      );
+    },
+    [nodes, edges, setNodes, setEdges],
+  );
+
   const openRelationFocus = useCallback(
     (edgeId: string) => {
       const edge = edges.find((item) => item.id === edgeId);
@@ -1428,6 +1492,14 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange, readOnl
           color: "#334155",
         },
       };
+      // Style inherited (proxy) edges distinctly — dotted, dimmer, no arrowhead
+      if (edge.data?.relationType === 'inherited') {
+        return {
+          ...baseEdge,
+          style: { strokeDasharray: '3 4', opacity: 0.5, stroke: 'rgba(116,117,120,0.7)' },
+          markerEnd: undefined,
+        };
+      }
       if (!inFocusModes) {
         return baseEdge;
       }
@@ -1480,21 +1552,14 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange, readOnl
       if (editorState === "edit_node" || editorState === "edit_relation") {
         return;
       }
-      if (editorState === "focus") {
-        const isActive = node.id === focusedNodeId || neighborIds.has(node.id);
-        if (!isActive) {
-          return;
-        }
-      }
-      if (editorState === "focus_relation" && !focusedRelationEndpointIds.has(node.id)) {
-        return;
-      }
+      // Just track selection — focus mode must be triggered explicitly via the ⬡ button
       setFocusedNodeId(node.id);
       setFocusedRelationId(null);
-      setEditorState("focus");
-      setTimeout(() => fitView({ nodes: [{ id: node.id }], duration: 350, padding: 0.55 }), 50);
+      if (editorState === "focus" || editorState === "focus_relation") {
+        setEditorState("browse");
+      }
     },
-    [editorState, focusedNodeId, neighborIds, fitView, focusedRelationEndpointIds],
+    [editorState],
   );
 
   const onNodeDoubleClick = useCallback(
@@ -2256,7 +2321,7 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange, readOnl
   }, [editorState, onUnfocus]);
 
   return (
-    <KnowledgeGraphContext.Provider value={{ openNodeEditor }}>
+    <KnowledgeGraphContext.Provider value={{ openNodeEditor, openFocusMode, toggleGroupCollapse }}>
     <div className="flex h-screen">
       {!readOnly && <aside className={cn(
         "bg-surface border-r border-outline-variant overflow-y-auto transition-all duration-200 shrink-0 flex flex-col gap-3 py-3",
