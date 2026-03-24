@@ -44,7 +44,7 @@ export function schemaToGraph(schema: DocumentSchema): {
 
     nodes.push({
       id: type.id,
-      type: type.render_as === 'group' ? 'group' : 'default',
+      type: 'simple',
       position: { x: 0, y: 0 },
       data: {
         name: type.label,

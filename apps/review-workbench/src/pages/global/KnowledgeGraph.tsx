@@ -824,6 +824,14 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange, readOnl
   const currentSnapshot = useMemo(() => serializeGraph(nodes, edges), [nodes, edges]);
   const dirty = currentSnapshot !== savedSnapshot;
 
+  // Auto-fit view on mount when readOnly (nodes have pre-computed positions)
+  useEffect(() => {
+    if (readOnly) {
+      setTimeout(() => fitView({ duration: 350, padding: 0.12 }), 80);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Notify parent of any graph change (used by embedding pages like Match)
   useEffect(() => {
     onChange?.(nodes, edges);
@@ -2110,7 +2118,7 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange, readOnl
 
   return (
     <div className="flex h-screen">
-      <aside className={cn(
+      {!readOnly && <aside className={cn(
         "bg-surface border-r border-outline-variant overflow-y-auto transition-all duration-200 shrink-0 flex flex-col gap-3 py-3",
         sidebarOpen ? "w-[280px] px-4" : "w-10 overflow-hidden px-1",
       )}>
@@ -2421,7 +2429,7 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange, readOnl
             </SidebarSection>
           </div>
         ) : null}
-      </aside>
+      </aside>}
 
       <div className="flex-1 relative" ref={canvasRef}>
         <ReactFlow<SimpleNode, SimpleEdge>
