@@ -27,9 +27,10 @@
 - Inyectar datos limpios al Nivel 2
 
 ### Docs
-- `L1_ui_app/schema_integration.md`
-- `L1_ui_app/document_explorer.md`
-- `L1_ui_app/validation_testing.md`
+- `L1_ui_app/schema_translation.md` - Motor de traducción Schema→AST
+- `L1_ui_app/schema_integration.md` - Integración con APIs
+- `L1_ui_app/document_explorer.md` - Explorador
+- `L1_ui_app/validation_testing.md` - Testing
 
 ---
 
@@ -140,6 +141,7 @@ plan/
 │   └── image_annotation.md
 │
 ├── L1_ui_app/                        # Orquestación
+│   ├── schema_translation.md          # Motor Schema→AST
 │   ├── schema_integration.md
 │   ├── document_explorer.md
 │   └── validation_testing.md
