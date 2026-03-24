@@ -1,5 +1,22 @@
+import dagre from '@dagrejs/dagre';
 import type { DocumentSchema, SchemaNodeType } from '../../../schemas/types';
 import type { SimpleNode, SimpleEdge } from '../../../pages/global/KnowledgeGraph';
+
+const NODE_WIDTH = 180;
+const NODE_HEIGHT = 48;
+
+function applyDagreLayout(nodes: SimpleNode[], edges: SimpleEdge[]): SimpleNode[] {
+  const graph = new dagre.graphlib.Graph();
+  graph.setDefaultEdgeLabel(() => ({}));
+  graph.setGraph({ rankdir: 'LR', nodesep: 52, ranksep: 120, marginx: 24, marginy: 24 });
+  nodes.forEach((n) => graph.setNode(n.id, { width: NODE_WIDTH, height: NODE_HEIGHT }));
+  edges.forEach((e) => graph.setEdge(e.source, e.target));
+  dagre.layout(graph);
+  return nodes.map((n) => {
+    const pos = graph.node(n.id) as { x: number; y: number } | undefined;
+    return pos ? { ...n, position: { x: pos.x - NODE_WIDTH / 2, y: pos.y - NODE_HEIGHT / 2 } } : n;
+  });
+}
 
 function renderToken(type: SchemaNodeType): string {
   const map: Record<string, string> = {
@@ -75,5 +92,5 @@ export function schemaToGraph(schema: DocumentSchema): {
     });
   }
 
-  return { nodes, edges };
+  return { nodes: applyDagreLayout(nodes, edges), edges };
 }
