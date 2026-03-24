@@ -134,7 +134,11 @@ Esto importa especialmente porque el sistema planea ser **multi-dominio**. Cada 
 
 - **Validación cruzada:** "Este nodo requiere al menos 3 tags" es una regla de negocio (L1), pero se manifiesta en la UI del editor (L3). ¿L1 pasa reglas de validación como props a L3 a través de L2?
 
-**Recomendación:** No abandonar la regla, pero documentar los **escape hatches legítimos**: React Context para estado de selección (read-only desde L3), event bus para drag-drop cross-layer, focus management como concern transversal fuera de las 3 capas.
+**Recomendación:** No abandonar la regla, pero documentar los **escape hatches legítimos** — con cuidado de no crear problemas nuevos:
+
+- **Estado compartido cross-layer:** NO usar React Context genérico. Un `SelectionContext` que cambia con cada clic causará re-render de los 100 nodos L3 que lo consumen. La solución performante son **selectores atómicos** (Zustand ya está en el proyecto): `useStore(state => state.selectedNodeId === myId)` — cada nodo solo re-renderiza cuando *su propio* estado de selección cambia.
+- **Drag-drop cross-layer:** Event bus dedicado o extensión del contrato de L2 con un `onExternalDrop` que L2 proxea sin interpretar.
+- **Focus management:** Concern transversal fuera de las 3 capas (ver punto 9).
 
 ### 8. El schema es un DSL que va a crecer sin control
 
@@ -146,6 +150,139 @@ El schema de traducción ya tiene: `match_rule`, `node_types`, `edge_types`, `re
 - **Migración** — schemas viejos con datos existentes
 
 **Recomendación:** JSON Schema para validar los representation schemas. Versión explícita (`"schema_version": "1.0"`). Función `validateSchema()` que corre antes de `schemaToGraph()`.
+
+### 9. Accesibilidad (a11y) y Focus Management no existen como concern
+
+La crítica del punto 7 menciona conflictos de atajos de teclado, pero el problema es más profundo: **navegar un grafo espacial con teclado o lector de pantalla no tiene contrato**.
+
+**El conflicto de foco entre capas:** Cuando el usuario presiona Tab, ¿quién controla el destino? ¿L2 (Canvas) moviendo foco de nodo a nodo? ¿O L3 (editor interno) navegando entre inputs de un formulario JSON? Si un Monaco editor en L3 captura todo el input de teclado (focus trap), el usuario no puede salir al canvas sin saber el atajo mágico.
+
+Esto no es un nice-to-have de accesibilidad — es un **bug de UX** que afecta a todos los usuarios power-user que navegan con teclado.
+
+**Recomendación:** Contrato explícito de delegación de foco con dos modos:
+
+1. **Modo Canvas (L2 owns focus):** Flechas direccionales navegan entre nodos. Tab cicla nodos. L3 renderiza en modo pasivo (preview, no editable).
+2. **Modo Edición (L3 owns focus):** `Enter` en un nodo "hunde" el foco hacia L3, delegando control total al editor interno. `Escape` devuelve el foco a L2.
+
+Esto es análogo a cómo funcionan las celdas en Google Sheets (navegar vs editar) y es un patrón probado.
+
+### 10. TypeScript desaparece en runtime — falta validación de datos reales
+
+El punto 1 propone discriminated unions para tipar el payload. Correcto, pero insuficiente: **TypeScript no existe en tiempo de ejecución**. Si la API o Neo4j envía un JSON que dice `contentType: 'markdown'` pero `content` es un número, L3 crashea igual — TypeScript no lo va a prevenir.
+
+Esto es crítico porque el sistema es **multi-dominio**: cada schema nuevo es una fuente nueva de datos malformados, y la frontera L1→L2 es donde entran datos del mundo exterior.
+
+**Recomendación:** Integrar validación en runtime (Zod o Valibot) en la frontera entre el mundo exterior y el AST. Esto se puede hacer en dos puntos:
+
+1. **`schemaToGraph()` valida sus outputs** — cada ASTNode sale validado contra el schema Zod correspondiente a su `contentType`. Si falla, el nodo se marca con un tipo especial `error` en lugar de crashear.
+2. **El Node Type Registry valida en el lookup** — cuando L2 le pide al registry el renderer para un `typeId`, el registry valida el payload contra el `payload_schema` registrado antes de retornar el componente.
+
+```typescript
+// Ejemplo: el pipeline de traducción con validación
+const matched = matchNodes(rawData, schema.node_types);
+const topology = resolveTopology(matched, schema.topology);
+const ast = resolveEdges(topology, schema.edge_types);
+const { valid, errors } = validateAST(ast, payloadSchemas);  // Zod validation
+// errors → nodos con type 'error' que renderizan fallback visual
+```
+
+Esto emparejado con tipar los `any` es probablemente el **cambio de mayor impacto con menor esfuerzo** — da estabilidad inmediata sin tocar la arquitectura de capas.
+
+### 11. Los eventos semánticos no están preparados para colaboración
+
+El sistema asume un solo usuario. Pero las arquitecturas de grafos (Figma, Miro, FigJam) suelen evolucionar hacia multiplayer, y la estructura de los eventos semánticos definida hoy determina si eso es posible mañana.
+
+El doc `01c_editor_state_and_history_contract.md` define acciones semánticas (create node, edit payload, etc.) pero como **operaciones imperativas** acopladas al estado local, no como **objetos serializables**.
+
+**El costo de no hacer nada:** Si en 6 meses se quiere agregar colaboración, hay que reescribir toda la capa de history + persistence para extraer los eventos en un formato que se pueda transmitir (WebSocket) o reconciliar (CRDTs).
+
+**El costo de hacerlo ahora:** Casi cero — solo requiere que las acciones semánticas sean **objetos planos serializables** en lugar de closures o mutaciones directas:
+
+```typescript
+// En lugar de:
+setNodes(prev => prev.map(n => n.id === id ? { ...n, data: newData } : n));
+
+// Emitir:
+const action: SemanticAction = {
+  type: 'PAYLOAD_EDITED',
+  nodeId: id,
+  prevPayload: oldData,
+  nextPayload: newData,
+  actor: userId,
+  timestamp: Date.now(),
+};
+dispatch(action); // history lo registra, store lo aplica
+```
+
+No se necesita implementar CRDTs ni WebSockets hoy. Solo estructurar las acciones como datos puros (estilo Redux) deja la puerta abierta sin costo adicional.
+
+### 12. El payload se renderiza como HTML — no hay sanitization
+
+El sistema acepta contenido arbitrario en `payload.contentData` y lo pasa a editores que lo renderizan como HTML (markdown → HTML, JSON preview con syntax highlighting, etc.). No hay sanitization en ningún punto del pipeline.
+
+**El vector de ataque:** Un payload con `contentType: 'markdown'` y `content: '![img](x onerror=alert(1))'` o contenido con `<script>` embebido pasa directo de Neo4j/API → `schemaToGraph()` → L2 → L3 → `dangerouslySetInnerHTML` o equivalente en el markdown renderer.
+
+Esto no es un problema hipotético — el sistema está diseñado para renderizar contenido que viene de fuentes externas (job postings scrapeados, datos de API, contenido editado por usuarios).
+
+**Recomendación:** Sanitization en la frontera, no en el renderer. Dos opciones:
+
+1. **En `schemaToGraph()`** — sanitizar todo `contentData` al generar el AST. Ventaja: un solo punto. Desventaja: performance hit en la traducción.
+2. **En el Node Type Registry** — cada tipo registra su sanitizer junto con su renderer. Ventaja: sanitization específica por tipo (markdown necesita DOMPurify, JSON no necesita nada, imágenes necesitan validar URLs). Desventaja: fácil de olvidar al registrar un tipo nuevo.
+
+**Opción recomendada:** La 2, pero con un **default deny** — si un tipo no registra sanitizer, el registry lo envuelve en un sanitizer genérico (DOMPurify con config estricta). Esto empareja bien con la validación Zod del punto 10: Zod valida la forma, DOMPurify valida el contenido.
+
+### 13. El Node Type Registry necesita soportar lazy loading
+
+El registry de `01b_node_type_registry_and_modes.md` define renderers por tipo: `minimized`, `focus`, `edit_in_context`, `full_editor`. Pero si todos los renderers se importan estáticamente, el bundle carga Monaco, el markdown renderer, el table editor, y todos los demás al inicio — independientemente de si el grafo actual los necesita.
+
+Esto es una decisión de **contrato del registry**, no solo de build:
+
+```typescript
+// Estático — todo en el bundle inicial
+renderers: {
+  minimized: MinimalCodeView,
+  full_editor: MonacoEditor,  // +800KB
+}
+
+// Lazy — carga bajo demanda
+renderers: {
+  minimized: MinimalCodeView,
+  full_editor: React.lazy(() => import('./MonacoEditor')),
+}
+```
+
+Si el registry no está diseñado para aceptar `React.lazy()` componentes desde el día 1, retrofit es doloroso (hay que agregar `<Suspense>` boundaries, fallbacks, y manejar el estado de carga dentro del NodeShell).
+
+**Recomendación:** El contrato del registry debe exigir que `renderers` sea `ComponentType | LazyExoticComponent`, y `NodeShell` debe envolver el render en `<Suspense fallback={<NodeSkeleton />}>` siempre. Costo: ~5 líneas de código ahora. Costo de no hacerlo: refactor de todos los node types cuando el bundle pase el threshold.
+
+### 14. No hay Contract Testing entre capas
+
+El aislamiento L1/L2/L3 es una promesa verbal — no hay nada que la enforcea con el tiempo. Un desarrollador puede agregar un campo al contrato de L2, olvidar actualizar el schema parser de L1, y el sistema compila pero crashea en runtime.
+
+**Recomendación:** Tests que validan exclusivamente que las salidas de una capa son consumibles por la siguiente, sin montar UI:
+
+```typescript
+// contract.test.ts
+describe('L1 → L2 contract', () => {
+  it('schemaToGraph output satisfies AppToCanvasProps', () => {
+    const ast = schemaToGraph(sampleRawData, sampleSchema);
+    // Zod parse — falla si el contrato cambió sin actualizar el parser
+    AppToCanvasPropsSchema.parse({ astNodes: ast.nodes, astEdges: ast.edges });
+  });
+});
+
+describe('L2 → L3 contract', () => {
+  it('every ASTNode.payload is valid for its registered type', () => {
+    const ast = schemaToGraph(sampleRawData, sampleSchema);
+    for (const node of ast.nodes) {
+      const schema = registry.getPayloadSchema(node.typeId);
+      schema.parse(node.payload); // Zod — fails if payload shape drifted
+    }
+  });
+});
+```
+
+Si Zod ya se adopta para validación runtime (punto 10), estos tests salen casi gratis — reusan los mismos schemas.
 
 ---
 
@@ -195,10 +332,43 @@ La arquitectura no tiene respuesta para auto-save, conflict detection, o dirty s
 
 ## Resumen: Qué resolver antes de implementar
 
-1. **Tipar el payload** — discriminated union, no `any`
-2. **Reconciliar el Node Type Registry con los contratos** — el registry debería ser la fuente de verdad para tipos de nodo, no el enum en el contrato
-3. **Diseñar la serialización inversa** (`astToDomain`) antes de implementar edición
-4. **Decidir dagre vs elkjs** una sola vez, actualizar todos los docs
-5. **Definir la frontera de undo** entre L3 (local) y L2 (semántico)
-6. **Agregar modelo de error** a los contratos y a `schemaToGraph()`
-7. **Documentar los escape hatches** del aislamiento estricto (context, event bus, focus)
+### Impacto alto, esfuerzo bajo (hacer primero)
+
+1. **Tipar el payload + validación Zod en runtime** — discriminated unions en compile time, Zod en la frontera L1→L2. Da estabilidad inmediata sin cambiar la arquitectura. Los schemas Zod se reusan para contract testing.
+2. **Reconciliar el Node Type Registry con los contratos** — el registry es la fuente de verdad para tipos de nodo, no el enum en el contrato. Elimina el acoplamiento L2→L3.
+3. **Decidir dagre vs elkjs** una sola vez, actualizar todos los docs. Es una decisión de 10 minutos que desbloquea coherencia en 5 documentos.
+4. **Sanitization del payload** — DOMPurify como default deny en el registry. Sin esto, contenido externo (job postings scrapeados) es un vector XSS directo.
+5. **Lazy loading en el registry** — `<Suspense>` en NodeShell + renderers como `ComponentType | LazyExoticComponent`. ~5 líneas ahora, evita refactor de todos los node types después.
+
+### Impacto alto, esfuerzo medio (diseñar antes de implementar)
+
+6. **Diseñar la serialización inversa** (`astToDomain`) — sin esto, la edición no puede persistirse. Más difícil que el parsing original.
+7. **Definir la frontera de undo** entre L3 (local/keystroke) y L2 (semántico/action). Documentar que `onContentMutate` es el punto de transición.
+8. **Contrato de delegación de foco** — modo Canvas (L2 owns) vs modo Edición (L3 owns), con Enter/Escape como transición. Afecta a todos los usuarios de teclado.
+9. **Modelo de error** en los contratos y en `schemaToGraph()` — nodos `error` con fallback visual, no crashes silenciosos.
+
+### Impacto medio, esfuerzo bajo (inversión de futuro casi gratis)
+
+10. **Eventos semánticos como objetos serializables** — estructurar las acciones de history como datos puros (no closures). Prepara colaboración sin costo adicional hoy.
+11. **Contract tests entre capas** — si Zod ya está adoptado, estos tests salen casi gratis. Previenen drift silencioso entre L1→L2→L3.
+
+### Documentar y decidir
+
+12. **Escape hatches del aislamiento** — Zustand con selectores atómicos (no Context), event bus para drag-drop, focus management como concern transversal.
+13. **Versionado y validación del schema DSL** — `schema_version`, `validateSchema()`, JSON Schema para los representation schemas.
+
+---
+
+## Fuera de alcance de este documento
+
+Los siguientes temas son válidos pero pertenecen a documentos separados — son decisiones de **implementación y operación**, no de arquitectura de capas. Se listan aquí para que no se pierdan:
+
+| Tema | Doc sugerido | Razón |
+|------|-------------|-------|
+| Virtualización del canvas con 1000+ nodos | Extensión de `02_L2_graph_viewer/graph_foundations.md` | Es una decisión de implementación de L2, no un problema de contrato entre capas |
+| Testing strategy (e2e vs unit vs Storybook) | Nuevo: `_meta/testing_strategy.md` | Tooling y proceso, no arquitectura |
+| Mock API → L1 y caching (React Query) | Extensión de `01_L1_ui_app/schema_integration.md` | Es implementación de la capa de datos de L1 |
+| Estructura de archivos en `src/` | Nuevo: `_meta/project_structure.md` | Organización física, no conceptual |
+| Bundle splitting | Nuevo: `_meta/project_structure.md` | Build concern — aunque lazy loading del registry (punto 13 arriba) lo habilita |
+| Migración desde código legacy | Nuevo: `_meta/migration_plan.md` | Plan de ejecución, no análisis de diseño |
+| Logging y observabilidad | Nuevo: `_meta/observability.md` | Concern operacional transversal |
