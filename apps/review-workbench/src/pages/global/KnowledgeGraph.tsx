@@ -2511,6 +2511,48 @@ function NodeEditorInner({ initialNodes, initialEdges, onSave, onChange, readOnl
         </div>
       ) : null}
 
+      {readOnly && editorState === "edit_node" && focusedNode ? (
+        <div
+          className="fixed inset-0 bg-slate-900/35 backdrop-blur-[2px] flex items-center justify-center z-50"
+          onClick={() => setEditorState("browse")}
+        >
+          <div
+            className="bg-surface border border-outline-variant p-6 flex flex-col gap-4 w-[500px] max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="text-on-surface font-mono text-sm">{(focusedNode.data as SimpleNodeData).name}</h2>
+              <button
+                type="button"
+                className="text-on-muted hover:text-on-surface font-mono text-xs px-2 py-1 border border-outline-variant bg-transparent"
+                onClick={() => setEditorState("browse")}
+              >
+                ✕
+              </button>
+            </div>
+            {(() => {
+              const metaRecord = (focusedNode.data as SimpleNodeData).meta as Record<string, unknown> | undefined;
+              const schemaType = metaRecord?.['schemaType'] as { attributes?: { name: string; type: string; required: boolean; values?: string[]; note?: string }[] } | undefined;
+              const attrs = schemaType?.attributes ?? [];
+              return attrs.length > 0 ? (
+                <div className="flex flex-col gap-1">
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-on-muted mb-1">Attributes</span>
+                  {attrs.map((attr) => (
+                    <div key={attr.name} className="flex items-start gap-2 font-mono text-[11px]">
+                      <span className="text-primary w-36 shrink-0">{attr.name}</span>
+                      <span className="text-on-muted">{attr.type}</span>
+                      {attr.required && <span className="text-error/70 ml-auto">required</span>}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="font-mono text-[10px] text-on-muted/50 italic">No attributes defined.</p>
+              );
+            })()}
+          </div>
+        </div>
+      ) : null}
+
       {!readOnly && editorState === "edit_node" && nodeDraft ? (
         <div className="fixed inset-0 bg-slate-900/35 backdrop-blur-[2px] flex items-center justify-center z-50">
           <div className="bg-surface border border-outline-variant p-6 flex flex-col gap-4 w-[500px] max-h-[90vh] overflow-y-auto">
