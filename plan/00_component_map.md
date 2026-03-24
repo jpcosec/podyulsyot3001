@@ -1,140 +1,191 @@
 # Component Map — Terran Command UI
 
-Mapa de componentes para el rediseño. Define qué vistas existen, cómo se componen,
-y qué átomos consume cada molécula.
+> **START HERE** - Define qué componentes existen y cómo se comunican.
 
 ---
 
-## Vistas y Layout
+## Capas de Componentes
 
-| Spec | Vista | Layout Base | Main | Secundarios |
-|------|-------|-------------|------|-------------|
-| A1 | Portfolio Dashboard | Grid 9/3 | `<PortfolioTable>` `<ProgressSegmented>` | `<DeadlineSensors>` `<SystemStats>` |
-| A2 | Data Explorer | `<SplitPane>` 30/70 | `<IntelligentEditor mode="fold">` | `<FileTree>` |
-| A3 | Base CV Editor | Grid 70/30 | `<GraphCanvas>` (nodos CV/Skills) | `<NodeInspectorSidebar>` |
-| B0 | Job Flow Inspector | Columna única | `<PipelineTimeline>` `<HitlCtaBanner>` | — |
-| B1 | Scrape Diagnostics | Columna + Control | `<DiagnosticCard>` `<ImagePreview>` | `<ScrapeControlPanel>` |
-| B2 | Extract & Understand | `<SplitPane>` 50/50 | `<IntelligentEditor mode="tag-hover">` `<RequirementList>` | `<ExtractControlPanel>` |
-| B3 | Match | `<SplitPane>` 3 col | `<GraphCanvas>` (edges evaluados) | `<EvidenceBankSidebar>` `<MatchControlPanel>` |
-| B4 | Generate Documents | `<SplitPane>` 50/50 | `<IntelligentEditor mode="diff">` `<DocumentTabs>` | `<PackageControlPanel>` |
+| Capa | Descripción | Ubicación |
+|-------|-------------|-----------|
+| **Foundation** | Átomos y moléculas base | `_foundation/` |
+| **L1** | Vistas y páginas (orquestación) | `01_L1_ui_app/` |
+| **L2** | Graph Canvas (motor espacial) | `02_L2_graph_viewer/` |
+| **L3** | Internal Nodes (contenido) | `03_L3_internal_nodes/` |
 
 ---
 
-## Moléculas → Átomos
+## Arquitectura de Capas
 
-| Molécula | Átomos que consume | Rol de cada átomo |
-|----------|--------------------|-------------------|
-| `<IntelligentEditor>` | `<Tag>` `<Badge>` `<Icon>` | `<Tag>` resalta spans en el texto. `<Badge>` aparece en el hover card. |
-| `<GraphCanvas>` | `<Badge>` `<Icon>` | `<Badge>` muestra scores en los edges. `<Icon>` en los nodos. |
-| `<PortfolioTable>` | `<Badge>` `<Icon>` | `<Badge status="verified\|pending">` para estado del job. |
-| `<HitlCtaBanner>` | `<Button>` `<Icon>` | Botón gigante `variant="primary"` para ir al review. |
-| `<RequirementList>` | `<Badge>` `<Button>` `<Icon>` | `<Badge>` para prioridad (must/nice). `<Button variant="ghost">` para borrar. |
-| `<EvidenceBankSidebar>` | `<Badge>` `<Icon>` | `<Badge>` para categoría (skill/project). `<Icon name="drag_indicator">`. |
-| `<FileTree>` | `<Icon>` | `<Icon>` dinámico según extensión (`.json`, `.md`, carpeta). |
-| `<ControlPanel>` (todos) | `<Button>` `<Spinner>` `<Kbd>` | `<Button>` para commit/guardar. `<Spinner>` mientras guarda. `<Kbd>` para atajos. |
+```
+┌─────────────────────────────────────────────────────────────┐
+│ L1: 01_L1_ui_app (Vistas / Pages)                          │
+│   ├── PortfolioDashboard (A1)                               │
+│   ├── DataExplorer (A2)                                    │
+│   ├── BaseCvEditor (A3)                                   │
+│   └── JobFlowInspector / B1-B5 (Jobs)                       │
+│       ↓ Props: ASTNode[], ASTEdge[], themeTokens           │
+└─────────────────────────┬───────────────────────────────────┘
+                          ▼
+┌─────────────────────────────────────────────────────────────┐
+│ L2: 02_L2_graph_viewer (Graph Canvas)                       │
+│   ├── UniversalGraphCanvas                                 │
+│   ├── UniversalNodeShell                                   │
+│   ├── UniversalGroupShell                                  │
+│   └── ProxyEdge                                           │
+│       ↓ Payload: contentType, contentData                 │
+└─────────────────────────┬───────────────────────────────────┘
+                          ▼
+┌─────────────────────────────────────────────────────────────┐
+│ L3: 03_L3_internal_nodes (Contenido)                        │
+│   ├── InternalNodeRouter                                   │
+│   ├── IntelligentEditor (modos: fold/tag-hover/diff)      │
+│   ├── JsonPreview                                          │
+│   └── ...                                                 │
+└─────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────┐
+│ _foundation (UI Base)                                      │
+│   ├── Átomos: Button, Badge, Tag, Icon, Spinner, Kbd    │
+│   └── Moléculas: SplitPane, ControlPanel, DiagnosticCard │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## Átomos base (a construir primero)
+## Contratos de Comunicación
 
-| Átomo | Props clave | Notas |
-|-------|-------------|-------|
-| `<Button>` | `variant: primary\|ghost\|danger` `size: sm\|md` `loading?: boolean` | `loading` muestra `<Spinner>` inline |
-| `<Badge>` | `variant: primary\|secondary\|success\|muted` `size: xs\|sm` | Colores del design system. Border-radius 0. |
-| `<Tag>` | `id` `category: skill\|req\|risk` `onHover` `onClick` | Inline span con `border-l-2` color-coded |
-| `<Icon>` | `name: string` `size: xs\|sm\|md` | Lucide icons wrapeado con tamaño y color coherente |
-| `<Spinner>` | `size: xs\|sm\|md` | Spinner CSS, color primario |
-| `<Kbd>` | `keys: string[]` | Muestra atajos de teclado `Ctrl+S` con estilo mono |
+### L1 → L2 (App → Graph Canvas)
+
+```typescript
+// Props que L1 le pasa a L2
+interface AppToCanvasProps {
+  nodes: ASTNode[];
+  edges: ASTEdge[];
+  themeTokens: Record<string, StyleToken>;
+  isReadOnly?: boolean;
+  layoutEngine?: 'dagre' | 'manual';
+}
+
+// Eventos que L2 emite hacia L1
+interface CanvasToAppEvents {
+  onNodeClick: (nodeId: string, attributes: Record<string, any>) => void;
+  onEdgeClick: (edgeId: string) => void;
+  onTopologyMutate: (newAST: AST) => void;
+}
+```
+
+### L2 → L3 (Graph Canvas → Node)
+
+```typescript
+// Props que L2 le pasa a cada nodo
+interface CanvasToNodeProps {
+  nodeId: string;
+  isFocused: boolean;
+  payload: NodePayload;
+  themeToken: StyleToken;
+}
+
+// Eventos que L3 emite hacia L2
+interface NodeToCanvasEvents {
+  onContentMutate: (nodeId: string, newPayload: any) => void;
+  onRequestFocus: (nodeId: string) => void;
+}
+```
 
 ---
 
-## Modo de `<IntelligentEditor>`
+## Componentes por Capa
 
-El mismo componente se usa en tres vistas con comportamiento distinto:
+### Foundation (`_foundation/`)
+
+| Componente | Tipo | Descripción |
+|------------|------|-------------|
+| `Button` | Átomo | variant: primary/ghost/danger, size: sm/md |
+| `Badge` | Átomo | variant: primary/secondary/success/muted |
+| `Tag` | Átomo | category: skill/req/risk, onHover, onClick |
+| `Icon` | Átomo | Lucide wrapper, size: xs/sm/md |
+| `Spinner` | Átomo | Loading indicator |
+| `Kbd` | Átomo | Keyboard shortcuts |
+| `SplitPane` | Molécula | react-resizable-panels wrapper |
+| `ControlPanel` | Molécula | Generic panel with actions |
+| `DiagnosticCard` | Molécula | Card with status |
+
+### L1: UI App (`01_L1_ui_app/`)
+
+| Componente | Spec | Layout | Dependencias |
+|------------|------|--------|--------------|
+| `PortfolioDashboard` | A1 | Grid 9/3 | Table, Progress |
+| `DataExplorer` | A2 | SplitPane 30/70 | IntelligentEditor, FileTree |
+| `BaseCvEditor` | A3 | Grid 70/30 | GraphCanvas, NodeInspector |
+| `JobFlowInspector` | B0 | Columna | PipelineTimeline |
+| `ScrapeDiagnostics` | B1 | Columna | DiagnosticCard |
+| `ExtractUnderstand` | B2 | SplitPane 50/50 | IntelligentEditor, RequirementList |
+| `Match` | B3 | SplitPane 3col | GraphCanvas, EvidenceBank |
+| `GenerateDocuments` | B4 | SplitPane 50/50 | IntelligentEditor, DocumentTabs |
+| `PackageDeployment` | B5 | SplitPane | PackageFileList |
+
+### L2: Graph Viewer (`02_L2_graph_viewer/`)
+
+| Componente | Descripción |
+|------------|-------------|
+| `UniversalGraphCanvas` | Wrapper de ReactFlow + Background + Controls |
+| `UniversalNodeShell` | Cascarón visual para nodos simples |
+| `UniversalGroupShell` | Cascarón para grupos colapsables |
+| `ProxyEdge` | Edge custom para conexiones cruzadas |
+| `LayoutEngine` | Dagre/ELK para auto-layout |
+
+### L3: Internal Nodes (`03_L3_internal_nodes/`)
+
+| Componente | contentType | Descripción |
+|------------|-------------|-------------|
+| `InternalNodeRouter` | - | Switch que renderiza según contentType |
+| `IntelligentEditor` | markdown, tags | Editor con tags interactivos |
+| `JsonPreview` | json | Visor de JSON con syntax highlighting |
+| `PropertyList` | property_list | Lista de atributos key-value |
+| `ImagePreview` | image | Visor de imágenes |
+| `EmptyNode` | empty | Nodo sin contenido (grupos colapsados) |
+
+---
+
+## Modos de IntelligentEditor
 
 | Modo | Vista | Comportamiento |
 |------|-------|----------------|
-| `fold` | A2 Data Explorer | Solo renderiza texto con syntax highlighting. Sin tags interactivos. |
-| `tag-hover` | B2 Extract | Tags resaltan spans. Hover muestra card. Click pina al sidebar. |
-| `diff` | B4 Generate Docs | Muestra diff entre versión anterior y generada. Tags de cambio (add/remove). |
+| `fold` | A2 Data Explorer | Solo renderiza texto, sin tags |
+| `tag-hover` | B2 Extract | Tags interactivos, hover muestra card |
+| `diff` | B4 Generate Docs | Diff entre versión anterior y nueva |
 
 ---
 
-## Árbol de archivos target
+## Docs por Capa
 
-> Fuente de verdad: `00_architecture.md`. Este árbol replica la estructura canónica.
+```
+plan/
+├── 00_component_map.md           ← Este archivo
+├── _foundation/
+│   └── atoms_molecules.md        # Definición de UI base
+├── 01_L1_ui_app/
+│   └── views.md                  # Pages y layouts
+├── 02_L2_graph_viewer/
+│   └── graph_canvas.md          # Componentes del canvas
+└── 03_L3_internal_nodes/
+    └── internal_nodes.md         # Contenido de nodos
+```
+
+---
+
+## Archivo Target
 
 ```
 src/
-  components/                  # UI global (Diseño Atómico puro)
-    atoms/
-      Button.tsx
-      Badge.tsx
-      Tag.tsx
-      Icon.tsx
-      Spinner.tsx
-      Kbd.tsx
-    molecules/
-      SplitPane.tsx            # wrapper de react-resizable-panels
-      DiagnosticCard.tsx
-      ControlPanel.tsx
-    organisms/
-      IntelligentEditor.tsx    ✅ implementado
-      GraphCanvas.tsx          ✅ implementado
-      FileTree.tsx            ✅ implementado
-    layouts/
-      AppShell.tsx             # LeftNav + <Outlet />
-      JobWorkspaceShell.tsx    # Pipeline TopBar + <Outlet />
-  features/                    # Lógica de negocio (Feature-Sliced)
-    portfolio/
-      api/usePortfolioSummary.ts
-      components/PortfolioTable.tsx, DeadlineSidebar.tsx
-    job-pipeline/
-      api/useJobTimeline.ts, useViewOne.ts, useViewTwo.ts, useViewThree.ts, ...
-      components/RequirementList.tsx, EvidenceBankPanel.tsx, MatchControlPanel.tsx, ...
-    base-cv/
-      api/useCvProfileGraph.ts
-      components/CvGraphEditor.tsx
-  pages/
-    global/
-      PortfolioDashboard.tsx   (A1)
-      DataExplorer.tsx         (A2)
-      BaseCvEditor.tsx         (A3)
-    job/
-      JobFlowInspector.tsx     (B0)
-      ScrapeDiagnostics.tsx    (B1)
-      ExtractUnderstand.tsx    (B2)
-      Match.tsx                (B3)
-      GenerateDocuments.tsx    (B4)
-      PackageDeployment.tsx    (B5)
-  types/
-    api.types.ts               # PortfolioSummary, ViewOnePayload, GraphNode...
-    ui.types.ts                # ReactFlow, DnD, editor state
-  utils/
-    cn.ts                      # clsx + tailwind-merge
-  api/                         # client real (fetch wrapper)
-  mock/                        # client mock + fixtures
-  sandbox/
-    components/IntelligentEditor.tsx   ← prototipo actual
-    pages/IntelligentEditorPage.tsx
-```
-
----
-
-## Orden de construcción
-
-> Fuente de verdad: `plan/index_checklist.md` (Fase 0–10).
-
-```
-Fase 0  → cn.ts, main.tsx, AppShell, JobWorkspaceShell, Badge, PortfolioDashboard, mock toggle, types/
-Fase 1  → B0 JobFlowInspector
-Fase 2  → A2 DataExplorer
-Fase 3  → B1 ScrapeDiagnostics
-Fase 4  → B2 ExtractUnderstand
-Fase 5  → B3 Match
-Fase 6  → B4 GenerateDocuments (PREP_MATCH)
-Fase 7  → B5 PackageDeployment
-Fase 8  → B4b Default Document Gates ⚠️ BLOCKED
-Fase 9  → A3 BaseCvEditor
-Fase 10 → B3b ApplicationContext ⚠️ BLOCKED
+├── components/
+│   ├── atoms/                    # _foundation
+│   ├── molecules/                 # _foundation
+│   ├── layouts/                   # _foundation
+│   ├── organisms/                 # L2 + L3
+│   └── GraphCanvas/              # L2 (nuevo)
+├── features/                     # L1 (Feature-Sliced)
+├── pages/                        # L1
+└── ...
 ```
