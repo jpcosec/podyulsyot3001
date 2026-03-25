@@ -6,7 +6,7 @@
 
 ## Regla #1: No leas todo
 
-Esta carpeta tiene ~25 documentos. No necesitas la mayoría. Usa esta guía para ir directo a lo que necesitas.
+Esta carpeta tiene ~30 documentos. No necesitas la mayoría. Usa esta guía para ir directo a lo que necesitas.
 
 ---
 
@@ -14,21 +14,32 @@ Esta carpeta tiene ~25 documentos. No necesitas la mayoría. Usa esta guía para
 
 ### "Quiero entender la arquitectura"
 
-1. **`ARCHITECTURE.md`** — El modelo de 3 capas (L1/L2/L3), los contratos TypeScript, y la regla Data Down / Events Up. Es el documento más importante.
+→ **`ARCHITECTURE.md`** — El modelo de 3 capas (L1/L2/L3), contratos TypeScript, Data Down / Events Up, stack tecnológico.
 
-### "Quiero implementar algo"
+### "Quiero implementar el node editor"
 
-1. `ARCHITECTURE.md` → identifica en qué capa vive tu feature
-2. Ve al doc específico en `01_L1_ui_app/`, `02_L2_graph_viewer/`, o `03_L3_internal_nodes/`
-3. `_meta/implementation_example.md` → código real de las 3 capas trabajando juntas
+1. **`_meta/blueprint_node_editor.md`** — El blueprint definitivo. Estructura de archivos, stores, registry, contratos, flujo de datos, hooks, CSS, migration mapping. **Empieza aquí.**
+2. `ARCHITECTURE.md` → para entender en qué capa vive tu feature
+3. `_meta/reactflow_patterns_catalog.md` → código copiable para cada patrón RF
+
+### "Quiero saber qué patrones de ReactFlow usar"
+
+→ **`_meta/reactflow_patterns_catalog.md`** — 20 patrones de los ejemplos oficiales, con código copiable, priorizados por fase.
+→ **`_meta/reactflow_inventory.md`** — Qué usamos de RF nativo vs custom, qué nos falta, decisiones de stack.
+
+### "Quiero ver los problemas y riesgos del diseño"
+
+→ **`_meta/architecture_critique.md`** — 14 problemas identificados con prioridad y solución propuesta. Incluye: a11y, runtime validation, XSS, performance, contract testing, lazy loading.
 
 ### "Quiero refactorizar KnowledgeGraph.tsx"
 
-→ `_meta/refactor_knowledgegraph.md` — Migración paso a paso del God Component a 3 archivos.
+→ **`_meta/blueprint_node_editor.md`** (sección "Migration mapping") — Cada sección del God Component (2,949 líneas) → archivo target.
+→ **`_meta/session_reactflow_deep_dive.md`** — Decisiones tomadas durante la auditoría de código + ReactFlow.
 
 ### "Quiero entender los contratos entre capas"
 
-→ `_meta/06_flow_contract.md` — Contrato A (L1→L2) y Contrato B (L2→L3), con el ciclo de vida completo de una edición.
+→ `ARCHITECTURE.md` (sección "Contratos entre Capas") — Versión actualizada.
+→ `_meta/flow_contract.md` — Versión original (legacy, referencia).
 
 ### "Quiero usar un agente para revisar el plan"
 
@@ -41,28 +52,31 @@ Esta carpeta tiene ~25 documentos. No necesitas la mayoría. Usa esta guía para
 
 ---
 
-## Mapa de dependencias entre docs
+## Mapa de dependencias
 
 ```
-ARCHITECTURE.md (modelo mental)
+ARCHITECTURE.md (modelo mental — L1/L2/L3, contratos, stack)
     │
-    ├── _meta/06_flow_contract.md (contratos formales)
-    ├── _meta/implementation_example.md (código concreto)
+    ├── _meta/blueprint_node_editor.md (implementación concreta — THE doc)
+    │       │
+    │       ├── _meta/reactflow_patterns_catalog.md (código copiable para cada feature)
+    │       └── _meta/reactflow_inventory.md (qué delegar a RF, qué mantener custom)
+    │
+    ├── _meta/architecture_critique.md (problemas a resolver durante implementación)
+    │
+    ├── _meta/session_reactflow_deep_dive.md (contexto de decisiones)
     │
     ├── 01_L1_ui_app/
     │     └── schema_translation.md ← Motor schemaToGraph()
-    │         (depende de: flow_contract)
     │
     ├── 02_L2_graph_viewer/
     │     └── graph_foundations.md ← Estado canónico del editor
-    │         (habilita: layout_presets, node_types, state_history)
+    │         (habilita: layout_presets, node_types, state_history, subflows)
     │
     └── 03_L3_internal_nodes/
           └── rich_content_nodes.md ← Contrato de nodos ricos
               (habilita: markdown, json, table, code, image editors)
 ```
-
-Cada doc L2/L3 tiene secciones `Depends On` y `Enables` — úsalas para saber qué leer antes.
 
 ---
 
@@ -73,35 +87,31 @@ Cada doc L2/L3 tiene secciones `Depends On` y `Enables` — úsalas para saber q
 | `01_L1_ui_app/` | Schema engine, integración API, explorer, testing | Implementar fetching, traducción a AST, o páginas orquestadoras |
 | `02_L2_graph_viewer/` | Canvas, layout, tipos de nodo, subflows, historial | Implementar ReactFlow, posicionamiento, interacción espacial |
 | `03_L3_internal_nodes/` | Editores ricos: markdown, JSON, tablas, código, imágenes | Implementar contenido dentro de los nodos |
-| `_meta/` | Contratos, arquitectura visual, refactor, ejemplos | Entender el diseño global o iniciar refactorizaciones |
-| `_legacy/` | Status matrix original y review de diseño pre-reorganización | Solo referencia histórica — decisiones ya incorporadas en los docs actuales |
+| `_meta/` | Blueprint, critique, patrones RF, inventario, contratos, sesiones | Entender el diseño global, tomar decisiones, o iniciar implementación |
+| `_legacy/` | Status matrix original y review de diseño pre-reorganización | Solo referencia histórica |
 
 ---
 
-## Status de implementación por área
+## Stack decidido
 
-Derivado de `_legacy/00_status_matrix.md` y los docs individuales:
-
-| Área | Status |
-|------|--------|
-| Graph canvas + interacción | **Parcial** — existe en sandbox |
-| Layout/posicionamiento | **Parcial** — sin presets ni motor compartido |
-| Tipos de nodo + registry | **Parcial** — custom nodes sin registro formal |
-| Rich content nodes | **Missing** — sin contrato unificado |
-| Markdown editor | **Parcial** — solo textarea |
-| JSON/YAML, Tablas, Código, Imágenes | **Missing** |
-| Schema-driven rendering | **Parcial** — concepto definido, sin implementación |
-| Subflows / documentos anidados | **Parcial** — solo en CV graph |
-| Persistencia | **Fragmentada** — sandbox local vs CV API |
+| Herramienta | Para qué | Doc de referencia |
+|-------------|----------|-------------------|
+| ReactFlow | Canvas, interacción, viewport | `_meta/reactflow_inventory.md` |
+| elkjs | Layout compound (subflows anidados) | `_meta/reactflow_inventory.md` |
+| Zustand | State management (selectores atómicos) | `_meta/blueprint_node_editor.md` |
+| Zod | Validación runtime de payloads | `_meta/blueprint_node_editor.md` |
+| DOMPurify | Sanitización HTML (default deny) | `_meta/architecture_critique.md` |
+| shadcn/ui | Sheet, Accordion, AlertDialog, ContextMenu | `_meta/reactflow_inventory.md` |
+| xy-theme.css | Tema visual RF con `--xy-*` variables | `_meta/reactflow_inventory.md` |
 
 ---
 
 ## Decisiones de diseño clave
 
-Documentadas en `_legacy/2026-03-20-ui-plan-review-design.md`:
-
-- **elkjs desde el inicio** (no dagre)
-- **Library-first** — React Flow, elkjs, zustand, FlexLayout, RJSF directamente, sin wrappers especulativos
-- **Representation Schema** — YAML/JSON por proyecto que mapea estructura a comportamiento visual
-- **CSS theming** — Obsidian-style con `data-*` attributes, tokens MD3
-- **Extension model** — `registry.register()` para todo tipo de extensión
+- **elkjs desde el día 1** (no dagre) — subflows anidados son requisito inmediato
+- **Zustand con selectores atómicos** (no React Context) — evita re-renders innecesarios
+- **Node Type Registry** — reemplaza CATEGORY_COLORS + NODE_TEMPLATES hardcoded
+- **Edge Inheritance** (no ProxyEdge) — edges se reasignan visualmente al colapsar, no se crean/destruyen
+- **Render tiers** — contextual zoom con 3 niveles para performance con muchos nodos
+- **xy-theme.css** — separación tema visual / estilos de app (patrón oficial RF)
+- **Library-first** — RF, elkjs, zustand, shadcn directamente, sin wrappers especulativos

@@ -77,22 +77,11 @@ const topology = resolveTopology(matched, schema.topology);  // TopologyGraph
 const ast = resolveEdges(topology, schema.edge_types);       // AST
 ```
 
-### 4. dagre vs elkjs — el contrato ya está desactualizado
+### 4. dagre vs elkjs — RESUELTO: elkjs desde el día 1
 
-`ARCHITECTURE.md` define:
-```typescript
-layoutEngine: 'dagre' | 'manual';
-```
+~~`ARCHITECTURE.md` define `layoutEngine: 'dagre' | 'manual'` pero la decisión de diseño dice "elkjs from the start" y `layout_presets.md` dice "keep dagre for MVP". Tres documentos, tres respuestas.~~
 
-Pero `_legacy/2026-03-20-ui-plan-review-design.md` decidió:
-> "elkjs from the start. No dagre."
-
-Y `01a_layout_and_view_presets.md` dice:
-> "keep dagre for MVP, add elkjs later"
-
-Tres documentos, tres respuestas. El contrato ya nació inconsistente.
-
-**Recomendación:** Tomar la decisión una vez, en un solo lugar, y que el contrato la refleje. Si elkjs es el target, el contrato debería ser `layoutEngine: 'elk' | 'manual'` y dagre debería documentarse como legacy/transitorio.
+**Decisión tomada:** elkjs. Subflows anidados son un requisito inmediato — dagre no soporta compound layouts. El contrato debe actualizarse a `layoutEngine: 'elk' | 'manual'`. Ver `_meta/reactflow_inventory.md` para detalles.
 
 ### 5. Undo/Redo cruza capas sin contrato
 
