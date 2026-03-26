@@ -9,3 +9,4 @@
 - Replaced per-step E2E expectations with local verification guidance and consolidated E2E at the end.
 - Repaired core documentation links and updated reviewer entrypoint to real repository paths.
 - Added GRP-001 Step 00 prereq artifacts: graph data provider module, worker smoke baseline, and QA preflight documentation.
+- Implemented UI-001-01 shadcn setup in `apps/review-workbench` with required UI primitives and utility wiring.
