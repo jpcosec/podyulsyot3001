@@ -19,3 +19,4 @@
 - Implemented GRP-001-07 sidebar layer with `CanvasSidebar` and Actions/Filters/Creation/View accordion sections wired to graph/UI stores.
 - Implemented GRP-001-08 inspector panel layer with `NodeInspector` and `EdgeInspector` sheets wired to UI focus state and graph store updates.
 - Fixed GRP-001-08 node property persistence so inspector add/edit/delete/rename updates replace property maps correctly.
+- Implemented GRP-001-09 hooks layer with ELK worker layout, edge inheritance collapse/expand behavior, and global keyboard shortcuts wired into L2 canvas components.

@@ -91,6 +91,22 @@ function mergeNode(node: ASTNode, patch: Partial<ASTNode>): ASTNode {
 }
 
 function mergeEdge(edge: ASTEdge, patch: Partial<ASTEdge>): ASTEdge {
+  const dataPatch = patch.data;
+
+  const readPatchedMetadata = (
+    key: '_originalSource' | '_originalTarget' | '_originalRelationType',
+  ): string | undefined => {
+    if (!dataPatch) {
+      return edge.data?.[key];
+    }
+
+    if (Object.prototype.hasOwnProperty.call(dataPatch, key)) {
+      return dataPatch[key];
+    }
+
+    return edge.data?.[key];
+  };
+
   const nextData = patch.data
     ? {
         relationType: patch.data.relationType ?? edge.data?.relationType ?? 'linked',
@@ -98,8 +114,9 @@ function mergeEdge(edge: ASTEdge, patch: Partial<ASTEdge>): ASTEdge {
           ...(edge.data?.properties ?? {}),
           ...(patch.data.properties ?? {}),
         },
-        _originalSource: patch.data._originalSource ?? edge.data?._originalSource,
-        _originalTarget: patch.data._originalTarget ?? edge.data?._originalTarget,
+        _originalSource: readPatchedMetadata('_originalSource'),
+        _originalTarget: readPatchedMetadata('_originalTarget'),
+        _originalRelationType: readPatchedMetadata('_originalRelationType'),
       }
     : edge.data;
 

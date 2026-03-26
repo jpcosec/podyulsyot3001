@@ -28,6 +28,7 @@ export interface ASTEdge {
     properties: Record<string, string>;
     _originalSource?: string;
     _originalTarget?: string;
+    _originalRelationType?: string;
   };
   selected?: boolean;
   hidden?: boolean;

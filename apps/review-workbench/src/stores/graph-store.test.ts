@@ -141,4 +141,40 @@ describe('useGraphStore (GRP-001-01)', () => {
     });
     expect(useGraphStore.getState().nodes[0]?.data.properties).toEqual({ betaRenamed: '20', gamma: '3' });
   });
+
+  it('allows clearing inherited edge metadata with explicit undefined values', () => {
+    const inheritedEdge: ASTEdge = {
+      ...edgeAB,
+      data: {
+        relationType: 'inherited',
+        properties: { scope: 'x' },
+        _originalSource: 'n-a',
+        _originalTarget: 'n-b',
+        _originalRelationType: 'uses',
+      },
+    };
+
+    useGraphStore.getState().loadGraph([nodeA, nodeB], [inheritedEdge]);
+    useGraphStore.getState().updateEdge(
+      'e-ab',
+      {
+        data: {
+          relationType: 'uses',
+          properties: { scope: 'x' },
+          _originalSource: undefined,
+          _originalTarget: undefined,
+          _originalRelationType: undefined,
+        },
+      },
+      { isVisualOnly: true },
+    );
+
+    expect(useGraphStore.getState().edges[0]?.data).toEqual({
+      relationType: 'uses',
+      properties: { scope: 'x' },
+      _originalSource: undefined,
+      _originalTarget: undefined,
+      _originalRelationType: undefined,
+    });
+  });
 });

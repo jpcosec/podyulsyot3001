@@ -21,6 +21,7 @@ import type { ASTEdge, ASTNode } from '@/stores/types';
 import { GroupShell } from './GroupShell';
 import { NodeShell } from './NodeShell';
 import { ButtonEdge, FloatingEdge } from './edges';
+import { useKeyboard } from './hooks';
 import { EdgeInspector, NodeInspector } from './panels';
 import { CanvasSidebar } from './sidebar';
 
@@ -101,6 +102,8 @@ function toConnectionEdge(connection: Connection): ASTEdge | null {
 }
 
 export function GraphCanvas() {
+  useKeyboard();
+
   const nodes = useGraphStore((state) => state.nodes);
   const edges = useGraphStore((state) => state.edges);
   const updateNode = useGraphStore((state) => state.updateNode);

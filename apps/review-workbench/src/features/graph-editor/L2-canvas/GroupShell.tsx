@@ -2,7 +2,7 @@ import { memo } from 'react';
 
 import { Handle, NodeResizer, NodeToolbar, Position, type Node, type NodeProps } from '@xyflow/react';
 
-import { useGraphStore } from '@/stores/graph-store';
+import { useEdgeInheritance } from './hooks';
 import type { ASTNode } from '@/stores/types';
 
 type CanvasNode = Node<ASTNode['data'], string>;
@@ -39,16 +39,16 @@ export function getNextCollapseProperties(
 }
 
 export const GroupShell = memo(function GroupShell({ id, data, selected }: NodeProps<CanvasNode>) {
-  const updateNode = useGraphStore((state) => state.updateNode);
+  const { collapseGroup, expandGroup } = useEdgeInheritance();
   const collapsed = isCollapsed(data);
 
   const toggleCollapse = () => {
-    updateNode(id, {
-      data: {
-        ...data,
-        properties: getNextCollapseProperties(data.properties, collapsed),
-      },
-    });
+    if (collapsed) {
+      expandGroup(id);
+      return;
+    }
+
+    collapseGroup(id);
   };
 
   return (
