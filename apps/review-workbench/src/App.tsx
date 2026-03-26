@@ -3,8 +3,8 @@ import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AppShell } from './components/layouts/AppShell';
 import { KnowledgeGraph } from './pages/global/KnowledgeGraph';
-import { mockClient } from './mock/client';
 import { useQuery } from '@tanstack/react-query';
+import { graphDataProvider } from './features/graph-editor/lib/data-provider';
 import './styles.css';
 
 const queryClient = new QueryClient({
@@ -16,7 +16,7 @@ const queryClient = new QueryClient({
 function GraphPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['graph'],
-    queryFn: () => mockClient.getGraph(),
+    queryFn: () => graphDataProvider.getGraph(),
   });
 
   if (isLoading) {

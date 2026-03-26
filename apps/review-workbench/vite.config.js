@@ -10,8 +10,9 @@ export default defineConfig(function (_a) {
     return {
         plugins: [react()],
         resolve: {
-            alias: useMock
-                ? (_b = {}, _b[path.resolve(__dirname, "src/api/client")] = path.resolve(__dirname, "src/mock/client.ts"), _b) : {},
+            alias: Object.assign({ "@": path.resolve(__dirname, "src") }, (useMock
+                ? (_b = {}, _b[path.resolve(__dirname, "src/api/client")] = path.resolve(__dirname, "src/mock/client.ts"), _b)
+                : {})),
         },
         server: {
             host: "127.0.0.1",
