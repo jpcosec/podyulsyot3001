@@ -14,3 +14,4 @@
 - Implemented GRP-001-02 schema translation libraries with raw-to-AST/domain mappers and coverage tests.
 - Implemented GRP-001-03 node type registry with Zod-backed validation, placeholder default registrations, and registry tests.
 - Implemented GRP-001-04 L3 content components and wired registry detail renderers to real `EntityCard` content.
+- Implemented GRP-001-05 graph canvas layer with `GraphCanvas`, `NodeShell`, and `GroupShell`, including controlled drag semantics and render tiers.

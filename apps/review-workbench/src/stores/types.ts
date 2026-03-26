@@ -14,6 +14,7 @@ export interface ASTNode {
     visualToken?: string;
   };
   parentId?: string;
+  selected?: boolean;
   hidden?: boolean;
 }
 
@@ -28,6 +29,7 @@ export interface ASTEdge {
     _originalSource?: string;
     _originalTarget?: string;
   };
+  selected?: boolean;
   hidden?: boolean;
 }
 
