@@ -36,7 +36,7 @@
     },
     {
       "id": "n-autos",
-      "type": "simple",
+      "type": "node",
       "position": { "x": 40, "y": 80 },
       "parentId": "g-terrestres",
       "extent": "parent",
@@ -44,7 +44,7 @@
     },
     {
       "id": "n-camiones",
-      "type": "simple",
+      "type": "node",
       "position": { "x": 40, "y": 200 },
       "parentId": "g-terrestres",
       "extent": "parent",
@@ -52,7 +52,7 @@
     },
     {
       "id": "n-aviones",
-      "type": "simple",
+      "type": "node",
       "position": { "x": 40, "y": 80 },
       "parentId": "g-aereos",
       "extent": "parent",
@@ -60,7 +60,7 @@
     },
     {
       "id": "n-helicopteros",
-      "type": "simple",
+      "type": "node",
       "position": { "x": 40, "y": 200 },
       "parentId": "g-aereos",
       "extent": "parent",
@@ -68,7 +68,7 @@
     },
     {
       "id": "n-lanchas",
-      "type": "simple",
+      "type": "node",
       "position": { "x": 30, "y": 80 },
       "parentId": "g-acuaticos",
       "extent": "parent",
@@ -76,7 +76,7 @@
     },
     {
       "id": "n-submarinos",
-      "type": "simple",
+      "type": "node",
       "position": { "x": 30, "y": 200 },
       "parentId": "g-acuaticos",
       "extent": "parent",
@@ -84,25 +84,25 @@
     },
     {
       "id": "n-rueda",
-      "type": "simple",
+      "type": "node",
       "position": { "x": 100, "y": 680 },
       "data": { "name": "Rueda", "category": "skill", "properties": { "diametro_cm": "40", "material_llanta": "Aleación de aluminio", "presion_ideal_psi": "32" } }
     },
     {
       "id": "n-helice",
-      "type": "simple",
+      "type": "node",
       "position": { "x": 400, "y": 680 },
       "data": { "name": "Hélice", "category": "skill", "properties": { "numero_aspas": "4", "rpm_maximo": "3500", "material": "Fibra de carbono" } }
     },
     {
       "id": "n-motor",
-      "type": "simple",
+      "type": "node",
       "position": { "x": 680, "y": 680 },
       "data": { "name": "Motor", "category": "skill", "properties": { "caballos_fuerza": "300", "tipo_combustible": "Multicombustible", "consumo_litros_hora": "15" } }
     },
     {
       "id": "n-radar",
-      "type": "simple",
+      "type": "node",
       "position": { "x": 960, "y": 680 },
       "data": { "name": "Radar", "category": "skill", "properties": { "alcance_km": "150", "frecuencia_ghz": "9.5" } }
     }

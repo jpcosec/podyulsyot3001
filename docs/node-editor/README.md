@@ -38,10 +38,14 @@ src/
 
 ### Available now
 
-- `docs/node-editor/README.md`
-- `docs/node-editor/architecture_pitfalls.md`
-- `docs/node-editor/l1-app-layer.md`
-- `docs/node-editor/product.md`
+- [`README.md`](README.md) — Entry point (this file)
+- [`architecture_pitfalls.md`](architecture_pitfalls.md) — Guardrails and anti-patterns
+- [`l1-app-layer.md`](l1-app-layer.md) — L1 implementation details
+- [`product.md`](product.md) — Product context and intent
+
+### Planned
+
+- L2/L3 documentation — pending future implementation phase
 
 ---
 
@@ -90,13 +94,13 @@ These anti-patterns appear in older docs and have been superseded:
 
 | Anti-pattern | Where it appeared | Correct approach |
 |--------------|-------------------|-----------------|
-| Sidebar in L1 | `refactor_knowledgegraph.md`, `monolith_split_proposal.md` | Sidebar is in L2 |
+| Sidebar in L1 | `refactor_knowledgegraph.md` | Sidebar is in L2 |
 | `contentType: 'markdown' \| 'json' \| ...` enum | `06_flow_contract.md`, `implementation_example.md` | Node Type Registry lookup |
 | `payload: Record<string, any>` | `06_flow_contract.md` | Zod schemas in registry |
 | `layoutEngine: 'dagre' \| 'manual'` | `ARCHITECTURE.md` (old), `layout_presets.md` | `'elk' \| 'manual'` |
 | "Add zustand only when multiple surfaces need it" | `graph_foundations.md` | Zustand from day 1 |
 | ProxyEdge for group collapse | Various | Edge Inheritance — reroute, don't create |
-| L3 inside `features/graph-editor/content/` | `monolith_split_proposal.md` | L3 in `components/content/` |
+| L3 inside `features/graph-editor/content/` | Legacy docs | L3 in `components/content/` |
 | Filters modify AST before passing to canvas | `refactor_knowledgegraph.md` | Filters live in ui-store in L2 |
 | Hardcoded domain (person, skill, etc.) | `register-defaults.ts` production | Dynamic schema JSON loading |
 | `Record<string, unknown>` used directly in UI | Legacy docs | `NodePayload` envelope + registry validation |

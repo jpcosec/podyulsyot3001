@@ -28,7 +28,6 @@ type CanvasEdgeData = NonNullable<ASTEdge['data']>;
 type CanvasEdge = Edge<CanvasEdgeData, string>;
 
 const nodeTypes = {
-  node: NodeShell,
   group: GroupShell,
 };
 
@@ -40,7 +39,7 @@ const edgeTypes = {
 function asCanvasNode(node: ASTNode): CanvasNode {
   return {
     ...node,
-    type: node.type === 'group' ? 'group' : 'node',
+    type: node.type === 'group' ? 'group' : undefined, // undefined = use ReactFlow default
   };
 }
 

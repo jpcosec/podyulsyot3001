@@ -284,5 +284,5 @@ plan/
 - `_meta/architecture_critique.md` — Problemas identificados y recomendaciones
 - `_meta/reactflow_patterns_catalog.md` — Patrones RF priorizados con código
 - `_meta/reactflow_inventory.md` — Inventario RF nativo vs custom
-- `_meta/06_flow_contract.md` — Contratos detallados (legacy)
+- `_meta/06_flow_contract.md` — Contratos detallados (legacy, reference only)
 - `_meta/06_ui_graph_architecture_layers.md` — Capas visuales (legacy)

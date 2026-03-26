@@ -63,6 +63,44 @@ function detailRendererFor(category: string, visualToken: string) {
 
 const defaultNodeTypes: NodeTypeDefinition[] = [
   {
+    typeId: 'group',
+    label: 'Group',
+    icon: 'folder',
+    category: 'group',
+    colorToken: 'token-group',
+    payloadSchema: z.object({
+      name: z.string().min(1),
+      category: z.string().optional(),
+      properties: z.record(z.string(), z.string()).optional(),
+    }),
+    renderers: {
+      dot: PlaceholderDot,
+      label: PlaceholderLabel,
+      detail: detailRendererFor('Group', 'token-group'),
+    },
+    defaultSize: { width: 400, height: 300 },
+    allowedConnections: ['group', 'simple'],
+  },
+  {
+    typeId: 'simple',
+    label: 'Simple',
+    icon: 'circle',
+    category: 'entity',
+    colorToken: 'token-simple',
+    payloadSchema: z.object({
+      name: z.string().min(1),
+      category: z.string().optional(),
+      properties: z.record(z.string(), z.string()).optional(),
+    }),
+    renderers: {
+      dot: PlaceholderDot,
+      label: PlaceholderLabel,
+      detail: detailRendererFor('Simple', 'token-simple'),
+    },
+    defaultSize: { width: 200, height: 80 },
+    allowedConnections: ['group', 'simple'],
+  },
+  {
     typeId: 'person',
     label: 'Person',
     icon: 'user',

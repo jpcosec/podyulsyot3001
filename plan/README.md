@@ -19,7 +19,7 @@ Ver `ARCHITECTURE.md` para detalles completos.
 ## Quick Links
 
 - [Arquitectura](./ARCHITECTURE.md)
-- [Contratos](./_meta/06_flow_contract.md)
+- [Contratos (legacy)](./_meta/06_flow_contract.md) — Original version, reference only
 - [Legacy](./_legacy/)
 
 ---
