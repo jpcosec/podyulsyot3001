@@ -53,6 +53,7 @@ export function ActionsSection({ onSave }: ActionsSectionProps) {
 
   const copiedNodeId = useUIStore((state) => state.copiedNodeId);
   const copyNode = useUIStore((state) => state.copyNode);
+  const openDeleteConfirm = useUIStore((state) => state.openDeleteConfirm);
 
   const selectedNode = nodes.find((node) => node.selected);
   const selectedNodeIds = nodes.filter((node) => node.selected).map((node) => node.id);
@@ -95,8 +96,29 @@ export function ActionsSection({ onSave }: ActionsSectionProps) {
       return;
     }
 
-    removeElements(selectedNodeIds, selectedEdgeIds);
-    toast.success('Selection deleted');
+    if (selectedNodeIds.length > 0) {
+      const nodeTitles = selectedNodeIds.map(id => {
+        const node = nodes.find(n => n.id === id);
+        return node?.data.visualToken ?? id;
+      }).join(', ');
+      openDeleteConfirm({
+        kind: 'node',
+        title: nodeTitles,
+        description: selectedNodeIds.length === 1 
+          ? `This will permanently delete "${nodeTitles}" and all its connections.`
+          : `This will permanently delete ${selectedNodeIds.length} nodes and all their connections.`,
+      }, selectedNodeIds, selectedEdgeIds);
+    } else {
+      const edgeTitles = selectedEdgeIds.map(id => {
+        const edge = edges.find(e => e.id === id);
+        return edge?.data?.relationType ?? id;
+      }).join(', ');
+      openDeleteConfirm({
+        kind: 'edge',
+        title: edgeTitles,
+        description: `This will permanently delete ${selectedEdgeIds.length} edge(s).`,
+      }, selectedNodeIds, selectedEdgeIds);
+    }
   };
 
   return (

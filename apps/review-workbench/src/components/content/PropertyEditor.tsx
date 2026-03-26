@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -82,6 +83,7 @@ export function PropertyEditor({ pairs, onChange, readOnly = false }: PropertyEd
             pair={pair}
             onChange={(value) => updatePair(index, { value })}
             readOnly={readOnly}
+            index={index}
           />
         </div>
       ))}
@@ -99,9 +101,10 @@ interface PropertyValueInputProps {
   pair: PropertyPair;
   onChange: (value: string) => void;
   readOnly: boolean;
+  index: number;
 }
 
-function PropertyValueInput({ pair, onChange, readOnly }: PropertyValueInputProps) {
+function PropertyValueInput({ pair, onChange, readOnly, index }: PropertyValueInputProps) {
   switch (pair.dataType) {
     case "text_markdown":
       return (
@@ -150,15 +153,17 @@ function PropertyValueInput({ pair, onChange, readOnly }: PropertyValueInputProp
 
     case "boolean":
       return (
-        <label className="flex items-center gap-2 text-xs">
-          <input
-            type="checkbox"
+        <div className="flex items-center gap-2">
+          <Checkbox
+            id={`boolean-${index}`}
             checked={pair.value === "true"}
-            onChange={(event) => onChange(event.target.checked ? "true" : "false")}
+            onCheckedChange={(checked) => onChange(checked ? "true" : "false")}
             disabled={readOnly}
           />
-          {pair.value === "true" ? "true" : "false"}
-        </label>
+          <label htmlFor={`boolean-${index}`} className="text-xs text-muted-foreground">
+            {pair.value === "true" ? "true" : "false"}
+          </label>
+        </div>
       );
 
     case "enum":

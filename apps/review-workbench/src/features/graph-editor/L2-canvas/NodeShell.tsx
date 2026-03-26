@@ -2,7 +2,16 @@ import { memo, useMemo, type ComponentType } from 'react';
 
 import { Handle, Position, useStore, type Node, type NodeProps } from '@xyflow/react';
 
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuShortcut,
+  ContextMenuTrigger,
+} from '@/components/ui/context-menu';
 import { registry } from '@/schema/registry';
+import { useUIStore } from '@/stores/ui-store';
 import type { ASTNode } from '@/stores/types';
 
 type CanvasNode = Node<ASTNode['data'], string>;
@@ -77,45 +86,115 @@ function renderNodeBody(data: ASTNode['data'], colorToken: string, zoom: number)
 
 export const NodeShell = memo(function NodeShell(props: NodeProps<CanvasNode>) {
   const zoom = useStore(zoomSelector);
-  const { data } = props;
+  const { data, selected, id } = props;
+
+  const setFocusedNode = useUIStore((state) => state.setFocusedNode);
+  const setFocusedEdge = useUIStore((state) => state.setFocusedEdge);
+  const setEditorState = useUIStore((state) => state.setEditorState);
+  const copyNode = useUIStore((state) => state.copyNode);
+  const openDeleteConfirm = useUIStore((state) => state.openDeleteConfirm);
 
   const definition = registry.get(data.typeId);
   const colorToken = definition?.colorToken ?? 'token-error';
   const nodeBody = useMemo(() => renderNodeBody(data, colorToken, zoom), [data, colorToken, zoom]);
 
+  const handleEdit = () => {
+    setFocusedEdge(null);
+    setFocusedNode(id);
+    setEditorState('edit_node');
+  };
+
+  const handleFocusNeighborhood = () => {
+    setFocusedEdge(null);
+    setFocusedNode(id);
+    setEditorState('focus');
+  };
+
+  const handleCopy = () => {
+    copyNode(id);
+  };
+
+  const handleDelete = () => {
+    const payloadRecord = data.payload.value as Record<string, unknown>;
+    const title = (payloadRecord.name ?? payloadRecord.title ?? 'Untitled') as string;
+    openDeleteConfirm({
+      kind: 'node',
+      title,
+      description: `Delete node "${title}"?`,
+    }, [id], []);
+  };
+
   if (!definition) {
     const message = getUnknownMessage(data);
     return (
-      <div className="min-w-[150px] rounded-lg border-2 border-red-500 bg-red-50 p-2">
-        <span className="text-xs text-red-600">Unknown: {data.typeId}</span>
-        {message ? <p className="text-[10px] text-red-400">{message}</p> : null}
-        <Handle type="target" position={Position.Top} />
-        <Handle type="source" position={Position.Bottom} />
-      </div>
+      <ContextMenu>
+        <ContextMenuTrigger disabled={selected}>
+          <div className="min-w-[150px] rounded-lg border-2 border-red-500 bg-red-50 p-2">
+            <span className="text-xs text-red-600">Unknown: {data.typeId}</span>
+            {message ? <p className="text-[10px] text-red-400">{message}</p> : null}
+            <Handle type="target" position={Position.Top} />
+            <Handle type="source" position={Position.Bottom} />
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem onClick={handleEdit}>
+            Edit <ContextMenuShortcut>Enter</ContextMenuShortcut>
+          </ContextMenuItem>
+          <ContextMenuItem onClick={handleFocusNeighborhood}>
+            Focus Neighborhood
+          </ContextMenuItem>
+          <ContextMenuSeparator />
+          <ContextMenuItem onClick={handleCopy}>
+            Copy <ContextMenuShortcut>Ctrl+C</ContextMenuShortcut>
+          </ContextMenuItem>
+          <ContextMenuItem onClick={handleDelete}>
+            Delete <ContextMenuShortcut>Del</ContextMenuShortcut>
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
     );
   }
 
   return (
-    <div
-      className={`rounded-lg border-2 bg-card ${props.selected ? 'ring-2 ring-primary/40' : ''}`}
-      style={{
-        borderColor: `var(--${definition.colorToken}, #888)`,
-        minWidth: definition.defaultSize.width,
-      }}
-    >
-      <Handle
-        type="target"
-        position={Position.Top}
-        className="!border-muted-foreground !bg-muted-foreground"
-      />
+    <ContextMenu>
+      <ContextMenuTrigger disabled={selected}>
+        <div
+          className={`rounded-lg border-2 bg-card ${selected ? 'ring-2 ring-primary/40' : ''}`}
+          style={{
+            borderColor: `var(--${definition.colorToken}, #888)`,
+            minWidth: definition.defaultSize.width,
+          }}
+        >
+          <Handle
+            type="target"
+            position={Position.Top}
+            className="!border-muted-foreground !bg-muted-foreground"
+          />
 
-      {nodeBody}
+          {nodeBody}
 
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        className="!border-muted-foreground !bg-muted-foreground"
-      />
-    </div>
+          <Handle
+            type="source"
+            position={Position.Bottom}
+            className="!border-muted-foreground !bg-muted-foreground"
+          />
+        </div>
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem onClick={handleEdit}>
+          Edit <ContextMenuShortcut>Enter</ContextMenuShortcut>
+        </ContextMenuItem>
+        <ContextMenuItem onClick={handleFocusNeighborhood}>
+          Focus Neighborhood
+        </ContextMenuItem>
+        <ContextMenuSeparator />
+        <ContextMenuItem onClick={handleCopy}>
+          Copy <ContextMenuShortcut>Ctrl+C</ContextMenuShortcut>
+        </ContextMenuItem>
+        <ContextMenuItem onClick={handleDelete}>
+          Delete <ContextMenuShortcut>Del</ContextMenuShortcut>
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 });
