@@ -12,6 +12,7 @@ import {
   type NodeChange,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
+import './xy-theme.css';
 
 import { registry } from '@/schema/registry';
 import { useGraphStore } from '@/stores/graph-store';
