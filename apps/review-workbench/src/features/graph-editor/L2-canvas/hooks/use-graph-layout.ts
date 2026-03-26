@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback } from 'react';
+
+import dagre from 'dagre';
 
 import { useGraphStore } from '@/stores/graph-store';
-
-import { createElkWorker } from './create-elk-worker';
 
 export interface LayoutOptions {
   direction?: 'LR' | 'TB' | 'RL' | 'BT';
@@ -12,118 +12,93 @@ export interface LayoutOptions {
 
 type LayoutResult = Array<{ id: string; position: { x: number; y: number } }>;
 
-interface LayoutWorkerRequest {
-  type: 'layout';
-  requestId: string;
-  payload: {
-    nodes: Array<{ id: string; width?: number; height?: number }>;
-    edges: Array<{ id: string; source: string; target: string }>;
-    options: LayoutOptions;
-  };
-}
-
-interface LayoutWorkerResultResponse {
-  type: 'result';
-  requestId: string;
-  payload: LayoutResult;
-}
-
-interface LayoutWorkerErrorResponse {
-  type: 'error';
-  requestId: string;
-  error: string;
-}
-
-type LayoutWorkerResponse = LayoutWorkerResultResponse | LayoutWorkerErrorResponse;
-
 type UpdateNode = (
   id: string,
   updates: { position: { x: number; y: number } },
   options: { isVisualOnly: true },
 ) => void;
 
-export function applyLayoutWorkerResponse(
-  response: LayoutWorkerResponse,
-  requestId: string,
-  updateNode: UpdateNode,
-): LayoutResult | null {
-  if (response.requestId !== requestId) {
-    return null;
-  }
-
-  if (response.type === 'error') {
-    return [];
-  }
-
-  response.payload.forEach(({ id, position }) => {
-    updateNode(id, { position }, { isVisualOnly: true });
-  });
-
-  return response.payload;
+export interface UseGraphLayoutResult {
+  layout: (options?: LayoutOptions) => LayoutResult;
 }
 
-export interface UseGraphLayoutResult {
-  layout: (options?: LayoutOptions) => Promise<LayoutResult>;
+function getLayoutedElements(
+  nodes: Array<{ id: string; width?: number; height?: number }>,
+  edges: Array<{ id: string; source: string; target: string }>,
+  options: LayoutOptions,
+): LayoutResult {
+  const dagreGraph = new dagre.graphlib.Graph();
+  dagreGraph.setDefaultEdgeLabel(() => ({}));
+
+  const direction = options.direction ?? 'LR';
+  dagreGraph.setGraph({
+    rankdir: direction,
+    nodesep: options.nodeSpacing ?? 50,
+    ranksep: options.rankSpacing ?? 100,
+    marginx: 0,
+    marginy: 0,
+  });
+
+  const nodeWidth = 200;
+  const nodeHeight = 80;
+
+  nodes.forEach((node) => {
+    dagreGraph.setNode(node.id, { width: node.width ?? nodeWidth, height: node.height ?? nodeHeight });
+  });
+
+  edges.forEach((edge) => {
+    dagreGraph.setEdge(edge.source, edge.target);
+  });
+
+  dagre.layout(dagreGraph);
+
+  const result: LayoutResult = nodes
+    .map((node) => {
+      const nodeWithPosition = dagreGraph.node(node.id);
+      if (!nodeWithPosition) return null;
+
+      const { x, y } = nodeWithPosition;
+      const { width, height } = nodeWithPosition;
+
+      return {
+        id: node.id,
+        position: {
+          x: x - (width ?? nodeWidth) / 2,
+          y: y - (height ?? nodeHeight) / 2,
+        },
+      };
+    })
+    .filter((item): item is LayoutResult[number] => item !== null);
+
+  return result;
 }
 
 export function useGraphLayout(): UseGraphLayoutResult {
   const nodes = useGraphStore((state) => state.nodes);
   const edges = useGraphStore((state) => state.edges);
   const updateNode = useGraphStore((state) => state.updateNode);
-  const workerRef = useRef<Worker | null>(null);
-  const requestCounterRef = useRef(0);
-
-  useEffect(() => {
-    workerRef.current = createElkWorker();
-    return () => {
-      workerRef.current?.terminate();
-      workerRef.current = null;
-    };
-  }, []);
 
   const layout = useCallback(
-    (options: LayoutOptions = {}): Promise<LayoutResult> => {
-      return new Promise((resolve) => {
-        if (!workerRef.current) {
-          resolve([]);
-          return;
-        }
+    (options: LayoutOptions = {}): LayoutResult => {
+      const nodesInput = nodes.map((node) => ({
+        id: node.id,
+        width: node.width,
+        height: node.height,
+      }));
 
-        const request: LayoutWorkerRequest = {
-          type: 'layout',
-          requestId: `layout-${++requestCounterRef.current}`,
-          payload: {
-            nodes: nodes.map((node) => ({ id: node.id })),
-            edges: edges.map((edge) => ({
-              id: edge.id,
-              source: edge.source,
-              target: edge.target,
-            })),
-            options,
-          },
-        };
+      const edgesInput = edges.map((edge) => ({
+        id: edge.id,
+        source: edge.source,
+        target: edge.target,
+      }));
 
-        const handleMessage = (event: MessageEvent<LayoutWorkerResponse>) => {
-          const updates = applyLayoutWorkerResponse(event.data, request.requestId, updateNode);
-          if (updates === null) {
-            return;
-          }
+      const result = getLayoutedElements(nodesInput, edgesInput, options);
 
-          workerRef.current?.removeEventListener('message', handleMessage);
-          workerRef.current?.removeEventListener('error', handleError);
-          resolve(updates);
-        };
-
-        const handleError = () => {
-          workerRef.current?.removeEventListener('message', handleMessage);
-          workerRef.current?.removeEventListener('error', handleError);
-          resolve([]);
-        };
-
-        workerRef.current.addEventListener('message', handleMessage);
-        workerRef.current.addEventListener('error', handleError);
-        workerRef.current.postMessage(request);
+      result.forEach(({ id, position }) => {
+        updateNode(id, { position }, { isVisualOnly: true });
       });
+
+      return result;
     },
     [edges, nodes, updateNode],
   );

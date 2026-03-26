@@ -256,3 +256,128 @@ Después de analizar todos estos proyectos:
 - `ANALYSIS: simple-ai` ✅
 - `ANALYSIS: prismaliser` ✅
 - `ANALYSIS: json-sea` ✅
+
+---
+
+## Código Copiable
+
+### 1. Dagre Layout Síncrono (prismaliser)
+
+Adaptado de `prismaliser/util/layout.ts`:
+
+```typescript
+import dagre from 'dagre';
+
+function getLayoutedElements(
+  nodes: Array<{ id: string; width?: number; height?: number }>,
+  edges: Array<{ id: string; source: string; target: string }>,
+  options: { direction?: 'LR' | 'TB' } = {}
+) {
+  const dagreGraph = new dagre.graphlib.Graph();
+  dagreGraph.setDefaultEdgeLabel(() => ({}));
+
+  dagreGraph.setGraph({
+    rankdir: options.direction ?? 'LR',
+    nodesep: 50,
+    ranksep: 100,
+  });
+
+  nodes.forEach((node) => {
+    dagreGraph.setNode(node.id, { 
+      width: node.width ?? 200, 
+      height: node.height ?? 80 
+    });
+  });
+
+  edges.forEach((edge) => {
+    dagreGraph.setEdge(edge.source, edge.target);
+  });
+
+  dagre.layout(dagreGraph);
+
+  return nodes.map((node) => {
+    const nodeWithPosition = dagreGraph.node(node.id);
+    return {
+      id: node.id,
+      position: {
+        x: nodeWithPosition.x - (nodeWithPosition.width ?? 200) / 2,
+        y: nodeWithPosition.y - (nodeWithPosition.height ?? 80) / 2,
+      },
+    };
+  });
+}
+```
+
+### 2. Extent: 'parent' (ReactFlow nativo)
+
+```typescript
+// Nodo hijo que se adhiere al padre
+const childNode = {
+  id: 'child-1',
+  type: 'node',
+  parentId: 'parent-group',
+  extent: 'parent', // Se adiere a los bordes del padre
+  position: { x: 0, y: 0 },
+};
+
+// Nodo grupo/padre
+const parentNode = {
+  id: 'parent-group',
+  type: 'group',
+  data: { label: 'Grupo' },
+  style: { width: 400, height: 300 },
+  position: { x: 100, y: 100 },
+};
+```
+
+### 3. patrón ameliorate: Separar Store de UI
+
+De ameliorate/src/web/topic/diagramStore/store.ts:
+
+```typescript
+import { create } from 'zustand';
+import { devtools, persist } from 'zustand/middleware';
+
+interface DiagramState {
+  nodes: Node[];
+  edges: Edge[];
+  setNodes: (nodes: Node[]) => void;
+  setEdges: (edges: Edge[]) => void;
+}
+
+export const useDiagramStore = create<DiagramState>()(
+  devtools(
+    persist(
+      (set) => ({
+        nodes: [],
+        edges: [],
+        setNodes: (nodes) => set({ nodes }),
+        setEdges: (edges) => set({ edges }),
+      }),
+      { name: 'diagram-storage' }
+    ),
+    { name: 'DiagramStore' }
+  )
+);
+```
+
+### 4. nodeTypes Estable (nuestro patrón actual)
+
+```typescript
+// ✅ BIEN: nodeTypes definido fuera del componente
+const nodeTypes = {
+  node: NodeShell,
+  group: GroupShell,
+};
+
+function GraphCanvas() {
+  // ✅ NO recrear nodeTypes en cada render
+  return <ReactFlow nodeTypes={nodeTypes} ... />;
+}
+
+// ❌ MAL: nodeTypes recreado en cada render
+function GraphCanvas() {
+  const nodeTypes = { node: NodeShell, group: GroupShell }; // MAL!
+  return <ReactFlow nodeTypes={nodeTypes} ... />;
+}
+```

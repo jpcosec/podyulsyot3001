@@ -1,11 +1,11 @@
 # Diagnóstico de Problemas - Node Editor
 
 **Fecha:** 2026-03-26
-**Estado:** Problemas identificados en runtime - Análisis de proyectos similares completado
+**Estado:** Problemas resueltos - Análisis de proyectos similares completado
 
 ---
 
-## Problema 1: Worker ELK no funciona en browser
+## Problema 1: Worker ELK no funciona en browser ✅ RESUELTO
 
 **Síntoma:**
 ```
@@ -19,8 +19,16 @@ TypeError: _Worker is not a constructor
 - El worker intenta importar `elkjs/lib/elk.bundled.js` pero falla en el browser
 
 **Solución aplicada:**
-- Se cambió `use-graph-layout.ts` para ejecutar ELK en el thread principal (síncrono)
-- Esto resuelve el error pero pierde el beneficio de worker thread
+
+- Se eliminó `elk.worker.ts` y `create-elk-worker.ts` (peso muerto)
+- Se reemplaza ELK por `dagre` en `use-graph-layout.ts` (más simple, síncrono)
+- dagre ya estaba instalado (`"dagre": "^0.8.5"`)
+
+**Ventajas de dagre sobre ELK:**
+
+- Síncrono, sin problemas de worker
+- Configuración más simple (`rankdir: 'LR'`)
+- Mejor mantenimiento
 
 **Recomendación a largo plazo:**
 - Volver a `dagre` o `dagre-d3` para layout (más simple, sin worker)
@@ -135,6 +143,6 @@ function getLayoutedElements(nodes, edges) {
 
 ## Tags para seguimiento
 
-- `TODO: replace-elk-with-dagre`
-- `TODO: simplify-node-types`
-- `TODO: remove-unused-worker-code`
+- `TODO: replace-elk-with-dagre` ✅
+- `TODO: simplify-node-types` ✅
+- `TODO: remove-unused-worker-code` ✅
