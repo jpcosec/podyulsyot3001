@@ -20,3 +20,4 @@
 - Implemented GRP-001-08 inspector panel layer with `NodeInspector` and `EdgeInspector` sheets wired to UI focus state and graph store updates.
 - Fixed GRP-001-08 node property persistence so inspector add/edit/delete/rename updates replace property maps correctly.
 - Implemented GRP-001-09 hooks layer with ELK worker layout, edge inheritance collapse/expand behavior, and global keyboard shortcuts wired into L2 canvas components.
+- Implemented GRP-001-10 L1/L2 integration with `GraphEditorPage` orchestrating schema registration + graph loading and new `GraphEditor` container composing canvas, sidebar, inspector panels, and toaster.

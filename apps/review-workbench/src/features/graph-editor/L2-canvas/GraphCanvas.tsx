@@ -21,9 +21,6 @@ import type { ASTEdge, ASTNode } from '@/stores/types';
 import { GroupShell } from './GroupShell';
 import { NodeShell } from './NodeShell';
 import { ButtonEdge, FloatingEdge } from './edges';
-import { useKeyboard } from './hooks';
-import { EdgeInspector, NodeInspector } from './panels';
-import { CanvasSidebar } from './sidebar';
 
 type CanvasNode = Node<ASTNode['data'], string>;
 type CanvasEdgeData = NonNullable<ASTEdge['data']>;
@@ -102,8 +99,6 @@ function toConnectionEdge(connection: Connection): ASTEdge | null {
 }
 
 export function GraphCanvas() {
-  useKeyboard();
-
   const nodes = useGraphStore((state) => state.nodes);
   const edges = useGraphStore((state) => state.edges);
   const updateNode = useGraphStore((state) => state.updateNode);
@@ -253,40 +248,35 @@ export function GraphCanvas() {
   }, [edges, displayNodes, filters.hiddenRelationTypes]);
 
   return (
-    <div className="flex h-full w-full">
-      <div className="h-full flex-1">
-        <ReactFlow
-          nodes={displayNodes}
-          edges={displayEdges}
-          nodeTypes={nodeTypes}
-          edgeTypes={edgeTypes}
-          isValidConnection={isValidConnection}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onNodesDelete={onNodesDelete}
-          onEdgesDelete={onEdgesDelete}
-          onConnect={onConnect}
-          onNodeClick={onNodeClick}
-          onEdgeClick={onEdgeClick}
-          onPaneClick={onPaneClick}
-          fitView
-          fitViewOptions={{ padding: 0.12 }}
-          defaultEdgeOptions={{ type: 'floating' }}
-        >
-          <Background color="#e5e7eb" gap={16} />
-          <Controls showInteractive={false} />
-          <MiniMap
-            nodeColor={(node) => {
-              const typeId = node.data?.typeId;
-              return typeId ? `var(--token-${typeId}, #888)` : '#888';
-            }}
-            maskColor="rgba(0, 0, 0, 0.1)"
-          />
-        </ReactFlow>
-      </div>
-      <CanvasSidebar />
-      <NodeInspector />
-      <EdgeInspector />
+    <div className="h-full w-full">
+      <ReactFlow
+        nodes={displayNodes}
+        edges={displayEdges}
+        nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        isValidConnection={isValidConnection}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onNodesDelete={onNodesDelete}
+        onEdgesDelete={onEdgesDelete}
+        onConnect={onConnect}
+        onNodeClick={onNodeClick}
+        onEdgeClick={onEdgeClick}
+        onPaneClick={onPaneClick}
+        fitView
+        fitViewOptions={{ padding: 0.12 }}
+        defaultEdgeOptions={{ type: 'floating' }}
+      >
+        <Background color="#e5e7eb" gap={16} />
+        <Controls showInteractive={false} />
+        <MiniMap
+          nodeColor={(node) => {
+            const typeId = node.data?.typeId;
+            return typeId ? `var(--token-${typeId}, #888)` : '#888';
+          }}
+          maskColor="rgba(0, 0, 0, 0.1)"
+        />
+      </ReactFlow>
     </div>
   );
 }

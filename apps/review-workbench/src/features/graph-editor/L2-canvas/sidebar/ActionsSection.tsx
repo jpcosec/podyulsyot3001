@@ -36,7 +36,11 @@ function makeCopyNode(node: ASTNode): ASTNode {
   };
 }
 
-export function ActionsSection() {
+interface ActionsSectionProps {
+  onSave: () => void;
+}
+
+export function ActionsSection({ onSave }: ActionsSectionProps) {
   const nodes = useGraphStore((state) => state.nodes);
   const edges = useGraphStore((state) => state.edges);
   const undoStack = useGraphStore((state) => state.undoStack);
@@ -46,7 +50,6 @@ export function ActionsSection() {
   const removeElements = useGraphStore((state) => state.removeElements);
   const undo = useGraphStore((state) => state.undo);
   const redo = useGraphStore((state) => state.redo);
-  const markSaved = useGraphStore((state) => state.markSaved);
 
   const copiedNodeId = useUIStore((state) => state.copiedNodeId);
   const copyNode = useUIStore((state) => state.copyNode);
@@ -56,7 +59,7 @@ export function ActionsSection() {
   const selectedEdgeIds = edges.filter((edge) => edge.selected).map((edge) => edge.id);
 
   const handleSave = () => {
-    markSaved();
+    onSave();
     toast.success('Graph saved successfully');
   };
 

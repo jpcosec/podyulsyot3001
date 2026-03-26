@@ -1,4 +1,6 @@
-import { mockClient, type GraphPayload } from '@/mock/client';
+import { mockClient } from '@/mock/client';
+
+import type { DomainData, RawData } from './types';
 
 interface SchemaAttribute {
   type: string;
@@ -13,6 +15,7 @@ interface SchemaNodeType {
     icon: string;
   };
   attributes: Record<string, SchemaAttribute>;
+  allowed_connections?: string[];
 }
 
 export interface GraphSchema {
@@ -21,8 +24,8 @@ export interface GraphSchema {
 
 export interface GraphDataProvider {
   getSchema: () => Promise<GraphSchema>;
-  getGraph: () => Promise<GraphPayload>;
-  saveGraph: (payload: GraphPayload) => Promise<{ ok: true }>;
+  getGraph: () => Promise<RawData>;
+  saveGraph: (payload: DomainData) => Promise<{ ok: true }>;
 }
 
 const mockSchema: GraphSchema = {
@@ -46,9 +49,9 @@ export const graphDataProvider: GraphDataProvider = {
     return mockSchema;
   },
   async getGraph() {
-    return mockClient.getGraph();
+    return mockClient.getGraph() as Promise<RawData>;
   },
-  async saveGraph() {
+  async saveGraph(_payload) {
     return { ok: true };
   },
 };

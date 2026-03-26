@@ -14,7 +14,11 @@ import { ViewSection } from './ViewSection';
 
 const accordionClassName = 'font-mono text-[10px] uppercase tracking-[0.2em] px-3';
 
-export function CanvasSidebar() {
+interface CanvasSidebarProps {
+  onSave: () => void;
+}
+
+export function CanvasSidebar({ onSave }: CanvasSidebarProps) {
   const sidebarOpen = useUIStore((state) => state.sidebarOpen);
   const toggleSidebar = useUIStore((state) => state.toggleSidebar);
 
@@ -55,7 +59,7 @@ export function CanvasSidebar() {
         <AccordionItem value="actions">
           <AccordionTrigger className={accordionClassName}>Actions</AccordionTrigger>
           <AccordionContent>
-            <ActionsSection />
+            <ActionsSection onSave={onSave} />
           </AccordionContent>
         </AccordionItem>
 

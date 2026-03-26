@@ -9,7 +9,6 @@ import type {
 } from './types';
 import { registry } from '@/schema/registry';
 import type { NodeTypeRegistry } from '@/schema/registry';
-import { registerDefaultNodeTypes } from '@/schema/register-defaults';
 
 const X_SPACING = 220;
 const Y_SPACING = 140;
@@ -173,10 +172,6 @@ function collectErrors(nodeMap: Map<string, ASTNode>): ValidationError[] {
   return errors;
 }
 
-function ensureDefaultRegistryCompatibility(): void {
-  registerDefaultNodeTypes();
-}
-
 export function schemaToGraphWithRegistry(
   rawData: RawData,
   schemaRegistry: SchemaRegistryAdapter,
@@ -192,6 +187,5 @@ export function schemaToGraphWithRegistry(
 }
 
 export function schemaToGraph(rawData: RawData): ValidatedAST {
-  ensureDefaultRegistryCompatibility();
   return schemaToGraphWithRegistry(rawData, registry);
 }
