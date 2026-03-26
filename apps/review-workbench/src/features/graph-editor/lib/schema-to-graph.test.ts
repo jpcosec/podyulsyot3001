@@ -1,65 +1,63 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { z } from 'zod';
 
 import { schemaToGraph, schemaToGraphWithRegistry } from './schema-to-graph';
-import type {
-  RawData,
-  SchemaNodeDefinition,
-  SchemaRegistry,
-  SchemaValidationResult,
-} from './types';
+import type { RawData } from './types';
+import { NodeTypeRegistry, registry } from '@/schema/registry';
+import { registerDefaultNodeTypes } from '@/schema/register-defaults';
 
-function buildValidationResult(payload: unknown): SchemaValidationResult {
-  if (!payload || typeof payload !== 'object') {
-    return {
-      success: false,
-      error: { message: 'Payload must be an object' },
-    };
-  }
+function createRegistry(): NodeTypeRegistry {
+  const localRegistry = new NodeTypeRegistry();
 
-  const candidate = payload as Record<string, unknown>;
-  if (typeof candidate.name !== 'string' || candidate.name.trim().length === 0) {
-    return {
-      success: false,
-      error: { message: 'Name is required' },
-    };
-  }
-
-  return {
-    success: true,
-    data: candidate,
-  };
-}
-
-function createRegistry(definitions: SchemaNodeDefinition[]): SchemaRegistry {
-  const map = new Map(definitions.map((definition) => [definition.typeId, definition]));
-
-  return {
-    get(typeId: string) {
-      return map.get(typeId);
-    },
-  };
-}
-
-describe('schemaToGraph (GRP-001-02)', () => {
-  const personDefinition: SchemaNodeDefinition = {
+  localRegistry.register({
     typeId: 'person',
+    label: 'Person',
+    icon: 'user',
+    category: 'entity',
     colorToken: 'token-person',
-    validate: buildValidationResult,
-    sanitize: (payload) => {
+    payloadSchema: z.object({
+      name: z.string().trim().min(1),
+      role: z.string().optional(),
+    }),
+    sanitizer: (payload) => {
       const candidate = payload as Record<string, unknown>;
       return {
         ...candidate,
         name: String(candidate.name).trim(),
       };
     },
-  };
+    renderers: {
+      dot: () => null,
+      label: () => null,
+      detail: () => null,
+    },
+    defaultSize: { width: 200, height: 80 },
+    allowedConnections: ['skill'],
+  });
 
-  const skillDefinition: SchemaNodeDefinition = {
+  localRegistry.register({
     typeId: 'skill',
+    label: 'Skill',
+    icon: 'wrench',
+    category: 'component',
     colorToken: 'token-skill',
-    validate: buildValidationResult,
-  };
+    payloadSchema: z.object({
+      name: z.string().trim().min(1),
+      level: z.string().optional(),
+    }),
+    renderers: {
+      dot: () => null,
+      label: () => null,
+      detail: () => null,
+    },
+    defaultSize: { width: 180, height: 60 },
+    allowedConnections: ['person'],
+  });
 
+  return localRegistry;
+}
+
+describe('schemaToGraph (GRP-001-02)', () => {
   it('translates valid raw data into nodes and edges', () => {
     const rawData: RawData = {
       nodes: [
@@ -88,7 +86,7 @@ describe('schemaToGraph (GRP-001-02)', () => {
       ],
     };
 
-    const graph = schemaToGraphWithRegistry(rawData, createRegistry([personDefinition, skillDefinition]));
+    const graph = schemaToGraphWithRegistry(rawData, createRegistry());
     const personNode = graph.nodes.find((node) => node.id === 'n-1');
     const skillNode = graph.nodes.find((node) => node.id === 'n-2');
 
@@ -137,7 +135,7 @@ describe('schemaToGraph (GRP-001-02)', () => {
       edges: [],
     };
 
-    const graph = schemaToGraphWithRegistry(rawData, createRegistry([personDefinition]));
+    const graph = schemaToGraphWithRegistry(rawData, createRegistry());
 
     expect(graph.errors).toEqual([]);
     expect(graph.nodes[0].type).toBe('node');
@@ -147,12 +145,58 @@ describe('schemaToGraph (GRP-001-02)', () => {
     });
   });
 
-  it('uses runtime registry defaults in schemaToGraph', () => {
+  it('maps rawNode.name to title for title-based schemas', () => {
+    const localRegistry = new NodeTypeRegistry();
+
+    localRegistry.register({
+      typeId: 'document',
+      label: 'Document',
+      icon: 'file',
+      category: 'content',
+      colorToken: 'token-document',
+      payloadSchema: z.object({
+        title: z.string().min(1),
+        kind: z.string().optional(),
+      }),
+      renderers: {
+        dot: () => null,
+        label: () => null,
+        detail: () => null,
+      },
+      defaultSize: { width: 200, height: 80 },
+      allowedConnections: [],
+    });
+
     const rawData: RawData = {
       nodes: [
         {
           id: 'n-1',
-          type: 'entity',
+          type: 'document',
+          name: 'Architecture Decision Record',
+          properties: { title: 'Wrong Title', kind: 'adr' },
+        },
+      ],
+      edges: [],
+    };
+
+    const graph = schemaToGraphWithRegistry(rawData, localRegistry);
+
+    expect(graph.errors).toEqual([]);
+    expect(graph.nodes[0].type).toBe('node');
+    expect(graph.nodes[0].data.payload.value).toMatchObject({
+      title: 'Architecture Decision Record',
+      kind: 'adr',
+    });
+  });
+
+  it('uses registered defaults in schemaToGraph', () => {
+    registerDefaultNodeTypes();
+
+    const rawData: RawData = {
+      nodes: [
+        {
+          id: 'n-1',
+          type: 'person',
           name: 'Workbench Entity',
           properties: { category: 'document' },
         },
@@ -164,7 +208,125 @@ describe('schemaToGraph (GRP-001-02)', () => {
 
     expect(graph.errors).toEqual([]);
     expect(graph.nodes[0].type).toBe('node');
-    expect(graph.nodes[0].data.typeId).toBe('entity');
+    expect(graph.nodes[0].data.typeId).toBe('person');
+  });
+
+  it('supports schemaToGraph before explicit default registry bootstrap', async () => {
+    vi.resetModules();
+
+    const [{ schemaToGraph: isolatedSchemaToGraph }, { registry: isolatedRegistry }] =
+      await Promise.all([import('./schema-to-graph'), import('@/schema/registry')]);
+
+    expect(isolatedRegistry.getAll()).toHaveLength(0);
+
+    const rawData: RawData = {
+      nodes: [
+        {
+          id: 'n-1',
+          type: 'person',
+          name: 'Bootstrap User',
+          properties: { role: 'Reviewer' },
+        },
+        {
+          id: 'n-2',
+          type: 'document',
+          name: 'Step Notes',
+          properties: { type: 'report' },
+        },
+      ],
+      edges: [],
+    };
+
+    const graph = isolatedSchemaToGraph(rawData);
+    const personNode = graph.nodes.find((node) => node.id === 'n-1');
+    const documentNode = graph.nodes.find((node) => node.id === 'n-2');
+
+    expect(graph.errors).toEqual([]);
+    expect(personNode?.type).toBe('node');
+    expect(documentNode?.type).toBe('node');
+    expect(documentNode?.data.payload.value).toMatchObject({ title: 'Step Notes', type: 'report' });
+  });
+
+  it('fills missing defaults when registry is partially pre-registered', async () => {
+    vi.resetModules();
+
+    const [{ schemaToGraph: isolatedSchemaToGraph }, { registry: isolatedRegistry }] =
+      await Promise.all([import('./schema-to-graph'), import('@/schema/registry')]);
+
+    isolatedRegistry.register({
+      typeId: 'person',
+      label: 'Custom Person',
+      icon: 'user-round',
+      category: 'entity',
+      colorToken: 'token-person-custom',
+      payloadSchema: z.object({
+        name: z.string().min(1),
+        role: z.string().optional(),
+      }),
+      renderers: {
+        dot: () => null,
+        label: () => null,
+        detail: () => null,
+      },
+      defaultSize: { width: 260, height: 90 },
+      allowedConnections: ['document'],
+    });
+
+    const rawData: RawData = {
+      nodes: [
+        {
+          id: 'n-1',
+          type: 'person',
+          name: 'Custom Bootstrap User',
+          properties: { role: 'Owner' },
+        },
+        {
+          id: 'n-2',
+          type: 'document',
+          name: 'Defaults Must Fill',
+          properties: { type: 'report' },
+        },
+      ],
+      edges: [],
+    };
+
+    const graph = isolatedSchemaToGraph(rawData);
+    const personNode = graph.nodes.find((node) => node.id === 'n-1');
+    const documentNode = graph.nodes.find((node) => node.id === 'n-2');
+
+    expect(graph.errors).toEqual([]);
+    expect(personNode?.type).toBe('node');
+    expect(personNode?.data.visualToken).toBe('token-person-custom');
+    expect(documentNode?.type).toBe('node');
+    expect(documentNode?.data.payload.value).toMatchObject({
+      title: 'Defaults Must Fill',
+      type: 'report',
+    });
+  });
+
+  it('accepts section.order as a string via default schema coercion', () => {
+    registerDefaultNodeTypes();
+
+    const rawData: RawData = {
+      nodes: [
+        {
+          id: 'n-1',
+          type: 'section',
+          name: 'Experience',
+          properties: { order: '2' },
+        },
+      ],
+      edges: [],
+    };
+
+    const graph = schemaToGraph(rawData);
+
+    expect(graph.errors).toEqual([]);
+    expect(graph.nodes[0].type).toBe('node');
+    expect(graph.nodes[0].data.payload.value).toMatchObject({
+      title: 'Experience',
+      order: 2,
+    });
   });
 
   it('emits an error node when validation fails', () => {
@@ -180,7 +342,7 @@ describe('schemaToGraph (GRP-001-02)', () => {
       edges: [],
     };
 
-    const graph = schemaToGraphWithRegistry(rawData, createRegistry([personDefinition]));
+    const graph = schemaToGraphWithRegistry(rawData, createRegistry());
 
     expect(graph.nodes[0].type).toBe('error');
     expect(graph.errors).toHaveLength(1);
@@ -207,8 +369,14 @@ describe('schemaToGraph (GRP-001-02)', () => {
       ],
     };
 
-    const graph = schemaToGraphWithRegistry(rawData, createRegistry([personDefinition]));
+    const graph = schemaToGraphWithRegistry(rawData, createRegistry());
 
     expect(graph.edges).toEqual([]);
+  });
+
+  it('fails unknown types gracefully through registry validation', () => {
+    const result = registry.validatePayload('missing-type', { name: 'Ghost' });
+
+    expect(result.success).toBe(false);
   });
 });

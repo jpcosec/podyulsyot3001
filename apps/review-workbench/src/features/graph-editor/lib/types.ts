@@ -47,26 +47,3 @@ export interface DomainData {
   nodes: DomainNode[];
   edges: DomainEdge[];
 }
-
-export type SchemaValidationResult =
-  | {
-      success: true;
-      data: unknown;
-    }
-  | {
-      success: false;
-      error: {
-        message: string;
-      };
-    };
-
-export interface SchemaNodeDefinition {
-  typeId: string;
-  colorToken?: string;
-  validate: (payload: unknown) => SchemaValidationResult;
-  sanitize?: (payload: unknown) => unknown;
-}
-
-export interface SchemaRegistry {
-  get: (typeId: string) => SchemaNodeDefinition | undefined;
-}

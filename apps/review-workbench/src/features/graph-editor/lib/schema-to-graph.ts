@@ -4,67 +4,17 @@ import type {
   RawData,
   RawEdge,
   RawNode,
-  SchemaNodeDefinition,
-  SchemaRegistry,
-  SchemaValidationResult,
   ValidationError,
   ValidatedAST,
 } from './types';
+import { registry } from '@/schema/registry';
+import type { NodeTypeRegistry } from '@/schema/registry';
+import { registerDefaultNodeTypes } from '@/schema/register-defaults';
 
 const X_SPACING = 220;
 const Y_SPACING = 140;
 
-const DEFAULT_RUNTIME_NODE_DEFINITIONS: SchemaNodeDefinition[] = [
-  {
-    typeId: 'entity',
-    colorToken: 'surface-primary',
-    validate: validateNodePayload,
-  },
-  {
-    typeId: 'group',
-    colorToken: 'surface-primary',
-    validate: validateNodePayload,
-  },
-  {
-    typeId: 'simple',
-    colorToken: 'surface-primary',
-    validate: validateNodePayload,
-  },
-];
-
-function validateNodePayload(payload: unknown): SchemaValidationResult {
-  if (!payload || typeof payload !== 'object') {
-    return {
-      success: false,
-      error: { message: 'Payload must be an object' },
-    };
-  }
-
-  const candidate = payload as Record<string, unknown>;
-  if (typeof candidate.name !== 'string' || candidate.name.trim().length === 0) {
-    return {
-      success: false,
-      error: { message: 'Name is required' },
-    };
-  }
-
-  return {
-    success: true,
-    data: candidate,
-  };
-}
-
-function createSchemaRegistry(definitions: SchemaNodeDefinition[]): SchemaRegistry {
-  const definitionMap = new Map(definitions.map((definition) => [definition.typeId, definition]));
-
-  return {
-    get(typeId: string) {
-      return definitionMap.get(typeId);
-    },
-  };
-}
-
-const runtimeSchemaRegistry = createSchemaRegistry(DEFAULT_RUNTIME_NODE_DEFINITIONS);
+type SchemaRegistryAdapter = Pick<NodeTypeRegistry, 'get' | 'validatePayload' | 'sanitizePayload'>;
 
 function getErrorMessage(error: unknown): string {
   if (error && typeof error === 'object' && 'message' in error) {
@@ -101,7 +51,7 @@ function toValidNode(
   rawNode: RawNode,
   parentId: string | undefined,
   position: { x: number; y: number },
-  definition: SchemaNodeDefinition,
+  colorToken: string,
   payloadValue: unknown,
 ): ASTNode {
   return {
@@ -115,13 +65,13 @@ function toValidNode(
         value: payloadValue,
       },
       properties: rawNode.properties,
-      visualToken: definition.colorToken,
+      visualToken: colorToken,
     },
     parentId,
   };
 }
 
-function matchNodes(rawData: RawData, schemaRegistry: SchemaRegistry): Map<string, ASTNode> {
+function matchNodes(rawData: RawData, schemaRegistry: SchemaRegistryAdapter): Map<string, ASTNode> {
   const nodeMap = new Map<string, ASTNode>();
   const depthOffsets = new Map<number, number>();
 
@@ -151,10 +101,13 @@ function matchNodes(rawData: RawData, schemaRegistry: SchemaRegistry): Map<strin
         ),
       );
     } else {
-      const validation = definition.validate({
+      const payloadCandidate = {
         ...rawNode.properties,
         name: rawNode.name,
-      });
+        title: rawNode.name,
+      };
+
+      const validation = schemaRegistry.validatePayload(rawNode.type, payloadCandidate);
 
       if (!validation.success) {
         nodeMap.set(
@@ -168,13 +121,11 @@ function matchNodes(rawData: RawData, schemaRegistry: SchemaRegistry): Map<strin
           ),
         );
       } else {
-        const sanitizedPayload = definition.sanitize
-          ? definition.sanitize(validation.data)
-          : validation.data;
+        const sanitizedPayload = schemaRegistry.sanitizePayload(rawNode.type, validation.data);
 
         nodeMap.set(
           rawNode.id,
-          toValidNode(rawNode, parentId, position, definition, sanitizedPayload),
+          toValidNode(rawNode, parentId, position, definition.colorToken, sanitizedPayload),
         );
       }
     }
@@ -222,9 +173,13 @@ function collectErrors(nodeMap: Map<string, ASTNode>): ValidationError[] {
   return errors;
 }
 
+function ensureDefaultRegistryCompatibility(): void {
+  registerDefaultNodeTypes();
+}
+
 export function schemaToGraphWithRegistry(
   rawData: RawData,
-  schemaRegistry: SchemaRegistry,
+  schemaRegistry: SchemaRegistryAdapter,
 ): ValidatedAST {
   const nodeMap = matchNodes(rawData, schemaRegistry);
   const edges = resolveEdges(rawData.edges, nodeMap);
@@ -237,5 +192,6 @@ export function schemaToGraphWithRegistry(
 }
 
 export function schemaToGraph(rawData: RawData): ValidatedAST {
-  return schemaToGraphWithRegistry(rawData, runtimeSchemaRegistry);
+  ensureDefaultRegistryCompatibility();
+  return schemaToGraphWithRegistry(rawData, registry);
 }
