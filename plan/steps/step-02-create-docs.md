@@ -1,100 +1,55 @@
 # Step 02: Create Updated Documentation
 
-**Context:** After the refactor, documentation needs to reflect the new architecture.
+**Context:** After implementation, documentation must match the current repository layout and architecture contracts.
 
 ---
 
 ## 1. Purpose
 
-- Update README with new architecture overview
-- Document the L1/L2 split in ARCHITECTURE.md
-- Create API documentation for new components
+- Keep architecture docs and step docs aligned
+- Remove broken links
+- Publish only docs that match existing folders
 
 ---
 
-## 2. Files to Update
+## 2. Files to update
 
 ```
-docs/
-├── README.md                    # Main project README
-├── graph-editor/
-│   ├── README.md               # Graph editor module docs
-│   ├── architecture.md         # L1/L2 architecture
-│   └── api/
-│       ├── stores.md           # Graph/UI store APIs
-│       ├── components.md       # Component API docs
-│       └── hooks.md            # Hooks API docs
+docs/node-editor/
+├── README.md                  # Entry point with valid links only
+├── architecture_pitfalls.md   # Guardrails and anti-patterns
+├── l1-app-layer.md            # L1 details
+└── product.md                 # Product intent
+
+plan/
+├── README.md
+├── GUIDE.md
+├── IMPLEMENTATION_ORDER.md
+└── steps/README.md
 ```
 
 ---
 
-## 3. Content Templates
+## 3. Required content updates
 
-### docs/graph-editor/README.md
-
-```markdown
-# Graph Editor
-
-Knowledge graph visualization and editing component.
-
-## Architecture
-
-- **L1 (App Layer):** `GraphEditorPage` - Data loading, schema translation
-- **L2 (Canvas Layer):** `GraphEditor` - Sidebar, panels, controls
-- **L3 (Content Layer):** Nodes, edges, property editors
-
-## Usage
-
-\`\`\`tsx
-import { GraphEditorPage } from '@/features/graph-editor/L1-app/GraphEditorPage';
-
-export default function GraphPage() {
-  return <GraphEditorPage />;
-}
-\`\`\`
-```
-
-### docs/graph-editor/architecture.md
-
-```markdown
-# Graph Editor Architecture
-
-## Layer Responsibilities
-
-### L1 - Application Layer
-- Fetches raw data from API
-- Translates schema to AST via `schemaToGraph`
-- Handles save via `graphToDomain`
-- Delegates rendering to L2
-
-### L2 - Canvas Layer
-- Manages ReactFlow canvas
-- Owns sidebar, panels, controls
-- Handles keyboard shortcuts
-- Applies layout algorithms
-
-### L3 - Content Layer
-- Node components (SimpleNodeCard, GroupNode)
-- Edge components (FloatingEdge, ButtonEdge)
-- Property editors
-
-## State Management
-
-- `graph-store`: nodes, edges, undo/redo, dirty state
-- `ui-store`: editorState, focusedId, filters, sidebar
-```
+- `docs/node-editor/README.md`
+  - add "Available now" section
+  - mark missing docs as planned instead of linking broken paths
+- `plan/README.md` and `plan/GUIDE.md`
+  - fix `06_flow_contract.md` path references
+- `plan/IMPLEMENTATION_ORDER.md` and `plan/steps/README.md`
+  - keep one consistent execution order
 
 ---
 
 ## 4. Verification
 
-- [ ] README.md mentions new architecture
-- [ ] docs/graph-editor/ exists with README
-- [ ] API docs cover stores, components, hooks
-- [ ] No broken links
+- [ ] No broken links in edited files
+- [ ] Step order in `plan/steps/README.md` matches `plan/IMPLEMENTATION_ORDER.md`
+- [ ] Legacy docs referenced as legacy, not active implementation source
 
 ---
 
-## 5. Next Step
+## 5. Next step
 
-step-03-cleanup-plan — Clean up temporary planning files.
+`step-03-cleanup-plan.md` - Archive or remove temporary files safely.

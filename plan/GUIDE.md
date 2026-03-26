@@ -39,7 +39,7 @@ Esta carpeta tiene ~30 documentos. No necesitas la mayoría. Usa esta guía para
 ### "Quiero entender los contratos entre capas"
 
 → `ARCHITECTURE.md` (sección "Contratos entre Capas") — Versión actualizada.
-→ `_meta/flow_contract.md` — Versión original (legacy, referencia).
+→ `_meta/06_flow_contract.md` — Versión original (legacy, referencia).
 
 ### "Quiero usar un agente para revisar el plan"
 

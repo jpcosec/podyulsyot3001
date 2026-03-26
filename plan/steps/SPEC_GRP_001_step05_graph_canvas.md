@@ -7,7 +7,8 @@
 - GRP-001-01 (stores)
 - GRP-001-03 (registry) 
 - GRP-001-04 (L3 components)
-- GRP-001-06 (edges - for edgeTypes)
+
+**Integration note:** Step 05 can start with temporary edge mapping; finalize custom edge wiring in GRP-001-06.
 
 ---
 
@@ -47,7 +48,7 @@ interface NodeProps {
   position: { x: number; y: number };
   data: {
     typeId: string;
-    payload: Record<string, unknown>;
+    payload: NodePayload;
     properties: Record<string, string>;
     visualToken?: string;
     collapsed?: boolean;
@@ -129,15 +130,19 @@ export function GraphCanvas() {
   
   const { fitView } = useReactFlow();
   const isValidConnection = useConnectionValidation();
+  const removeElements = useGraphStore(s => s.removeElements);
   
-  // Handle node position changes
+  // Handle node position changes in a controlled canvas.
+  // During drag: visual updates only (no undo pollution).
+  // On drag end: semantic update for undo/redo.
   const onNodesChange: OnNodesChange = useCallback((changes) => {
     changes.forEach(change => {
-      if (change.type === 'position' && change.position && !change.dragging) {
-        updateNode(change.id, { position: change.position });
-      }
-      if (change.type === 'remove') {
-        // Handle removal via store
+      if (change.type === 'position' && change.position) {
+        updateNode(
+          change.id,
+          { position: change.position },
+          { isVisualOnly: Boolean(change.dragging) },
+        );
       }
     });
   }, [updateNode]);
@@ -146,10 +151,26 @@ export function GraphCanvas() {
   const onEdgesChange: OnEdgesChange = useCallback((changes) => {
     changes.forEach(change => {
       if (change.type === 'remove') {
-        // Handle removal via store
+        // ReactFlow handles internal removal; store sync via onEdgesDelete
       }
     });
   }, []);
+  
+  // Handle node deletion (ReactFlow's built-in delete triggers this)
+  const onNodesDelete = useCallback((deletedNodes: ASTNode[]) => {
+    const nodeIds = deletedNodes.map(n => n.id);
+    // Get edge IDs connected to deleted nodes
+    const connectedEdgeIds = edges
+      .filter(e => nodeIds.includes(e.source) || nodeIds.includes(e.target))
+      .map(e => e.id);
+    removeElements(nodeIds, connectedEdgeIds);
+  }, [edges, removeElements]);
+  
+  // Handle edge deletion
+  const onEdgesDelete = useCallback((deletedEdges: ASTEdge[]) => {
+    const edgeIds = deletedEdges.map(e => e.id);
+    removeElements([], edgeIds);
+  }, [removeElements]);
   
   // Handle new connections
   const onConnect: OnConnect = useCallback((connection) => {
@@ -213,6 +234,8 @@ export function GraphCanvas() {
         isValidConnection={isValidConnection}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
+        onNodesDelete={onNodesDelete}
+        onEdgesDelete={onEdgesDelete}
         onConnect={onConnect}
         fitView
         fitViewOptions={{ padding: 0.12 }}
@@ -264,11 +287,12 @@ export const NodeShell = memo(function NodeShell({ data, selected }: NodeProps<A
   
   // Error node
   if (!def) {
+    const errorPayload = data.payload as { typeId: 'error'; message?: string };
     return (
       <div className="border-2 border-red-500 rounded-lg bg-red-50 p-2 min-w-[150px]">
         <span className="text-xs text-red-600">Unknown: {typeId}</span>
-        {data.payload.message && (
-          <p className="text-[10px] text-red-400">{data.payload.message as string}</p>
+        {errorPayload.message && (
+          <p className="text-[10px] text-red-400">{errorPayload.message}</p>
         )}
         <Handle type="target" position={Position.Top} />
         <Handle type="source" position={Position.Bottom} />
@@ -286,10 +310,16 @@ export const NodeShell = memo(function NodeShell({ data, selected }: NodeProps<A
   // Get renderer component
   const Renderer = def.renderers[renderTier];
   
-  // Build props for renderer
+  // Build props for renderer - TypeScript infers type from discriminated union
+  const title = 'name' in data.payload 
+    ? data.payload.name 
+    : 'title' in data.payload 
+      ? data.payload.title 
+      : 'Untitled';
+  
   const renderProps = {
     ...data.payload,
-    title: (data.payload.name ?? data.payload.title ?? 'Untitled') as string,
+    title,
     category: typeId,
     properties: data.properties,
     visualToken: data.visualToken,
@@ -351,6 +381,12 @@ export const GroupShell = memo(function GroupShell({ data, selected }: NodeProps
     });
   };
   
+  const groupTitle = 'name' in data.payload 
+    ? data.payload.name 
+    : 'title' in data.payload 
+      ? data.payload.title 
+      : 'Group';
+
   return (
     <>
       <NodeToolbar position={Position.Top} align="start" isVisible>
@@ -362,7 +398,7 @@ export const GroupShell = memo(function GroupShell({ data, selected }: NodeProps
             {collapsed ? '▶' : '▼'}
           </button>
           <span className="font-semibold font-headline">
-            {(data.payload.name ?? data.payload.title ?? 'Group') as string}
+            {groupTitle}
           </span>
         </div>
       </NodeToolbar>
@@ -432,19 +468,20 @@ Per Guide: Uses CSS variables from xy-theme.css (created in step 11)
 [ ] Node dragging updates position
 [ ] Edge connections create new edges
 [ ] isValidConnection uses registry
+[ ] onNodesDelete handler syncs to Zustand store
+[ ] onEdgesDelete handler syncs to Zustand store
+[ ] No unsafe type casts (payload is discriminated union)
 [ ] No TypeScript errors
 ```
 
 ---
 
-## 7. E2E (TestSprite)
+## 7. Local Verification
 
-Test via integration:
-1. Load page → canvas renders
-2. Drag node → position updates in store
-3. Connect two nodes → new edge appears
-4. Zoom out → dots visible
-5. Zoom in → full cards visible
+1. Load canvas and drag a node: position should update continuously (no frozen drag).
+2. Complete drag and run undo: one semantic position action should revert.
+3. Connect two nodes and verify new edge in store.
+4. Zoom tiers switch between dot/label/detail renderers.
 
 ---
 

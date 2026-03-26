@@ -58,36 +58,42 @@ interface UseKeyboardResult {
 apps/review-workbench/src/
 ├── features/graph-editor/
 │   └── L2-canvas/
-│       └── hooks/
-│           ├── use-graph-layout.ts
-│           ├── use-edge-inheritance.ts
-│           └── use-keyboard.ts
+│       ├── hooks/
+│       │   ├── use-graph-layout.ts
+│       │   ├── use-edge-inheritance.ts
+│       │   └── use-keyboard.ts
+│       └── workers/
+│           └── elk.worker.ts       # Web Worker for ELK layout
 ```
 
 ---
 
 ## 4. Implementation
 
+### Web Worker for ELK (elk.worker.ts)
+
 ```ts
-// features/graph-editor/L2-canvas/hooks/use-graph-layout.ts
-import { useCallback } from 'react';
+// features/graph-editor/L2-canvas/workers/elk.worker.ts
 import ELK from 'elkjs/lib/elk.bundled.js';
-import { useGraphStore } from '@/stores/graph-store';
 
 const elk = new ELK();
 
-interface LayoutOptions {
-  direction?: 'LR' | 'TB' | 'RL' | 'BT';
-  nodeSpacing?: number;
-  rankSpacing?: number;
+interface LayoutMessage {
+  type: 'layout';
+  payload: {
+    nodes: Array<{ id: string; width?: number; height?: number }>;
+    edges: Array<{ id: string; source: string; target: string }>;
+    options: {
+      direction?: 'LR' | 'TB' | 'RL' | 'BT';
+      nodeSpacing?: number;
+      rankSpacing?: number;
+    };
+  };
 }
 
-export function useGraphLayout() {
-  const nodes = useGraphStore(s => s.nodes);
-  const edges = useGraphStore(s => s.edges);
-  const updateNode = useGraphStore(s => s.updateNode);
-  
-  const layout = useCallback(async (options: LayoutOptions = {}) => {
+self.onmessage = async (event: MessageEvent<LayoutMessage>) => {
+  if (event.data.type === 'layout') {
+    const { nodes, edges, options } = event.data.payload;
     const { direction = 'LR', nodeSpacing = 50, rankSpacing = 100 } = options;
     
     const graph = {
@@ -99,8 +105,8 @@ export function useGraphLayout() {
       },
       children: nodes.map(node => ({
         id: node.id,
-        width: node.data?.width ?? 170,
-        height: node.data?.height ?? 68,
+        width: node.width ?? 170,
+        height: node.height ?? 68,
       })),
       edges: edges.map(edge => ({
         id: edge.id,
@@ -118,11 +124,81 @@ export function useGraphLayout() {
         position: { x: node.x, y: node.y },
       }));
     
-    updates.forEach(({ id, position }) => {
-      updateNode(id, { position });
-    });
+    self.postMessage({ type: 'result', payload: updates });
+  }
+};
+
+export {};
+```
+
+### Hook that uses Web Worker
+
+```ts
+// features/graph-editor/L2-canvas/hooks/use-graph-layout.ts
+import { useCallback, useRef, useEffect } from 'react';
+import { useGraphStore } from '@/stores/graph-store';
+
+interface LayoutOptions {
+  direction?: 'LR' | 'TB' | 'RL' | 'BT';
+  nodeSpacing?: number;
+  rankSpacing?: number;
+}
+
+export function useGraphLayout() {
+  const nodes = useGraphStore(s => s.nodes);
+  const edges = useGraphStore(s => s.edges);
+  const updateNode = useGraphStore(s => s.updateNode);
+  const workerRef = useRef<Worker | null>(null);
+  
+  // Initialize worker on mount
+  useEffect(() => {
+    workerRef.current = new Worker(
+      new URL('./workers/elk.worker.ts', import.meta.url),
+      { type: 'module' }
+    );
     
-    return updates;
+    return () => {
+      workerRef.current?.terminate();
+    };
+  }, []);
+  
+  const layout = useCallback((options: LayoutOptions = {}): Promise<Array<{ id: string; position: { x: number; y: number } }>> => {
+    return new Promise((resolve) => {
+      if (!workerRef.current) {
+        console.error('Layout worker not initialized');
+        resolve([]);
+        return;
+      }
+      
+      const handler = (event: MessageEvent) => {
+        const updates = event.data.payload;
+        // Apply updates to store
+        updates.forEach(({ id, position }: { id: string; position: { x: number; y: number } }) => {
+          updateNode(id, { position });
+        });
+        workerRef.current?.removeEventListener('message', handler);
+        resolve(updates);
+      };
+      
+      workerRef.current.addEventListener('message', handler);
+      
+      workerRef.current.postMessage({
+        type: 'layout',
+        payload: {
+          nodes: nodes.map(node => ({
+            id: node.id,
+            width: node.data?.width ?? 170,
+            height: node.data?.height ?? 68,
+          })),
+          edges: edges.map(edge => ({
+            id: edge.id,
+            source: edge.source,
+            target: edge.target,
+          })),
+          options,
+        },
+      });
+    });
   }, [nodes, edges, updateNode]);
   
   return { layout };
@@ -144,12 +220,12 @@ export function useEdgeInheritance() {
     const childNodes = nodes.filter(n => n.parentId === groupId);
     const childIds = new Set(childNodes.map(n => n.id));
     
-    // 1. Hide child nodes
+    // 1. Hide child nodes (visual-only: no undo stack entry)
     childNodes.forEach(child => {
-      updateNode(child.id, { hidden: true });
+      updateNode(child.id, { hidden: true }, { isVisualOnly: true });
     });
     
-    // 2. Create inherited edges
+    // 2. Create inherited edges (visual-only: no undo stack entry)
     const groupEdges = edges.filter(e => 
       childIds.has(e.source) || childIds.has(e.target)
     );
@@ -172,17 +248,17 @@ export function useEdgeInheritance() {
               ? 'inherited' 
               : edge.data?.relationType,
           },
-        });
+        }, { isVisualOnly: true });
       }
     });
     
-    // 3. Update group node
+    // 3. Update group node (visual-only: no undo stack entry)
     const groupNode = nodes.find(n => n.id === groupId);
     if (groupNode) {
       updateNode(groupId, { 
         data: { ...groupNode.data, collapsed: true },
         style: { ...groupNode.style, height: 48 },
-      });
+      }, { isVisualOnly: true });
     }
   }, [nodes, edges, updateNode, updateEdge]);
   
@@ -190,12 +266,12 @@ export function useEdgeInheritance() {
     const childNodes = nodes.filter(n => n.parentId === groupId);
     const childIds = new Set(childNodes.map(n => n.id));
     
-    // 1. Show child nodes
+    // 1. Show child nodes (visual-only: no undo stack entry)
     childNodes.forEach(child => {
-      updateNode(child.id, { hidden: false });
+      updateNode(child.id, { hidden: false }, { isVisualOnly: true });
     });
     
-    // 2. Restore original edges
+    // 2. Restore original edges (visual-only: no undo stack entry)
     edges
       .filter(e => e.data?._originalSource || e.data?._originalTarget)
       .forEach(edge => {
@@ -208,16 +284,16 @@ export function useEdgeInheritance() {
             _originalSource: undefined,
             _originalTarget: undefined,
           },
-        });
+        }, { isVisualOnly: true });
       });
     
-    // 3. Update group node
+    // 3. Update group node (visual-only: no undo stack entry)
     const groupNode = nodes.find(n => n.id === groupId);
     if (groupNode) {
       updateNode(groupId, { 
         data: { ...groupNode.data, collapsed: false },
         style: { ...groupNode.style, height: undefined },
-      });
+      }, { isVisualOnly: true });
     }
   }, [nodes, edges, updateNode, updateEdge]);
   
@@ -227,9 +303,7 @@ export function useEdgeInheritance() {
 
 ```ts
 // features/graph-editor/L2-canvas/hooks/use-keyboard.ts
-import { useEffect, useCallback } from 'react';
-import { useStore } from 'zustand';
-import { useKeyboardShortcuts as useRFKeyboard } from '@xyflow/react';
+import { useEffect } from 'react';
 import { useGraphStore } from '@/stores/graph-store';
 import { useUIStore } from '@/stores/ui-store';
 
@@ -241,22 +315,9 @@ export function useKeyboard() {
   
   const undo = useGraphStore(s => s.undo);
   const redo = useGraphStore(s => s.redo);
-  const removeElements = useGraphStore(s => s.removeElements);
   
-  // Delete
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Delete' || e.key === 'Backspace') {
-        if (editorState === 'browse' || editorState === 'focus') {
-          // Trigger delete for selected elements
-          // Implementation depends on selection state
-        }
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [editorState]);
+  // NOTE: Delete key handling is done by ReactFlow internally via onNodesDelete/onEdgesDelete
+  // Do NOT implement manual Delete handling here - it would duplicate functionality
   
   // Enter - open node editor
   useEffect(() => {
@@ -331,12 +392,14 @@ Hooks are pure logic — no styles. Layout updates positions in store; keyboard 
 
 ```
 [ ] use-graph-layout.ts exports useGraphLayout hook
-[ ] use-graph-layout.layout() repositions nodes via ELKjs
+[ ] elk.worker.ts runs ELK layout in Web Worker (not main thread)
+[ ] use-graph-layout.layout() repositions nodes asynchronously
 [ ] use-edge-inheritance.ts exports collapseGroup/expandGroup
-[ ] collapseGroup hides children, rewires edges to group
-[ ] expandGroup shows children, restores original edges
-[ ] use-keyboard.ts attaches Delete, Enter, Escape handlers
+[ ] collapseGroup uses isVisualOnly: true (no undo entry)
+[ ] expandGroup uses isVisualOnly: true (no undo entry)
+[ ] use-keyboard.ts attaches Enter, Escape handlers
 [ ] use-keyboard.ts attaches Ctrl+Z/Ctrl+Y for undo/redo
+[ ] use-keyboard.ts does NOT handle Delete (ReactFlow handles it via onNodesDelete)
 [ ] No TypeScript errors
 [ ] No memory leaks from event listeners
 ```
@@ -404,8 +467,8 @@ feat(hooks): implement utility hooks (GRP-001-09)
 
 | Dep | Reason |
 |-----|--------|
-| `elkjs` | Graph layout algorithm |
-| `@xyflow/react` | ReactFlow keyboard utilities |
+| `elkjs` | Graph layout algorithm (runs in Web Worker) |
+| `@xyflow/react` | ReactFlow (provides onNodesDelete/onEdgesDelete) |
 
 ---
 

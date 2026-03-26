@@ -63,8 +63,16 @@ apps/review-workbench/src/
 ├── schema/
 │   ├── registry.ts            # NodeTypeRegistry class + singleton
 │   ├── registry.types.ts      # NodeTypeDefinition interface
-│   └── register-defaults.ts   # Default node type registrations
+│   └── register-defaults.ts   # ONLY for testing/mocks - NOT for production
 ```
+
+> **CRITICAL:** `register-defaults.ts` must NOT be used in production. L1 (GraphEditorPage) must load the schema JSON dynamically and populate the registry at runtime (see Step 10). This file should only be used for local development/testing or the SandboxPage.
+
+### Anti-circular dependency rule (blocking)
+
+- Step 03 must use placeholder renderers only.
+- Step 03 must not import `EntityCard`/L3 components directly.
+- Step 04 is responsible for replacing placeholders with real renderers.
 
 ---
 
@@ -163,7 +171,24 @@ export const registry = new NodeTypeRegistry();
 import { registry } from './registry';
 import { z } from 'zod';
 
-// Person node
+// PLACEHOLDER COMPONENTS - Will be replaced with real L3 components after Step 4
+// These simple placeholders prevent build errors during sequential development
+const PlaceholderDot = ({ colorToken }: { colorToken: string }) => (
+  <div className="w-4 h-4 rounded-full" style={{ backgroundColor: `var(--${colorToken})` }} />
+);
+
+const PlaceholderLabel = ({ title }: { title: string }) => (
+  <span className="text-xs">{title}</span>
+);
+
+const PlaceholderDetail = (props: any) => (
+  <div className="p-2 min-w-[150px] border rounded">
+    <p className="text-xs font-semibold">{props.title || 'Untitled'}</p>
+    <p className="text-[10px] text-muted-foreground">Placeholder</p>
+  </div>
+);
+
+// Person node - placeholder
 registry.register({
   typeId: 'person',
   label: 'Person',
@@ -175,17 +200,15 @@ registry.register({
     role: z.string().optional(),
   }),
   renderers: {
-    dot: ({ colorToken }) => (
-      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: `var(--${colorToken})` }} />
-    ),
-    label: ({ title }) => <span className="text-xs">{title}</span>,
-    detail: (props) => <EntityCard {...props} />,
+    dot: PlaceholderDot,
+    label: PlaceholderLabel,
+    detail: PlaceholderDetail,
   },
   defaultSize: { width: 200, height: 80 },
   allowedConnections: ['skill', 'project', 'publication', 'concept'],
 });
 
-// Skill node
+// Skill node - placeholder
 registry.register({
   typeId: 'skill',
   label: 'Skill',
@@ -197,17 +220,15 @@ registry.register({
     level: z.enum(['basic', 'intermediate', 'advanced']).optional(),
   }),
   renderers: {
-    dot: ({ colorToken }) => (
-      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: `var(--${colorToken})` }} />
-    ),
-    label: ({ title }) => <span className="text-xs">{title}</span>,
-    detail: (props) => <EntityCard {...props} />,
+    dot: PlaceholderDot,
+    label: PlaceholderLabel,
+    detail: PlaceholderDetail,
   },
   defaultSize: { width: 180, height: 60 },
   allowedConnections: ['person', 'project', 'concept'],
 });
 
-// Project node
+// Project node - placeholder
 registry.register({
   typeId: 'project',
   label: 'Project',
@@ -219,17 +240,15 @@ registry.register({
     stage: z.enum(['draft', 'active', 'completed']).optional(),
   }),
   renderers: {
-    dot: ({ colorToken }) => (
-      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: `var(--${colorToken})` }} />
-    ),
-    label: ({ title }) => <span className="text-xs">{title}</span>,
-    detail: (props) => <EntityCard {...props} />,
+    dot: PlaceholderDot,
+    label: PlaceholderLabel,
+    detail: PlaceholderDetail,
   },
   defaultSize: { width: 200, height: 80 },
   allowedConnections: ['person', 'skill', 'publication'],
 });
 
-// Publication node
+// Publication node - placeholder
 registry.register({
   typeId: 'publication',
   label: 'Publication',
@@ -241,17 +260,15 @@ registry.register({
     year: z.string().optional(),
   }),
   renderers: {
-    dot: ({ colorToken }) => (
-      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: `var(--${colorToken})` }} />
-    ),
-    label: ({ title }) => <span className="text-xs">{title}</span>,
-    detail: (props) => <EntityCard {...props} />,
+    dot: PlaceholderDot,
+    label: PlaceholderLabel,
+    detail: PlaceholderDetail,
   },
   defaultSize: { width: 220, height: 80 },
   allowedConnections: ['person', 'project', 'concept'],
 });
 
-// Concept node
+// Concept node - placeholder
 registry.register({
   typeId: 'concept',
   label: 'Concept',
@@ -263,17 +280,15 @@ registry.register({
     description: z.string().optional(),
   }),
   renderers: {
-    dot: ({ colorToken }) => (
-      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: `var(--${colorToken})` }} />
-    ),
-    label: ({ title }) => <span className="text-xs">{title}</span>,
-    detail: (props) => <EntityCard {...props} />,
+    dot: PlaceholderDot,
+    label: PlaceholderLabel,
+    detail: PlaceholderDetail,
   },
   defaultSize: { width: 180, height: 60 },
   allowedConnections: ['person', 'skill', 'project', 'publication'],
 });
 
-// Document node
+// Document node - placeholder
 registry.register({
   typeId: 'document',
   label: 'Document',
@@ -285,17 +300,15 @@ registry.register({
     type: z.enum(['cv', 'resume', 'report', 'other']).optional(),
   }),
   renderers: {
-    dot: ({ colorToken }) => (
-      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: `var(--${colorToken})` }} />
-    ),
-    label: ({ title }) => <span className="text-xs">{title}</span>,
-    detail: (props) => <EntityCard {...props} />,
+    dot: PlaceholderDot,
+    label: PlaceholderLabel,
+    detail: PlaceholderDetail,
   },
   defaultSize: { width: 200, height: 80 },
   allowedConnections: ['section', 'entry'],
 });
 
-// Section node
+// Section node - placeholder
 registry.register({
   typeId: 'section',
   label: 'Section',
@@ -307,17 +320,15 @@ registry.register({
     order: z.number().optional(),
   }),
   renderers: {
-    dot: ({ colorToken }) => (
-      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: `var(--${colorToken})` }} />
-    ),
-    label: ({ title }) => <span className="text-xs">{title}</span>,
-    detail: (props) => <EntityCard {...props} />,
+    dot: PlaceholderDot,
+    label: PlaceholderLabel,
+    detail: PlaceholderDetail,
   },
   defaultSize: { width: 180, height: 60 },
   allowedConnections: ['document', 'entry'],
 });
 
-// Entry node
+// Entry node - placeholder
 registry.register({
   typeId: 'entry',
   label: 'Entry',
@@ -329,16 +340,20 @@ registry.register({
     date: z.string().optional(),
   }),
   renderers: {
-    dot: ({ colorToken }) => (
-      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: `var(--${colorToken})` }} />
-    ),
-    label: ({ title }) => <span className="text-xs">{title}</span>,
-    detail: (props) => <EntityCard {...props} />,
+    dot: PlaceholderDot,
+    label: PlaceholderLabel,
+    detail: PlaceholderDetail,
   },
   defaultSize: { width: 160, height: 50 },
   allowedConnections: ['section'],
 });
 ```
+
+> **IMPORTANT:** After completing Step 4 (L3 Components), update this file to use the real `EntityCard` component:
+> ```ts
+> import { EntityCard } from '@/components/content/EntityCard';
+> // Replace PlaceholderDetail with: detail: (props) => <EntityCard {...props} />
+> ```
 
 ---
 
@@ -358,21 +373,21 @@ No styles — registry is pure logic. CSS tokens defined in GRP-001-11 (xy-theme
 [ ] registry.validatePayload() handles unknown type gracefully
 [ ] registry.sanitizePayload() applies sanitizer if defined
 [ ] registry.canConnect() checks allowedConnections
-[ ] register-defaults.ts registers all 8 node types
+[ ] register-defaults.ts registers all 8 node types (PLACEHOLDERS)
+[ ] register-defaults.ts does NOT import EntityCard (prevents circular dependency)
 [ ] No TypeScript errors
 [ ] Schema step (GRP-001-02) now works with validation
 ```
 
 ---
 
-## 7. E2E (TestSprite)
+## 7. Local Verification
 
-Test via integration in later steps:
-1. Import registry in schemaToGraph
-2. Pass valid node → validatePayload returns success: true
-3. Pass invalid node → validatePayload returns success: false
-4. Pass unknown type → validatePayload returns error
-5. Test canConnect for valid/invalid connections
+1. Import registry in schema translation module.
+2. Pass valid node -> `validatePayload` returns `success: true`.
+3. Pass invalid node -> `validatePayload` returns `success: false`.
+4. Pass unknown type -> graceful failure path.
+5. Verify `register-defaults.ts` compiles without importing L3 components.
 
 ---
 

@@ -4,110 +4,62 @@ Each file is one discrete, agent-executable task. Execute in order.
 
 ---
 
-## Phase 0 — Prerequisites (one-time)
+## Implementation (run first)
 
-| Step | Task | Status |
-|------|------|--------|
-| UI-001-01 | Install shadcn components | ☐ |
-
----
-
-## Phase 1 — Data Foundation (first!)
-
-> **Why schema first?** Real data to test UI against, validation early, type safety from start
-
-| Step | Task | Status |
-|------|------|--------|
-| GRP-001-01 | Zustand stores (graph-store, ui-store) | ☐ |
-| GRP-001-02 | Schema translation (schemaToGraph, graphToDomain) — work with real data | ☐ |
-
----
-
-## Phase 2 — Type System
-
-| Step | Task | Status |
-|------|------|--------|
-| GRP-001-03 | Node Registry with validation | ☐ |
-
----
-
-## Phase 3 — UI Components (consume data from Phase 1)
-
-| Step | Task | Status |
-|------|------|--------|
-| GRP-001-04 | L3 Content (EntityCard, PropertiesPreview, PropertyEditor, PlaceholderNode) | ☐ |
-| GRP-001-05 | GraphCanvas (ReactFlow wrapper + render tiers) | ☐ |
-| GRP-001-06 | Custom edges (FloatingEdge, ButtonEdge) | ☐ |
+| Order | Step | Task | Status |
+|-------|------|------|--------|
+| 00 | GRP-001-00 | Prerequisites (data provider, worker support, QA bootstrap) | ☐ |
+| 01 | UI-001-01 | Install shadcn components | ☐ |
+| 02 | GRP-001-01 | Zustand stores (graph-store, ui-store) | ☐ |
+| 03 | GRP-001-02 | Schema translation (schemaToGraph, graphToDomain) | ☐ |
+| 04 | GRP-001-03 | Node Registry with validation (placeholders only) | ☐ |
+| 05 | GRP-001-04 | L3 Content (EntityCard, PropertiesPreview, PropertyEditor) | ☐ |
+| 06 | GRP-001-05 | GraphCanvas (ReactFlow wrapper + render tiers) | ☐ |
+| 07 | GRP-001-06 | Custom edges (FloatingEdge, ButtonEdge) | ☐ |
+| 08 | GRP-001-07 | Sidebar (Actions, Filters, Creation, View) | ☐ |
+| 09 | GRP-001-08 | Inspector Panels (NodeInspector, EdgeInspector) | ☐ |
+| 10 | GRP-001-09 | Hooks (useGraphLayout, useEdgeInheritance, useKeyboard) | ☐ |
+| 11 | GRP-001-10 | L1 Page (orchestrator) | ☐ |
+| 12 | GRP-001-11 | xy-theme.css (theming) | ☐ |
+| 13 | UI-001-02 | Sidebar Accordion (depends on GRP-001-07) | ✓ |
+| 14 | UI-001-03 | Node Sheet (depends on GRP-001-08) | ☐ |
+| 15 | UI-001-04 | Edge Sheet (depends on GRP-001-08) | ☐ |
+| 16 | UI-001-05 | Property Inputs (depends on GRP-001-04, GRP-001-08) | ☐ |
+| 17 | UI-001-06 | Delete Dialog (depends on GRP-001-05) | ☐ |
+| 18 | UI-001-07 | Filter UI (depends on GRP-001-07) | ☐ |
+| 19 | UI-001-08 | Creation Popover (depends on GRP-001-07) | ☐ |
+| 20 | UI-001-09 | Context Menu (depends on GRP-001-05) | ☐ |
+| 21 | UI-001-10 | Command Dialog (depends on GRP-001-07) | ☐ |
+| 22 | UI-001-11 | Sonner (depends on GRP-001-10) | ☐ |
 
 ---
 
-## Phase 4 — Integration
+## Documentation (run AFTER implementation)
 
-| Step | Task | Status |
-|------|------|--------|
-| GRP-001-07 | L1 Page (orchestrator — fetches data, translates, renders canvas) | ☐ |
-
----
-
-## Phase 5 — Editor Controls
-
-| Step | Task | Status |
-|------|------|--------|
-| GRP-001-08 | Sidebar (Actions, Filters, Creation, View sections) | ☐ |
-| GRP-001-09 | Inspector Panels (NodeInspector, EdgeInspector with Sheet) | ☐ |
-| GRP-001-10 | Hooks (useGraphLayout, useEdgeInheritance, useKeyboard) | ☐ |
+| Order | Step | Task | File | Description |
+|-------|------|------|------|-------------|
+| 23 | DOC-01 | Commit and tag | `step-01-commit-and-tag.md` | Tag all completed steps |
+| 24 | DOC-02 | Create docs | `step-02-create-docs.md` | Generate final docs |
+| 25 | DOC-03 | Cleanup plan | `step-03-cleanup-plan.md` | Archive or remove temp files safely |
+| 26 | DOC-04 | Create future/ | `step-04-create-future.md` | Deferred specs folder |
+| 27 | DOC-05 | Final validation | `step-05-final-validation.md` | Consolidated E2E and regression checks |
 
 ---
 
-## Phase 6 — CSS / Theming
+## Quick Reference
 
-| Step | Task | Status |
-|------|------|--------|
-| GRP-001-11 | xy-theme.css (node color tokens, edge styles, dark mode, touch support) | ☐ |
-
----
-
-## UI Enhancements (PARALLEL with GRP)
-
-> **Note:** UI-001 steps can run in parallel with GRP-001 after UI-001-01 completes. They migrate existing UI to shadcn components.
-
-| Step | Task | Status | Runs After |
-|------|------|--------|------------|
-| UI-001-02 | Sidebar Accordion | ☐ | UI-001-01 |
-| UI-001-03 | Node Sheet | ☐ | UI-001-01 |
-| UI-001-04 | Edge Sheet | ☐ | UI-001-01 |
-| UI-001-05 | Property Inputs | ☐ | UI-001-01 |
-| UI-001-06 | Delete Dialog | ☐ | UI-001-01 |
-| UI-001-07 | Filter UI | ☐ | UI-001-01 |
-| UI-001-08 | Creation Popover | ☐ | UI-001-01 |
-| UI-001-09 | Context Menu | ☐ | UI-001-01 |
-| UI-001-10 | Command Dialog | ☐ | UI-001-01 |
-| UI-001-11 | Sonner | ☐ | UI-001-01 |
+| Need | Go To |
+|------|-------|
+| Avoid errors | `docs/node-editor/architecture_pitfalls.md` |
+| Step-by-step | `plan/IMPLEMENTATION_ORDER.md` |
+| Specs | `plan/steps/SPEC_GRP_001_*.md` |
 
 ---
 
-## Cleanup Steps (after all above complete)
+## Legacy Retention Policy
 
-| Step | Task | Status |
-|------|------|--------|
-| step-01 | Commit and tag completed steps | ☐ |
-| step-02 | Create updated documentation | ☐ |
-| step-03 | Clean up plan directory | ☐ |
-| step-04 | Create FUTURE.md roadmap | ☐ |
+Do not delete `apps/review-workbench/src/pages/global/KnowledgeGraph.tsx` at the beginning.
 
----
-
-## Spec Overview
-
-- **GRP-001:** Graph Editor refactor - `SPEC_GRP_001.md`
-- **UI-001:** Shadcn UI migration - `SPEC_UI_001.md`
-
----
-
-## Reference
-
-- Architecture: `plan/ARCHITECTURE.md`
-- Blueprint: `plan/_meta/blueprint_node_editor.md`
-- ReactFlow patterns: `plan/_meta/reactflow_patterns_catalog.md`
-- Known problems: `plan/_meta/architecture_critique.md`
-- E2E Testing: `plan/_meta/testsprite_product.md`
+- Keep it as migration reference during GRP-001 and UI-001.
+- Optional: rename to `KnowledgeGraph.legacy.tsx` to prevent accidental usage.
+- Delete only after GRP-001-10 is stable and local validation passes.

@@ -92,6 +92,10 @@ apps/review-workbench/src/
 
 ## 4. Implementation
 
+### Required wiring step (from registry placeholders)
+
+After creating L3 components, update registry detail renderers to replace Step 03 placeholders with real components. This is required to close the temporary anti-circular setup.
+
 ### components/content/EntityCard.tsx
 
 ```tsx
@@ -467,13 +471,12 @@ Per Guide: "Background: bg-surface", "Headers: font-mono text-[10px] uppercase"
 
 ---
 
-## 7. E2E (TestSprite)
+## 7. Local Verification
 
-Test via integration in later steps:
-1. GraphCanvas renders nodes → EntityCard visible
-2. NodeInspector opens → PropertyEditor editable
-3. Zoom out → PlaceholderNode shows
-4. Loading state → NodeSkeleton visible
+1. Render `EntityCard`, `PropertiesPreview`, and `PropertyEditor` in isolation.
+2. Verify registry renderer mapping now points to real L3 components.
+3. Confirm placeholders are no longer used for detail tier after wiring.
+4. Typecheck touched modules.
 
 ---
 

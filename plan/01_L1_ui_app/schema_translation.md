@@ -125,4 +125,4 @@ El Canvas solo ve topología, no conoce "Vehículos" ni "Motor".
 
 - `L2_graph_viewer/graph_foundations.md` - Fundamentos del grafo
 - `L1_ui_app/schema_integration.md` - Integración con APIs
-- `_meta/flow_contract.md` - Contratos entre capas
+- `_meta/06_flow_contract.md` - Contratos entre capas

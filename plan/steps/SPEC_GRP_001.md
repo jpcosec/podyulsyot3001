@@ -89,9 +89,11 @@ Validation errors produce ErrorNode, not crashes.
 
 ## Dependencies
 
-- Step GRP-001-01 (stores) first
-- Step GRP-001-02 (schema) second - real data for rest
+- Step GRP-001-00 (prerequisites) first
+- Step UI-001-01 (shadcn install) second
+- Step GRP-001-01 (stores) and GRP-001-02 (schema) next
 - Steps 04-10 depend on 01-03
+- UI-001-02..11 are refinement steps and depend on GRP artifacts
 
 ---
 

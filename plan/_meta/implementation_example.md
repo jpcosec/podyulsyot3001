@@ -198,5 +198,5 @@ export function InternalNodeRouter({ payload }) {
 
 ## Docs Relacionados
 
-- `_meta/flow_contract.md` - Contratos completos
+- `_meta/06_flow_contract.md` - Contratos completos
 - `ARCHITECTURE.md` - Modelo de 3 capas

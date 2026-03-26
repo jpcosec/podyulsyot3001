@@ -1,104 +1,44 @@
-# Step 04: Create FUTURE.md Roadmap
+# Step 04: Maintain Future Specs Folder
 
-**Context:** Document future improvements and next steps after the refactor.
+**Context:** `plan/future/` already exists. This step keeps deferred specs aligned with the current implementation roadmap.
 
 ---
 
 ## 1. Purpose
 
-- Document what was accomplished
-- Set direction for future work
-- Provide onboarding context for new developers
+- Keep deferred ideas documented without polluting current execution steps
+- Ensure `plan/future/README.md` reflects the actual spec files present
+- Track only realistic post-v2 features
 
 ---
 
-## 2. Content Template
+## 2. Current folder
 
-Create `FUTURE.md` in project root:
-
-```markdown
-# Future Improvements
-
-## Completed (v2.0.0)
-
-- **Architecture:** L1/L2 split with Zustand stores
-- **Rendering:** ReactFlow with custom nodes/edges
-- **UI:** shadcn/ui component migration
-- **Theming:** xy-theme.css with type-based colors
-
-## Backlog
-
-### High Priority
-- [ ] Performance optimization for large graphs (>500 nodes)
-- [ ] Implement group collapse/expand animations
-- [ ] Add minimap customization
-- [ ] Edge label editing
-
-### Medium Priority
-- [ ] Keyboard shortcuts for all actions
-- [ ] Undo/redo persistence across sessions
-- [ ] Graph export (JSON, PNG, SVG)
-- [ ] Import from external formats
-
-### Lower Priority
-- [ ] Collaborative editing (real-time)
-- [ ] Graph versioning/branching
-- [ ] Custom node templates
-- [ ] Plugin system for extensions
-
-## Technical Debt
-
-- [ ] E2E test coverage (TestSprite)
-- [ ] Performance benchmarking
-- [ ] Bundle size optimization
-- [ ] Accessibility audit
-
-## Contributing
-
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines.
-
-## Architecture Decisions
-
-- **Why Zustand?** Atomic selectors prevent unnecessary re-renders
-- **Why shadcn/ui?** Accessible, themeable, maintained
-- **Why ELKjs?** Best-in-class layout algorithm for directed graphs
+```
+plan/future/
+├── README.md
+├── SPEC_FUTURE_001_performance.md
+└── SPEC_FUTURE_002_export.md
 ```
 
 ---
 
 ## 3. Action
 
-```bash
-# Create FUTURE.md
-cat > FUTURE.md << 'EOF'
-# Future Improvements
-
-## Completed (v2.0.0)
-...
-
-## Backlog
-...
-
-## Contributing
-See CONTRIBUTING.md
-EOF
-
-# Commit
-git add FUTURE.md
-git commit -m "docs: add FUTURE.md roadmap"
-```
+- Review `plan/future/README.md` and ensure the table matches real files.
+- Add new future specs only when a concrete dependency and scope are known.
+- Keep each future spec self-contained (`Problem`, `Solution`, `Dependencies`, `Risks`).
 
 ---
 
 ## 4. Verification
 
-- [ ] FUTURE.md exists in root
-- [ ] Lists completed work
-- [ ] Has prioritized backlog
-- [ ] Links to contributing guidelines
+- [ ] `plan/future/README.md` lists only existing spec files
+- [ ] No duplicate templates or stale placeholders
+- [ ] Priorities still match roadmap assumptions
 
 ---
 
-## 5. Next Step
+## 5. Next step
 
-All cleanup steps complete. Begin new development cycle.
+`step-05-final-validation.md` - Run consolidated end-to-end validation.

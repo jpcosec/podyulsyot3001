@@ -22,13 +22,20 @@
 ### Graph Store
 
 ```ts
+// Domain-agnostic payload at store boundary.
+// Runtime validation and narrowing happen in the Node Type Registry.
+type NodePayload = {
+  typeId: string;
+  value: unknown;
+};
+
 interface ASTNode {
   id: string;
   type: string;
   position: { x: number; y: number };
   data: {
     typeId: string;
-    payload: Record<string, unknown>;
+    payload: NodePayload;
     properties: Record<string, string>;
     visualToken?: string;
   };
@@ -85,13 +92,20 @@ apps/review-workbench/src/
 ```ts
 // Core types for graph state
 
+// Domain-agnostic payload at store boundary.
+// Runtime validation and narrowing happen in the Node Type Registry.
+export type NodePayload = {
+  typeId: string;
+  value: unknown;
+};
+
 export interface ASTNode {
   id: string;
   type: string;
   position: { x: number; y: number };
   data: {
     typeId: string;
-    payload: Record<string, unknown>;
+    payload: NodePayload;
     properties: Record<string, string>;
     visualToken?: string;
   };
@@ -146,8 +160,8 @@ interface GraphStore {
   // Mutations
   addElements: (nodes: ASTNode[], edges: ASTEdge[]) => void;
   removeElements: (nodeIds: string[], edgeIds: string[]) => void;
-  updateNode: (nodeId: string, patch: Partial<ASTNode>) => void;
-  updateEdge: (edgeId: string, patch: Partial<ASTEdge>) => void;
+  updateNode: (nodeId: string, patch: Partial<ASTNode>, options?: { isVisualOnly?: boolean }) => void;
+  updateEdge: (edgeId: string, patch: Partial<ASTEdge>, options?: { isVisualOnly?: boolean }) => void;
   
   // History
   undo: () => void;
@@ -204,11 +218,20 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
     }));
   },
   
-  updateNode: (nodeId, patch) => {
+  updateNode: (nodeId, patch, options) => {
     const { nodes } = get();
     const node = nodes.find(n => n.id === nodeId);
     if (!node) return;
     const updatedNode = { ...node, ...patch };
+    
+    // If isVisualOnly is true, skip adding to undoStack (for UI-only changes like collapse/expand)
+    if (options?.isVisualOnly) {
+      set(state => ({
+        nodes: state.nodes.map(n => n.id === nodeId ? updatedNode : n),
+      }));
+      return;
+    }
+    
     const action: SemanticAction = {
       type: 'UPDATE_NODE',
       payload: { before: node, after: updatedNode },
@@ -222,11 +245,20 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
     }));
   },
   
-  updateEdge: (edgeId, patch) => {
+  updateEdge: (edgeId, patch, options) => {
     const { edges } = get();
     const edge = edges.find(e => e.id === edgeId);
     if (!edge) return;
     const updatedEdge = { ...edge, ...patch };
+    
+    // If isVisualOnly is true, skip adding to undoStack (for UI-only changes like collapse/expand)
+    if (options?.isVisualOnly) {
+      set(state => ({
+        edges: state.edges.map(e => e.id === edgeId ? updatedEdge : e),
+      }));
+      return;
+    }
+    
     const action: SemanticAction = {
       type: 'UPDATE_EDGE',
       payload: { before: edge, after: updatedEdge },
@@ -422,6 +454,7 @@ No styles — stores are pure logic. No UI components yet.
 [ ] graph-store.isDirty() returns true after mutations, false after markSaved()
 [ ] graph-store.undo() reverses last action correctly
 [ ] graph-store.redo() re-applies undone action correctly
+[ ] removeElements() is used by ReactFlow delete callbacks and records semantic history
 [ ] ui-store.ts exports useUIStore with all methods
 [ ] ui-store.setFilter() merges partial filter updates
 [ ] No TypeScript errors
@@ -430,9 +463,11 @@ No styles — stores are pure logic. No UI components yet.
 
 ---
 
-## 7. E2E (TestSprite)
+## 7. Local Verification
 
-Not applicable — stores are logic layer, tested via component integration in later steps.
+- Instantiate the store and run `addElements`, `updateNode`, `removeElements`.
+- Confirm `isVisualOnly` updates do not pollute semantic undo history.
+- Confirm `undo`/`redo` roundtrip restores previous values correctly.
 
 ---
 

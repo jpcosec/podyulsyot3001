@@ -84,4 +84,4 @@ Tener una representación formal de la estructura UI del Node Editor como grafo,
 ## Docs Relacionados
 
 - `ARCHITECTURE.md` - Modelo de 3 capas
-- `_meta/flow_contract.md` - Contratos entre capas
+- `_meta/06_flow_contract.md` - Contratos entre capas

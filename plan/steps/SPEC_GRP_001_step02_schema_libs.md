@@ -16,6 +16,8 @@
 - Current KnowledgeGraph.tsx has hardcoded mock data in `buildInitialGraph()`
 - We need a pipeline that: (1) reads raw API data → (2) validates against registry → (3) outputs AST → (4) renders UI
 
+**Contract rule:** Keep payload contract aligned with `stores/types.ts` and registry runtime validation. Do not introduce a separate payload shape here.
+
 ---
 
 ## 2. Data Contract
@@ -54,7 +56,7 @@ interface ASTNode {
   position: { x: number; y: number };
   data: {
     typeId: string;
-    payload: Record<string, unknown>;
+    payload: NodePayload;
     properties: Record<string, string>;
     visualToken?: string;  // references xy-theme.css token
   };
@@ -242,7 +244,10 @@ function matchNodes(rawData: RawData): Map<string, ASTNode> {
       position: { x: depth * 200, y: 0 }, // Layout will reposition
       data: {
         typeId: rawNode.type,
-        payload: sanitized,
+        payload: {
+          typeId: rawNode.type,
+          value: sanitized,
+        },
         properties: rawNode.properties,
         visualToken: def.colorToken,
       },
@@ -390,14 +395,12 @@ No styles — this is pure data transformation logic.
 
 ---
 
-## 7. E2E (TestSprite)
+## 7. Local Verification
 
-Test via integration in GRP-001-07 (L1 Page):
-1. Fetch raw data from mock API
-2. Pass to schemaToGraph()
-3. Verify nodes/edges match expected AST
-4. Verify errors array contains validation failures
-5. Verify ErrorNode renders for invalid types
+1. Pass valid raw data into `schemaToGraph()` and verify `nodes/edges/errors` shape.
+2. Pass unknown type and verify `ErrorNode` is emitted (no crash).
+3. Pass invalid payload and verify validation failure is captured in `errors`.
+4. Run `graphToDomain()` and verify hierarchy + relation roundtrip.
 
 ---
 

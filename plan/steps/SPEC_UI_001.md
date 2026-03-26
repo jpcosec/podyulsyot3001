@@ -2,7 +2,7 @@
 
 **Feature:** Replace custom UI components with shadcn/ui
 **Context:** Node Editor refactoring - custom UI outside ReactFlow canvas
-**Phase:** Parallel with GRP-001
+**Phase:** Post-GRP integration/refinement track
 
 ---
 
@@ -18,7 +18,7 @@ Replace custom-built UI components in `KnowledgeGraph.tsx` with shadcn/ui compon
 
 ## Scope
 
-### Replace (Custom UI → Shadcn)
+### Replace (Custom UI -> Shadcn)
 
 | Current | Replacement | Step |
 |---------|-------------|------|
@@ -48,8 +48,15 @@ Replace custom-built UI components in `KnowledgeGraph.tsx` with shadcn/ui compon
 
 ## Dependencies
 
-- Step 01 must complete first (install components)
-- Steps 02-11 can run in parallel after step 01
+- `UI-001-01` is blocking and must be completed first.
+- `UI-001-02` depends on `GRP-001-07`.
+- `UI-001-03` and `UI-001-04` depend on `GRP-001-08`.
+- `UI-001-05` depends on `GRP-001-04` and `GRP-001-08`.
+- `UI-001-06` and `UI-001-09` depend on `GRP-001-05`.
+- `UI-001-07`, `UI-001-08`, and `UI-001-10` depend on `GRP-001-07`.
+- `UI-001-11` depends on `GRP-001-10`.
+
+This track is not fully parallel by default. Parallelize only when dependencies are already met.
 
 ---
 
@@ -72,6 +79,13 @@ apps/review-workbench/src/components/ui/
   tabs.tsx
   scroll-area.tsx
 ```
+
+---
+
+## Verification strategy
+
+- Per-step local checks are mandatory (render smoke + typecheck on touched module).
+- End-to-end checks run in `step-05-final-validation.md` after all GRP/UI steps are complete.
 
 ---
 

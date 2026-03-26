@@ -21,3 +21,4 @@
 - Fixed GRP-001-08 node property persistence so inspector add/edit/delete/rename updates replace property maps correctly.
 - Implemented GRP-001-09 hooks layer with ELK worker layout, edge inheritance collapse/expand behavior, and global keyboard shortcuts wired into L2 canvas components.
 - Implemented GRP-001-10 L1/L2 integration with `GraphEditorPage` orchestrating schema registration + graph loading and new `GraphEditor` container composing canvas, sidebar, inspector panels, and toaster.
+- Implemented UI-001-02: Sidebar accordion migration (uses shadcn Accordion with type="multiple").

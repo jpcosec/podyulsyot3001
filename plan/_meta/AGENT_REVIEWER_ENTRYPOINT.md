@@ -1,47 +1,48 @@
 # Agent Reviewer Entrypoint
 
-Use this file as the entrypoint prompt for a reviewing/planning agent working on the UI roadmap.
+Use this file as the entrypoint prompt for a reviewing/planning agent working on the node editor roadmap.
 
 ## Mission
 
-Review the UI roadmap as a dependency graph, not as isolated features.
+Review the roadmap as a dependency graph, not as isolated features.
 
-## Read First
+## Read first
 
-1. `docs/UI_plan/README.md`
-2. `docs/UI_plan/00_status_matrix.md`
-3. `docs/UI_plan/01_graph_foundations.md`
-4. `docs/UI_plan/05_validation_and_test_impact_map.md`
+1. `plan/steps/README.md`
+2. `plan/IMPLEMENTATION_ORDER.md`
+3. `plan/ARCHITECTURE.md`
+4. `docs/node-editor/README.md`
+5. `docs/node-editor/architecture_pitfalls.md`
 
-Then read the specific node files relevant to the feature under review.
+Then read the specific step files relevant to the feature under review.
 
-## Source Code Anchors
+## Source code anchors
 
+- `apps/review-workbench/src/pages/global/KnowledgeGraph.tsx`
 - `apps/review-workbench/src/sandbox/pages/NodeEditorSandboxPage.tsx`
 - `apps/review-workbench/src/sandbox/pages/CvGraphEditorPage.tsx`
-- `apps/review-workbench/src/sandbox/components/RichTextPane.tsx`
 - `apps/review-workbench/src/api/client.ts`
 
-## Review Questions
+## Review questions
 
 For any proposed implementation, answer these in order:
 
-1. Which UI-plan node does this belong to?
+1. Which plan step does this belong to?
 2. What are its hard dependencies?
-3. Is the dependency already implemented, partial, or missing?
+3. Is each dependency implemented, partial, or missing?
 4. What state contracts or payload shapes would change?
 5. What breaks if we implement this now?
 6. What can be deferred safely?
 7. What is the smallest reviewable vertical slice?
 
-## Output Format
+## Output format
 
-- `Target node`
+- `Target step`
 - `Depends on`
 - `Blocked by`
 - `Break risk`
 - `Recommended smallest slice`
-- `Verification checklist`
+- `Local verification checklist`
 - `Libraries to evaluate`
 
 ## Rule
