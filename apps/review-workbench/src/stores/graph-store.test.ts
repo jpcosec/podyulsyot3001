@@ -86,4 +86,59 @@ describe('useGraphStore (GRP-001-01)', () => {
     expect(state.edges).toHaveLength(0);
     expect(state.undoStack[0]?.type).toBe('DELETE_ELEMENTS');
   });
+
+  it('persists property add/edit/delete/rename updates via node patches', () => {
+    const node: ASTNode = {
+      ...nodeA,
+      data: {
+        ...nodeA.data,
+        properties: {
+          alpha: '1',
+          beta: '2',
+        },
+      },
+    };
+
+    useGraphStore.getState().loadGraph([node], []);
+
+    const updateProperties = (properties: Record<string, string>) => {
+      const current = useGraphStore.getState().nodes[0];
+      if (!current) {
+        return;
+      }
+
+      useGraphStore.getState().updateNode('n-a', {
+        data: {
+          ...current.data,
+          properties,
+        },
+      });
+    };
+
+    updateProperties({
+      alpha: '1',
+      beta: '2',
+      gamma: '3',
+    });
+    expect(useGraphStore.getState().nodes[0]?.data.properties).toEqual({ alpha: '1', beta: '2', gamma: '3' });
+
+    updateProperties({
+      alpha: '1',
+      beta: '20',
+      gamma: '3',
+    });
+    expect(useGraphStore.getState().nodes[0]?.data.properties).toEqual({ alpha: '1', beta: '20', gamma: '3' });
+
+    updateProperties({
+      beta: '20',
+      gamma: '3',
+    });
+    expect(useGraphStore.getState().nodes[0]?.data.properties).toEqual({ beta: '20', gamma: '3' });
+
+    updateProperties({
+      betaRenamed: '20',
+      gamma: '3',
+    });
+    expect(useGraphStore.getState().nodes[0]?.data.properties).toEqual({ betaRenamed: '20', gamma: '3' });
+  });
 });

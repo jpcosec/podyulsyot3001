@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, type MouseEvent } from 'react';
 
 import {
   Background,
@@ -21,6 +21,7 @@ import type { ASTEdge, ASTNode } from '@/stores/types';
 import { GroupShell } from './GroupShell';
 import { NodeShell } from './NodeShell';
 import { ButtonEdge, FloatingEdge } from './edges';
+import { EdgeInspector, NodeInspector } from './panels';
 import { CanvasSidebar } from './sidebar';
 
 type CanvasNode = Node<ASTNode['data'], string>;
@@ -108,6 +109,9 @@ export function GraphCanvas() {
   const removeElements = useGraphStore((state) => state.removeElements);
 
   const filters = useUIStore((state) => state.filters);
+  const setFocusedNode = useUIStore((state) => state.setFocusedNode);
+  const setFocusedEdge = useUIStore((state) => state.setFocusedEdge);
+  const setEditorState = useUIStore((state) => state.setEditorState);
 
   const isValidConnection = useCallback(
     (connectionOrEdge: Connection | CanvasEdge): boolean => {
@@ -196,6 +200,30 @@ export function GraphCanvas() {
     [addElements],
   );
 
+  const onNodeClick = useCallback(
+    (_event: MouseEvent, node: CanvasNode) => {
+      setFocusedEdge(null);
+      setFocusedNode(node.id);
+      setEditorState('edit_node');
+    },
+    [setEditorState, setFocusedEdge, setFocusedNode],
+  );
+
+  const onEdgeClick = useCallback(
+    (_event: MouseEvent, edge: CanvasEdge) => {
+      setFocusedNode(null);
+      setFocusedEdge(edge.id);
+      setEditorState('edit_relation');
+    },
+    [setEditorState, setFocusedEdge, setFocusedNode],
+  );
+
+  const onPaneClick = useCallback(() => {
+    setFocusedNode(null);
+    setFocusedEdge(null);
+    setEditorState('browse');
+  }, [setEditorState, setFocusedEdge, setFocusedNode]);
+
   const displayNodes = useMemo(() => {
     return buildDisplayNodes(nodes, filters.filterText);
   }, [nodes, filters.filterText]);
@@ -235,6 +263,9 @@ export function GraphCanvas() {
           onNodesDelete={onNodesDelete}
           onEdgesDelete={onEdgesDelete}
           onConnect={onConnect}
+          onNodeClick={onNodeClick}
+          onEdgeClick={onEdgeClick}
+          onPaneClick={onPaneClick}
           fitView
           fitViewOptions={{ padding: 0.12 }}
           defaultEdgeOptions={{ type: 'floating' }}
@@ -251,6 +282,8 @@ export function GraphCanvas() {
         </ReactFlow>
       </div>
       <CanvasSidebar />
+      <NodeInspector />
+      <EdgeInspector />
     </div>
   );
 }

@@ -17,3 +17,5 @@
 - Implemented GRP-001-05 graph canvas layer with `GraphCanvas`, `NodeShell`, and `GroupShell`, including controlled drag semantics and render tiers.
 - Implemented GRP-001-06 custom edge layer with `FloatingEdge`, `ButtonEdge`, and shared edge helpers wired into `GraphCanvas` edge types.
 - Implemented GRP-001-07 sidebar layer with `CanvasSidebar` and Actions/Filters/Creation/View accordion sections wired to graph/UI stores.
+- Implemented GRP-001-08 inspector panel layer with `NodeInspector` and `EdgeInspector` sheets wired to UI focus state and graph store updates.
+- Fixed GRP-001-08 node property persistence so inspector add/edit/delete/rename updates replace property maps correctly.

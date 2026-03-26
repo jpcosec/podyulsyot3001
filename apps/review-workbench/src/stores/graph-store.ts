@@ -67,6 +67,10 @@ function withoutIds<T extends { id: string }>(items: T[], ids: string[]): T[] {
 }
 
 function mergeNode(node: ASTNode, patch: Partial<ASTNode>): ASTNode {
+  const replacesProperties = Boolean(
+    patch.data && Object.prototype.hasOwnProperty.call(patch.data, 'properties'),
+  );
+
   return {
     ...node,
     ...patch,
@@ -81,10 +85,7 @@ function mergeNode(node: ASTNode, patch: Partial<ASTNode>): ASTNode {
         ...node.data.payload,
         ...(patch.data?.payload ?? {}),
       },
-      properties: {
-        ...node.data.properties,
-        ...(patch.data?.properties ?? {}),
-      },
+      properties: replacesProperties ? (patch.data?.properties ?? {}) : node.data.properties,
     },
   };
 }
