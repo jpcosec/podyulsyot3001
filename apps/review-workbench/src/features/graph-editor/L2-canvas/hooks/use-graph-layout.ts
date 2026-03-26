@@ -82,8 +82,6 @@ export function useGraphLayout(): UseGraphLayoutResult {
     (options: LayoutOptions = {}): LayoutResult => {
       const nodesInput = nodes.map((node) => ({
         id: node.id,
-        width: node.width,
-        height: node.height,
       }));
 
       const edgesInput = edges.map((edge) => ({
