@@ -1,7 +1,6 @@
 import { useCallback, useMemo } from 'react';
 
 import {
-  BezierEdge,
   Background,
   Controls,
   MiniMap,
@@ -21,6 +20,7 @@ import type { ASTEdge, ASTNode } from '@/stores/types';
 
 import { GroupShell } from './GroupShell';
 import { NodeShell } from './NodeShell';
+import { ButtonEdge, FloatingEdge } from './edges';
 
 type CanvasNode = Node<ASTNode['data'], string>;
 type CanvasEdgeData = NonNullable<ASTEdge['data']>;
@@ -32,8 +32,8 @@ const nodeTypes = {
 };
 
 const edgeTypes = {
-  floating: BezierEdge,
-  button: BezierEdge,
+  floating: FloatingEdge,
+  button: ButtonEdge,
 };
 
 function asCanvasNode(node: ASTNode): CanvasNode {
