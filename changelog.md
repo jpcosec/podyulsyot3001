@@ -13,3 +13,4 @@
 - Implemented GRP-001-01 store foundations with Zustand graph/ui stores, semantic undo-redo primitives, and store unit tests.
 - Implemented GRP-001-02 schema translation libraries with raw-to-AST/domain mappers and coverage tests.
 - Implemented GRP-001-03 node type registry with Zod-backed validation, placeholder default registrations, and registry tests.
+- Implemented GRP-001-04 L3 content components and wired registry detail renderers to real `EntityCard` content.

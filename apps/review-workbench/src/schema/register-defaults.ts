@@ -2,32 +2,63 @@ import { createElement } from 'react';
 
 import { z } from 'zod';
 
+import { EntityCard } from '@/components/content/EntityCard';
+import { PlaceholderNode } from '@/components/content/PlaceholderNode';
+
 import { registry } from './registry';
 import type { NodeTypeDefinition } from './registry.types';
 
 function PlaceholderDot({ colorToken }: { colorToken: string }) {
-  return createElement('div', {
-    className: 'h-4 w-4 rounded-full',
-    style: { backgroundColor: `var(--${colorToken})` },
-  });
+  return createElement(PlaceholderNode, { colorToken });
 }
 
 function PlaceholderLabel({ title }: { title: string }) {
   return createElement('span', { className: 'text-xs' }, title);
 }
 
-function PlaceholderDetail(props: unknown) {
-  const title =
-    props && typeof props === 'object' && 'title' in props
-      ? String((props as { title: unknown }).title ?? 'Untitled')
-      : 'Untitled';
+function toEntityCardProps(props: unknown, fallbackCategory: string, fallbackVisualToken: string) {
+  const candidate = props && typeof props === 'object' ? (props as Record<string, unknown>) : {};
 
-  return createElement(
-    'div',
-    { className: 'min-w-[150px] rounded border p-2' },
-    createElement('p', { className: 'text-xs font-semibold' }, title),
-    createElement('p', { className: 'text-[10px] text-muted-foreground' }, 'Placeholder'),
+  const titleCandidate = candidate.title ?? candidate.name;
+  const title = typeof titleCandidate === 'string' && titleCandidate.trim().length > 0
+    ? titleCandidate
+    : 'Untitled';
+
+  const category =
+    typeof candidate.category === 'string' && candidate.category.trim().length > 0
+      ? candidate.category
+      : fallbackCategory;
+
+  const visualToken =
+    typeof candidate.visualToken === 'string' && candidate.visualToken.trim().length > 0
+      ? candidate.visualToken
+      : fallbackVisualToken;
+
+  const badges = Array.isArray(candidate.badges)
+    ? candidate.badges.filter((badge): badge is string => typeof badge === 'string')
+    : undefined;
+
+  const propertiesSource =
+    candidate.properties && typeof candidate.properties === 'object'
+      ? (candidate.properties as Record<string, unknown>)
+      : {};
+
+  const properties = Object.fromEntries(
+    Object.entries(propertiesSource).map(([key, value]) => [key, String(value)]),
   );
+
+  return {
+    title,
+    category,
+    properties,
+    badges,
+    visualToken,
+  };
+}
+
+function detailRendererFor(category: string, visualToken: string) {
+  return (props: unknown) =>
+    createElement(EntityCard, toEntityCardProps(props, category, visualToken));
 }
 
 const defaultNodeTypes: NodeTypeDefinition[] = [
@@ -44,7 +75,7 @@ const defaultNodeTypes: NodeTypeDefinition[] = [
     renderers: {
       dot: PlaceholderDot,
       label: PlaceholderLabel,
-      detail: PlaceholderDetail,
+      detail: detailRendererFor('Person', 'token-person'),
     },
     defaultSize: { width: 200, height: 80 },
     allowedConnections: ['skill', 'project', 'publication', 'concept'],
@@ -63,7 +94,7 @@ const defaultNodeTypes: NodeTypeDefinition[] = [
     renderers: {
       dot: PlaceholderDot,
       label: PlaceholderLabel,
-      detail: PlaceholderDetail,
+      detail: detailRendererFor('Skill', 'token-skill'),
     },
     defaultSize: { width: 180, height: 60 },
     allowedConnections: ['person', 'project', 'concept'],
@@ -82,7 +113,7 @@ const defaultNodeTypes: NodeTypeDefinition[] = [
     renderers: {
       dot: PlaceholderDot,
       label: PlaceholderLabel,
-      detail: PlaceholderDetail,
+      detail: detailRendererFor('Project', 'token-project'),
     },
     defaultSize: { width: 200, height: 80 },
     allowedConnections: ['person', 'skill', 'publication'],
@@ -101,7 +132,7 @@ const defaultNodeTypes: NodeTypeDefinition[] = [
     renderers: {
       dot: PlaceholderDot,
       label: PlaceholderLabel,
-      detail: PlaceholderDetail,
+      detail: detailRendererFor('Publication', 'token-publication'),
     },
     defaultSize: { width: 220, height: 80 },
     allowedConnections: ['person', 'project', 'concept'],
@@ -120,7 +151,7 @@ const defaultNodeTypes: NodeTypeDefinition[] = [
     renderers: {
       dot: PlaceholderDot,
       label: PlaceholderLabel,
-      detail: PlaceholderDetail,
+      detail: detailRendererFor('Concept', 'token-concept'),
     },
     defaultSize: { width: 180, height: 60 },
     allowedConnections: ['person', 'skill', 'project', 'publication'],
@@ -139,7 +170,7 @@ const defaultNodeTypes: NodeTypeDefinition[] = [
     renderers: {
       dot: PlaceholderDot,
       label: PlaceholderLabel,
-      detail: PlaceholderDetail,
+      detail: detailRendererFor('Document', 'token-document'),
     },
     defaultSize: { width: 200, height: 80 },
     allowedConnections: ['section', 'entry'],
@@ -158,7 +189,7 @@ const defaultNodeTypes: NodeTypeDefinition[] = [
     renderers: {
       dot: PlaceholderDot,
       label: PlaceholderLabel,
-      detail: PlaceholderDetail,
+      detail: detailRendererFor('Section', 'token-section'),
     },
     defaultSize: { width: 180, height: 60 },
     allowedConnections: ['document', 'entry'],
@@ -177,7 +208,7 @@ const defaultNodeTypes: NodeTypeDefinition[] = [
     renderers: {
       dot: PlaceholderDot,
       label: PlaceholderLabel,
-      detail: PlaceholderDetail,
+      detail: detailRendererFor('Entry', 'token-entry'),
     },
     defaultSize: { width: 160, height: 50 },
     allowedConnections: ['section'],
