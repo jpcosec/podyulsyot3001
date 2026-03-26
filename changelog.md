@@ -10,3 +10,5 @@
 - Repaired core documentation links and updated reviewer entrypoint to real repository paths.
 - Added GRP-001 Step 00 prereq artifacts: graph data provider module, worker smoke baseline, and QA preflight documentation.
 - Implemented UI-001-01 shadcn setup in `apps/review-workbench` with required UI primitives and utility wiring.
+- Implemented GRP-001-01 store foundations with Zustand graph/ui stores, semantic undo-redo primitives, and store unit tests.
+- Implemented GRP-001-02 schema translation libraries with raw-to-AST/domain mappers and coverage tests.

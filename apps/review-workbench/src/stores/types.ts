@@ -31,6 +31,17 @@ export interface ASTEdge {
   hidden?: boolean;
 }
 
+export interface ValidationError {
+  nodeId: string;
+  message: string;
+}
+
+export interface ValidatedAST {
+  nodes: ASTNode[];
+  edges: ASTEdge[];
+  errors: ValidationError[];
+}
+
 export interface SemanticAction {
   type: 'CREATE_ELEMENTS' | 'DELETE_ELEMENTS' | 'UPDATE_NODE' | 'UPDATE_EDGE';
   payload: unknown;
