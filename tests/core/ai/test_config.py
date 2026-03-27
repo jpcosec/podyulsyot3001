@@ -62,6 +62,14 @@ class TestLLMConfigFromEnv:
             assert cfg.langsmith_enabled is False
             assert cfg.langsmith_api_key is None
 
+    def test_langsmith_enabled_when_legacy_key_set(self):
+        with patch.dict(os.environ, {"LANGSMITH_KEY": "legacy-key-123"}):
+            from src.core.ai.config import LLMConfig
+
+            cfg = LLMConfig.from_env()
+            assert cfg.langsmith_enabled is True
+            assert cfg.langsmith_api_key == "legacy-key-123"
+
     def test_model_from_env(self):
         with patch.dict(os.environ, {"PHD2_GEMINI_MODEL": "gemini-2.5-pro"}):
             from src.core.ai.config import LLMConfig

@@ -17,7 +17,9 @@ class LLMConfig:
     def from_env(cls) -> "LLMConfig":
         import os
 
-        api_key = os.environ.get("LANGSMITH_API_KEY", "")
+        api_key = os.environ.get("LANGSMITH_API_KEY") or os.environ.get(
+            "LANGSMITH_KEY", ""
+        )
         project = os.environ.get("LANGSMITH_PROJECT", "phd-20")
         endpoint = os.environ.get("LANGSMITH_ENDPOINT")
         model = (

@@ -9,7 +9,7 @@ Forward-looking topology is tracked in `docs/reference/node_io_target_matrix.md`
 ## Executable entrypoints
 
 - Runtime path: `create_prep_match_app()` in `src/graph.py`
-- Operator entrypoint: `python -m src.cli.run_prep_match`
+- Operator entrypoint: `python -m src.cli.run_pipeline`
 
 ## Current flow and routing
 

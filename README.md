@@ -28,7 +28,7 @@ Current review routing:
 The main CLI entrypoint is:
 
 ```bash
-python -m src.cli.run_prep_match \
+python -m src.cli.run_pipeline \
   --source <source> \
   --job-id <job_id> \
   --source-url <url> \
@@ -38,13 +38,13 @@ python -m src.cli.run_prep_match \
 Resume form:
 
 ```bash
-python -m src.cli.run_prep_match --source <source> --job-id <job_id> --resume
+python -m src.cli.run_pipeline --source <source> --job-id <job_id> --resume
 ```
 
 LangSmith-verifiable mode:
 
 ```bash
-LANGSMITH_API_KEY=<key> python -m src.cli.run_prep_match \
+LANGSMITH_API_KEY=<key> python -m src.cli.run_pipeline \
   --source <source> \
   --job-id <job_id> \
   --source-url <url> \
@@ -58,7 +58,7 @@ Helpful support CLIs:
 
 - `python -m src.cli.run_scrape_probe ...`
 - `python -m src.cli.run_stepstone_autoapply ...`
-- `scripts/run_prep_match_langsmith.sh ...` (wrapper for verifiable LangSmith runs)
+- `scripts/run_prep_match_langsmith.sh ...` (wrapper for verifiable LangSmith runs; now calls `run_pipeline`)
 
 ## Repository structure
 

@@ -6,7 +6,7 @@ Describe how to run the prep-match pipeline in LangSmith-verifiable mode.
 
 ## What is instrumented
 
-- Graph-level run span: `graph.run_prep_match`
+- Graph-level run span: `graph.run_pipeline`
 - Every graph node span: `node.<node_name>` (applies to all nodes registered in `create_app`)
 - Deterministic quality evaluation span: `quality_eval.prep_match`
 
@@ -25,7 +25,7 @@ You can also enforce verification globally by setting:
 Run prep-match with explicit verification:
 
 ```bash
-python -m src.cli.run_prep_match \
+python -m src.cli.run_pipeline \
   --source <source> \
   --job-id <job_id> \
   --source-url <url> \

@@ -4,8 +4,8 @@ Current role: operator entrypoints for running and resuming workflow components.
 
 ## Main commands in this workspace
 
-- `python -m src.cli.run_prep_match ...`
-- `python -m src.cli.run_prep_match --resume ...`
+- `python -m src.cli.run_pipeline ...`
+- `python -m src.cli.run_pipeline --resume ...`
 - `python -m src.cli.run_review_api`
 - `python -m src.cli.bootstrap_neo4j_schema`
 - `python -m src.cli.check_repo_protocol`

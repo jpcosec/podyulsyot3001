@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from src.cli.run_prep_match import (
+    _load_dotenv_if_present,
     _load_profile_evidence,
     _write_run_summary_artifact,
     _write_verification_artifact,
@@ -138,3 +139,29 @@ def test_write_verification_artifact(tmp_path: Path) -> None:
     assert out_path.exists()
     payload = json.loads(out_path.read_text(encoding="utf-8"))
     assert payload["passed"] is True
+
+
+def test_load_dotenv_if_present_loads_env_vars(tmp_path: Path, monkeypatch) -> None:
+    dotenv = tmp_path / ".env"
+    dotenv.write_text("LANGSMITH_PROJECT=from-dotenv\n", encoding="utf-8")
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("LANGSMITH_PROJECT", raising=False)
+
+    _load_dotenv_if_present()
+
+    assert os.environ.get("LANGSMITH_PROJECT") == "from-dotenv"
+
+
+def test_load_dotenv_if_present_does_not_override_existing_env(
+    tmp_path: Path, monkeypatch
+) -> None:
+    dotenv = tmp_path / ".env"
+    dotenv.write_text("LANGSMITH_PROJECT=from-dotenv\n", encoding="utf-8")
+
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("LANGSMITH_PROJECT", "from-env")
+
+    _load_dotenv_if_present()
+
+    assert os.environ.get("LANGSMITH_PROJECT") == "from-env"

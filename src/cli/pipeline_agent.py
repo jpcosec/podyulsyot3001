@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from src.core.scraping.registry import get_scraping_registry
-from src.graph import build_prep_match_node_registry, run_prep_match
+from src.graph import build_prep_match_node_registry, run_pipeline
 from src.core.graph.state import GraphState, build_thread_id
 
 
@@ -283,7 +283,7 @@ def handle_run(args: argparse.Namespace) -> int:
     sqlite_saver_cls = getattr(sqlite_module, "SqliteSaver")
 
     with sqlite_saver_cls.from_conn_string(str(checkpoint_path)) as checkpointer:
-        out = run_prep_match(state, resume=args.resume, checkpointer=checkpointer)
+        out = run_pipeline(state, resume=args.resume, checkpointer=checkpointer)
 
     print(json.dumps(out, indent=2, ensure_ascii=False))
     return 0

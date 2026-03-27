@@ -20,20 +20,20 @@ python -m pytest tests/nodes/match -q
 python -m pytest tests/core/tools/test_translation_service.py -q
 
 # Run the prep-match flow (scrape -> translate -> extract -> match -> review_match)
-python -m src.cli.run_prep_match \
+python -m src.cli.run_pipeline \
   --source tu_berlin \
   --job-id 201399 \
   --source-url <URL> \
   --profile-evidence <path/to/evidence.json>
 
 # Resume after HITL review decision
-python -m src.cli.run_prep_match \
+python -m src.cli.run_pipeline \
   --source tu_berlin \
   --job-id 201399 \
   --resume
 
 # Select Gemini model (default: gemini-2.5-flash)
-PHD2_GEMINI_MODEL=gemini-2.0-flash python -m src.cli.run_prep_match ...
+PHD2_GEMINI_MODEL=gemini-2.0-flash python -m src.cli.run_pipeline ...
 ```
 
 ## Architecture

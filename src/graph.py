@@ -138,14 +138,14 @@ def create_prep_match_app(
     )
 
 
-def run_prep_match(
+def run_pipeline(
     initial_state: GraphState,
     *,
     resume: bool = False,
     checkpointer: Any | None = None,
     verifiable: bool = False,
 ):
-    """Execute prep-match flow with canonical thread identity."""
+    """Execute application pipeline flow with canonical thread identity."""
     cfg = LLMConfig.from_env()
     if verifiable or cfg.langsmith_verification_required:
         cfg.assert_verifiable()
@@ -160,7 +160,7 @@ def run_prep_match(
     }
     payload = None if resume else dict(initial_state)
     with trace_section(
-        "graph.run_prep_match",
+        "graph.run_pipeline",
         metadata={
             "source": initial_state.get("source"),
             "job_id": initial_state.get("job_id"),
@@ -170,6 +170,22 @@ def run_prep_match(
         },
     ):
         return app.invoke(payload, config=config)
+
+
+def run_prep_match(
+    initial_state: GraphState,
+    *,
+    resume: bool = False,
+    checkpointer: Any | None = None,
+    verifiable: bool = False,
+):
+    """Backward-compatible alias for `run_pipeline`."""
+    return run_pipeline(
+        initial_state,
+        resume=resume,
+        checkpointer=checkpointer,
+        verifiable=verifiable,
+    )
 
 
 def build_prep_match_node_registry() -> dict[str, NodeHandler]:

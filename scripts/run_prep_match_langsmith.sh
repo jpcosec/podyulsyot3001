@@ -3,6 +3,13 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
+if [[ -f "$REPO_ROOT/.env" ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  . "$REPO_ROOT/.env"
+  set +a
+fi
+
 usage() {
   cat <<'EOF'
 Usage:
@@ -92,15 +99,19 @@ if [[ -z "$JOB_ID" ]]; then
   exit 1
 fi
 
+if [[ -z "${LANGSMITH_API_KEY:-}" && -n "${LANGSMITH_KEY:-}" ]]; then
+  export LANGSMITH_API_KEY="${LANGSMITH_KEY}"
+fi
+
 if [[ -z "${LANGSMITH_API_KEY:-}" ]]; then
-  echo "LANGSMITH_API_KEY is required" >&2
+  echo "LANGSMITH_API_KEY is required (or set LANGSMITH_KEY)" >&2
   exit 1
 fi
 
 export LANGSMITH_PROJECT="${LANGSMITH_PROJECT:-phd-20}"
 
 CMD=(
-  python -m src.cli.run_prep_match
+  python -m src.cli.run_pipeline
   --source "$SOURCE"
   --job-id "$JOB_ID"
   --run-id "$RUN_ID"

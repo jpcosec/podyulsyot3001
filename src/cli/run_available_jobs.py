@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any, Callable, Mapping
 import re
 
-from src.cli.run_prep_match import _load_profile_evidence
+from src.cli.run_pipeline import _load_profile_evidence
 from src.nodes.match.logic import run_logic as run_match_logic
 from src.nodes.review_match.logic import run_logic as run_review_match_logic
 

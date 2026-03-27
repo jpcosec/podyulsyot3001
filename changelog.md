@@ -4,6 +4,8 @@
 
 ## 2026-03-27
 
+- Upgraded core runtime dependencies to current stack versions in `requirements.txt` (`langgraph 1.1.3`, `langgraph-checkpoint-sqlite 3.0.3`, `langchain-core 1.2.22`, `langchain-google-genai 4.2.1`, `langsmith 0.7.22`, plus FastAPI/Uvicorn and `google-generativeai` updates).
+- Renamed the primary operator CLI entrypoint to `python -m src.cli.run_pipeline` and added compatibility aliases (`src.cli.run_prep_match` and `src.graph.run_prep_match`) so existing scripts continue to work.
 - Improved broad-job motivation letter generation quality in `generate_documents`: role-specific subject/intro normalization (e.g., `Application for <job title>`), deterministic paragraph de-duplication between core/alignment sections, and stronger closing normalization that adds start-date availability + discussion intent + thanks when missing.
 - Replaced generic institution fallback with deterministic company resolution in `generate_documents` using explicit state fields, extracted/scrape metadata, and raw-text heuristics; final fallback is now `Company` (instead of `Hiring Organization`).
 - Updated `generate_documents` prompts to enforce explicit paragraph-function structure (intro, evidence-fit, employer-fit, closing) and avoid repetitive argument reuse across paragraphs.
@@ -16,6 +18,9 @@
 - Added runtime documentation `docs/runtime/langsmith_verification.md` and linked it from runtime docs index.
 - Added/updated tests covering verifiable config behavior, graph node trace wrapping, verification scoring, and verification artifact writes.
 - Added executable helper script `scripts/run_prep_match_langsmith.sh` to run prep-match with `--langsmith-verifiable` and strict env/argument validation.
+- Updated `src/cli/run_prep_match.py` to auto-load `.env` from the current working directory via `python-dotenv` (without overriding already-exported shell variables).
+- Added LangSmith key compatibility for `LANGSMITH_KEY` (legacy alias) across CLI config and wrapper scripts, mapping it to `LANGSMITH_API_KEY` when needed.
+- Enabled LangSmith tracing env defaults in verifiable CLI runs (`LANGSMITH_TRACING=true`, `LANGCHAIN_TRACING_V2=true`) to ensure runs are visible in the LangSmith UI.
 
 ## 2026-03-21 (continued)
 
