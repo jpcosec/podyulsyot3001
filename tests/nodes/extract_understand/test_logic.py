@@ -48,6 +48,7 @@ def test_run_logic_updates_state_with_extracted_data(
     assert updated["extracted_data"]["job_title"] == "PhD Position"
     assert updated["extracted_data"]["requirements"][0]["id"] == "R1"
     assert updated["extracted_data"]["contact_info"]["email"] == "ada@example.org"
+    assert updated["extracted_data"]["contact_infos"][0]["email"] == "ada@example.org"
     assert updated["extracted_data"]["salary_grade"] is None
 
 
@@ -74,4 +75,31 @@ def test_enrich_extraction_result_fills_missing_contact_and_salary() -> None:
 
     assert enriched.contact_info.email == "ada@example.org"
     assert enriched.contact_info.name == "Prof. Dr. Ada Lovelace"
+    assert len(enriched.contact_infos) == 1
+    assert enriched.contact_infos[0].email == "ada@example.org"
     assert enriched.salary_grade == "Salary grade 13"
+
+
+def test_enrich_extraction_result_detects_multiple_contact_emails() -> None:
+    result = JobUnderstandingExtract(
+        job_title="Data and AI Integration Engineer",
+        analysis_notes="explicit extraction rationale",
+        requirements=[JobRequirement(id="R1", text="Python", priority="must")],
+        constraints=[],
+        risk_areas=[],
+        contact_info=ContactInfo(),
+        salary_grade=None,
+    )
+
+    enriched = _enrich_extraction_result(
+        result,
+        (
+            "Send your documents to Mariama Drammeh at m.drammeh@exclusive.de.com "
+            "or Isabelle Konrad at i.konrad@exclusive.de.com"
+        ),
+    )
+
+    assert enriched.contact_info.email == "m.drammeh@exclusive.de.com"
+    assert len(enriched.contact_infos) == 2
+    assert enriched.contact_infos[0].name == "Mariama Drammeh"
+    assert enriched.contact_infos[1].name == "Isabelle Konrad"

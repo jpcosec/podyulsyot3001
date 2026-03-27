@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import cast
+from contextlib import contextmanager
 
 import pytest
 
@@ -53,3 +54,58 @@ def _state_with_decision(decision: str) -> GraphState:
             "review_decision": decision,
         },
     )
+
+
+def test_create_app_wraps_node_handlers_with_trace(monkeypatch) -> None:
+    calls: list[str] = []
+
+    @contextmanager
+    def fake_trace_section(name: str, metadata=None):
+        calls.append(name)
+        yield
+
+    class FakeStateGraph:
+        def __init__(self, _state_cls):
+            self.nodes = {}
+
+        def add_node(self, name, fn):
+            self.nodes[name] = fn
+
+        def set_entry_point(self, _entry):
+            return None
+
+        def add_edge(self, _src, _dst):
+            return None
+
+        def add_conditional_edges(self, _review, _router, _transitions):
+            return None
+
+        def compile(self, **_kwargs):
+            return self
+
+    monkeypatch.setattr("src.graph.trace_section", fake_trace_section)
+    monkeypatch.setattr(
+        "src.graph._load_langgraph_primitives",
+        lambda: (FakeStateGraph, "__END__"),
+    )
+
+    app = create_app(
+        node_registry={"scrape": lambda state: state, "package": lambda state: state},
+        entry_point="scrape",
+        linear_edges=(("scrape", "package"),),
+        review_transitions={},
+        interrupt_before=(),
+    )
+    state = cast(
+        GraphState,
+        {
+            "source": "tu_berlin",
+            "job_id": "1",
+            "run_id": "r1",
+            "current_node": "scrape",
+            "status": "running",
+        },
+    )
+    app.nodes["scrape"](state)
+
+    assert calls == ["node.scrape"]

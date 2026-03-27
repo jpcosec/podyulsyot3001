@@ -80,7 +80,8 @@ def _build_prompt_value(node_data: dict[str, Any]) -> Any:
         [
             ("system", system_prompt),
             ("human", user_template),
-        ]
+        ],
+        template_format="jinja2",
     )
     prompt_value = chat_prompt.invoke(node_data)
 
@@ -135,10 +136,20 @@ def _enrich_extraction_result(
     if not isinstance(contact_payload, dict):
         contact_payload = {}
 
+    contact_infos_payload = payload.get("contact_infos")
+    existing_contacts = _normalize_contact_infos(contact_infos_payload)
+    detected_contacts = _detect_contact_infos(source_text)
+
     email = contact_payload.get("email") or _detect_contact_email(source_text)
     name = contact_payload.get("name") or _detect_contact_name(source_text, email)
+    primary = ContactInfo(name=name, email=email)
 
-    payload["contact_info"] = ContactInfo(name=name, email=email).model_dump()
+    merged_contacts = _merge_contacts(existing_contacts, detected_contacts)
+    merged_contacts = _merge_contacts([primary], merged_contacts)
+    primary_contact = _select_primary_contact(primary, merged_contacts)
+
+    payload["contact_info"] = primary_contact.model_dump()
+    payload["contact_infos"] = [contact.model_dump() for contact in merged_contacts]
     payload["salary_grade"] = payload.get("salary_grade") or _detect_salary_grade(
         source_text
     )
@@ -167,10 +178,105 @@ def _enrich_requirements(requirements: list[dict], source_text: str) -> list[dic
 
 
 def _detect_contact_email(source_text: str) -> str | None:
-    match = EMAIL_RE.search(source_text)
-    if not match:
+    emails = _detect_contact_emails(source_text)
+    if not emails:
         return None
-    return match.group(0)
+    return emails[0]
+
+
+def _detect_contact_emails(source_text: str) -> list[str]:
+    seen: set[str] = set()
+    output: list[str] = []
+    for match in EMAIL_RE.finditer(source_text):
+        email = match.group(0)
+        lowered = email.lower()
+        if lowered in seen:
+            continue
+        seen.add(lowered)
+        output.append(email)
+    return output
+
+
+def _detect_contact_infos(source_text: str) -> list[ContactInfo]:
+    emails = _detect_contact_emails(source_text)
+    output: list[ContactInfo] = []
+    for email in emails:
+        output.append(
+            ContactInfo(
+                name=_detect_contact_name(source_text, email),
+                email=email,
+            )
+        )
+    return output
+
+
+def _normalize_contact_infos(value: Any) -> list[ContactInfo]:
+    if not isinstance(value, list):
+        return []
+    output: list[ContactInfo] = []
+    for item in value:
+        if not isinstance(item, Mapping):
+            continue
+        output.append(
+            ContactInfo(
+                name=str(item.get("name") or "").strip() or None,
+                email=str(item.get("email") or "").strip() or None,
+            )
+        )
+    return output
+
+
+def _merge_contacts(
+    base_contacts: list[ContactInfo],
+    other_contacts: list[ContactInfo],
+) -> list[ContactInfo]:
+    merged: list[ContactInfo] = []
+    for candidate in [*base_contacts, *other_contacts]:
+        merged = _upsert_contact(merged, candidate)
+    return merged
+
+
+def _upsert_contact(
+    contacts: list[ContactInfo], candidate: ContactInfo
+) -> list[ContactInfo]:
+    has_name = bool(candidate.name and candidate.name.strip())
+    has_email = bool(candidate.email and candidate.email.strip())
+    if not has_name and not has_email:
+        return contacts
+
+    candidate_email = (candidate.email or "").strip().lower()
+    candidate_name = (candidate.name or "").strip().lower()
+
+    for index, existing in enumerate(contacts):
+        existing_email = (existing.email or "").strip().lower()
+        existing_name = (existing.name or "").strip().lower()
+        same_email = bool(
+            candidate_email and existing_email and candidate_email == existing_email
+        )
+        same_name = bool(
+            candidate_name and existing_name and candidate_name == existing_name
+        )
+        if not same_email and not same_name:
+            continue
+
+        best_name = existing.name or candidate.name
+        best_email = existing.email or candidate.email
+        contacts[index] = ContactInfo(name=best_name, email=best_email)
+        return contacts
+
+    contacts.append(candidate)
+    return contacts
+
+
+def _select_primary_contact(
+    preferred: ContactInfo,
+    contacts: list[ContactInfo],
+) -> ContactInfo:
+    if preferred.name or preferred.email:
+        return preferred
+    if contacts:
+        return contacts[0]
+    return ContactInfo()
 
 
 def _detect_contact_name(source_text: str, email: str | None) -> str | None:
@@ -182,6 +288,9 @@ def _detect_contact_name(source_text: str, email: str | None) -> str | None:
         for index, line in enumerate(lines):
             if email not in line:
                 continue
+            same_line = _extract_name_near_email(line, email)
+            if same_line:
+                return same_line
             same_line = _extract_name_fragment(line.replace(email, " "))
             if same_line:
                 return same_line
@@ -222,6 +331,24 @@ def _extract_name_fragment(value: str) -> str | None:
     if any(token in lowered for token in ("job", "salary", "application")):
         return None
     return candidate
+
+
+def _extract_name_near_email(line: str, email: str) -> str | None:
+    before, _, after = line.partition(email)
+    candidates = [before, after]
+    for candidate in candidates:
+        compact = re.sub(r"\s+", " ", candidate).strip(" -,:;|()")
+        if not compact:
+            continue
+        local = compact
+        if " at " in local.lower():
+            local = local.rsplit(" at ", 1)[-1]
+        if " unter " in local.lower():
+            local = local.rsplit(" unter ", 1)[-1]
+        found = _extract_name_fragment(local)
+        if found:
+            return found
+    return None
 
 
 def _build_node_data(state: Mapping[str, Any]) -> dict[str, Any]:

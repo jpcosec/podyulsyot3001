@@ -6,6 +6,8 @@ from __future__ import annotations
 from importlib import import_module
 from typing import Any, Callable, Mapping, Sequence
 
+from src.core.ai.config import LLMConfig
+from src.core.ai.tracing import trace_section
 from src.core.graph.state import GraphState, ReviewDecision, build_thread_id
 
 NodeHandler = Callable[[GraphState], Mapping[str, Any]]
@@ -94,7 +96,7 @@ def create_app(
     workflow = state_graph_cls(GraphState)
 
     for node_name, node_fn in node_registry.items():
-        workflow.add_node(node_name, node_fn)
+        workflow.add_node(node_name, _instrument_node_handler(node_name, node_fn))
 
     workflow.set_entry_point(entry_point)
 
@@ -137,9 +139,17 @@ def create_prep_match_app(
 
 
 def run_prep_match(
-    initial_state: GraphState, *, resume: bool = False, checkpointer: Any | None = None
+    initial_state: GraphState,
+    *,
+    resume: bool = False,
+    checkpointer: Any | None = None,
+    verifiable: bool = False,
 ):
     """Execute prep-match flow with canonical thread identity."""
+    cfg = LLMConfig.from_env()
+    if verifiable or cfg.langsmith_verification_required:
+        cfg.assert_verifiable()
+
     app = create_prep_match_app(checkpointer=checkpointer)
     config = {
         "configurable": {
@@ -149,7 +159,17 @@ def run_prep_match(
         }
     }
     payload = None if resume else dict(initial_state)
-    return app.invoke(payload, config=config)
+    with trace_section(
+        "graph.run_prep_match",
+        metadata={
+            "source": initial_state.get("source"),
+            "job_id": initial_state.get("job_id"),
+            "run_id": initial_state.get("run_id"),
+            "resume": resume,
+            "verifiable": verifiable,
+        },
+    ):
+        return app.invoke(payload, config=config)
 
 
 def build_prep_match_node_registry() -> dict[str, NodeHandler]:
@@ -215,3 +235,17 @@ def _load_langgraph_primitives() -> tuple[Any, Any]:
         raise RuntimeError("langgraph is required to compile graph app") from exc
 
     return graph_module.StateGraph, graph_module.END
+
+
+def _instrument_node_handler(node_name: str, node_fn: NodeHandler) -> NodeHandler:
+    def wrapped(state: GraphState) -> Mapping[str, Any]:
+        metadata = {
+            "source": state.get("source"),
+            "job_id": state.get("job_id"),
+            "run_id": state.get("run_id"),
+            "current_node": state.get("current_node"),
+        }
+        with trace_section(f"node.{node_name}", metadata=metadata):
+            return node_fn(state)
+
+    return wrapped

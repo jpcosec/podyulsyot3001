@@ -114,3 +114,25 @@ def test_document_deltas_normalizes_description_additions_alias() -> None:
     )
 
     assert out.cv_injections[0].new_bullets == ["Bullet A", "Bullet B"]
+
+
+def test_document_deltas_normalizes_unknown_string_bullet_field() -> None:
+    out = DocumentDeltas.model_validate(
+        {
+            "cv_summary": "line1",
+            "cv_injections": [
+                {
+                    "experience_id": "EXP001",
+                    "injected_bullet": "Implemented backend APIs for applied analytics",
+                }
+            ],
+            "letter_deltas": {
+                "core_argument_paragraph": "Core",
+            },
+            "email_body": "mail line1",
+        }
+    )
+
+    assert out.cv_injections[0].new_bullets == [
+        "Implemented backend APIs for applied analytics"
+    ]

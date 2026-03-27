@@ -11,3 +11,4 @@ Read here when you need to know what the system actually does today.
 - `match_review_cycle.md`
 - `data_management.md`
 - `core_io_and_provenance.md`
+- `langsmith_verification.md`

@@ -7,6 +7,7 @@ import json
 from pathlib import Path
 from typing import Any, Mapping, cast
 
+from src.core.ai import LLMConfig, evaluate_prep_match_run, verification_artifact_path
 from src.core.io import ArtifactWriter, ObservabilityService, WorkspaceManager
 from src.core.graph.state import GraphState
 from src.graph import run_prep_match
@@ -26,7 +27,16 @@ def main() -> int:
         help="Path to sqlite checkpoint database (defaults to data/jobs/<source>/<job_id>/graph/checkpoint.sqlite)",
     )
     parser.add_argument("--resume", action="store_true")
+    parser.add_argument(
+        "--langsmith-verifiable",
+        action="store_true",
+        help="Require LangSmith credentials and emit quality verification report",
+    )
     args = parser.parse_args()
+
+    cfg = LLMConfig.from_env()
+    if args.langsmith_verifiable or cfg.langsmith_verification_required:
+        cfg.assert_verifiable()
 
     if args.resume:
         state = {
@@ -64,13 +74,31 @@ def main() -> int:
     try:
         with sqlite_saver_cls.from_conn_string(str(checkpoint_path)) as checkpointer:
             out = run_prep_match(
-                cast(GraphState, state), resume=args.resume, checkpointer=checkpointer
+                cast(GraphState, state),
+                resume=args.resume,
+                checkpointer=checkpointer,
+                verifiable=args.langsmith_verifiable,
             )
     except Exception as exc:
         _write_run_summary_artifact(_failed_summary_state(state, exc))
         raise
 
+    if args.langsmith_verifiable:
+        verification = evaluate_prep_match_run(state, out)
+        _write_verification_artifact(
+            source=args.source,
+            job_id=args.job_id,
+            verification_report=verification,
+        )
+
     _write_run_summary_artifact(out)
+
+    if args.langsmith_verifiable:
+        if not verification["passed"]:
+            raise RuntimeError(
+                "LangSmith verification failed. See graph/langsmith_verification.json"
+            )
+
     print(json.dumps(out, indent=2, ensure_ascii=False))
     return 0
 
@@ -212,6 +240,20 @@ def _failed_summary_state(
             "attempt_count": 1,
         },
     }
+
+
+def _write_verification_artifact(
+    *,
+    source: str,
+    job_id: str,
+    verification_report: Mapping[str, Any],
+) -> None:
+    out_path = verification_artifact_path(source, job_id)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(
+        json.dumps(dict(verification_report), indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
 
 
 if __name__ == "__main__":

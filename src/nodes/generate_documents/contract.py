@@ -61,6 +61,16 @@ class CVExperienceInjection(BaseModel):
             if all(isinstance(item, str) for item in candidate):
                 payload["new_bullets"] = candidate
                 return payload
+
+        for key, candidate in payload.items():
+            if key == "experience_id":
+                continue
+            if not isinstance(candidate, str):
+                continue
+            text = " ".join(candidate.split()).strip()
+            if text:
+                payload["new_bullets"] = [text]
+                return payload
         return payload
 
     @field_validator("new_bullets")

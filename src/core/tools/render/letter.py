@@ -36,15 +36,9 @@ def _parse_letter(md_text: str) -> dict:
     # Everything between first and second separator is the header block
     header_block = lines[sep_indices[0] + 1 : sep_indices[1]]
     date = ""
-    to = ""
-    re_line = ""
     for ln in header_block:
         stripped = ln.strip()
-        if stripped.startswith("**To:**"):
-            to = stripped.replace("**To:**", "").strip()
-        elif stripped.startswith("**Re:**"):
-            re_line = stripped.replace("**Re:**", "").strip()
-        elif stripped and not stripped.startswith("**"):
+        if stripped and not stripped.startswith("**"):
             date = stripped
 
     # Everything after second separator is the letter body
@@ -63,6 +57,11 @@ def _parse_letter(md_text: str) -> dict:
     if current:
         paragraphs.append(" ".join(current))
 
+    header_lines: list[str] = []
+    if paragraphs and "dear " not in paragraphs[0].lower():
+        header_lines = [line.strip() for line in body_lines[:5] if line.strip()]
+        paragraphs = paragraphs[1:]
+
     # Find closing: "Yours sincerely," and everything after
     closing_index = next(
         (i for i, p in enumerate(paragraphs) if "sincerely" in p.lower()), -1
@@ -72,8 +71,7 @@ def _parse_letter(md_text: str) -> dict:
 
     return {
         "date": date,
-        "to": to,
-        "re": re_line,
+        "header_lines": header_lines,
         "paragraphs": body_paragraphs,
         "closing_block": closing_block,
     }
@@ -114,13 +112,12 @@ def render_letter_docx(md_path: str | Path, output_path: str | Path) -> Path:
     r.font.size = size_body
     r.font.color.rgb = gray
 
-    # Recipient and Re:
-    _para(f"To: {fields['to']}", space_after=2)
-    rep = doc.add_paragraph()
-    rep.paragraph_format.space_after = Pt(16)
-    _add_runs(rep, f"Re: {fields['re']}", size_body, font)
-    for run in rep.runs:
-        run.bold = True
+    for index, line in enumerate(fields.get("header_lines", [])):
+        contact = doc.add_paragraph()
+        contact.paragraph_format.space_after = Pt(0 if index < len(fields["header_lines"]) - 1 else 12)
+        run = contact.add_run(line)
+        run.font.name = font
+        run.font.size = size_body
 
     # Horizontal rule via border
     hr = doc.add_paragraph()

@@ -77,3 +77,28 @@ class TestLLMConfigFromEnv:
 
             cfg = LLMConfig.from_env()
             assert cfg.model == "gemini-2.0-flash"
+
+    def test_project_and_endpoint_from_env(self):
+        with patch.dict(
+            os.environ,
+            {
+                "LANGSMITH_API_KEY": "k",
+                "LANGSMITH_PROJECT": "phd-evals",
+                "LANGSMITH_ENDPOINT": "https://api.smith.langchain.com",
+            },
+        ):
+            from src.core.ai.config import LLMConfig
+
+            cfg = LLMConfig.from_env()
+            assert cfg.langsmith_project == "phd-evals"
+            assert cfg.langsmith_endpoint == "https://api.smith.langchain.com"
+
+    def test_assert_verifiable_raises_when_key_missing(self):
+        env = os.environ.copy()
+        env.pop("LANGSMITH_API_KEY", None)
+        with patch.dict(os.environ, env, clear=True):
+            from src.core.ai.config import LLMConfig
+
+            cfg = LLMConfig.from_env()
+            with pytest.raises(RuntimeError, match="LANGSMITH_API_KEY"):
+                cfg.assert_verifiable()

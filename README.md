@@ -41,10 +41,24 @@ Resume form:
 python -m src.cli.run_prep_match --source <source> --job-id <job_id> --resume
 ```
 
+LangSmith-verifiable mode:
+
+```bash
+LANGSMITH_API_KEY=<key> python -m src.cli.run_prep_match \
+  --source <source> \
+  --job-id <job_id> \
+  --source-url <url> \
+  --profile-evidence <path> \
+  --langsmith-verifiable
+```
+
+This mode writes `graph/langsmith_verification.json` and fails closed when verification checks fail.
+
 Helpful support CLIs:
 
 - `python -m src.cli.run_scrape_probe ...`
 - `python -m src.cli.run_stepstone_autoapply ...`
+- `scripts/run_prep_match_langsmith.sh ...` (wrapper for verifiable LangSmith runs)
 
 ## Repository structure
 

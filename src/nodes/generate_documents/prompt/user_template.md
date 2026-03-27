@@ -28,5 +28,11 @@
 Populate the JSON schema with these steps:
 1. Write a factual `cv_summary` (max 3 lines) using validated matches.
 2. Write `cv_injections` using only `experience_id` values that exist in candidate_base_cv.experience.
-3. Generate motivation letter deltas where `core_argument_paragraph` expands the same technical facts from `cv_injections`.
-4. Generate a concise `email_body` of max 2 lines.
+3. Generate motivation letter deltas with strict paragraph functions:
+   - `subject_line`: include the role title (avoid generic "Application").
+   - `intro_paragraph`: introduce candidate + explicit role application context.
+   - `core_argument_paragraph`: evidence-driven technical fit, grounded in validated matches.
+   - `alignment_paragraph`: employer/company motivation (not a paraphrase of core argument).
+   - `closing_paragraph`: mention availability/start timing, invite discussion/interview, and thank the recipient.
+4. Avoid repeating the same argument in both `core_argument_paragraph` and `alignment_paragraph`.
+5. Generate a concise `email_body` of max 2 lines.

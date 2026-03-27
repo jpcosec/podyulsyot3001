@@ -19,6 +19,10 @@ class GenericAdapter:
         return bool(domain)
 
     def extract_job_id(self, url: str) -> str | None:
+        # TODO: for non-job-board URLs (e.g. university admission pages), the last
+        # path segment produces ugly IDs like "-1345808913953.html". Consider
+        # accepting an explicit job_id override at the call site instead of
+        # deriving it from the URL path.
         path = urlparse(url).path.strip("/")
         if not path:
             return None

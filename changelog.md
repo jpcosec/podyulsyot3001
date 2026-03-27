@@ -2,6 +2,21 @@
 
 > Historical note: older entries may reference paths or planning structures that no longer exist after later cleanups. Treat each entry as accurate for its date.
 
+## 2026-03-27
+
+- Improved broad-job motivation letter generation quality in `generate_documents`: role-specific subject/intro normalization (e.g., `Application for <job title>`), deterministic paragraph de-duplication between core/alignment sections, and stronger closing normalization that adds start-date availability + discussion intent + thanks when missing.
+- Replaced generic institution fallback with deterministic company resolution in `generate_documents` using explicit state fields, extracted/scrape metadata, and raw-text heuristics; final fallback is now `Company` (instead of `Hiring Organization`).
+- Updated `generate_documents` prompts to enforce explicit paragraph-function structure (intro, evidence-fit, employer-fit, closing) and avoid repetitive argument reuse across paragraphs.
+- Added multi-recipient contact support in extraction and document generation: `extract_understand` now populates `contact_infos` (all detected contacts) while keeping `contact_info` as primary for backward compatibility, and `generate_documents` now uses all extracted contact names in email salutation fallback (e.g., `Dear A and B,`) before defaulting to `Hiring Committee`.
+- Added end-to-end LangSmith verifiable mode for prep-match runs.
+- Instrumented all graph nodes at `create_app` assembly time using `trace_section("node.<node_name>")`, plus graph-level run tracing via `graph.run_prep_match`.
+- Added deterministic quality evaluator `src/core/ai/verification.py` (`evaluate_prep_match_run`) with weighted checks and score output.
+- Added CLI verification flag `--langsmith-verifiable` in `src/cli/run_prep_match.py`: requires `LANGSMITH_API_KEY`, writes `data/jobs/<source>/<job_id>/graph/langsmith_verification.json`, and fails closed on failed checks.
+- Extended LangSmith environment handling in `src/core/ai/config.py` with `LANGSMITH_PROJECT`, `LANGSMITH_ENDPOINT`, and optional global enforcement via `PHD2_LANGSMITH_REQUIRE_VERIFICATION=1`.
+- Added runtime documentation `docs/runtime/langsmith_verification.md` and linked it from runtime docs index.
+- Added/updated tests covering verifiable config behavior, graph node trace wrapping, verification scoring, and verification artifact writes.
+- Added executable helper script `scripts/run_prep_match_langsmith.sh` to run prep-match with `--langsmith-verifiable` and strict env/argument validation.
+
 ## 2026-03-21 (continued)
 
 - Completed minimal viable architecture plan across all 3 tracks (UI, AI, Scraper).

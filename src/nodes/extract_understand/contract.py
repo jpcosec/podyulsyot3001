@@ -42,4 +42,5 @@ class JobUnderstandingExtract(BaseModel):
     constraints: list[JobConstraint]
     risk_areas: list[str] = Field(default_factory=list)
     contact_info: ContactInfo = Field(default_factory=ContactInfo)
+    contact_infos: list[ContactInfo] = Field(default_factory=list)
     salary_grade: str | None = None

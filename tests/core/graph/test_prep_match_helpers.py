@@ -79,3 +79,31 @@ def test_run_prep_match_uses_thread_id_and_resume_behavior(monkeypatch) -> None:
     assert first_config["configurable"]["thread_id"] == "tu_berlin_201397"
     assert second_payload is None
     assert second_config["configurable"]["thread_id"] == "tu_berlin_201397"
+
+
+def test_run_prep_match_verifiable_requires_langsmith_key(monkeypatch) -> None:
+    class FakeApp:
+        def invoke(self, payload, config=None):
+            return {"ok": True}
+
+    monkeypatch.setattr("src.graph.create_prep_match_app", lambda **kwargs: FakeApp())
+
+    state = cast(
+        GraphState,
+        {
+            "source": "tu_berlin",
+            "job_id": "201397",
+            "run_id": "r1",
+            "current_node": "scrape",
+            "status": "running",
+        },
+    )
+
+    monkeypatch.delenv("LANGSMITH_API_KEY", raising=False)
+
+    try:
+        run_prep_match(state, verifiable=True)
+    except RuntimeError as exc:
+        assert "LANGSMITH_API_KEY" in str(exc)
+    else:
+        raise AssertionError("expected verifiable mode to require LANGSMITH_API_KEY")

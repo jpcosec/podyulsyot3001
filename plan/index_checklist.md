@@ -32,6 +32,12 @@ This is the single planning checklist for active work.
 - [x] Artifacts under nodes/scrape/ and raw/source_text.md
 - [x] Visible mode used and warnings in UI
 
+## 04 UI — Phase 2: Bring-Back Migrations
+
+- [x] C1 CV Graph Editor — collapsible groups, mastery skill balls, inline entry editing
+- [x] C2 Match Editor — undo/redo, search/filter, keyboard nav, structured field editor
+- [x] C3 Extract Tagger — char-level spans, select-to-create, keyboard priority tagging
+
 ## Rules
 
 - Mark a phase complete only when code, verification, and changelog agree.

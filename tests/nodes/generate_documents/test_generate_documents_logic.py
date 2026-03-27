@@ -162,14 +162,28 @@ def test_run_logic_writes_artifacts_and_indicators(
     cv_md = (
         tmp_path / "data/jobs/tu_berlin/job-1/nodes/generate_documents/proposed/cv.md"
     )
+    email_md = (
+        tmp_path
+        / "data/jobs/tu_berlin/job-1/nodes/generate_documents/proposed/application_email.md"
+    )
+    letter_md = (
+        tmp_path
+        / "data/jobs/tu_berlin/job-1/nodes/generate_documents/proposed/motivation_letter.md"
+    )
 
     assert approved_state.exists()
     assert assist_state.exists()
     assert cv_md.exists()
+    assert email_md.exists()
+    assert letter_md.exists()
     assert "SUMMARY" in cv_md.read_text(encoding="utf-8")
     assert "Integrated deterministic review indicators" in cv_md.read_text(
         encoding="utf-8"
     )
+    assert "Dear Hiring Committee," in email_md.read_text(encoding="utf-8")
+    letter_text = letter_md.read_text(encoding="utf-8")
+    assert "Hiring Team" in letter_text
+    assert "Company" in letter_text
 
 
 def test_run_logic_rejects_unknown_experience_id(
@@ -266,3 +280,157 @@ def test_run_logic_uses_real_prompt_template_xml_tags(
 
     out = run_logic(_base_state())
     assert out["current_node"] == "generate_documents"
+
+
+def test_run_logic_uses_extracted_contact_names_for_email_salutation(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+
+    class FakePromptManager:
+        def __init__(self, base_path: str):
+            assert base_path == "src/nodes"
+
+        def build_prompt(self, node_name: str, data: dict, **kwargs):
+            assert node_name == "generate_documents"
+            return "system", "user"
+
+    class FakeRuntime:
+        def __init__(self, model_name: str):
+            assert model_name == "gemini-2.0-flash"
+
+        def generate_structured(
+            self, system_prompt: str, user_prompt: str, output_schema
+        ):
+            return output_schema(
+                cv_summary="Factual summary",
+                cv_injections=[
+                    {
+                        "experience_id": "EXP001",
+                        "new_bullets": ["Integrated backend and LLM APIs"],
+                    }
+                ],
+                letter_deltas={
+                    "subject_line": "Application",
+                    "intro_paragraph": "Intro",
+                    "core_argument_paragraph": "Core",
+                    "alignment_paragraph": "Align",
+                    "closing_paragraph": "Close",
+                },
+                email_body="Please find attached my documents.",
+            )
+
+    monkeypatch.setattr(
+        "src.nodes.generate_documents.logic.PromptManager", FakePromptManager
+    )
+    monkeypatch.setattr("src.nodes.generate_documents.logic.LLMRuntime", FakeRuntime)
+
+    state = _base_state()
+    state["extracted_data"]["contact_info"] = {
+        "name": "Mariama Drammeh",
+        "email": "m.drammeh@exclusive.de.com",
+    }
+    state["extracted_data"]["contact_infos"] = [
+        {
+            "name": "Mariama Drammeh",
+            "email": "m.drammeh@exclusive.de.com",
+        },
+        {
+            "name": "Isabelle Konrad",
+            "email": "i.konrad@exclusive.de.com",
+        },
+    ]
+
+    run_logic(state)
+
+    email_md = (
+        tmp_path
+        / "data/jobs/tu_berlin/job-1/nodes/generate_documents/proposed/application_email.md"
+    )
+    assert email_md.exists()
+    assert "Dear Mariama Drammeh and Isabelle Konrad," in email_md.read_text(
+        encoding="utf-8"
+    )
+
+
+def test_run_logic_normalizes_generic_subject_intro_and_dedupes_alignment(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.chdir(tmp_path)
+
+    class FakePromptManager:
+        def __init__(self, base_path: str):
+            assert base_path == "src/nodes"
+
+        def build_prompt(self, node_name: str, data: dict, **kwargs):
+            assert node_name == "generate_documents"
+            return "system", "user"
+
+    class FakeRuntime:
+        def __init__(self, model_name: str):
+            assert model_name == "gemini-2.0-flash"
+
+        def generate_structured(
+            self, system_prompt: str, user_prompt: str, output_schema
+        ):
+            return output_schema(
+                cv_summary="Factual summary",
+                cv_injections=[
+                    {
+                        "experience_id": "EXP001",
+                        "new_bullets": ["Integrated backend and LLM APIs"],
+                    }
+                ],
+                letter_deltas={
+                    "subject_line": "Application",
+                    "intro_paragraph": "I am applying for this position.",
+                    "core_argument_paragraph": "I built backend services for LLM pipelines in production.",
+                    "alignment_paragraph": "I am interested in this position because of your company's work in [mention company's specific domain or project].",
+                    "closing_paragraph": "Thank you for your consideration.",
+                },
+                email_body="Please find attached my documents.",
+            )
+
+    monkeypatch.setattr(
+        "src.nodes.generate_documents.logic.PromptManager", FakePromptManager
+    )
+    monkeypatch.setattr("src.nodes.generate_documents.logic.LLMRuntime", FakeRuntime)
+
+    state = _base_state()
+    state["extracted_data"]["job_title"] = "Data and AI Integration Engineer"
+    state["ingested_data"] = {
+        "raw_text": (
+            "Data and AI Integration Engineer - J36172 in Essen Company details "
+            "Exclusive Associates Human resources services"
+        )
+    }
+
+    run_logic(state)
+
+    approved_state = (
+        tmp_path
+        / "data/jobs/tu_berlin/job-1/nodes/generate_documents/approved/state.json"
+    )
+    payload = json.loads(approved_state.read_text(encoding="utf-8"))
+    assert (
+        payload["letter_deltas"]["subject_line"]
+        == "Application for Data and AI Integration Engineer"
+    )
+    assert (
+        payload["letter_deltas"]["intro_paragraph"]
+        == "I am applying for the Data and AI Integration Engineer position."
+    )
+    assert (
+        payload["letter_deltas"]["alignment_paragraph"]
+        != payload["letter_deltas"]["core_argument_paragraph"]
+    )
+    assert "[" not in payload["letter_deltas"]["alignment_paragraph"]
+    assert "start date" in payload["letter_deltas"]["closing_paragraph"].lower()
+
+    letter_md = (
+        tmp_path
+        / "data/jobs/tu_berlin/job-1/nodes/generate_documents/proposed/motivation_letter.md"
+    )
+    assert "Exclusive Associates" in letter_md.read_text(encoding="utf-8")

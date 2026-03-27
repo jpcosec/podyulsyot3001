@@ -8,7 +8,11 @@ from pathlib import Path
 
 import pytest
 
-from src.cli.run_prep_match import _load_profile_evidence, _write_run_summary_artifact
+from src.cli.run_prep_match import (
+    _load_profile_evidence,
+    _write_run_summary_artifact,
+    _write_verification_artifact,
+)
 
 
 def test_load_profile_evidence_requires_path() -> None:
@@ -109,3 +113,28 @@ def test_write_run_summary_artifact_includes_error_state(tmp_path: Path) -> None
     payload = json.loads(summary_path.read_text(encoding="utf-8"))
     assert payload["status"] == "failed"
     assert payload["error_state"]["message"] == "boom"
+
+
+def test_write_verification_artifact(tmp_path: Path) -> None:
+    report = {
+        "verifier": "prep_match_v1",
+        "passed": True,
+        "score": 1.0,
+        "checks": [],
+    }
+
+    prev_cwd = Path.cwd()
+    try:
+        os.chdir(tmp_path)
+        _write_verification_artifact(
+            source="tu_berlin",
+            job_id="job-2",
+            verification_report=report,
+        )
+    finally:
+        os.chdir(prev_cwd)
+
+    out_path = tmp_path / "data/jobs/tu_berlin/job-2/graph/langsmith_verification.json"
+    assert out_path.exists()
+    payload = json.loads(out_path.read_text(encoding="utf-8"))
+    assert payload["passed"] is True

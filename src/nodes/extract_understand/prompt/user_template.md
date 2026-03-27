@@ -21,7 +21,7 @@ Apply these rules from previous mistakes:
 Before generating JSON, follow this process:
 1. **Requirements Scan:** Identify each technology, role, years-of-experience signal, and soft skill. Classify each as `must` or `nice`.
 2. **Constraint Evaluation:** Explicitly look for work mode (remote/hybrid/onsite), timezone, legal status, visas, process, deadline, contract constraints, and salary grade.
-3. **Contact Extraction:** Explicitly look for PI or contact person name and email. If an email exists, populate `contact_info.email`. If the name is absent, keep `contact_info.name` as null.
+3. **Contact Extraction:** Explicitly look for PI or contact person name and email. If an email exists, populate `contact_info.email`. If the name is absent, keep `contact_info.name` as null. If there are multiple contacts, list all of them in `contact_infos`.
 4. **Risk Analysis:** Identify contradictions or red flags that may affect candidate fit or process viability.
 5. **Validation:** Ensure requirement IDs are unique and descriptive.
 

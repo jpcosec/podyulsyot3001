@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from difflib import SequenceMatcher
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
@@ -62,6 +63,7 @@ def run_logic(state: Mapping[str, Any]) -> dict[str, Any]:
     )
 
     deltas_payload = result.model_dump()
+    deltas_payload = _normalize_letter_deltas(state, deltas_payload)
     _validate_injection_ids(deltas_payload, profile_data)
 
     source_hash = _compute_payload_hash(deltas_payload)
@@ -503,15 +505,9 @@ def _render_documents(
         lstrip_blocks=True,
     )
 
-    receiver_name = str(
-        state.get("receiver_name") or "[Receiver Name / Hiring Committee]"
-    )
-    receiver_department = str(
-        state.get("receiver_department") or "[Department / Faculty]"
-    )
-    receiver_institution = str(
-        state.get("receiver_institution") or "[Institution / Company]"
-    )
+    receiver_name = _resolve_receiver_name(state)
+    receiver_department = _resolve_receiver_department(state.get("receiver_department"))
+    receiver_institution = _resolve_receiver_institution(state)
     city = str(state.get("receiver_city") or "Berlin")
 
     context = {
@@ -531,6 +527,328 @@ def _render_documents(
         ),
         "email_markdown": env.get_template("email_template.jinja2").render(**context),
     }
+
+
+def _resolve_receiver_name(state: Mapping[str, Any]) -> str:
+    text = str(state.get("receiver_name") or "").strip()
+    if not _is_placeholder_receiver_name(text):
+        return text
+
+    extracted_data = state.get("extracted_data")
+    if isinstance(extracted_data, Mapping):
+        contact_names = _extract_contact_names(extracted_data)
+        if contact_names:
+            return _format_recipient_names(contact_names)
+
+    return "Hiring Committee"
+
+
+def _is_placeholder_receiver_name(text: str) -> bool:
+    if not text:
+        return True
+
+    normalized = re.sub(r"\s+", " ", text).strip().lower()
+    return (
+        normalized.startswith("[")
+        or normalized.startswith("<")
+        or "receiver name" in normalized
+    )
+
+
+def _resolve_receiver_department(value: Any) -> str:
+    text = str(value or "").strip()
+    if not text:
+        return "Hiring Team"
+
+    normalized = re.sub(r"\s+", " ", text).strip().lower()
+    is_placeholder = (
+        normalized.startswith("[")
+        or normalized.startswith("<")
+        or "department" in normalized
+        or "faculty" in normalized
+    )
+    if is_placeholder:
+        return "Hiring Team"
+    return text
+
+
+def _resolve_receiver_institution(value: Any) -> str:
+    text = str(value.get("receiver_institution") or "").strip()
+    if text and not _is_placeholder_institution(text):
+        return text
+
+    extracted_data = value.get("extracted_data")
+    if isinstance(extracted_data, Mapping):
+        for key in (
+            "receiver_institution",
+            "institution",
+            "company",
+            "company_name",
+            "organization",
+            "employer",
+            "employer_name",
+        ):
+            candidate = str(extracted_data.get(key) or "").strip()
+            if candidate and not _is_placeholder_institution(candidate):
+                return candidate
+
+    ingested_data = value.get("ingested_data")
+    candidate = _resolve_institution_from_ingested(ingested_data)
+    if candidate:
+        return candidate
+
+    return "Company"
+
+
+def _is_placeholder_institution(text: str) -> bool:
+    normalized = re.sub(r"\s+", " ", text).strip().lower()
+    return (
+        not normalized
+        or normalized.startswith("[")
+        or normalized.startswith("<")
+        or "institution" in normalized
+        or "company" in normalized
+        or "organization" in normalized
+    )
+
+
+def _resolve_institution_from_ingested(ingested_data: Any) -> str | None:
+    if not isinstance(ingested_data, Mapping):
+        return None
+
+    metadata = ingested_data.get("metadata")
+    if isinstance(metadata, Mapping):
+        source_extraction = metadata.get("source_extraction")
+        if isinstance(source_extraction, Mapping):
+            for key in ("company", "organization", "employer", "institution"):
+                candidate = str(source_extraction.get(key) or "").strip()
+                if candidate and not _is_placeholder_institution(candidate):
+                    return candidate
+
+    raw_text = str(ingested_data.get("raw_text") or "")
+    if raw_text:
+        return _extract_organization_from_raw_text(raw_text)
+    return None
+
+
+def _extract_organization_from_raw_text(raw_text: str) -> str | None:
+    compact = re.sub(r"\s+", " ", raw_text)
+    patterns = (
+        r"(?:Company details|Unternehmens-Details)\s+([A-Z][A-Za-z0-9&.,'\- ]{2,80})",
+        r"J\d+\s+([A-Z][A-Za-z0-9&.,'\- ]{2,80})\s+(?:Personnel|Personaldienstleistungen|Human resources|Vollzeit|full-time)",
+    )
+    for pattern in patterns:
+        match = re.search(pattern, compact)
+        if not match:
+            continue
+        candidate = _cleanup_org_candidate(match.group(1))
+        if candidate:
+            return candidate
+
+    email_pattern = re.search(r"@([A-Za-z0-9.-]+)", raw_text)
+    if email_pattern:
+        domain = email_pattern.group(1).lower()
+        if "." in domain:
+            base = domain.split(".")[0].replace("-", " ").strip()
+            if base:
+                return " ".join(part.capitalize() for part in base.split())
+    return None
+
+
+def _cleanup_org_candidate(value: str) -> str | None:
+    candidate = re.sub(r"\s+", " ", value).strip(" -|,.;:")
+    if not candidate:
+        return None
+    trim_after = (
+        " human resources services",
+        " personeldienstleistungen",
+        " personaldienstleistungen",
+    )
+    lowered = candidate.lower()
+    for marker in trim_after:
+        idx = lowered.find(marker)
+        if idx > 0:
+            candidate = candidate[:idx].strip(" -|,.;:")
+            lowered = candidate.lower()
+
+    blacklist = ("find jobs", "xing jobs", "job details")
+    if any(term in lowered for term in blacklist):
+        return None
+    words = candidate.split()
+    if len(words) > 7:
+        candidate = " ".join(words[:7])
+    return candidate
+
+
+def _normalize_letter_deltas(
+    state: Mapping[str, Any],
+    deltas_payload: Mapping[str, Any],
+) -> dict[str, Any]:
+    payload = dict(deltas_payload)
+    letter_deltas = payload.get("letter_deltas")
+    if not isinstance(letter_deltas, Mapping):
+        return payload
+
+    normalized = dict(letter_deltas)
+    job_title = _resolve_job_title(state)
+    receiver_institution = _resolve_receiver_institution(state)
+
+    subject = " ".join(str(normalized.get("subject_line") or "").split()).strip()
+    if _is_generic_subject(subject):
+        normalized["subject_line"] = f"Application for {job_title}"
+
+    intro = " ".join(str(normalized.get("intro_paragraph") or "").split()).strip()
+    if _is_generic_intro(intro):
+        normalized["intro_paragraph"] = f"I am applying for the {job_title} position."
+
+    core = str(normalized.get("core_argument_paragraph") or "").strip()
+    alignment = str(normalized.get("alignment_paragraph") or "").strip()
+    if _paragraphs_are_too_similar(core, alignment) or _contains_placeholder_marker(
+        alignment
+    ):
+        normalized["alignment_paragraph"] = (
+            f"I am motivated to contribute these capabilities to {receiver_institution} "
+            f"and support the goals of the {job_title} role in a practical, delivery-focused way."
+        )
+
+    closing = " ".join(str(normalized.get("closing_paragraph") or "").split()).strip()
+    normalized["closing_paragraph"] = _normalize_closing_paragraph(closing)
+
+    payload["letter_deltas"] = normalized
+    return payload
+
+
+def _resolve_job_title(state: Mapping[str, Any]) -> str:
+    extracted_data = state.get("extracted_data")
+    if isinstance(extracted_data, Mapping):
+        title = " ".join(str(extracted_data.get("job_title") or "").split()).strip()
+        if title:
+            return title
+
+    ingested_data = state.get("ingested_data")
+    if isinstance(ingested_data, Mapping):
+        raw_text = str(ingested_data.get("raw_text") or "")
+        match = re.search(
+            r"([A-Z][A-Za-z0-9&/+,()\- ]{8,120})\s+-\s+J\d+",
+            raw_text,
+        )
+        if match:
+            return " ".join(match.group(1).split()).strip()
+
+    return "the advertised role"
+
+
+def _is_generic_subject(value: str) -> bool:
+    if not value:
+        return True
+    normalized = value.strip().lower()
+    return normalized in {
+        "application",
+        "job application",
+        "application letter",
+        "bewerbung",
+    }
+
+
+def _is_generic_intro(value: str) -> bool:
+    if not value:
+        return True
+    normalized = re.sub(r"\s+", " ", value).strip().lower().rstrip(".")
+    generic_patterns = (
+        "i am applying for this position",
+        "i am applying for this role",
+        "i am applying for the position",
+        "i am applying for the role",
+    )
+    return normalized in generic_patterns
+
+
+def _paragraphs_are_too_similar(left: str, right: str) -> bool:
+    left_norm = re.sub(r"\s+", " ", left).strip().lower()
+    right_norm = re.sub(r"\s+", " ", right).strip().lower()
+    if not left_norm or not right_norm:
+        return False
+    if left_norm == right_norm:
+        return True
+    return SequenceMatcher(a=left_norm, b=right_norm).ratio() >= 0.9
+
+
+def _contains_placeholder_marker(value: str) -> bool:
+    compact = value.strip().lower()
+    if not compact:
+        return False
+    return (
+        "[" in compact
+        or "]" in compact
+        or "<" in compact
+        or ">" in compact
+        or "mention" in compact
+    )
+
+
+def _normalize_closing_paragraph(value: str) -> str:
+    text = value.strip()
+    if not text:
+        return (
+            "I am available to discuss a suitable start date and would welcome the "
+            "opportunity to discuss my application further. Thank you for your consideration."
+        )
+
+    lowered = text.lower()
+    parts = [text.rstrip(".")]
+    if "available" not in lowered and "start" not in lowered:
+        parts.append("I am available to discuss a suitable start date")
+    if "discuss" not in lowered and "interview" not in lowered:
+        parts.append(
+            "I would welcome the opportunity to discuss my application further"
+        )
+    if "thank" not in lowered:
+        parts.append("Thank you for your consideration")
+    return ". ".join(parts).strip() + "."
+
+
+def _extract_contact_names(extracted_data: Mapping[str, Any]) -> list[str]:
+    names: list[str] = []
+    contact_infos = extracted_data.get("contact_infos")
+    if isinstance(contact_infos, list):
+        for item in contact_infos:
+            if not isinstance(item, Mapping):
+                continue
+            name = str(item.get("name") or "").strip()
+            if _is_placeholder_receiver_name(name):
+                continue
+            names.append(name)
+
+    if names:
+        return _dedupe_names(names)
+
+    contact_info = extracted_data.get("contact_info")
+    if isinstance(contact_info, Mapping):
+        name = str(contact_info.get("name") or "").strip()
+        if not _is_placeholder_receiver_name(name):
+            return [name]
+
+    return []
+
+
+def _dedupe_names(values: list[str]) -> list[str]:
+    seen: set[str] = set()
+    out: list[str] = []
+    for value in values:
+        key = value.strip().lower()
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        out.append(value)
+    return out
+
+
+def _format_recipient_names(names: list[str]) -> str:
+    if len(names) == 1:
+        return names[0]
+    if len(names) == 2:
+        return f"{names[0]} and {names[1]}"
+    return f"{', '.join(names[:-1])}, and {names[-1]}"
 
 
 def _persist_artifacts(
