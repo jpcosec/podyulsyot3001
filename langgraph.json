@@ -1,8 +1,0 @@
-{
-  "dependencies": [
-    "."
-  ],
-  "graphs": {
-    "pipeline": "src.graph:create_prep_match_app"
-  }
-}
