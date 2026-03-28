@@ -54,11 +54,15 @@ class MatchSkillState(TypedDict, total=False):
     status: str
     artifact_refs: dict[str, str]
     active_feedback: list[dict[str, Any]]
+    profile_base_data: dict[str, Any]  # Ported from generate_documents
+    document_deltas: dict[str, Any]
+    generated_documents: dict[str, Any]
 
 
 def build_match_skill_graph(
     *,
     match_chain: Any | None = None,
+    gen_chain: Any | None = None,
     artifact_store: MatchArtifactStore | None = None,
     checkpointer: Any | None = None,
     interrupt_before: tuple[str, ...] = ("human_review_node",),
@@ -68,6 +72,7 @@ def build_match_skill_graph(
 
     Args:
         match_chain: Optional prebuilt LangChain runnable for matching.
+        gen_chain: Optional prebuilt LangChain runnable for document generation.
         artifact_store: Optional persistence adapter.
         checkpointer: Optional LangGraph checkpointer for pause/resume.
         interrupt_before: Nodes that should act as breakpoints before execution.
@@ -76,13 +81,18 @@ def build_match_skill_graph(
     Returns:
         A compiled LangGraph app ready for invoke/update_state usage.
     """
+    from src.generate_documents.graph import (
+        _make_generate_documents_node,
+        build_default_generate_documents_chain,
+    )
 
-    chain = match_chain or build_default_match_chain()
+    match_chain = match_chain or build_default_match_chain()
+    gen_chain = gen_chain or build_default_generate_documents_chain()
     store = artifact_store or MatchArtifactStore()
     workflow = StateGraph(MatchSkillState)
 
     workflow.add_node("load_match_inputs", _make_load_match_inputs_node(store))
-    workflow.add_node("run_match_llm", _make_run_match_llm_node(chain))
+    workflow.add_node("run_match_llm", _make_run_match_llm_node(match_chain))
     workflow.add_node("persist_match_round", _make_persist_match_round_node(store))
     workflow.add_node("human_review_node", _human_review_node)
     workflow.add_node("apply_review_decision", _make_apply_review_decision_node(store))
@@ -90,6 +100,7 @@ def build_match_skill_graph(
         "prepare_regeneration_context",
         _make_prepare_regeneration_context_node(store),
     )
+    workflow.add_node("generate_documents", _make_generate_documents_node(gen_chain))
 
     workflow.add_edge(START, "load_match_inputs")
     workflow.add_edge("load_match_inputs", "run_match_llm")
@@ -97,6 +108,7 @@ def build_match_skill_graph(
     workflow.add_edge("persist_match_round", "human_review_node")
     workflow.add_edge("human_review_node", "apply_review_decision")
     workflow.add_edge("prepare_regeneration_context", "run_match_llm")
+    workflow.add_edge("generate_documents", "__end__")
 
     return workflow.compile(
         checkpointer=checkpointer,
@@ -392,14 +404,18 @@ def _make_apply_review_decision_node(store: MatchArtifactStore):
             feedback_items=feedback_items,
             routing_decision=routing_decision,
         )
-        goto: Literal["prepare_regeneration_context", "__end__"] = (
+        goto: Literal["prepare_regeneration_context", "generate_documents", "__end__"] = (
             "prepare_regeneration_context"
             if routing_decision == "request_regeneration"
+            else "generate_documents"
+            if routing_decision == "approve"
             else "__end__"
         )
         status = (
             "pending_regeneration"
             if routing_decision == "request_regeneration"
+            else "generating_documents"
+            if routing_decision == "approve"
             else "completed"
         )
         return Command(
