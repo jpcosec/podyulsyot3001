@@ -1,33 +1,92 @@
-# 🎨 Render Pipeline
+# Render Pipeline
 
-This sub-module provides a unified, command-line interface for rendering tailored CVs (PDFs via LaTeX) and motivation letters (PDFs via DOCX).
+`src/render` now uses a typed request/coordinator flow so document type, engine, style, and language are resolved independently instead of being mixed inside per-document services.
 
-## 🏗️ Architecture
-It relies on two main components:
-- **`render_cv.py`**: Compiles a LaTeX document using dynamically generated context from your base profile and job-specific overrides.
-- **`render_letter.py`**: Injects localized markdown content into a DOCX template and converts it to PDF.
+## Structure
 
-The central entry point is **`main.py`**, making it behave similarly to the `scraper` and `translator` modules.
-
-## 🚀 CLI Usage
-
-```bash
-python -m src.render.main --action {cv|letter} --source {tuberlin|stepstone} --job-id {ID} [OPTIONS]
+```text
+src/render/
+├── coordinator.py
+├── request.py
+├── registry.py
+├── documents/
+│   ├── base.py
+│   ├── cv/
+│   └── letter/
+├── engines/
+│   ├── docx/
+│   ├── latex/
+│   └── pandoc/
+├── languages/
+│   ├── models.py
+│   ├── registry.py
+│   ├── en/
+│   ├── es/
+│   └── de/
+├── templates/
+│   ├── cv/
+│   ├── letter/
+│   └── shared/
+├── shared/
+├── main.py
+└── __init__.py
 ```
 
-### CLI Arguments
+- `coordinator.py` resolves adapters, manifests, locale bundles, and paths.
+- `documents/` contains document adapters that normalize CV and letter inputs.
+- `engines/` contains backend adapters and rendering helpers.
+- `languages/` contains typed locale bundles split by `common`, `cv`, and `letter`.
+- `templates/` is the root registry for style templates and manifests.
+- `shared/` contains reusable filesystem and metadata helpers.
 
-| Argument | Description | Default |
-| :--- | :--- | :--- |
-| `--action` | **(Required)** Which document to render: `cv` or `letter`. | |
-| `--source` | **(Required)** The job portal source folder (e.g. `tuberlin`). | |
-| `--job-id` | **(Required)** The specific job ID inside the source folder. | |
-| `--language` | Target language for the template (only applies to CV currently). Choices: `english`, `german`, `spanish`. | `english` |
+## Current Model
 
-## 📂 Output
+- `cv`: Markdown-first via Pandoc, with a coordinator-managed legacy JSON -> LaTeX fallback for job-based rendering.
+- `letter`: Markdown-first via Pandoc for PDF and DOCX output.
+- `classic` CV style: root-level template manifest plus the familiar legacy `moderncv` asset set.
+- `language`: handled through typed locale bundles, not hardcoded template labels.
 
-Rendered files are automatically placed in the job's `application` directory:
-- `data/jobs/tuberlin/{job-id}/application/cv.pdf`
-- `data/jobs/tuberlin/{job-id}/application/motivation_letter.pdf`
+## CLI Usage
 
-*Note: Rendering a letter requires that `motivation_letter.md` already exists in the application directory.*
+Direct source rendering:
+
+```bash
+python -m src.render.main cv --source test_assets/cv/en.md --language en --template classic --engine tex --output output/cv-en.pdf
+python -m src.render.main cv --source test_assets/cv/es.md --language es --template classic --engine tex --output output/cv-es.pdf
+python -m src.render.main cv --source test_assets/cv/de.md --language de --template classic --engine tex --output output/cv-de.pdf
+python -m src.render.main letter --source test_assets/letter/en.md --language en --template default --engine tex --output output/letter-en.pdf
+python -m src.render.main letter --source test_assets/letter/es.md --language es --template default --engine tex --output output/letter-es.pdf
+python -m src.render.main letter --source test_assets/letter/de.md --language de --template default --engine tex --output output/letter-de.pdf
+```
+
+DOCX smoke examples:
+
+```bash
+python -m src.render.main cv --source test_assets/cv/es.md --language es --template classic --engine docx --output output/cv-es.docx
+python -m src.render.main letter --source test_assets/letter/de.md --language de --template default --engine docx --output output/letter-de.docx
+```
+
+Legacy job-based rendering:
+
+```bash
+python -m src.render.main --action cv --source stepstone --job-id 12345 --language en --template classic
+python -m src.render.main --action letter --source stepstone --job-id 12345 --language de --template default
+```
+
+## Notes
+
+- `--engine` and `--motor` are aliases.
+- `--extra-vars KEY=VALUE` can be repeated to inject Pandoc metadata.
+- the coordinator, not the engines, is responsible for output and build path creation.
+- Pandoc and a working TeX installation are required for the Markdown -> PDF flow.
+- LibreOffice is still used when a DOCX -> PDF conversion is needed.
+
+## Test Assets
+
+Create localized test markdown files under `test_assets/cv/` and `test_assets/letter/` for testing the pipeline.
+
+## Localization Model
+
+- language bundles live under `src/render/languages/` and are split into `common.py`, `cv.py`, and `letter.py` per locale.
+- Pydantic models in `src/render/languages/models.py` validate the structure and support style-aware overrides.
+- style manifests under `src/render/templates/**/manifest.json` declare templates, assets, and Lua filters independently from the engines.

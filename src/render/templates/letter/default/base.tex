@@ -1,0 +1,23 @@
+"""Tailor CV reader."""
+
+from __future__ import annotations
+
+from src.ai.nodes.tailor_cv.contract import TailorCvInput
+from src.core.io import ArtifactStore
+from src.core.runtime import NodeContext
+
+
+def read_inputs(store: ArtifactStore, ctx: NodeContext) -> TailorCvInput:
+    context_paths = store.node_paths(
+        ctx.source, ctx.job_id, "review_application_context"
+    )
+    motivation_paths = store.node_paths(
+        ctx.source, ctx.job_id, "review_motivation_letter"
+    )
+    context_state = store.read_json(context_paths.approved / "state.json")
+    motivation_state = store.read_json(motivation_paths.approved / "state.json")
+    return TailorCvInput(
+        job_id=ctx.job_id,
+        approved_context=context_state,
+        approved_motivation=motivation_state,
+    )
