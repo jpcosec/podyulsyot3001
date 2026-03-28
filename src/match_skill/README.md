@@ -1,31 +1,32 @@
-# Match Skill
+# ⚖️ Match Skill
 
-This module provides a LangGraph + LangChain-native version of the `dev` branch match-review loop without markdown review files.
+This module provides a LangGraph + LangChain-native version of the matching loop, enabling a deterministic human-in-the-loop workflow without the need for manual markdown review files.
 
-For a detailed implementation and operations guide, see `docs/runtime/match_skill_studio_implementation_guide.md`.
+---
 
-## Design
+## 🏗️ Architecture & Features
 
-- `graph.py` builds a reusable `match_skill` subgraph.
-- `prompt.py` uses `ChatPromptTemplate` for the LLM boundary.
-- `contracts.py` defines the structured model and review payload schemas.
-- `storage.py` persists immutable round artifacts as JSON for Studio or a custom UI.
+The `match_skill` is designed as a reusable LangGraph subgraph:
+- **`graph.py`**: Constructs the state graph with a `human_review_node` interrupt.
+- **`prompt.py`**: Uses `ChatPromptTemplate` for clear, versioned LLM boundaries.
+- **`storage.py`**: Persists immutable round artifacts as JSON for external UI integration (Studio, TUI, or Web).
+- **LangGraph Native**: Uses standard checkpointers and interrupt logic for robust state persistence.
 
-## Human Review Flow
+---
 
-1. Run the graph with a checkpointer and `interrupt_before=["human_review_node"]`.
-2. Read the paused thread state plus `review/current.json`.
-3. Submit a typed `ReviewPayload` with `graph.update_state(..., as_node="human_review_node")`.
-4. Resume the graph on the same `thread_id`.
+## ⚙️ Configuration
 
-## Artifacts
+Set your LLM credentials in the root `.env` file:
+```env
+# Required for the graph logic and Studio
+GOOGLE_API_KEY="your_gemini_api_key_here"
+```
 
-By default artifacts are written under `output/match_skill/<source>/<job_id>/nodes/match_skill/`.
+---
 
-## CLI
+## 💻 How to Use (Quickstart)
 
-Run a new thread:
-
+To run a new match thread for a job:
 ```bash
 python -m src.cli.run_match_skill \
   --source demo \
@@ -34,8 +35,7 @@ python -m src.cli.run_match_skill \
   --profile-evidence profile.json
 ```
 
-Resume a paused thread with a structured review payload:
-
+To resume a paused thread with a human review decision:
 ```bash
 python -m src.cli.run_match_skill \
   --source demo \
@@ -44,32 +44,52 @@ python -m src.cli.run_match_skill \
   --review-payload review_payload.json
 ```
 
-- `approved/state.json`
-- `review/current.json`
-- `review/decision.json`
-- `review/rounds/round_<NNN>/proposal.json`
-- `review/rounds/round_<NNN>/decision.json`
-- `review/rounds/round_<NNN>/feedback.json`
+---
 
-The review surface is JSON-first so it can feed LangGraph Studio, a CLI TUI, or a small React/Streamlit review app.
+## 🚀 CLI / Usage
 
-## LangGraph Studio
+| Argument | Description | Default |
+|---|---|---|
+| `--source` | The job portal source name (e.g. `stepstone`, `xing`). | `demo` |
+| `--job-id` | Unique ID for the job posting being matched. | |
+| `--resume` | If set, resumes the latest interrupted thread. | `False` |
+| `--review-payload` | Path to a JSON file containing the `ReviewPayload` for resume. | |
+| `--requirements` | Input requirements structure (for new threads). | |
+| `--profile-evidence` | Your CV/profile evidence JSON (for new threads). | |
 
-This repo now exposes the graph through `langgraph.json` as:
+---
 
-- `match_skill`: `src.match_skill.graph:create_studio_graph`
+## 📝 The Data Contract
 
-Notes:
+The matching engine consumes and produces standardized JSON envelopes:
+- **`MatchState`**: The LangGraph state schema (requires `job_id`, `source`, `match_result`).
+- **`ReviewPayload`**: Schema for human feedback, containing `approved`, `feedback`, and `decisions`.
+- **`RoundArtifact`**: Immutable record of one iteration of LLM matching + human review.
 
-- Studio should be able to render the graph topology immediately.
-- To run the real model node in Studio, set `GOOGLE_API_KEY` or `GEMINI_API_KEY`.
-- Without those credentials, Studio falls back to a deterministic demo chain so you can still test graph behavior end-to-end.
+---
 
-## Sample Payloads
+## 📂 Artifacts & Storage
 
-Example files for Studio or CLI replay live under `test_assets/match_assets/`:
+By default, all iterations are versioned under:
+`output/match_skill/<source>/<job_id>/nodes/match_skill/`
 
-- `test_assets/match_assets/sample_requirements.json`
-- `test_assets/match_assets/sample_profile_evidence.json`
-- `test_assets/match_assets/sample_review_payload_approve.json`
-- `test_assets/match_assets/sample_review_payload_regenerate.json`
+Key persistent files:
+- `approved/state.json`: Final approved state.
+- `review/current.json`: Latest pending proposal.
+- `review/rounds/round_<NNN>/proposal.json`: Historical iterations.
+
+---
+
+## 🛠️ How to Add / Extend
+
+1.  **Modify Logic**: Update nodes in `src/match_skill/graph.py`.
+2.  **Add Tools**: Register new LangChain tools in `src/match_skill/graph.py:create_match_skill_graph`.
+3.  **Refine Prompts**: Update the system message template in `src/match_skill/prompt.py`.
+
+---
+
+## 🚑 Troubleshooting
+
+- **Graph Fails to Start**: Ensure all input JSON files match the expected `MatchState` schema.
+- **Studio Connection Failure**: Check your `langgraph.json` configuration and your API keys.
+- **Missing Artifacts**: Ensure the `output/` directory is writable and the `MatchArtifactStore` in `storage.py` is initialized correctly.

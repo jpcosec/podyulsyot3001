@@ -20,12 +20,26 @@ from src.render.shared.paths import build_output_path, job_render_paths
 
 
 class RenderCoordinator:
-    """Resolve adapters/configuration and execute renders."""
+    """Orchestrates the document rendering process by resolving adapters, manifests, and engines.
+
+    This coordinator acts as a facade, hiding the complexity of resolving engine-specific 
+    configurations, style manifests, and localized asset paths.
+    """
 
     def __init__(self):
+        """Initialize the coordinator with required renderers."""
         self.latex = LatexRenderer()
 
     def render(self, request: RenderRequest) -> Path:
+        """Execute a rendering request end-to-end.
+
+        Args:
+            request (RenderRequest): The unified request object containing document type, 
+                engine, language, and source data.
+
+        Returns:
+            Path: The absolute path to the generated document file.
+        """
         document_adapter = get_document_adapter(request.document_type)
         style = request.style or document_adapter.default_style
         source_path, output_path, build_dir = self._resolve_paths(
@@ -62,6 +76,15 @@ class RenderCoordinator:
     def _resolve_paths(
         self, request: RenderRequest, document_adapter
     ) -> tuple[Path, Path, Path]:
+        """Resolve relevant source, output, and build paths for a render request.
+
+        Args:
+            request (RenderRequest): The current render request.
+            document_adapter: The resolved document adapter for the request type.
+
+        Returns:
+            tuple[Path, Path, Path]: A tuple containing (source_path, output_path, build_dir).
+        """
         if request.source_kind == "job":
             if not request.job_id:
                 raise ValueError("job_id is required for job-based rendering")

@@ -91,18 +91,34 @@ def _make_generate_documents_node(chain: Any, store: DocumentArtifactStore | Non
             profile_base = json.loads(profile_path.read_text(encoding="utf-8"))
 
         # 2. Extract approved matches and patches
-        # For simplicity, we assume the previous nodes structured this
-        # or we load the latest from MatchArtifactStore.
         match_store = MatchArtifactStore()
+        
+        # Load requirements to get human-readable text
+        reqs_raw = state.get("requirements") or []
+        if not reqs_raw:
+            reqs_path = match_store.job_root(source, job_id) / "requirements.json"
+            if reqs_path.exists():
+                reqs_raw = json.loads(reqs_path.read_text(encoding="utf-8"))
+        
+        req_lookup = {r["id"]: r["text"] for r in reqs_raw if "id" in r and "text" in r}
+
         approved_match_raw = match_store.load_json(
             match_store.job_root(source, job_id) / "approved" / "state.json"
         )
-        approved_matches = approved_match_raw.get("matches") if isinstance(approved_match_raw, dict) else []
+        approved_matches_raw = approved_match_raw.get("matches") if isinstance(approved_match_raw, dict) else []
+        
+        # We enrich the matches with their original text for the prompt
+        enriched_matches = []
+        for m in approved_matches_raw:
+            enriched_matches.append({
+                **m,
+                "requirement_text": req_lookup.get(m.get("requirement_id"), "Unknown Requirement")
+            })
         
         # 3. Build prompt and invoke LLM
         prompt = build_generate_documents_prompt(
             profile_base=profile_base,
-            approved_matches=approved_matches,
+            approved_matches=enriched_matches,
             review_items=review_payload_raw.get("items", []),
         )
         

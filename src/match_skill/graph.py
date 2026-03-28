@@ -118,7 +118,7 @@ def build_match_skill_graph(
 
 
 def build_default_match_chain(
-    *, model_name: str = "gemini-2.5-flash", model: Any | None = None
+    *, model_name: str = "gemini-1.5-flash-latest", model: Any | None = None
 ):
     """Build the default LangChain runnable for the match step.
 
@@ -131,6 +131,9 @@ def build_default_match_chain(
     """
 
     from langchain_google_genai import ChatGoogleGenerativeAI
+    
+    if not (os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")):
+        return _build_studio_match_chain()
 
     prompt = build_match_prompt()
     chat_model = model or ChatGoogleGenerativeAI(model=model_name)
