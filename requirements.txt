@@ -13,4 +13,5 @@ langchain-core==1.2.23
 langchain-google-genai==4.2.1
 langsmith==0.7.22
 langgraph-cli[inmem]==0.4.19
+textual>=0.80.0
 pytest==9.0.2
