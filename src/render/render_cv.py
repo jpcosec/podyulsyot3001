@@ -12,7 +12,7 @@ import json
 import shutil
 from pathlib import Path
 
-from src.core.tools.render.latex import compile_cv_pdf
+from src.render.latex import compile_cv_pdf
 
 
 _PROFILE_PATH = Path(

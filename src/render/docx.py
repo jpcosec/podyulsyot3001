@@ -11,7 +11,7 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Inches, Pt
 
-from src.core.tools.render.styles import resolve_docx_style
+from src.render.styles import resolve_docx_style
 
 #TODO: Pydocs, would be a good idea being able to use templates here 
 

@@ -86,5 +86,6 @@ class TUBerlinAdapter(SmartScraperAdapter):
         The salary is usually a TV-L grade (e.g., 'Salary grade 13 TV-L Berliner Hochschulen').
         The posted date, deadline, and reference are in 'Facts' tables.
         The contact info is usually an email (mailto: link).
+        Detect the primary language of the posting and return its ISO 639-1 code in the 'original_language' field (e.g. 'de' or 'en').
         Do not invent data. If a field does not exist, return it as null.
         """

@@ -9,7 +9,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from src.core.tools.render.letter import convert_docx_to_pdf, render_letter_docx
+from src.render.letter import convert_docx_to_pdf, render_letter_docx
 
 
 def render_letter(source: str, job_id: str) -> Path:

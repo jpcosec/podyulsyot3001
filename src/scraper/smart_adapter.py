@@ -34,6 +34,19 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
+def detect_language(markdown_text: str) -> str:
+    """Naive fallback to detect if a text is German or English."""
+    GERMAN_MARKERS = [
+        " und ", " wie ", " wir ", " für ", " sind ", " werden ",
+        "aufgabengebiet", "tätigkeit", "erfahrung", "deutsch"
+    ]
+    lowered = markdown_text.lower()
+    marker_hits = sum(lowered.count(marker) for marker in GERMAN_MARKERS)
+    has_umlaut = any(ch in markdown_text for ch in "äöüß")
+    if marker_hits >= 2 or has_umlaut:
+        return "de"
+    return "en"
+
 
 class SmartScraperAdapter(ABC):
     """Abstract base class for all job portal scrapers.
@@ -367,6 +380,10 @@ class SmartScraperAdapter(ABC):
                         or getattr(result.markdown, "raw_markdown", None)
                         or str(result.markdown)
                     )
+
+                if valid_data is not None and not valid_data.get("original_language"):
+                    valid_data["original_language"] = detect_language(md_content)
+
                 with open(
                     os.path.join(output_dir, "content.md"), "w", encoding="utf-8"
                 ) as f:

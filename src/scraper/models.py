@@ -82,3 +82,6 @@ class JobPosting(BaseModel):
     contact_info: Optional[str] = Field(
         default=None, description="Email or contact person for application"
     )
+    original_language: Optional[str] = Field(
+        default=None, description="The detected ISO 639-1 language code (e.g. 'de', 'en', 'es')"
+    )

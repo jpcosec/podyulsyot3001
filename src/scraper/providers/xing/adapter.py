@@ -74,5 +74,6 @@ class XingAdapter(SmartScraperAdapter):
         Responsibilities are usually under 'Your Impact' or 'Deine Aufgaben'.
         Requirements under 'Skills & Experience' or 'Dein Profil'.
         If benefits appear under 'Additional Information', extract them there.
+        Detect the primary language of the posting and return its ISO 639-1 code in the 'original_language' field (e.g. 'de' or 'en').
         Do not invent data that is not in the text.
         """

@@ -77,4 +77,5 @@ class StepStoneAdapter(SmartScraperAdapter):
         Separate them logically.
         If the company does not specify salary or benefits, return null or an empty list, do not invent.
         The 'posted_date' field usually appears as 'vor X Tagen' or 'Erschienen: vor 1 Woche'.
+        Detect the primary language of the posting and return its ISO 639-1 code in the 'original_language' field (e.g. 'de' or 'en').
         """
