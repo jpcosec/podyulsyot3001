@@ -1,0 +1,114 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## What this project is
+
+Postulator 3000 is a modular job application pipeline that produces tailored CV and motivation letter documents from job postings. It combines a scraper, translator, LangGraph-native matching engine (with HITL review via a Textual TUI), document generation, and a typed render pipeline.
+
+## Commands
+
+```bash
+# Run all tests
+python -m pytest tests/ -q
+
+# Run a single test file
+python -m pytest tests/test_match_skill.py -q
+
+# Scrape job postings
+python -m src.scraper.main --source stepstone --limit 5
+
+# Translate scraped postings
+python -m src.translator.main --source stepstone
+
+# Run match skill (start a new thread)
+python -m src.cli.run_match_skill \
+  --source stepstone \
+  --job-id <ID> \
+  --requirements <path/to/requirements.json> \
+  --profile-evidence <path/to/evidence.json>
+
+# Launch HITL review TUI (after graph pauses at breakpoint)
+python -m src.cli.review_tui \
+  --source stepstone \
+  --job_id <ID> \
+  --thread-id <langgraph-thread-id>
+
+# Review TUI in read-only preview mode (omit --thread-id)
+python -m src.cli.review_tui --source stepstone --job_id <ID>
+
+# Render CV to PDF
+python -m src.render.main cv \
+  --source data/source/stepstone/<ID>/extracted_data_en.json \
+  --language en
+
+# Render motivation letter
+python -m src.render.main letter --source <path/to/data.json> --language de
+```
+
+## Architecture
+
+### Module layout
+
+Each skill is a self-contained package under `src/`:
+
+- `src/match_skill/` — LangGraph-native matching loop: `graph.py` (StateGraph), `contracts.py` (Pydantic I/O), `storage.py` (artifact persistence), `prompt.py`, `main.py`.
+- `src/generate_documents/` — LangGraph document generation nodes: same structure as match_skill.
+- `src/render/` — typed, engine-agnostic PDF/DOCX rendering via Pandoc + Jinja2. Entry point is `RenderCoordinator` in `coordinator.py`; `RenderRequest` in `request.py` is the unified request model.
+- `src/scraper/` — anti-bot job crawling with LLM fallbacks. Outputs `JobPosting` Pydantic models.
+- `src/translator/` — field and document translation pipeline.
+- `src/ui/` — Textual TUI: `app.py` (`MatchReviewApp`), `bus.py` (`MatchBus` connects UI to LangGraph + disk), `screens/`, `widgets/`.
+- `src/cli/` — operator entry points: `run_match_skill.py`, `review_tui.py`.
+
+### Control plane vs. data plane
+
+**Control plane** (`MatchSkillState` TypedDict in `src/match_skill/graph.py`): carries routing signals and refs — `source`, `job_id`, requirements, profile evidence, review payload, match result. State is intentionally thin; heavy payloads stay on disk.
+
+**Data plane** (disk under `output/match_skill/<source>/<job_id>/nodes/match_skill/`): `MatchArtifactStore` in `storage.py` manages immutable round snapshots (JSON), current review surface, and approved payloads. Artifact layout mirrors the old project: `review/rounds/round_NNN/`, `approved/`, etc.
+
+### Match skill graph flow
+
+`match_node → [interrupt_before review] → review_node`
+
+Review node routes via `Command`: `approve` (continue), `request_regeneration` (loop back to `match_node`), `reject` (end). Checkpointed with `SqliteSaver` (prod) or `InMemorySaver` (tests). `thread_id` is the LangGraph handle for resume.
+
+### Render pipeline
+
+`RenderRequest` → `RenderCoordinator` → resolves document adapter + style manifest + language bundle → `LatexRenderer` (Pandoc) → output file. Document types (`cv`, `letter`) and engines (`tex`, `docx`) are registered in `src/render/registry.py`.
+
+### HITL review loop
+
+1. `run_match_skill` starts a thread; graph pauses at the review breakpoint.
+2. Operator launches `review_tui` with the thread ID.
+3. `MatchBus` loads the review surface from `MatchArtifactStore` and holds the paused graph handle.
+4. Reviewer approves/rejects/requests regeneration in the TUI; `MatchBus` resumes the thread via `Command`.
+5. Immutable round snapshots are written to disk after each decision.
+
+### Shared data contracts
+
+- `JobPosting` — standardized job schema across scrapers and translators.
+- `MatchEnvelope` / `RequirementMatch` — LLM structured output for match decisions.
+- `ReviewSurface` / `ReviewPayload` — the JSON artifact exchanged between graph, TUI, and storage.
+- `RenderRequest` — unified input model for the render coordinator.
+
+### Failure model
+
+Nodes must fail closed — no silent fallback-to-success. LLM calls use structured output (LangChain `with_structured_output`). Missing credentials fall back to a demo chain in dev only (explicit `os.environ.get` guard in `generate_documents/graph.py`).
+
+## Key documentation
+
+- Match skill implementation guide: `docs/runtime/match_skill_implementation_methodology.md`
+- Match skill product guide: `docs/runtime/match_skill_product_guide.md`
+- Match skill hardening roadmap: `docs/runtime/match_skill_hardening_roadmap.md`
+- Documentation methodology: `docs/standards/documentation_methodology_guide.md`
+- LangGraph Studio integration: `docs/runtime/match_skill_studio_implementation_guide.md`
+
+## Environment
+
+```env
+GOOGLE_API_KEY=...       # Gemini API access
+GEMINI_API_KEY=...       # same key, both names accepted
+PLAYWRIGHT_BROWSERS_PATH=0  # for scraper browser automation
+```
+
+Requires: `pandoc` and `texlive-full` (or equivalent) installed for PDF rendering.

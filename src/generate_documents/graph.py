@@ -3,11 +3,40 @@
 from __future__ import annotations
 
 import json
+import logging
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
+
+logger = logging.getLogger(__name__)
+
+
+class DocumentGenerationError(Exception):
+    """Base exception for document generation failures."""
+
+    pass
+
+
+class ProfileLoadError(DocumentGenerationError):
+    """Raised when candidate profile data cannot be loaded."""
+
+    pass
+
+
+class ApprovedMatchesNotFoundError(DocumentGenerationError):
+    """Raised when no approved matches exist for document generation."""
+
+    pass
+
+
+class TemplateRenderError(DocumentGenerationError):
+    """Raised when Jinja2 template rendering fails."""
+
+    pass
+
 
 from src.generate_documents.contracts import (
     CVExperienceInjection,
@@ -23,28 +52,56 @@ from src.match_skill.contracts import MatchEnvelope
 from src.match_skill.storage import MatchArtifactStore
 
 
+def create_studio_graph():
+    """Create a graph for LangGraph Studio."""
+    from langgraph.graph import StateGraph, END
+    from typing import TypedDict
+
+    class GenerateDocumentsState(TypedDict):
+        source: str
+        job_id: str
+        requirements: list[Any]
+        profile_base_data: dict[str, Any]
+        review_payload: dict[str, Any]
+        artifact_refs: dict[str, Any]
+        status: str
+
+    chain = build_default_generate_documents_chain()
+    node = _make_generate_documents_node(chain)
+
+    graph = StateGraph(GenerateDocumentsState)
+    graph.add_node("generate_documents", node)
+    graph.set_entry_point("generate_documents")
+    graph.add_edge("generate_documents", END)
+
+    return graph.compile()
+
+
 def build_default_generate_documents_chain(model: Any | None = None) -> Any:
     """Build the standard LangChain-native generation chain with structured output."""
     from langchain_core.prompts import ChatPromptTemplate
     from langchain_google_genai import ChatGoogleGenerativeAI
-    
+
     # We use ChatPromptTemplate with system/user placeholders
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", "{system}"),
-        ("user", "{user}"),
-    ])
-    
+    prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", "{system}"),
+            ("user", "{user}"),
+        ]
+    )
+
     model_name = "gemini-1.5-flash-latest"
     if not os.environ.get("GOOGLE_API_KEY"):
         # We fall back to a demo chain if no credentials are present
         return _make_demo_generate_documents_chain()
-        
+
     chat_model = model or ChatGoogleGenerativeAI(model=model_name)
     return prompt | chat_model.with_structured_output(DocumentDeltas)
 
 
 def _make_demo_generate_documents_chain() -> Any:
     """Mock chain producing static DocumentDeltas for local Studio usage."""
+
     class DemoChain:
         def invoke(self, inputs: dict[str, str]) -> DocumentDeltas:
             return DocumentDeltas(
@@ -52,7 +109,7 @@ def _make_demo_generate_documents_chain() -> Any:
                 cv_injections=[
                     CVExperienceInjection(
                         experience_id="EXP001",
-                        new_bullets=["Added this bullet via the demo generator."]
+                        new_bullets=["Added this bullet via the demo generator."],
                     )
                 ],
                 letter_deltas=MotivationLetterDeltas(
@@ -60,90 +117,122 @@ def _make_demo_generate_documents_chain() -> Any:
                     intro_paragraph="I am applying via the demo mode of the LangGraph pipeline.",
                     core_argument_paragraph="My demo experience makes me a perfect fit for this mock role.",
                     alignment_paragraph="I am excited to join the demo institution.",
-                    closing_paragraph="Thank you for viewing this demo output."
+                    closing_paragraph="Thank you for viewing this demo output.",
                 ),
-                email_body="Please find my demo application attached."
+                email_body="Please find my demo application attached.",
             )
+
     return DemoChain()
 
 
-import os
-
-
-def _make_generate_documents_node(chain: Any, store: DocumentArtifactStore | None = None):
+def _make_generate_documents_node(
+    chain: Any, store: DocumentArtifactStore | None = None
+):
     """Factory for the document generation node."""
-    
+
     artifact_store = store or DocumentArtifactStore()
 
     def generate_documents_node(state: Mapping[str, Any]) -> dict[str, Any]:
         """Generate tailored application documents based on approved matches."""
-        
+
         source = state.get("source")
         job_id = state.get("job_id")
         review_payload_raw = state.get("review_payload") or {}
-        
+
+        logger.info(f"  [⚡] Starting document generation for {source}/{job_id}")
+
         # 1. Load context data
-        # In a real pipeline, profile_base_data should be in the state.
-        # Fallback to default if missing.
+        logger.info("  [📦] Loading profile base data")
         profile_base = state.get("profile_base_data")
         if not profile_base:
-            profile_path = Path("data/reference_data/profile/base_profile/profile_base_data.json")
-            profile_base = json.loads(profile_path.read_text(encoding="utf-8"))
+            profile_path = Path(
+                "data/reference_data/profile/base_profile/profile_base_data.json"
+            )
+            try:
+                profile_base = json.loads(profile_path.read_text(encoding="utf-8"))
+            except FileNotFoundError:
+                logger.warning("  [⚠️] Profile base data not found in state or file")
+                profile_base = {}
+            except json.JSONDecodeError as e:
+                logger.error(f"  [❌] Invalid JSON in profile file: {e}")
+                raise ProfileLoadError(f"Invalid profile JSON: {e}") from e
 
         # 2. Extract approved matches and patches
+        logger.info("  [📦] Loading approved matches from match_skill")
         match_store = MatchArtifactStore()
-        
+
         # Load requirements to get human-readable text
         reqs_raw = state.get("requirements") or []
         if not reqs_raw:
             reqs_path = match_store.job_root(source, job_id) / "requirements.json"
             if reqs_path.exists():
                 reqs_raw = json.loads(reqs_path.read_text(encoding="utf-8"))
-        
+                logger.info(f"  [📦] Loaded {len(reqs_raw)} requirements")
+
         req_lookup = {r["id"]: r["text"] for r in reqs_raw if "id" in r and "text" in r}
 
-        approved_match_raw = match_store.load_json(
-            match_store.job_root(source, job_id) / "approved" / "state.json"
+        approved_path = match_store.job_root(source, job_id) / "approved" / "state.json"
+        if not approved_path.exists():
+            logger.error(f"  [❌] Approved matches not found at {approved_path}")
+            raise ApprovedMatchesNotFoundError(
+                f"No approved matches found for {source}/{job_id}. "
+                "Run match_skill and approve matches first."
+            )
+
+        approved_match_raw = match_store.load_json(approved_path)
+        approved_matches_raw = (
+            approved_match_raw.get("matches")
+            if isinstance(approved_match_raw, dict)
+            else []
         )
-        approved_matches_raw = approved_match_raw.get("matches") if isinstance(approved_match_raw, dict) else []
-        
+        logger.info(f"  [📦] Loaded {len(approved_matches_raw)} approved matches")
+
         # We enrich the matches with their original text for the prompt
         enriched_matches = []
         for m in approved_matches_raw:
-            enriched_matches.append({
-                **m,
-                "requirement_text": req_lookup.get(m.get("requirement_id"), "Unknown Requirement")
-            })
-        
+            enriched_matches.append(
+                {
+                    **m,
+                    "requirement_text": req_lookup.get(
+                        m.get("requirement_id"), "Unknown Requirement"
+                    ),
+                }
+            )
+
         # 3. Build prompt and invoke LLM
+        logger.info("  [🧠] Building prompt and invoking LLM")
         prompt = build_generate_documents_prompt(
             profile_base=profile_base,
             approved_matches=enriched_matches,
             review_items=review_payload_raw.get("items", []),
         )
-        
+
         # Call the chain (model)
-        deltas: DocumentDeltas = chain.invoke(
-            {"system": SYSTEM_PROMPT, "user": prompt}
+        deltas: DocumentDeltas = chain.invoke({"system": SYSTEM_PROMPT, "user": prompt})
+        logger.info(
+            f"  [🧠] LLM returned deltas: cv_injections={len(deltas.cv_injections)}"
         )
-        
+
         # 4. Deterministic Review
+        logger.info("  [⚡] Building deterministic review indicators")
         indicators = build_deterministic_indicators(deltas)
-        source_hash = artifact_store.sha256_file(
-            match_store.job_root(source, job_id) / "approved" / "state.json"
-        )
-        
+        source_hash = artifact_store.sha256_file(approved_path)
+
         review_assist = TextReviewAssistEnvelope(
             job_id=job_id,
             source_state_hash=source_hash,
             indicators=indicators,
-            summary=f"Found {len(indicators)} deterministic warnings" if indicators else "Clean output"
+            summary=f"Found {len(indicators)} deterministic warnings"
+            if indicators
+            else "Clean output",
         )
-        
+
         # 5. Render Documents
+        logger.info("  [⚡] Rendering Jinja2 templates")
         rendered = _render_documents_internal(profile_base, deltas, state)
-        
+
         # 6. Persist
+        logger.info("  [📦] Persisting document artifacts")
         refs = artifact_store.write_document_payload(
             source=source,
             job_id=job_id,
@@ -151,10 +240,11 @@ def _make_generate_documents_node(chain: Any, store: DocumentArtifactStore | Non
             rendered=rendered,
             review_assist=review_assist,
         )
-        
+
         artifact_refs = dict(state.get("artifact_refs") or {})
         artifact_refs.update(refs)
-        
+
+        logger.info("  [✅] Document generation complete")
         return {
             "document_deltas": deltas.model_dump(),
             "generated_documents": rendered.model_dump(),
@@ -171,14 +261,14 @@ def _render_documents_internal(
     state: Mapping[str, Any],
 ) -> GeneratedDocuments:
     """Render Jinja2 templates for tailored documents."""
-    
+
     template_root = Path(__file__).parent / "templates"
     env = Environment(
         loader=FileSystemLoader(str(template_root)),
         undefined=StrictUndefined,
         autoescape=False,
     )
-    
+
     # Generic context for the templates
     context = {
         "profile": profile_base,
@@ -189,15 +279,25 @@ def _render_documents_internal(
         "receiver_department": "Hiring Team",
         "receiver_institution": "Institution",
     }
-    
+
     # Override context if present in state
     overrides = ("city", "receiver_name", "receiver_department", "receiver_institution")
     for key in overrides:
         if value := state.get(key):
             context[key] = value
 
+    try:
+        cv_markdown = env.get_template("cv_template.jinja2").render(**context)
+        letter_markdown = env.get_template("cover_letter_template.jinja2").render(
+            **context
+        )
+        email_markdown = env.get_template("email_template.jinja2").render(**context)
+    except Exception as e:
+        logger.error(f"  [❌] Template rendering failed: {e}")
+        raise TemplateRenderError(f"Failed to render templates: {e}") from e
+
     return GeneratedDocuments(
-        cv_markdown=env.get_template("cv_template.jinja2").render(**context),
-        letter_markdown=env.get_template("cover_letter_template.jinja2").render(**context),
-        email_markdown=env.get_template("email_template.jinja2").render(**context),
+        cv_markdown=cv_markdown,
+        letter_markdown=letter_markdown,
+        email_markdown=email_markdown,
     )
