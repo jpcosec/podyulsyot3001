@@ -2,6 +2,8 @@
 
 This module provides a LangGraph + LangChain-native version of the `dev` branch match-review loop without markdown review files.
 
+For a detailed implementation and operations guide, see `docs/runtime/match_skill_studio_implementation_guide.md`.
+
 ## Design
 
 - `graph.py` builds a reusable `match_skill` subgraph.
