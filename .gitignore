@@ -74,6 +74,8 @@ tmp-*.png
 # --- Tooling caches / runtime state ---
 .playwright-mcp/
 .tmp_logs/
+.langgraph_api/
+/output/
 
 # --- TestSprite generated outputs (keep TC*.py test cases) ---
 testsprite_tests/tmp/

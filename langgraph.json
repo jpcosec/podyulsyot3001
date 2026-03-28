@@ -1,0 +1,8 @@
+{
+  "dependencies": [
+    "."
+  ],
+  "graphs": {
+    "match_skill": "src.match_skill.graph:create_studio_graph"
+  }
+}
