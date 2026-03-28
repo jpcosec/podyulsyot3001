@@ -1,0 +1,84 @@
+.serena/
+.claude/
+.ruff_cache/
+.wezterm-init.sh
+artifacts/
+*.tsbuildinfo
+
+# --- Entorno y Secretos (CRITICO) ---
+.env
+.env.local
+.env.*.local
+*.secret
+*.pem
+*.key
+
+# --- Python / Backend ---
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+.venv
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# --- Node / Frontend (apps/review-workbench) ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.eslintcache
+.stylelintcache
+/apps/review-workbench/dist
+/apps/review-workbench/build
+
+# --- Bases de Datos y Docker ---
+data/
+logs/
+import/
+plugins/
+.neo4j/
+
+# --- Assets Personales (LaTeX/CV) ---
+src/core/tools/render/latex_assets/Abbildungen/profile.jpg
+src/core/tools/render/latex_assets/Abbildungen/signature.jpg
+*.pdf
+*.docx
+*.log
+*.aux
+*.out
+*.fls
+*.fdb_latexmk
+
+# --- IDEs y Sistema ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- Sisyphus / Agent workspace ---
+.sisyphus/
+
+# --- Local AI tooling / scratch ---
+.superpowers/
+tmp-*.png
+/examples*.html
+
+# --- Tooling caches / runtime state ---
+.playwright-mcp/
+.tmp_logs/
+
+# --- TestSprite generated outputs (keep TC*.py test cases) ---
+testsprite_tests/tmp/
+testsprite_tests/*.html
+testsprite_tests/testsprite-mcp-test-report.md
+
+# --- Screenshots / loose PNGs in root ---
+/*.png

@@ -136,7 +136,7 @@ class SmartScraperAdapter(ABC):
 
     @property
     def schema_cache_path(self) -> Path:
-        return Path(f"./schemas/{self.source_name}_schema.json")
+        return Path(f"./scrapping_schemas/{self.source_name}_schema.json")
 
     async def get_fast_schema(
         self, crawler: AsyncWebCrawler, sample_url: str
