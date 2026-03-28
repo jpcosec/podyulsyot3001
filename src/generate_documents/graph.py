@@ -1,0 +1,137 @@
+"""LangGraph nodes for the document generation skill."""
+
+from __future__ import annotations
+
+import json
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Mapping
+
+from jinja2 import Environment, FileSystemLoader, StrictUndefined
+
+from src.generate_documents.contracts import (
+    DocumentDeltas,
+    GeneratedDocuments,
+    TextReviewAssistEnvelope,
+)
+from src.generate_documents.prompt import build_generate_documents_prompt, SYSTEM_PROMPT
+from src.generate_documents.review import build_deterministic_indicators
+from src.generate_documents.storage import DocumentArtifactStore
+from src.match_skill.storage import MatchArtifactStore
+
+
+def _make_generate_documents_node(chain: Any, store: DocumentArtifactStore | None = None):
+    """Factory for the document generation node."""
+    
+    artifact_store = store or DocumentArtifactStore()
+
+    def generate_documents_node(state: Mapping[str, Any]) -> dict[str, Any]:
+        """Generate tailored application documents based on approved matches."""
+        
+        source = state.get("source")
+        job_id = state.get("job_id")
+        review_payload_raw = state.get("review_payload") or {}
+        
+        # 1. Load context data
+        # In a real pipeline, profile_base_data should be in the state.
+        # Fallback to default if missing.
+        profile_base = state.get("profile_base_data")
+        if not profile_base:
+            profile_path = Path("data/reference_data/profile/base_profile/profile_base_data.json")
+            profile_base = json.loads(profile_path.read_text(encoding="utf-8"))
+
+        # 2. Extract approved matches and patches
+        # For simplicity, we assume the previous nodes structured this
+        # or we load the latest from MatchArtifactStore.
+        match_store = MatchArtifactStore()
+        approved_match_raw = match_store.load_json(
+            match_store.job_root(source, job_id) / "approved" / "state.json"
+        )
+        approved_matches = approved_match_raw.get("matches") if isinstance(approved_match_raw, dict) else []
+        
+        # 3. Build prompt and invoke LLM
+        prompt = build_generate_documents_prompt(
+            profile_base=profile_base,
+            approved_matches=approved_matches,
+            review_items=review_payload_raw.get("items", []),
+        )
+        
+        # Call the chain (model)
+        deltas: DocumentDeltas = chain.invoke(
+            {"system": SYSTEM_PROMPT, "user": prompt}
+        )
+        
+        # 4. Deterministic Review
+        indicators = build_deterministic_indicators(deltas)
+        source_hash = artifact_store.sha256_file(
+            match_store.job_root(source, job_id) / "approved" / "state.json"
+        )
+        
+        review_assist = TextReviewAssistEnvelope(
+            job_id=job_id,
+            source_state_hash=source_hash,
+            indicators=indicators,
+            summary=f"Found {len(indicators)} deterministic warnings" if indicators else "Clean output"
+        )
+        
+        # 5. Render Documents
+        rendered = _render_documents_internal(profile_base, deltas, state)
+        
+        # 6. Persist
+        refs = artifact_store.write_document_payload(
+            source=source,
+            job_id=job_id,
+            deltas=deltas,
+            rendered=rendered,
+            review_assist=review_assist,
+        )
+        
+        artifact_refs = dict(state.get("artifact_refs") or {})
+        artifact_refs.update(refs)
+        
+        return {
+            "document_deltas": deltas.model_dump(),
+            "generated_documents": rendered.model_dump(),
+            "artifact_refs": artifact_refs,
+            "status": "documents_generated",
+        }
+
+    return generate_documents_node
+
+
+def _render_documents_internal(
+    profile_base: dict[str, Any],
+    deltas: DocumentDeltas,
+    state: Mapping[str, Any],
+) -> GeneratedDocuments:
+    """Render Jinja2 templates for tailored documents."""
+    
+    template_root = Path(__file__).parent / "templates"
+    env = Environment(
+        loader=FileSystemLoader(str(template_root)),
+        undefined=StrictUndefined,
+        autoescape=False,
+    )
+    
+    # Generic context for the templates
+    context = {
+        "profile": profile_base,
+        "document_deltas": deltas.model_dump(),
+        "current_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "city": "Berlin",  # Default if not in state
+        "receiver_name": "Hiring Committee",
+        "receiver_department": "Hiring Team",
+        "receiver_institution": "Institution",
+    }
+    
+    # Override context if present in state
+    overrides = ("city", "receiver_name", "receiver_department", "receiver_institution")
+    for key in overrides:
+        if value := state.get(key):
+            context[key] = value
+
+    return GeneratedDocuments(
+        cv_markdown=env.get_template("cv_template.jinja2").render(**context),
+        letter_markdown=env.get_template("cover_letter_template.jinja2").render(**context),
+        email_markdown=env.get_template("email_template.jinja2").render(**context),
+    )
