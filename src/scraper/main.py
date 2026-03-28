@@ -1,13 +1,21 @@
-
+import logging
 import asyncio
 import os
+import datetime
+
+logger = logging.getLogger(__name__)
+
 import argparse
 from typing import List
 from src.scraper.providers.tuberlin.adapter import TUBerlinAdapter
+from src.scraper.providers.stepstone.adapter import StepStoneAdapter
+from src.scraper.providers.xing.adapter import XingAdapter
 
 # Registry of available portal adapters
 PROVIDERS = {
-    "tuberlin": TUBerlinAdapter()
+    "tuberlin": TUBerlinAdapter(),
+    "stepstone": StepStoneAdapter(),
+    "xing": XingAdapter()
 }
 
 def get_already_scraped_ids(data_dir: str) -> List[str]:
@@ -37,9 +45,28 @@ async def main():
     parser.add_argument("--categories", nargs="+", help="Job categories to filter by.")
     parser.add_argument("--city", help="City or location to search in.")
     parser.add_argument("--job_query", help="Text search for specific professional roles or keywords.")
-    parser.add_argument("--max_days", type=int, help="Maximum days since the job was posted.")
-    
+    parser.add_argument(
+        "--max_days", type=int, help="Maximum days since the job was posted."
+    )
+    parser.add_argument(
+        "--limit", type=int, help="Limit the number of job postings to scrape."
+    )
     args = parser.parse_args()
+    
+    # Configure logging with dynamic filename per run
+    os.makedirs("logs", exist_ok=True)
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_filename = f"logs/scraper_{args.source}_{timestamp}.log"
+    
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        handlers=[
+            logging.FileHandler(log_filename, encoding="utf-8"),
+            logging.StreamHandler()
+        ],
+        force=True
+    )
     
     # 1. Instantiate class based on source
     adapter = PROVIDERS[args.source]
@@ -54,12 +81,12 @@ async def main():
     
     for param_name, value in potential_params.items():
         if value is not None and param_name not in adapter.supported_params:
-            print(f"[WARNING] Provider '{args.source}' does not support filtering by '{param_name}'. This parameter will be ignored.")
+            logger.warning(f"[WARNING] Provider '{args.source}' does not support filtering by '{param_name}'. This parameter will be ignored.")
 
     # 2. Get list of already scraped IDs (Empty if overwrite is active)
     if args.overwrite:
         already_scraped = []
-        print("[!] Overwrite mode active: Scanning all links regardless of existing folders.")
+        logger.info("[!] Overwrite mode active: Scanning all links regardless of existing folders.")
     else:
         already_scraped = get_already_scraped_ids("data/source")
     
