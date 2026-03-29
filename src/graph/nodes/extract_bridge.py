@@ -31,6 +31,7 @@ class ExtractBridgeError(Exception):
     pass
 
 
+# TODO(future): replace temporary data/source -> output/match_skill path crossing with the canonical workspace contract — see future_docs/issues/pipeline_unification_followups.md
 def extract_bridge(
     source: str,
     job_id: str,

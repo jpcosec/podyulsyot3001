@@ -45,7 +45,10 @@ from src.ai.generate_documents.contracts import (
     MotivationLetterDeltas,
     TextReviewAssistEnvelope,
 )
-from src.ai.generate_documents.prompt import build_generate_documents_prompt, SYSTEM_PROMPT
+from src.ai.generate_documents.prompt import (
+    build_generate_documents_prompt,
+    SYSTEM_PROMPT,
+)
 from src.ai.generate_documents.review import build_deterministic_indicators
 from src.ai.generate_documents.storage import DocumentArtifactStore
 from src.ai.match_skill.contracts import MatchEnvelope
@@ -130,6 +133,8 @@ def _make_generate_documents_node(
 ):
     """Factory for the document generation node."""
 
+    # TODO(future): inject match/document stores from the pipeline runtime instead of constructing default-root stores here — see future_docs/issues/pipeline_unification_followups.md
+    # TODO(future): move match/document artifact reads and writes behind storage helpers and replace literal log tags with LogTag — see future_docs/issues/standards_alignment_followups.md
     artifact_store = store or DocumentArtifactStore()
 
     def generate_documents_node(state: Mapping[str, Any]) -> dict[str, Any]:

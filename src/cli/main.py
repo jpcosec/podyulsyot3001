@@ -21,6 +21,7 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 
+# TODO(future): route unified CLI through stable module entrypoints instead of deep internal imports where packages expose a public surface — see future_docs/issues/standards_alignment_followups.md
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="postulator",

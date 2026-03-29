@@ -1,5 +1,7 @@
 # 📝 Generate Documents
 
+<!-- # TODO(future): update the module README to match the standalone graph/runtime role and current storage layout — see future_docs/issues/standards_alignment_followups.md -->
+
 Generates tailored CV, motivation letter, and email body from approved match skill output. Runs as a LangGraph node embedded in the match skill pipeline, and can also be invoked standalone via CLI.
 
 ---

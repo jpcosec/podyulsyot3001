@@ -73,6 +73,8 @@ class GraphState(TypedDict, total=False):
     error_state: ErrorContext | None
 
 
+# TODO(future): move shared pipeline state/contracts into src/core and keep top-level state ref-oriented — see future_docs/issues/pipeline_unification_followups.md
+# TODO(future): split pipeline orchestration from adapter/file-IO code so nodes stay thin and storage-aware — see future_docs/issues/standards_alignment_followups.md
 async def scrape_node(state: GraphState) -> dict:
     """Scrape job postings from the specified source.
 

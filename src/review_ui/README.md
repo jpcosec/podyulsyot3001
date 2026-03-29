@@ -1,5 +1,7 @@
 # 🖥️ Review UI
 
+<!-- # TODO(future): update the review UI README to match the implemented imports, CLI path, and bus contract — see future_docs/issues/standards_alignment_followups.md -->
+
 Textual-based terminal UI for the match skill HITL review gate. Loads the persisted `ReviewSurface`, lets the operator make per-requirement decisions, and resumes the paused LangGraph thread via `MatchBus`.
 
 ---

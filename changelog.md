@@ -2,6 +2,8 @@
 
 ## 2026-03-29
 
+- Added `future_docs/issues/pipeline_unification_followups.md` and `future_docs/issues/standards_alignment_followups.md` to track the remaining non-Stage-7 pipeline gaps and the current standards-alignment debt.
+- Added inline `TODO(future)` markers in the affected pipeline, generation, CLI, test, package-surface, and README files so the deferred follow-up work is discoverable from the exact correction points.
 - Created `plan_docs/pipeline_unification.md` — implementation plan for orchestrating all modules under a single LangGraph pipeline with unified CLI and TUI wiring.
 - Updated plan with critical corrections: (1) never call main.py from nodes — call adapters directly, (2) extract bridge must cross data/source → output/match_skill directories, (3) subgraph resume requires app.get_state() to obtain nested thread_id, (4) added fragility handling with dummy requirement on parse failure.
 - Updated `plan_docs/2026-03-29-pipeline-unification-design.md` to be consistent with implementation plan: (1) keep existing module paths (src/ai/, src/tools/, src/review_ui/), (2) use summary payloads + refs for Studio compatibility, (3) call adapters directly in nodes, (4) resolved all open questions.

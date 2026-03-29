@@ -56,6 +56,7 @@ class MockGenChain:
         return {"documents": {"cv": "generated", "letter": "generated"}}
 
 
+# TODO(future): lock the cross-module fixture convention around tmp_path integration artifacts vs injected stores — see future_docs/issues/pipeline_unification_followups.md
 class TestPipelineBuild:
     """Tests for pipeline building and compilation."""
 
