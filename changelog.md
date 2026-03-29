@@ -5,6 +5,14 @@
 - Created `plan_docs/pipeline_unification.md` — implementation plan for orchestrating all modules under a single LangGraph pipeline with unified CLI and TUI wiring.
 - Updated plan with critical corrections: (1) never call main.py from nodes — call adapters directly, (2) extract bridge must cross data/source → output/match_skill directories, (3) subgraph resume requires app.get_state() to obtain nested thread_id, (4) added fragility handling with dummy requirement on parse failure.
 - Updated `plan_docs/2026-03-29-pipeline-unification-design.md` to be consistent with implementation plan: (1) keep existing module paths (src/ai/, src/tools/, src/review_ui/), (2) use summary payloads + refs for Studio compatibility, (3) call adapters directly in nodes, (4) resolved all open questions.
+- **Implemented pipeline unification:**
+  - Stage 1: extract_bridge node (src/graph/nodes/extract_bridge.py)
+  - Stage 2: top-level pipeline graph (src/graph/__init__.py)
+  - Stage 3: unified CLI (src/cli/main.py) with pipeline/scrape/translate/match/generate/render/review commands
+  - Stage 4: TUI wiring (MatchBus.get_resume_config() for subgraph routing)
+  - Stage 5: E2E tests (tests/e2e/test_pipeline.py)
+- Fixed imports: src.ui.* → src.review_ui.*, src.translator.* → src.tools.translator.*
+- Standardized CLI: translator and render main() accept argv parameter
 
 ## 2026-03-28
 
