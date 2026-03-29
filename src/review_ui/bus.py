@@ -42,9 +42,7 @@ class MatchBus:
     # Artifact reads (sync wrappers - called from Textual workers)
     # ------------------------------------------------------------------
 
-    def load_current_review_surface(
-        self, source: str, job_id: str
-    ) -> ReviewSurface:
+    def load_current_review_surface(self, source: str, job_id: str) -> ReviewSurface:
         """Load the current review surface payload from disk.
 
         Args:
@@ -57,9 +55,7 @@ class MatchBus:
         Raises:
             FileNotFoundError: If no review surface exists for the given job.
         """
-        path = (
-            self.store.job_root(source, job_id) / "review" / "current.json"
-        )
+        path = self.store.job_root(source, job_id) / "review" / "current.json"
         if not path.exists():
             raise FileNotFoundError(
                 f"No review surface found at {path}. "
@@ -71,6 +67,21 @@ class MatchBus:
     # ------------------------------------------------------------------
     # LangGraph actions (sync wrappers - called from Textual workers)
     # ------------------------------------------------------------------
+
+    def get_resume_config(self, thread_id: str) -> dict[str, Any]:
+        """Obtain the correct config for resuming a paused graph thread.
+
+        When match_skill runs as a subgraph inside a pipeline, the config must
+        be obtained from app.get_state() to get the nested thread reference.
+
+        Args:
+            thread_id: The thread identifier to resume.
+
+        Returns:
+            LangGraph config dict with the correct nested thread_id for subgraph resume.
+        """
+        current_state = self.app.get_state({"configurable": {"thread_id": thread_id}})
+        return current_state.config
 
     def resume_with_review(self, review_payload: ReviewPayload) -> dict[str, Any]:
         """Resume the paused LangGraph thread with a structured review payload.
