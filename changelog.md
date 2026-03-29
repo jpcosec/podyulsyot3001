@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-03-29 (pipeline graph unification)
+
+- **Pipeline graph unification:**
+  - `match_skill` is now a native LangGraph compiled subgraph — inner topology (`load_match_inputs → run_match_llm → persist_match_round → human_review_node → apply_review_decision → prepare_regeneration_context / generate_documents`) is fully visible in LangGraph Studio.
+  - Replaced `Command`-based routing in `apply_review_decision` with `add_conditional_edges` so all routing paths are statically declared and Studio renders them as connected edges.
+  - `GraphState` now carries `requirements` and `profile_evidence`; `extract_bridge` populates both so state flows into the subgraph without wrapper glue.
+  - Removed `src/graph/nodes/match_skill.py` opaque wrapper node.
+  - Added `include_document_generation` param to `build_match_skill_graph` — pipeline embeds the subgraph without internal doc-gen duplication; standalone use retains it.
+  - Reject decision now surfaces as `status="rejected"` (was `"completed"`).
+
 ## 2026-03-29
 
 - Finished the schema-v0 runtime migration: `match_skill`, `review`, `extract_bridge`, and document generation now use `data/jobs/<source>/<job_id>/...` instead of the legacy `output/match_skill` bridge.
