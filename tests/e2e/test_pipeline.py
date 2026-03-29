@@ -299,9 +299,9 @@ class TestResumeDecisions:
             },
         )
 
-        # Reject should route to __end__ with completed status
+        # Reject should route to __end__ with rejected status
         state = app.get_state(config)
-        assert state.values.get("status") == "completed"
+        assert state.values.get("status") == "rejected"
         assert state.values.get("review_decision") == "reject"
 
     def test_resume_with_stale_hash_rejected(self, tmp_path):
