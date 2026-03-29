@@ -30,7 +30,7 @@ class MatchArtifactStore:
     immutable round snapshots for decisions and feedback.
     """
 
-    def __init__(self, root: str | Path = "output/match_skill"):
+    def __init__(self, root: str | Path = "data/jobs"):
         """Initialize the artifact store.
 
         Args:

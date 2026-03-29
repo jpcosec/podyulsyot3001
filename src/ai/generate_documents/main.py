@@ -1,10 +1,7 @@
 """CLI entry point for the document generation pipeline.
 
 Generates tailored CV, motivation letter, and email body for a job application
-based on approved matches written by the match skill.
-
-Reads approved match artifacts from ``output/match_skill/<source>/<job_id>/``
-and writes rendered documents to ``output/<source>/<job_id>/nodes/generate_documents/``.
+based on approved matches already persisted for a schema-v0 job.
 
 Usage::
 
@@ -29,10 +26,12 @@ from pathlib import Path
 from typing import Any
 
 from src.ai.generate_documents.graph import (
-    build_default_generate_documents_chain,
     _default_profile_base_data,
+    build_default_generate_documents_chain,
     generate_documents_bundle,
 )
+from src.ai.generate_documents.storage import DocumentArtifactStore
+from src.ai.match_skill.storage import MatchArtifactStore
 from src.core.data_manager import DataManager
 
 
@@ -80,6 +79,8 @@ def main(argv: list[str] | None = None) -> int:
 
     state: dict[str, Any] = {"source": args.source, "job_id": args.job_id}
     data_manager = DataManager()
+    document_store = DocumentArtifactStore(data_manager.jobs_root)
+    match_store = MatchArtifactStore(data_manager.jobs_root)
 
     if args.profile:
         try:
@@ -115,12 +116,8 @@ def main(argv: list[str] | None = None) -> int:
             stage="proposed",
             filename="state.json",
         )
-        approved_state = data_manager.read_json_artifact(
-            source=args.source,
-            job_id=args.job_id,
-            node_name="match_skill",
-            stage="approved",
-            filename="state.json",
+        approved_state = match_store.load_json(
+            match_store.job_root(args.source, args.job_id) / "approved" / "state.json"
         )
         if state.get("artifact_refs", {}).get("profile_base_data"):
             profile_base = data_manager.read_json_artifact(
@@ -141,17 +138,8 @@ def main(argv: list[str] | None = None) -> int:
         if not profile_base:
             profile_base = _default_profile_base_data()
 
-        approved_state_path = data_manager.artifact_path(
-            source=args.source,
-            job_id=args.job_id,
-            node_name="match_skill",
-            stage="approved",
-            filename="state.json",
-        )
-        from src.ai.match_skill.storage import MatchArtifactStore
-
-        source_hash = MatchArtifactStore(data_manager.jobs_root).sha256_file(
-            approved_state_path
+        source_hash = match_store.sha256_file(
+            match_store.job_root(args.source, args.job_id) / "approved" / "state.json"
         )
         deltas, rendered, review_assist = generate_documents_bundle(
             source=args.source,
@@ -165,58 +153,13 @@ def main(argv: list[str] | None = None) -> int:
             state=state,
         )
 
-        refs = {
-            "document_deltas_ref": str(
-                data_manager.write_json_artifact(
-                    source=args.source,
-                    job_id=args.job_id,
-                    node_name="generate_documents",
-                    stage="proposed",
-                    filename="deltas.json",
-                    data=deltas.model_dump(),
-                )
-            ),
-            "cv_markdown_ref": str(
-                data_manager.write_text_artifact(
-                    source=args.source,
-                    job_id=args.job_id,
-                    node_name="generate_documents",
-                    stage="proposed",
-                    filename="cv.md",
-                    content=rendered.cv_markdown,
-                )
-            ),
-            "letter_markdown_ref": str(
-                data_manager.write_text_artifact(
-                    source=args.source,
-                    job_id=args.job_id,
-                    node_name="generate_documents",
-                    stage="proposed",
-                    filename="cover_letter.md",
-                    content=rendered.letter_markdown,
-                )
-            ),
-            "email_markdown_ref": str(
-                data_manager.write_text_artifact(
-                    source=args.source,
-                    job_id=args.job_id,
-                    node_name="generate_documents",
-                    stage="proposed",
-                    filename="email_body.txt",
-                    content=rendered.email_markdown,
-                )
-            ),
-            "review_assist_ref": str(
-                data_manager.write_json_artifact(
-                    source=args.source,
-                    job_id=args.job_id,
-                    node_name="generate_documents",
-                    stage="review",
-                    filename="assist.json",
-                    data=review_assist.model_dump(),
-                )
-            ),
-        }
+        refs = document_store.write_document_payload(
+            source=args.source,
+            job_id=args.job_id,
+            deltas=deltas,
+            rendered=rendered,
+            review_assist=review_assist,
+        )
 
         output = {
             "status": "documents_generated",

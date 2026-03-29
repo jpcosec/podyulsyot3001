@@ -63,7 +63,7 @@ Input and output schemas are defined in `src/ai/match_skill/contracts.py`:
 
 ## 📂 Artifacts & Storage
 
-All rounds are versioned under `output/match_skill/<source>/<job_id>/nodes/match_skill/`:
+All rounds are versioned under `data/jobs/<source>/<job_id>/nodes/match_skill/`:
 - `approved/state.json` — final approved state
 - `review/current.json` — latest pending proposal
 - `review/rounds/round_<NNN>/` — immutable per-round snapshots
@@ -123,4 +123,4 @@ python -m src.ai.match_skill.main \
 - **Graph fails to start**: ensure input JSON files conform to `RequirementInput` and `ProfileEvidence` schemas in `src/ai/match_skill/contracts.py`.
 - **Studio connection failure**: check `langgraph.json` and API keys.
 - **Studio runs but match produces dummy output**: `GOOGLE_API_KEY` is absent — the graph uses a deterministic demo chain. Set the key for real matching.
-- **Missing artifacts**: ensure `output/` is writable; check `MatchArtifactStore` initialisation in `src/ai/match_skill/storage.py`.
+- **Missing artifacts**: ensure `data/jobs/` is writable; check `MatchArtifactStore` initialisation in `src/ai/match_skill/storage.py`.

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import logging
 import os
 from datetime import datetime, timezone
@@ -70,7 +69,12 @@ def create_studio_graph():
         status: str
 
     chain = build_default_generate_documents_chain()
-    node = _make_generate_documents_node(chain)
+    store = DocumentArtifactStore()
+    node = _make_generate_documents_node(
+        chain,
+        store=store,
+        match_store=MatchArtifactStore(store.root),
+    )
 
     graph = StateGraph(GenerateDocumentsState)
     graph.add_node("generate_documents", node)
@@ -216,34 +220,13 @@ def generate_documents_bundle(
 
 def _load_generation_inputs_from_disk(
     state: Mapping[str, Any],
+    artifact_store: DocumentArtifactStore,
     match_store: MatchArtifactStore,
 ) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, Any]], str]:
-    """Load profile, requirements, approved matches, and hash from disk."""
+    """Load profile, requirements, approved matches, and hash from storage."""
 
     source = state.get("source")
     job_id = state.get("job_id")
-    profile_base = state.get("profile_base_data")
-    if not profile_base:
-        profile_path = Path(
-            "data/reference_data/profile/base_profile/profile_base_data.json"
-        )
-        try:
-            profile_base = json.loads(profile_path.read_text(encoding="utf-8"))
-        except FileNotFoundError:
-            logger.warning(
-                f"{LogTag.WARN} Profile base data not found in state or file"
-            )
-            profile_base = _default_profile_base_data()
-        except json.JSONDecodeError as exc:
-            logger.error(f"{LogTag.FAIL} Invalid JSON in profile file: {exc}")
-            raise ProfileLoadError(f"Invalid profile JSON: {exc}") from exc
-
-    requirements_raw = state.get("requirements") or []
-    if not requirements_raw:
-        reqs_path = match_store.job_root(source, job_id) / "requirements.json"
-        if reqs_path.exists():
-            requirements_raw = json.loads(reqs_path.read_text(encoding="utf-8"))
-
     approved_path = match_store.job_root(source, job_id) / "approved" / "state.json"
     if not approved_path.exists():
         logger.error(f"{LogTag.FAIL} Approved matches not found at {approved_path}")
@@ -252,13 +235,19 @@ def _load_generation_inputs_from_disk(
             "Run match_skill and approve matches first."
         )
 
-    approved_match_raw = match_store.load_json(approved_path)
-    approved_matches_raw = (
-        approved_match_raw.get("matches")
-        if isinstance(approved_match_raw, dict)
-        else []
+    profile_base, requirements_raw, approved_matches_raw, source_hash = (
+        artifact_store.load_generation_inputs(
+            source=source,
+            job_id=job_id,
+            match_store=match_store,
+            profile_base_data=state.get("profile_base_data"),
+            requirements=state.get("requirements") or [],
+        )
     )
-    source_hash = match_store.sha256_file(approved_path)
+
+    if not profile_base:
+        logger.warning(f"{LogTag.WARN} Profile base data not found in state or file")
+        profile_base = _default_profile_base_data()
     return profile_base, requirements_raw, approved_matches_raw, source_hash
 
 
@@ -284,8 +273,9 @@ def _persist_generation_outputs_to_store(
 
 def _make_generate_documents_node(
     chain: Any,
-    store: DocumentArtifactStore | None = None,
-    match_store: MatchArtifactStore | None = None,
+    *,
+    store: DocumentArtifactStore,
+    match_store: MatchArtifactStore,
     final_status: str = "documents_generated",
     load_inputs: Callable[
         [Mapping[str, Any]],
@@ -300,17 +290,19 @@ def _make_generate_documents_node(
 ):
     """Factory for the document generation node."""
 
-    # TODO(future): inject match/document stores from the pipeline runtime instead of constructing default-root stores here — see future_docs/issues/pipeline_unification_followups.md
-    # TODO(future): move match/document artifact reads and writes behind storage helpers and replace literal log tags with LogTag — see future_docs/issues/standards_alignment_followups.md
-    artifact_store = store or DocumentArtifactStore()
-    approved_match_store = match_store or MatchArtifactStore()
+    artifact_store = store
+    approved_match_store = match_store
 
     def _current_loader(
         current_state: Mapping[str, Any],
     ) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, Any]], str]:
         if load_inputs is not None:
             return load_inputs(current_state)
-        return _load_generation_inputs_from_disk(current_state, approved_match_store)
+        return _load_generation_inputs_from_disk(
+            current_state,
+            artifact_store,
+            approved_match_store,
+        )
 
     def _current_persist(
         out_source: str,

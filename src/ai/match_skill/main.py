@@ -13,12 +13,12 @@ restarts. The thread id is ``{source}_{job_id}``.
 Usage::
 
     # Start a new match thread
-    python -m src.cli.run_match_skill \\
+    python -m src.ai.match_skill.main \\
         --source stepstone --job-id 12345 \\
         --requirements reqs.json --profile-evidence profile.json
 
     # Resume after HITL review
-    python -m src.cli.run_match_skill \\
+    python -m src.ai.match_skill.main \\
         --source stepstone --job-id 12345 \\
         --resume --review-payload review.json
 
@@ -36,7 +36,7 @@ from typing import Any
 from src.ai.match_skill.graph import build_match_skill_graph, resume_with_review
 from src.ai.match_skill.storage import MatchArtifactStore
 
-_DEFAULT_OUTPUT_DIR = "output/match_skill"
+_DEFAULT_OUTPUT_DIR = "data/jobs"
 _CHECKPOINT_DB_NAME = "checkpoints.db"
 
 

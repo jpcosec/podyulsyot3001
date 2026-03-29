@@ -1,8 +1,8 @@
 """Main Textual application for the match skill HITL review TUI.
 
-Launch via the CLI runner::
+Launch via the unified CLI::
 
-    python -m src.cli.review_tui --source <source> --job_id <job_id>
+    python -m src.cli.main review --source <source> --job-id <job_id>
 
 Or programmatically::
 

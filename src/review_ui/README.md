@@ -75,8 +75,8 @@ from src.review_ui.bus import MatchBus
 from src.review_ui.app import MatchReviewApp
 from langgraph.checkpoint.sqlite import SqliteSaver
 
-store = MatchArtifactStore("output/match_skill")
-with SqliteSaver.from_conn_string("output/match_skill/checkpoints.db") as checkpointer:
+store = MatchArtifactStore("data/jobs")
+with SqliteSaver.from_conn_string("data/jobs/checkpoints.db") as checkpointer:
     app = build_match_skill_graph(artifact_store=store, checkpointer=checkpointer)
     config = {"configurable": {"thread_id": "stepstone_12345"}}
     bus = MatchBus(store=store, app=app, config=config)

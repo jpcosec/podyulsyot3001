@@ -313,13 +313,11 @@ def _run_review(args: argparse.Namespace) -> int:
     from src.ai.match_skill.graph import build_match_skill_graph
     from src.ai.match_skill.storage import MatchArtifactStore
     from langgraph.checkpoint.sqlite import SqliteSaver
-    from pathlib import Path
-    import json
 
-    output_dir = Path("output/match_skill")
-    output_dir.mkdir(parents=True, exist_ok=True)
-    checkpoint_path = output_dir / "checkpoints.db"
-    store = MatchArtifactStore(output_dir)
+    jobs_root = DataManager().jobs_root
+    jobs_root.mkdir(parents=True, exist_ok=True)
+    checkpoint_path = jobs_root / "checkpoints.db"
+    store = MatchArtifactStore(jobs_root)
 
     thread_id = f"{args.source}_{args.job_id}"
     config = {"configurable": {"thread_id": thread_id}}

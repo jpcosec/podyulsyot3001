@@ -58,7 +58,7 @@ review_match ──(approve)──→ build_application_context ──(approve)�
   - Breakpoint at `human_review_node`
   - Immutable round artifacts
   - Studio-integrated
-- **Artifacts:** `output/match_skill/<source>/<job_id>/nodes/match_skill/`
+- **Artifacts:** `data/jobs/<source>/<job_id>/nodes/match_skill/`
 
 ### `src/ai/generate_documents/` (LangGraph)
 - **Replaces:** `generate_documents` (simplified)
@@ -67,7 +67,7 @@ review_match ──(approve)──→ build_application_context ──(approve)�
   - Reads approved matches from `match_skill`
   - LLM structured output → Jinja2 templates
   - Deterministic review indicators
-- **Artifacts:** `output/match_skill/<source>/<job_id>/nodes/generate_documents/`
+- **Artifacts:** `data/jobs/<source>/<job_id>/nodes/generate_documents/`
 
 ### `src/tools/render/` (Deterministic)
 - **Replaces:** `render`

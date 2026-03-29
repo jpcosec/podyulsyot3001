@@ -40,7 +40,7 @@ To run a full pipeline from scratch:
 2.  **Translate:** `python -m src.tools.translator.main --source stepstone`
 3.  **Match:** `python -m src.ai.match_skill.main --source stepstone --job-id <ID>`
 4.  **Generate:** `python -m src.ai.generate_documents.main --source stepstone --job-id <ID>`
-5.  **Render:** `python -m src.tools.render.main cv --source data/source/stepstone/<ID>/extracted_data_en.json --language en`
+5.  **Render:** `python -m src.tools.render.main cv --source stepstone --job-id <ID> --language en`
 
 ---
 
