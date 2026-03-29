@@ -29,12 +29,12 @@ python -m src.ai.match_skill.main \
   --profile-evidence <path/to/evidence.json>
 
 # Launch HITL review TUI (after graph pauses at breakpoint)
-# Note: no CLI entry point yet — launch programmatically via src/review_ui/app.py
-# See future_docs/issues/review_ui_wiring.md for the wiring plan.
+python -m src.cli.main review --source stepstone --job-id <ID>
 
 # Render CV to PDF
 python -m src.tools.render.main cv \
-  --source data/source/stepstone/<ID>/extracted_data_en.json \
+  --source stepstone \
+  --job-id <ID> \
   --language en
 
 # Render motivation letter
@@ -58,7 +58,7 @@ Each skill is a self-contained package under `src/`:
 
 **Control plane** (`MatchSkillState` TypedDict in `src/ai/match_skill/graph.py`): carries routing signals and refs — `source`, `job_id`, requirements, profile evidence, review payload, match result. State is intentionally thin; heavy payloads stay on disk.
 
-**Data plane** (disk under `output/match_skill/<source>/<job_id>/nodes/match_skill/`): `MatchArtifactStore` in `storage.py` manages immutable round snapshots (JSON), current review surface, and approved payloads. Artifact layout mirrors the old project: `review/rounds/round_NNN/`, `approved/`, etc.
+**Data plane** (disk under `data/jobs/<source>/<job_id>/nodes/match_skill/`): `MatchArtifactStore` in `storage.py` manages immutable round snapshots (JSON), current review surface, and approved payloads.
 
 ### Match skill graph flow
 
@@ -73,7 +73,7 @@ Review node routes via `Command`: `approve` (continue), `request_regeneration` (
 ### HITL review loop
 
 1. `run_match_skill` starts a thread; graph pauses at the review breakpoint.
-2. Operator launches `review_tui` with the thread ID.
+2. Operator launches the `review` CLI command with the thread ID context.
 3. `MatchBus` loads the review surface from `MatchArtifactStore` and holds the paused graph handle.
 4. Reviewer approves/rejects/requests regeneration in the TUI; `MatchBus` resumes the thread via `Command`.
 5. Immutable round snapshots are written to disk after each decision.

@@ -2,15 +2,15 @@
 
 ## 2026-03-29
 
+- Finished the schema-v0 runtime migration: `match_skill`, `review`, `extract_bridge`, and document generation now use `data/jobs/<source>/<job_id>/...` instead of the legacy `output/match_skill` bridge.
+- Updated repository docs and module READMEs so CLI examples and storage references point to the schema-v0 runtime roots.
 - Added `docs/runtime/data_management.md` and introduced schema-v0 data-plane rules centered on `data/jobs/<source>/<job_id>/` plus per-job `meta.json` lifecycle metadata.
 - Added `src/core/data_manager.py`, `src/core/state.py`, and `tests/test_data_manager.py` as the first central schema-v0 runtime layer.
 - Refactored `src/graph/` into thinner node adapters under `src/graph/nodes/` and moved top-level shared state imports to `src/core/state.py`.
 - Reworked `src/ai/generate_documents/graph.py` around `generate_documents_bundle()` so generation can run on in-memory inputs while persistence happens at the orchestration layer.
 - Updated the generate-documents CLI and runtime docs to use the new schema-v0 data manager flow.
-- Added `future_docs/issues/pipeline_unification_followups.md` and `future_docs/issues/standards_alignment_followups.md` to track the remaining non-Stage-7 pipeline gaps and the current standards-alignment debt.
-- Added inline `TODO(future)` markers in the affected pipeline, generation, CLI, test, package-surface, and README files so the deferred follow-up work is discoverable from the exact correction points.
 - Created `plan_docs/pipeline_unification.md` — implementation plan for orchestrating all modules under a single LangGraph pipeline with unified CLI and TUI wiring.
-- Updated plan with critical corrections: (1) never call main.py from nodes — call adapters directly, (2) extract bridge must cross data/source → output/match_skill directories, (3) subgraph resume requires app.get_state() to obtain nested thread_id, (4) added fragility handling with dummy requirement on parse failure.
+- Updated plan with critical corrections: (1) never call main.py from nodes — call adapters directly, (2) subgraph resume requires app.get_state() to obtain nested thread_id, (3) added fragility handling with dummy requirement on parse failure.
 - Updated `plan_docs/2026-03-29-pipeline-unification-design.md` to be consistent with implementation plan: (1) keep existing module paths (src/ai/, src/tools/, src/review_ui/), (2) use summary payloads + refs for Studio compatibility, (3) call adapters directly in nodes, (4) resolved all open questions.
 - **Implemented pipeline unification:**
   - Stage 1: extract_bridge node (src/graph/nodes/extract_bridge.py)
