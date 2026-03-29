@@ -388,6 +388,7 @@ def _human_review_node(state: MatchSkillState) -> MatchSkillState:
 def _make_apply_review_decision_node(store: MatchArtifactStore):
     """Create the node that validates and applies a human review payload."""
 
+    # TODO(future): replace Command-based routing with add_conditional_edges so destinations are statically visible in Studio — see future_docs/issues/pipeline_graph_unification.md
     def apply_review_decision(
         state: MatchSkillState,
     ) -> Command[

@@ -109,6 +109,7 @@ def build_pipeline_graph(*, data_manager: DataManager | None = None) -> Any:
     workflow.add_node("scrape", make_scrape_node(manager))
     workflow.add_node("translate", make_translate_node(manager))
     workflow.add_node("extract_bridge", make_extract_bridge_node(manager))
+    # TODO(future): embed match_skill as native subgraph instead of opaque wrapper node — see future_docs/issues/pipeline_graph_unification.md
     workflow.add_node("match_skill", make_match_skill_node(manager))
     workflow.add_node("generate_documents", make_generate_documents_node(manager))
     workflow.add_node("render", make_render_node(manager))

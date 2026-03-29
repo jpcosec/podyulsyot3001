@@ -42,6 +42,7 @@ def _load_profile_evidence(state: GraphState, data_manager: DataManager) -> list
     return evidence
 
 
+# TODO(future): remove this wrapper — match_skill should be a native subgraph in the pipeline graph — see future_docs/issues/pipeline_graph_unification.md
 def make_match_skill_node(data_manager: DataManager):
     """Create the match-skill adapter rooted in ``data/jobs``."""
 
