@@ -66,7 +66,7 @@ def make_match_skill_node(data_manager: DataManager):
                 artifact_store=store,
                 checkpointer=InMemorySaver(),
             )
-            result = app.invoke(
+            result = await app.ainvoke(
                 {
                     "source": source,
                     "job_id": job_id,

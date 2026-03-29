@@ -206,7 +206,7 @@ async def _run_pipeline(args: argparse.Namespace) -> int:
         thread_id = f"{args.source}_{args.job_id}"
         config = {"configurable": {"thread_id": thread_id}}
 
-        result = app.invoke(state, config=config)
+        result = await app.ainvoke(state, config=config)
         print(json.dumps(result, indent=2, default=str))
         return 0
     except Exception as e:
