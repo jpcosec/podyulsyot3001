@@ -14,9 +14,8 @@ from __future__ import annotations
 import os
 from typing import Any, Literal, TypedDict, cast
 
-from langgraph.graph import START, StateGraph
+from langgraph.graph import END, START, StateGraph
 from langgraph.checkpoint.memory import InMemorySaver
-from langgraph.types import Command
 
 from src.ai.match_skill.contracts import (
     FeedbackItem,
@@ -67,6 +66,7 @@ def build_match_skill_graph(
     checkpointer: Any | None = None,
     interrupt_before: tuple[str, ...] = ("human_review_node",),
     interrupt_after: tuple[str, ...] = (),
+    include_document_generation: bool = True,
 ):
     """Compile the reusable match skill graph.
 
@@ -108,23 +108,37 @@ def build_match_skill_graph(
         "prepare_regeneration_context",
         _make_prepare_regeneration_context_node(store),
     )
-    workflow.add_node(
-        "generate_documents",
-        _make_generate_documents_node(
-            gen_chain,
-            store=DocumentArtifactStore(store.root),
-            match_store=store,
-            final_status="completed",
-        ),
-    )
+    if include_document_generation:
+        workflow.add_node(
+            "generate_documents",
+            _make_generate_documents_node(
+                gen_chain,
+                store=DocumentArtifactStore(store.root),
+                match_store=store,
+                final_status="completed",
+            ),
+        )
+        workflow.add_edge("generate_documents", END)
+
+    path_map: dict[str, str] = {
+        "human_review_node": "human_review_node",
+        "prepare_regeneration_context": "prepare_regeneration_context",
+        "__end__": END,
+    }
+    if include_document_generation:
+        path_map["generate_documents"] = "generate_documents"
 
     workflow.add_edge(START, "load_match_inputs")
     workflow.add_edge("load_match_inputs", "run_match_llm")
     workflow.add_edge("run_match_llm", "persist_match_round")
     workflow.add_edge("persist_match_round", "human_review_node")
     workflow.add_edge("human_review_node", "apply_review_decision")
+    workflow.add_conditional_edges(
+        "apply_review_decision",
+        _make_route_after_apply_review(include_document_generation),
+        path_map,
+    )
     workflow.add_edge("prepare_regeneration_context", "run_match_llm")
-    workflow.add_edge("generate_documents", "__end__")
 
     return workflow.compile(
         checkpointer=checkpointer,
@@ -385,15 +399,26 @@ def _human_review_node(state: MatchSkillState) -> MatchSkillState:
     return {"status": state.get("status", "pending_review")}
 
 
+def _make_route_after_apply_review(include_document_generation: bool):
+    """Return a routing function for the apply_review_decision conditional edge."""
+
+    def _route(state: MatchSkillState) -> str:
+        status = state.get("status")
+        if status == "pending_review":
+            return "human_review_node"
+        if status == "pending_regeneration":
+            return "prepare_regeneration_context"
+        if include_document_generation and status == "generating_documents":
+            return "generate_documents"
+        return "__end__"
+
+    return _route
+
+
 def _make_apply_review_decision_node(store: MatchArtifactStore):
     """Create the node that validates and applies a human review payload."""
 
-    # TODO(future): replace Command-based routing with add_conditional_edges so destinations are statically visible in Studio — see future_docs/issues/pipeline_graph_unification.md
-    def apply_review_decision(
-        state: MatchSkillState,
-    ) -> Command[
-        Literal["human_review_node", "prepare_regeneration_context", "__end__"]
-    ]:
+    def apply_review_decision(state: MatchSkillState) -> MatchSkillState:
         """Normalize human review input and route the graph accordingly.
 
         Missing payload is treated as a safe no-op: returns to
@@ -419,10 +444,7 @@ def _make_apply_review_decision_node(store: MatchArtifactStore):
         job_id = _require_non_empty_text(state, "job_id")
         raw_review_payload = state.get("review_payload")
         if not raw_review_payload:
-            return Command(
-                update={"status": "pending_review"},
-                goto="human_review_node",
-            )
+            return {"status": "pending_review"}
 
         review_payload = ReviewPayload.model_validate(raw_review_payload)
         match_hash = _require_non_empty_text(state, "match_result_hash")
@@ -443,31 +465,19 @@ def _make_apply_review_decision_node(store: MatchArtifactStore):
             feedback_items=feedback_items,
             routing_decision=routing_decision,
         )
-        goto: Literal[
-            "prepare_regeneration_context", "generate_documents", "__end__"
-        ] = (
-            "prepare_regeneration_context"
-            if routing_decision == "request_regeneration"
-            else "generate_documents"
-            if routing_decision == "approve"
-            else "__end__"
-        )
         status = (
             "pending_regeneration"
             if routing_decision == "request_regeneration"
             else "generating_documents"
             if routing_decision == "approve"
-            else "completed"
+            else "rejected"
         )
-        return Command(
-            update={
-                "review_decision": routing_decision,
-                "active_feedback": [item.model_dump() for item in feedback_items],
-                "artifact_refs": {**state.get("artifact_refs", {}), **refs},
-                "status": status,
-            },
-            goto=goto,
-        )
+        return {
+            "review_decision": routing_decision,
+            "active_feedback": [item.model_dump() for item in feedback_items],
+            "artifact_refs": {**state.get("artifact_refs", {}), **refs},
+            "status": status,
+        }
 
     return apply_review_decision
 
