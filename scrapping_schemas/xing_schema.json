@@ -1,63 +1,46 @@
 {
-  "name": "XING Job Details",
-  "baseSelector": "main#content",
+  "name": "Job Posting Detail",
+  "baseSelector": "body",
   "fields": [
     {
       "name": "job_title",
-      "selector": "div[class*='title-styles__TitleContainer-sc-'] h1",
+      "selector": "main#content div[class*='title-styles__TitleContainer-sc-'] h1",
       "type": "text"
     },
     {
       "name": "company_name",
-      "selector": "div[class*='job-intro__AdditionalInfos-sc-'] > a > p",
+      "selector": "main#content div[class*='job-intro__CompanyInfo-sc-'] div[class*='job-intro__AdditionalInfos-sc-'] > a > p",
       "type": "text"
     },
     {
       "name": "location",
-      "selector": "div[class*='job-intro__AdditionalInfos-sc-'] > div[class*='conditionals__NotOnSmall-sc-']:nth-of-type(2) p",
+      "selector": "main#content div[class*='job-intro__AdditionalInfos-sc-'] div[class*='conditionals__NotOnSmall-sc-'] p:not([class*='job-intro__AdditionalInfo-sc-'])",
       "type": "text"
     },
     {
       "name": "employment_type",
-      "selector": "ul[class*='highlights__HighlightsWrapper-sc-'] li:first-child span[class*='aria-extended-text__Text-sc-']",
+      "selector": "main#content ul[class*='highlights__HighlightsWrapper-sc-'] li:nth-child(1) span[class*='aria-extended-text__Text-sc-']",
       "type": "text"
     },
     {
       "name": "salary",
-      "selector": "ul[class*='highlights__HighlightsWrapper-sc-'] li:nth-child(2) span[class*='marker-styles__Text-sc-']",
+      "selector": "main#content ul[class*='highlights__HighlightsWrapper-sc-'] li:nth-child(2) span[class*='marker-styles__Text-sc-']",
       "type": "text"
     },
     {
-      "name": "similar_jobs",
-      "type": "list",
-      "selector": "section[class*='similar-jobs-module__StyledGridContainer-sc-'] article[class*='job-teaser-card-styles__Card-sc-'], section[class*='similar-jobs-module__StyledGridContainer-sc-'] article[class*='job-teaser-list-item-styles__Card-sc-']",
-      "fields": [
-        {
-          "name": "title",
-          "selector": "h3[class*='job-teaser-card-styles__Title-sc-'], h3[class*='job-teaser-list-item-styles__Title-sc-']",
-          "type": "text"
-        },
-        {
-          "name": "company",
-          "selector": "p[class*='job-teaser-card-styles__Company-sc-'], p[class*='job-teaser-list-item-styles__Company-sc-']",
-          "type": "text"
-        },
-        {
-          "name": "location",
-          "selector": "div[class*='multi-location-display-styles__Container-sc-'] p",
-          "type": "text"
-        },
-        {
-          "name": "salary_range",
-          "selector": "span[class*='marker-styles__Marker-sc-'] span[class*='marker-styles__Text-sc-']",
-          "type": "text"
-        },
-        {
-          "name": "posted_date",
-          "selector": "time span[class*='aria-extended-text__Text-sc-']",
-          "type": "text"
-        }
-      ]
+      "name": "remote_policy",
+      "selector": "main#content ul[class*='highlights__HighlightsWrapper-sc-'] li:nth-child(3) span[class*='marker-styles__Text-sc-']",
+      "type": "text"
+    },
+    {
+      "name": "company_industry",
+      "selector": "main#content div[class*='job-intro__AdditionalInfos-sc-'] p[class*='job-intro__AdditionalInfo-sc-']",
+      "type": "text"
+    },
+    {
+      "name": "company_size",
+      "selector": "main#content div[class*='company-module-styles__CompanyModuleWrapper-sc-'] div[class*='profile-info-styles__ContentContainer-sc-'] p:nth-of-type(2)",
+      "type": "text"
     }
   ]
 }

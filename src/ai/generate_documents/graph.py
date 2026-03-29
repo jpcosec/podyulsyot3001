@@ -97,7 +97,7 @@ def build_default_generate_documents_chain(model: Any | None = None) -> Any:
         ]
     )
 
-    model_name = "gemini-1.5-flash-latest"
+    model_name = "gemini-2.5-flash"
     if not os.environ.get("GOOGLE_API_KEY"):
         # We fall back to a demo chain if no credentials are present
         return _make_demo_generate_documents_chain()

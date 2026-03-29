@@ -22,20 +22,13 @@ class JobPosting(BaseModel):
     # ---------------------------------------------------------
     # MANDATORY FIELDS (The Intersection)
     # ---------------------------------------------------------
-    job_title: str = Field(
-        ..., description="The official job title"
-    )
+    job_title: str = Field(..., description="The official job title")
     company_name: str = Field(
         ..., description="Name of the company, university, or institution"
     )
-    location: str = Field(
-        ..., description="City or primary location"
-    )
+    location: str = Field(..., description="City or primary location")
     employment_type: str = Field(
         ..., description="Type of employment (e.g. Full-time, Part-time, Internship)"
-    )
-    posted_date: str = Field(
-        ..., description="Date of publication or time elapsed (e.g. 'vor 1 Woche', '26.03.2026')"
     )
     responsibilities: List[str] = Field(
         ...,
@@ -73,8 +66,29 @@ class JobPosting(BaseModel):
     company_size: Optional[str] = Field(
         default=None, description="Company size (e.g. '1001-5000 employees')"
     )
+    posted_date: str = Field(
+        ...,
+        description="Date of publication or time elapsed (e.g. 'vor 1 Woche', '26.03.2026')",
+    )
     application_deadline: Optional[str] = Field(
         default=None, description="Deadline to apply"
+    )
+    # TODO(future): validate whether application routing belongs in scrape-time contract or a later interpretation step — see future_docs/issues/application_routing_extraction.md
+    application_method: Optional[str] = Field(
+        default=None,
+        description="How to apply when explicitly stated (e.g. 'email', 'external portal', 'company portal', 'XING Easy Apply')",
+    )
+    application_url: Optional[str] = Field(
+        default=None,
+        description="Direct application URL or apply button target when available",
+    )
+    application_email: Optional[str] = Field(
+        default=None,
+        description="Application email address when the posting asks candidates to apply by email",
+    )
+    application_instructions: Optional[str] = Field(
+        default=None,
+        description="Short instructions on how to apply (e.g. 'Send CV by email', 'Apply via company portal')",
     )
     reference_number: Optional[str] = Field(
         default=None, description="Internal reference code for the posting"
@@ -83,5 +97,6 @@ class JobPosting(BaseModel):
         default=None, description="Email or contact person for application"
     )
     original_language: Optional[str] = Field(
-        default=None, description="The detected ISO 639-1 language code (e.g. 'de', 'en', 'es')"
+        default=None,
+        description="The detected ISO 639-1 language code (e.g. 'de', 'en', 'es')",
     )

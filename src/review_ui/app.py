@@ -13,7 +13,7 @@ Or programmatically::
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Optional
 
 from textual.app import App, ComposeResult
 
@@ -43,8 +43,8 @@ class MatchReviewApp(App):
         self,
         *,
         bus: MatchBus,
-        source: str,
-        job_id: str,
+        source: Optional[str] = None,
+        job_id: Optional[str] = None,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
@@ -53,17 +53,25 @@ class MatchReviewApp(App):
         self._job_id = job_id
 
     def compose(self) -> ComposeResult:
-        """Yield the initial review screen as the only root widget."""
-        # The ReviewScreen is pushed as the first and only screen.
-        # Any future screens (e.g. a run-history dashboard) can be pushed on top.
+        """Yield the initial screen as the root widget."""
         return iter([])  # Screens are pushed in `on_mount`
 
     def on_mount(self) -> None:
-        """Push the review screen once the app event loop is running."""
-        self.push_screen(
-            ReviewScreen(
-                bus=self._bus,
-                source=self._source,
-                job_id=self._job_id,
+        """Push the appropriate screen once the app event loop is running."""
+        from src.review_ui.screens.explorer_screen import JobExplorerScreen
+        from src.review_ui.screens.review_screen import ReviewScreen
+
+        if self._source and self._job_id:
+            # Direct access mode
+            self.push_screen(
+                ReviewScreen(
+                    bus=self._bus,
+                    source=self._source,
+                    job_id=self._job_id,
+                )
             )
-        )
+        else:
+            # Explorer mode
+            self.push_screen(
+                JobExplorerScreen(bus=self._bus)
+            )

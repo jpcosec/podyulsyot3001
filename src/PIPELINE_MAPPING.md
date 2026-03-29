@@ -36,7 +36,7 @@ review_match ──(approve)──→ build_application_context ──(approve)�
 
 | Old Node | New Module | Purpose |
 |----------|-----------|---------|
-| `scrape` | `src/ai/scraper/` | Job posting scraping |
+| `scrape` | `src/scraper/` | Job posting ingestion |
 | `translate_if_needed` | `src/tools/translator/` | Field/document translation |
 | `extract_understand` | *(scraper output)* | LLM extraction from scraped HTML |
 | `match` | `src/ai/match_skill/` | **LangGraph** - Requirement matching with HITL |
@@ -79,9 +79,9 @@ review_match ──(approve)──→ build_application_context ──(approve)�
 ### `src/tools/translator/` (Deterministic)
 - **Replaces:** `translate_if_needed`
 - **Provider:** Google Translate API
-- **Entry:** `translate_text()`, `translate_document()`
+- **Entry:** `translate_text()`, `translate_fields()`
 
-### `src/ai/scraper/`
+### `src/scraper/`
 - **Replaces:** `scrape` + `extract_understand`
 - **Adapters:** Generic, Stepstone, Xing
 - **Output:** `JobPosting` Pydantic models
@@ -121,7 +121,7 @@ python -m src.tools.render.main cv --source <deltas.json> --language en
 
 | Aspect | Old (dev) | New |
 |--------|-----------|-----|
-| Framework | Custom LangGraph + markdown files | Native LangGraph + JSON artifacts |
+| Framework | Custom LangGraph + markdown files | Native LangGraph + JSON artifacts (`state.json`) |
 | State | `GraphState` dict | TypedDict + checkpointing |
 | Review | Markdown file editing | TUI + Studio |
 | Documents | LaTeX directly | Jinja2 → Pandoc → PDF |

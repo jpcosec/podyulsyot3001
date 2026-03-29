@@ -60,10 +60,31 @@ Example:
 data/jobs/stepstone/12345/
   meta.json
   nodes/
-    scrape/
+    ingest/
       proposed/
         state.json
         content.md
+        raw_page.html
+        cleaned_page.html
+        raw_extracted.json
+        listing.json
+        listing_case.json
+        listing_case.md
+        listing_case.html
+        listing_case.cleaned.html
+        listing_content.md
+        listing_page.html
+        listing_page.cleaned.html
+        scrape_meta.json
+      failed/
+        state.json
+        content.md
+        raw_page.html
+        cleaned_page.html
+        raw_extracted.json
+        listing.json
+        listing_case.json
+        scrape_meta.json
     translate/
       proposed/
         state.json

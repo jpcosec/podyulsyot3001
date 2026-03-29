@@ -1,10 +1,8 @@
 """CLI entry point for the translation pipeline.
 
-Scans ``data/source/<source>/`` for job folders that contain
-``extracted_data.json`` and ``content.md``, translates all fields listed in
-``P_FIELDS_TO_TRANSLATE`` and the Markdown body, and writes
-``extracted_data_en.json`` and ``content_en.md`` to the same folder.
-Already-translated jobs are skipped unless ``--force`` is set.
+Scans canonical ingested jobs under ``data/jobs/<source>/<job_id>/`` and reads
+raw input artifacts from ``nodes/ingest/proposed/``. Translated artifacts are
+written to ``nodes/translate/proposed/``.
 """
 
 import argparse
@@ -13,6 +11,8 @@ import os
 import json
 import sys
 from pathlib import Path
+
+from src.core.data_manager import DataManager
 from src.tools.translator.providers.google.adapter import GoogleTranslatorAdapter
 
 logger = logging.getLogger(__name__)
@@ -34,6 +34,8 @@ P_FIELDS_TO_TRANSLATE = [
     "company_industry",
     "company_size",
     "application_deadline",
+    "application_method",
+    "application_instructions",
     "contact_info",
 ]
 
@@ -55,7 +57,7 @@ def main(argv: list[str] | None = None) -> None:
         "--target_lang", default="en", help="Target language (e.g. 'en')."
     )
     parser.add_argument(
-        "--data_dir", default="data/source", help="Base directory for scraped outputs."
+        "--data_dir", default="data/jobs", help="Base directory for canonical job data."
     )
     parser.add_argument(
         "--force",
@@ -82,7 +84,8 @@ def main(argv: list[str] | None = None) -> None:
     )
 
     adapter = PROVIDERS[args.provider]
-    source_path = Path(args.data_dir) / args.source
+    data_manager = DataManager(args.data_dir)
+    source_path = data_manager.source_root(args.source)
 
     if not source_path.exists():
         logger.error(f"Source path {source_path} does not exist.")
@@ -94,12 +97,36 @@ def main(argv: list[str] | None = None) -> None:
         if not job_path.is_dir():
             continue
 
-        json_path = job_path / "extracted_data.json"
-        md_path = job_path / "content.md"
-        out_json_path = job_path / "extracted_data_en.json"
-        out_md_path = job_path / "content_en.md"
+        json_path = data_manager.artifact_path(
+            source=args.source,
+            job_id=job_dir,
+            node_name="ingest",
+            stage="proposed",
+            filename="state.json",
+        )
+        md_path = data_manager.artifact_path(
+            source=args.source,
+            job_id=job_dir,
+            node_name="ingest",
+            stage="proposed",
+            filename="content.md",
+        )
+        out_json_path = data_manager.artifact_path(
+            source=args.source,
+            job_id=job_dir,
+            node_name="translate",
+            stage="proposed",
+            filename="state.json",
+        )
+        out_md_path = data_manager.artifact_path(
+            source=args.source,
+            job_id=job_dir,
+            node_name="translate",
+            stage="proposed",
+            filename="content.md",
+        )
 
-        if not json_path.exists() or not md_path.exists():
+        if not json_path.exists():
             continue
 
         if not args.force and out_json_path.exists() and out_md_path.exists():
@@ -116,12 +143,23 @@ def main(argv: list[str] | None = None) -> None:
                 logger.info(
                     f"  [⏭️] Skipping {job_dir} (Already matches target language: '{orig_lang}')"
                 )
-                # Create exact copies if they are already in the target language
-                out_json_path.write_text(
-                    json_path.read_text(encoding="utf-8"), encoding="utf-8"
+                data_manager.write_json_artifact(
+                    source=args.source,
+                    job_id=job_dir,
+                    node_name="translate",
+                    stage="proposed",
+                    filename="state.json",
+                    data=data,
                 )
-                out_md_path.write_text(
-                    md_path.read_text(encoding="utf-8"), encoding="utf-8"
+                data_manager.write_text_artifact(
+                    source=args.source,
+                    job_id=job_dir,
+                    node_name="translate",
+                    stage="proposed",
+                    filename="content.md",
+                    content=md_path.read_text(encoding="utf-8")
+                    if md_path.exists()
+                    else "",
                 )
                 continue
 
@@ -139,16 +177,27 @@ def main(argv: list[str] | None = None) -> None:
             translated_data["original_language"] = args.target_lang
 
             # 2. Translate body markdown
-            md_content = md_path.read_text(encoding="utf-8")
+            md_content = md_path.read_text(encoding="utf-8") if md_path.exists() else ""
             translated_md = adapter.translate_text(
                 md_content, target_lang=args.target_lang, source_lang=orig_lang
             )
 
-            # 3. Save
-            with open(out_json_path, "w", encoding="utf-8") as f:
-                json.dump(translated_data, f, indent=2, ensure_ascii=False)
-
-            out_md_path.write_text(translated_md, encoding="utf-8")
+            data_manager.write_json_artifact(
+                source=args.source,
+                job_id=job_dir,
+                node_name="translate",
+                stage="proposed",
+                filename="state.json",
+                data=translated_data,
+            )
+            data_manager.write_text_artifact(
+                source=args.source,
+                job_id=job_dir,
+                node_name="translate",
+                stage="proposed",
+                filename="content.md",
+                content=translated_md,
+            )
             logger.info(f"  [✅] {job_dir} successfully translated.")
 
         except Exception as e:

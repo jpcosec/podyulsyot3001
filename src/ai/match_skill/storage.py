@@ -140,10 +140,59 @@ class MatchArtifactStore:
         self._write_json(decision_path, decision_payload)
         self._write_json(current_decision_path, decision_payload)
         self._write_json(feedback_path, feedback_payload)
+
+        # Global propagation of patches to "feed the profile"
+        self._propagate_patches_to_global_profile(feedback_items)
+
         return {
             "review_decision_ref": str(current_decision_path),
             "feedback_ref": str(feedback_path),
         }
+
+    def _propagate_patches_to_global_profile(
+        self, feedback_items: list[FeedbackItem]
+    ) -> None:
+        """Append new patch evidence items to the global persistent profile store."""
+
+        patches_to_add = [
+            item.patch_evidence.model_dump()
+            for item in feedback_items
+            if item.patch_evidence is not None
+        ]
+        if not patches_to_add:
+            return
+
+        # Canonical path for global patches (matching load_profile node)
+        global_path = Path("data/reference_data/profile/base_profile/profile_patches.json")
+        global_path.parent.mkdir(parents=True, exist_ok=True)
+
+        try:
+            current_patches = []
+            if global_path.exists():
+                current_patches = json.loads(global_path.read_text(encoding="utf-8"))
+
+            if not isinstance(current_patches, list):
+                current_patches = []
+
+            seen_ids = {p.get("id") for p in current_patches if isinstance(p, dict)}
+            
+            changes = False
+            for patch in patches_to_add:
+                if patch.get("id") not in seen_ids:
+                    current_patches.append(patch)
+                    seen_ids.add(patch.get("id"))
+                    changes = True
+
+            if changes:
+                global_path.write_text(
+                    json.dumps(current_patches, indent=2, ensure_ascii=False),
+                    encoding="utf-8",
+                )
+        except Exception as e:
+            # We don't want to crash the whole pipeline if global sync fails
+            # but we should log it
+            import logging
+            logging.getLogger(__name__).warning(f"Failed to propagate profile patches: {e}")
 
     def get_all_feedback_patches(
         self, source: str, job_id: str

@@ -1,5 +1,32 @@
 # Changelog
 
+## 2026-03-29 (future follow-up notes)
+
+- Added `future_docs/issues/profile_input_loading_node.md` to capture a pipeline design gap: profile evidence loading and legacy normalization are currently embedded in orchestration glue instead of a dedicated node with a single canonical contract.
+
+## 2026-03-29 (canonical ingest refactor)
+
+- Moved the scraper implementation to `src/scraper/` and removed the old `src/ai/scraper/` package.
+- Refactored scraper persistence to write canonical raw artifacts directly under `data/jobs/<source>/<job_id>/nodes/ingest/proposed/` through `DataManager`.
+- Added `DataManager.ingest_raw_job()` and `DataManager.has_ingested_job()` to centralize raw-ingestion storage and existence checks.
+- Replaced the pipeline's source-wide `scrape` wrapper behavior with a canonical `ingest` node that reuses existing artifacts or performs explicit single-job fetches from `source_url`.
+- Updated translator CLI and runtime docs to consume canonical ingest artifacts instead of `data/source/...`.
+- Tightened CSS schema generation prompts to focus on the main detail page and avoid related-job teaser selectors; added XING-specific hints to ignore `similar-jobs` and sticky teaser layouts.
+- Added `docs/standards/code/crawl4ai_usage.md` to define the repository rule: new scraper sources may bootstrap with Crawl4AI-assisted LLM extraction, but stable sources must converge to saved deterministic schemas.
+- Added `plan_docs/issues/crawl4ai_scraper_correction.md` to capture the correction plan for listing/detail separation, Crawl4AI-native LLM fallback, and source-specific merge before validation.
+- Scraper ingest now preserves broader raw Crawl4AI surfaces per job, including raw plus cleaned detail HTML, listing context, raw plus cleaned listing HTML, listing markdown, and raw structured extraction output.
+- XING discovery now isolates the job-specific listing card, persists `listing_case.*` artifacts, and anchors relative listing dates to the scrape timestamp when possible.
+- Scraper ingestion now fails closed for success accounting: invalid extractions persist diagnostics under `nodes/ingest/failed/` and no longer count as successful ingests.
+- Extended the scraper contract with optional application-routing fields so sources can capture whether to apply by email or portal, plus direct application URLs and instructions when present.
+- Added `future_docs/issues/application_routing_extraction.md` and linked a `TODO(future)` in `src/scraper/models.py` because application routing may belong in a later interpretation stage rather than deterministic scrape-time extraction.
+
+## 2026-03-29 (API-only CLI control plane)
+
+- Refactored `src/cli/main.py` around an API-first workflow: added `api`, `search`, and `run-batch` commands, made `review` support true explorer mode, and removed local SQLite fallbacks from CLI-driven LangGraph execution.
+- Updated `src/core/api_client.py` to start or reuse `langgraph dev`, flatten thread metadata for the TUI explorer, invoke graph-specific assistants, and resume threads using the assistant recorded in API state metadata.
+- Removed local graph mutation from `src/review_ui/bus.py`; review submissions now resume threads through the LangGraph API only.
+- Updated `src/ai/match_skill/main.py` and launcher scripts so stateful match/pipeline workflows go through the LangGraph API instead of local `SqliteSaver` execution.
+
 ## 2026-03-29 (pipeline graph unification)
 
 - **Pipeline graph unification:**

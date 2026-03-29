@@ -2,7 +2,7 @@
 
 Standards for modules that sit at the system boundary — receiving uncontrolled external input and producing a validated internal representation. Extends `basic.md`.
 
-Current ingestion components: `src/ai/scraper/` (job portal crawling), `src/review_ui/` (human review input).
+Current ingestion components: `src/scraper/` (job portal crawling), `src/review_ui/` (human review input).
 Planned: CV ingestion.
 
 Scraper produces non-deterministic output (LLM-assisted extraction, portal variability) and is classified under LLM standards for its output contract. This document covers the **boundary concerns** that apply to all ingestion components regardless of whether the extraction step is deterministic or LLM-based.

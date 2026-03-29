@@ -5,7 +5,7 @@ Uses URL patterns and data-attribute selectors rescued from the legacy dev branc
 
 import re
 from typing import Any, List
-from src.ai.scraper.smart_adapter import SmartScraperAdapter
+from src.scraper.smart_adapter import SmartScraperAdapter
 
 
 class StepStoneAdapter(SmartScraperAdapter):
@@ -24,8 +24,8 @@ class StepStoneAdapter(SmartScraperAdapter):
 
         Pattern: ``https://www.stepstone.de/jobs/{query}/in-{city}?ag={age}``
         """
-        query = kwargs.get("job_query", "data-scientist").replace(" ", "-")
-        city = kwargs.get("city", "berlin").lower()
+        query = (kwargs.get("job_query") or "data-scientist").replace(" ", "-")
+        city = (kwargs.get("city") or "berlin").lower()
         max_days = kwargs.get("max_days")
 
         age_str = ""
@@ -49,6 +49,7 @@ class StepStoneAdapter(SmartScraperAdapter):
         match = re.search(r"--(\d+)-inline\.html", url)
         return match.group(1) if match else "unknown"
 
+    # TODO(future): extract_links returns plain URL strings, losing listing-side metadata — see future_docs/issues/scraper_fragility.md
     def extract_links(self, crawl_result: Any) -> List[str]:
         """Discover job URLs using crawl4ai's native link discovery."""
         job_links = []
@@ -77,5 +78,6 @@ class StepStoneAdapter(SmartScraperAdapter):
         Separate them logically.
         If the company does not specify salary or benefits, return null or an empty list, do not invent.
         The 'posted_date' field usually appears as 'vor X Tagen' or 'Erschienen: vor 1 Woche'.
+        Capture how the candidate must apply when stated: email, external portal, company portal, or direct apply link.
         Detect the primary language of the posting and return its ISO 639-1 code in the 'original_language' field (e.g. 'de' or 'en').
         """

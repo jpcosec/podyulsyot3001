@@ -8,7 +8,7 @@ Navigation index for the Postulator 3000 pipeline. Each module has its own READM
 
 | Module | Type | README | Purpose |
 |--------|------|--------|---------|
-| `src/ai/scraper/` | Deterministic + LLM fallback | `src/ai/scraper/README.md` | Crawl job portals → `JobPosting` |
+| `src/scraper/` | Deterministic + LLM fallback | `src/scraper/README.md` | Discover and ingest job postings → `JobPosting` |
 | `src/tools/translator/` | Deterministic | `src/tools/translator/README.md` | Translate scraped JSON fields + Markdown body |
 | `src/ai/match_skill/` | LangGraph | `src/ai/match_skill/README.md` | Requirement-to-evidence matching with HITL review |
 | `src/review_ui/` | Textual TUI | `src/review_ui/README.md` | Terminal interface for the match review gate |
@@ -22,8 +22,8 @@ Navigation index for the Postulator 3000 pipeline. Each module has its own READM
 ## Pipeline Sequence
 
 ```
-src/ai/scraper/
-  ↓  JobPosting (JSON)
+src/scraper/
+  ↓  canonical raw job artifacts under `nodes/ingest/proposed/`
 src/tools/translator/
   ↓  translated fields + content.md
 src/ai/match_skill/          ← LangGraph, pauses for HITL review

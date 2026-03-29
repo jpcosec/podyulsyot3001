@@ -34,6 +34,7 @@ class JobMetadata(BaseModel):
     updated_at: str
 
 
+# todo(future) merge with log. document
 class DataManager:
     """Manage schema-v0 job metadata and primitive artifact IO under ``data/jobs``."""
 
@@ -64,6 +65,10 @@ class DataManager:
         jid = self._validated_segment(job_id, "job_id")
         return self.jobs_root / src / jid
 
+    def source_root(self, source: str) -> Path:
+        src = self._validated_segment(source, "source")
+        return self.jobs_root / src
+
     def node_root(self, source: str, job_id: str, node_name: str) -> Path:
         node = self._validated_segment(node_name, "node_name")
         return self.job_root(source, job_id) / "nodes" / node
@@ -89,6 +94,23 @@ class DataManager:
     ) -> Path:
         file_name = self._validated_segment(filename, "filename")
         return self.node_stage_dir(source, job_id, node_name, stage) / file_name
+
+    def artifact_exists(
+        self,
+        *,
+        source: str,
+        job_id: str,
+        node_name: str,
+        stage: str,
+        filename: str,
+    ) -> bool:
+        return self.artifact_path(
+            source=source,
+            job_id=job_id,
+            node_name=node_name,
+            stage=stage,
+            filename=filename,
+        ).exists()
 
     def resolve_under_job(self, source: str, job_id: str, relative_path: str) -> Path:
         root = self.job_root(source, job_id).resolve()
@@ -212,6 +234,83 @@ class DataManager:
             filename=filename,
         )
         return path.read_text(encoding="utf-8")
+
+    def ingest_raw_job(
+        self,
+        *,
+        source: str,
+        job_id: str,
+        payload: dict,
+        content: str = "",
+        metadata: dict | None = None,
+        raw_html: str | None = None,
+        cleaned_html: str | None = None,
+        node_name: str = "ingest",
+        stage: str = "proposed",
+    ) -> dict[str, Path]:
+        refs = {
+            "state": self.write_json_artifact(
+                source=source,
+                job_id=job_id,
+                node_name=node_name,
+                stage=stage,
+                filename="state.json",
+                data=payload,
+            )
+        }
+        if content:
+            refs["content"] = self.write_text_artifact(
+                source=source,
+                job_id=job_id,
+                node_name=node_name,
+                stage=stage,
+                filename="content.md",
+                content=content,
+            )
+        if metadata is not None:
+            refs["meta"] = self.write_json_artifact(
+                source=source,
+                job_id=job_id,
+                node_name=node_name,
+                stage=stage,
+                filename="scrape_meta.json",
+                data=metadata,
+            )
+        if raw_html is not None:
+            refs["raw_html"] = self.write_text_artifact(
+                source=source,
+                job_id=job_id,
+                node_name=node_name,
+                stage=stage,
+                filename="raw_page.html",
+                content=raw_html,
+            )
+        if cleaned_html is not None:
+            refs["cleaned_html"] = self.write_text_artifact(
+                source=source,
+                job_id=job_id,
+                node_name=node_name,
+                stage=stage,
+                filename="cleaned_page.html",
+                content=cleaned_html,
+            )
+        return refs
+
+    def has_ingested_job(
+        self,
+        source: str,
+        job_id: str,
+        *,
+        node_name: str = "ingest",
+        stage: str = "proposed",
+    ) -> bool:
+        return self.artifact_exists(
+            source=source,
+            job_id=job_id,
+            node_name=node_name,
+            stage=stage,
+            filename="state.json",
+        )
 
     def write_bytes_artifact(
         self,

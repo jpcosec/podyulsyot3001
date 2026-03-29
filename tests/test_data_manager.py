@@ -55,7 +55,7 @@ def test_write_and_read_text_artifact(tmp_path) -> None:
     path = manager.write_text_artifact(
         source="stepstone",
         job_id="12345",
-        node_name="scrape",
+        node_name="ingest",
         stage="proposed",
         filename="content.md",
         content="# Job",
@@ -66,9 +66,30 @@ def test_write_and_read_text_artifact(tmp_path) -> None:
         manager.read_text_artifact(
             source="stepstone",
             job_id="12345",
-            node_name="scrape",
+            node_name="ingest",
             stage="proposed",
             filename="content.md",
         )
         == "# Job"
     )
+
+
+def test_ingest_raw_job_writes_canonical_artifacts(tmp_path) -> None:
+    manager = DataManager(tmp_path / "data" / "jobs")
+
+    refs = manager.ingest_raw_job(
+        source="stepstone",
+        job_id="12345",
+        payload={"job_title": "Engineer"},
+        content="# Posting",
+        metadata={"success": True},
+        raw_html="<html>raw</html>",
+        cleaned_html="<html>clean</html>",
+    )
+
+    assert refs["state"].exists()
+    assert refs["content"].exists()
+    assert refs["meta"].exists()
+    assert refs["raw_html"].exists()
+    assert refs["cleaned_html"].exists()
+    assert manager.has_ingested_job("stepstone", "12345") is True

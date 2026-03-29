@@ -1,14 +1,4 @@
-"""Unified CLI for Postulator 3000.
-
-Provides subcommands for running the full pipeline or individual modules:
-- pipeline: Run the full orchestration graph
-- scrape: Run the scraper only
-- translate: Run the translator only
-- match: Run the match skill only
-- generate: Run document generation only
-- render: Run document rendering only
-- review: Launch the HITL review TUI
-"""
+"""Unified CLI for Postulator 3000."""
 
 from __future__ import annotations
 
@@ -18,9 +8,12 @@ import json
 import logging
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
+from src.ai.match_skill.storage import MatchArtifactStore
 from src.core import DataManager
+from src.core.api_client import LangGraphAPIClient, LangGraphConnectionError
+from src.shared.log_tags import LogTag
 
 logger = logging.getLogger(__name__)
 
@@ -28,265 +21,369 @@ logger = logging.getLogger(__name__)
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="postulator",
-        description="Postulator 3000 - Job application pipeline with HITL review",
+        description="Postulator 3000 - unified operator CLI",
     )
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
+    _add_api_parser(subparsers)
     _add_pipeline_parser(subparsers)
     _add_scrape_parser(subparsers)
+    _add_search_parser(subparsers)
+    _add_run_batch_parser(subparsers)
     _add_translate_parser(subparsers)
     _add_match_parser(subparsers)
     _add_generate_parser(subparsers)
     _add_render_parser(subparsers)
     _add_review_parser(subparsers)
-
     return parser
+
+
+def _add_api_parser(subparsers: argparse._SubParsersAction) -> None:
+    p = subparsers.add_parser("api", help="Manage the LangGraph API control plane")
+    p.add_argument("action", choices=["start", "status"], help="API action")
+    p.add_argument("--port", type=int, default=8124, help="Preferred API port")
 
 
 def _add_pipeline_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser(
         "pipeline",
-        help="Run the full pipeline (scrape → translate → match → generate → render)",
+        help="Run the full pipeline via the LangGraph API",
     )
-    p.add_argument("--source", required=True, help="Job portal source (e.g. stepstone)")
-    p.add_argument("--job-id", dest="job_id", help="Specific job ID to process")
-    p.add_argument(
-        "--source-url", dest="source_url", help="URL to scrape (for scrape step)"
-    )
-    p.add_argument(
-        "--profile-evidence",
-        dest="profile_evidence",
-        help="Path to profile evidence JSON file",
-    )
-    p.add_argument(
-        "--requirements",
-        help="Path to requirements JSON file (or will be extracted from job)",
-    )
+    p.add_argument("--source", required=True, help="Job portal source")
+    p.add_argument("--job-id", dest="job_id", required=True, help="Job ID")
+    p.add_argument("--source-url", dest="source_url", help="Source URL override")
+    p.add_argument("--profile-evidence", dest="profile_evidence")
+    p.add_argument("--requirements")
 
 
 def _add_scrape_parser(subparsers: argparse._SubParsersAction) -> None:
-    p = subparsers.add_parser(
-        "scrape",
-        help="Run the scraper only",
-    )
+    p = subparsers.add_parser("scrape", help="Run discovery ingestion for one source")
     p.add_argument("--source", required=True, help="Job portal source")
-    p.add_argument("--limit", type=int, help="Limit number of postings to scrape")
-    p.add_argument("--overwrite", action="store_true", help="Re-download everything")
-    p.add_argument("--job-query", dest="job_query", help="Search query")
-    p.add_argument("--city", help="City/location filter")
-    p.add_argument("--categories", nargs="+", help="Job categories")
+    p.add_argument("--limit", type=int)
+    p.add_argument("--overwrite", action="store_true")
+    p.add_argument("--job-query", dest="job_query")
+    p.add_argument("--city")
+    p.add_argument("--categories", nargs="+")
+
+
+def _add_search_parser(subparsers: argparse._SubParsersAction) -> None:
+    p = subparsers.add_parser(
+        "search",
+        help="Run discovery ingestion across one or more sources",
+    )
+    p.add_argument("--sources", nargs="+", required=True, help="One or more sources")
+    p.add_argument("--limit", type=int)
+    p.add_argument("--overwrite", action="store_true")
+    p.add_argument("--job-query", dest="job_query", required=True)
+    p.add_argument("--city", required=True)
+    p.add_argument("--categories", nargs="+")
+
+
+def _add_run_batch_parser(subparsers: argparse._SubParsersAction) -> None:
+    p = subparsers.add_parser(
+        "run-batch",
+        help="Launch LangGraph pipeline runs for multiple ingested jobs",
+    )
+    p.add_argument("--sources", nargs="+", required=True, help="Sources to scan")
+    p.add_argument(
+        "--job",
+        action="append",
+        dest="jobs",
+        help="Explicit job selector as source:job_id or just job_id when one source is used",
+    )
+    p.add_argument(
+        "--stdin", action="store_true", help="Read source/job_id pairs from stdin"
+    )
+    p.add_argument(
+        "--limit",
+        type=int,
+        help="Newest jobs per source when no explicit jobs are given",
+    )
+    p.add_argument("--profile-evidence", dest="profile_evidence")
+    p.add_argument("--requirements")
 
 
 def _add_translate_parser(subparsers: argparse._SubParsersAction) -> None:
-    p = subparsers.add_parser(
-        "translate",
-        help="Run the translator only",
-    )
-    p.add_argument("--source", required=True, help="Job portal source")
-    p.add_argument(
-        "--target-lang",
-        dest="target_lang",
-        default="en",
-        help="Target language (default: en)",
-    )
-    p.add_argument(
-        "--force",
-        action="store_true",
-        help="Force re-translation even if files exist",
-    )
+    p = subparsers.add_parser("translate", help="Run the translator only")
+    p.add_argument("--source", required=True)
+    p.add_argument("--target-lang", dest="target_lang", default="en")
+    p.add_argument("--force", action="store_true")
 
 
 def _add_match_parser(subparsers: argparse._SubParsersAction) -> None:
-    p = subparsers.add_parser(
-        "match",
-        help="Run the match skill only",
-    )
-    p.add_argument("--source", required=True, help="Job portal source")
-    p.add_argument("--job-id", dest="job_id", required=True, help="Job posting ID")
-    p.add_argument(
-        "--requirements",
-        required=True,
-        help="Path to requirements JSON file",
-    )
-    p.add_argument(
-        "--profile-evidence",
-        dest="profile_evidence",
-        required=True,
-        help="Path to profile evidence JSON file",
-    )
+    p = subparsers.add_parser("match", help="Run the match step via the LangGraph API")
+    p.add_argument("--source", required=True)
+    p.add_argument("--job-id", dest="job_id", required=True)
+    p.add_argument("--requirements", required=True)
+    p.add_argument("--profile-evidence", dest="profile_evidence", required=True)
 
 
 def _add_generate_parser(subparsers: argparse._SubParsersAction) -> None:
-    p = subparsers.add_parser(
-        "generate",
-        help="Run document generation only",
-    )
-    p.add_argument("--source", required=True, help="Job portal source")
-    p.add_argument("--job-id", dest="job_id", required=True, help="Job posting ID")
-    p.add_argument(
-        "--profile",
-        help="Path to profile base data JSON",
-    )
+    p = subparsers.add_parser("generate", help="Run document generation only")
+    p.add_argument("--source", required=True)
+    p.add_argument("--job-id", dest="job_id", required=True)
+    p.add_argument("--profile")
 
 
 def _add_render_parser(subparsers: argparse._SubParsersAction) -> None:
-    p = subparsers.add_parser(
-        "render",
-        help="Run document rendering only",
-    )
-    p.add_argument("document", choices=["cv", "letter"], help="Document type")
-    p.add_argument("--source", required=True, help="Source file or job source")
-    p.add_argument("--job-id", dest="job_id", help="Job ID (for job-bound rendering)")
-    p.add_argument("--template", help="Template/style name to use")
-    p.add_argument(
-        "--engine",
-        default="tex",
-        choices=["tex", "docx"],
-        help="Rendering engine (default: tex)",
-    )
-    p.add_argument(
-        "--language",
-        default="english",
-        help="Language (default: english)",
-    )
-    p.add_argument("--output", help="Output file path")
+    p = subparsers.add_parser("render", help="Run document rendering only")
+    p.add_argument("document", choices=["cv", "letter"])
+    p.add_argument("--source", required=True)
+    p.add_argument("--job-id", dest="job_id")
+    p.add_argument("--template")
+    p.add_argument("--engine", default="tex", choices=["tex", "docx"])
+    p.add_argument("--language", default="english")
+    p.add_argument("--output")
 
 
 def _add_review_parser(subparsers: argparse._SubParsersAction) -> None:
-    p = subparsers.add_parser(
-        "review",
-        help="Launch the HITL review TUI",
+    p = subparsers.add_parser("review", help="Launch the HITL review TUI")
+    p.add_argument("--source", help="Source for direct review mode")
+    p.add_argument("--job-id", dest="job_id", help="Job ID for direct review mode")
+
+
+def _load_json(path: str | None) -> Any:
+    if not path:
+        return None
+    return json.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def _build_pipeline_input(
+    *,
+    profile_evidence_path: str | None,
+    requirements_path: str | None,
+) -> dict[str, Any]:
+    initial_input: dict[str, Any] = {}
+    if profile_evidence_path:
+        initial_input["profile_evidence"] = _load_json(profile_evidence_path)
+    if requirements_path:
+        initial_input["requirements"] = _load_json(requirements_path)
+    return initial_input
+
+
+def _parse_job_selector(selector: str, sources: list[str]) -> tuple[str, str]:
+    if ":" in selector:
+        source, job_id = selector.split(":", 1)
+        return source, job_id
+    if len(sources) == 1:
+        return sources[0], selector
+    raise ValueError(
+        f"Ambiguous job selector '{selector}'. Use source:job_id when multiple sources are provided."
     )
-    p.add_argument("--source", required=True, help="Job portal source")
-    p.add_argument("--job-id", dest="job_id", required=True, help="Job posting ID")
+
+
+def _read_jobs_from_stdin(sources: list[str]) -> list[tuple[str, str]]:
+    jobs: list[tuple[str, str]] = []
+    for line in sys.stdin.read().splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        if "\t" in stripped:
+            source, job_id = stripped.split("\t", 1)
+            jobs.append((source, job_id))
+        else:
+            jobs.append(_parse_job_selector(stripped, sources))
+    return jobs
+
+
+def _newest_jobs_for_sources(
+    data_manager: DataManager, sources: list[str], limit: int | None
+) -> list[tuple[str, str]]:
+    jobs: list[tuple[str, str, float]] = []
+    for source in sources:
+        root = data_manager.source_root(source)
+        if not root.exists():
+            continue
+        source_jobs: list[tuple[str, str, float]] = []
+        for job_dir in root.iterdir():
+            if not job_dir.is_dir() or not data_manager.has_ingested_job(
+                source, job_dir.name
+            ):
+                continue
+            source_jobs.append((source, job_dir.name, job_dir.stat().st_mtime))
+        source_jobs.sort(key=lambda item: item[2], reverse=True)
+        jobs.extend(source_jobs[:limit] if limit else source_jobs)
+    jobs.sort(key=lambda item: item[2], reverse=True)
+    return [(source, job_id) for source, job_id, _ in jobs]
+
+
+async def _invoke_remote_pipeline(
+    client: LangGraphAPIClient,
+    *,
+    source: str,
+    job_id: str,
+    source_url: str | None = None,
+    initial_input: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    return await client.invoke_pipeline(
+        source=source,
+        job_id=job_id,
+        source_url=source_url,
+        initial_input=initial_input,
+    )
+
+
+async def _run_api(args: argparse.Namespace) -> int:
+    if args.action == "start":
+        url = LangGraphAPIClient.ensure_server(port=args.port)
+        print(url)
+        return 0
+
+    try:
+        client = LangGraphAPIClient()
+        if client.is_healthy():
+            print(client.url)
+            return 0
+    except Exception:
+        pass
+    print("LangGraph API not reachable", file=sys.stderr)
+    return 1
 
 
 async def _run_pipeline(args: argparse.Namespace) -> int:
-    """Run the full pipeline via the graph module."""
-    from src.graph import build_pipeline_graph
-
-    if not args.job_id:
-        raise ValueError("pipeline requires --job-id in schema-v0")
-
-    data_manager = DataManager()
-    state: dict[str, Any] = {
-        "source": args.source,
-        "job_id": args.job_id,
-        "status": "pending",
-        "artifact_refs": {},
-    }
-
-    if args.source_url:
-        state["source_url"] = args.source_url
-    if args.profile_evidence:
-        payload = json.loads(Path(args.profile_evidence).read_text(encoding="utf-8"))
-        ref = data_manager.write_json_artifact(
-            source=args.source,
-            job_id=args.job_id,
-            node_name="pipeline_inputs",
-            stage="proposed",
-            filename="profile_evidence.json",
-            data=payload,
-        )
-        state["profile_evidence_ref"] = str(ref)
-    if args.requirements:
-        payload = json.loads(Path(args.requirements).read_text(encoding="utf-8"))
-        ref = data_manager.write_json_artifact(
-            source=args.source,
-            job_id=args.job_id,
-            node_name="pipeline_inputs",
-            stage="proposed",
-            filename="requirements.json",
-            data={"requirements": payload},
-        )
-        state["artifact_refs"]["requirements_ref"] = str(ref)
-
-    try:
-        app = build_pipeline_graph()
-        thread_id = f"{args.source}_{args.job_id}"
-        config = {"configurable": {"thread_id": thread_id}}
-
-        result = await app.ainvoke(state, config=config)
-        print(json.dumps(result, indent=2, default=str))
-        return 0
-    except Exception as e:
-        logger.error(f"Pipeline failed: {e}")
-        return 1
+    url = LangGraphAPIClient.ensure_server()
+    client = LangGraphAPIClient(url)
+    initial_input = _build_pipeline_input(
+        profile_evidence_path=args.profile_evidence,
+        requirements_path=args.requirements,
+    )
+    result = await _invoke_remote_pipeline(
+        client,
+        source=args.source,
+        job_id=args.job_id,
+        source_url=args.source_url,
+        initial_input=initial_input,
+    )
+    logger.info("%s Pipeline finished with status: %s", LogTag.OK, result.get("status"))
+    return 0
 
 
 async def _run_scrape(args: argparse.Namespace) -> int:
-    """Run the scraper module."""
-    from src.ai.scraper.main import PROVIDERS
+    from src.scraper.main import build_providers
 
-    adapter = PROVIDERS[args.source]
-    already_scraped = []
+    adapter = build_providers()[args.source]
+    ingested = await adapter.run(
+        already_scraped=[],
+        source=args.source,
+        drop_repeated=not args.overwrite,
+        overwrite=args.overwrite,
+        job_query=args.job_query,
+        city=args.city,
+        categories=args.categories,
+        limit=args.limit,
+    )
+    for job_id in ingested:
+        print(f"{args.source}\t{job_id}")
+    return 0
 
-    cli_args = {
-        "source": args.source,
-        "drop_repeated": True,
-        "overwrite": args.overwrite,
-        "job_query": args.job_query,
-        "city": args.city,
-        "categories": args.categories,
-        "limit": args.limit,
-    }
 
-    await adapter.run(already_scraped=already_scraped, **cli_args)
+async def _run_search(args: argparse.Namespace) -> int:
+    from src.scraper.main import build_providers, get_ingested_job_ids
+
+    providers = build_providers()
+    data_manager = DataManager()
+    results: list[tuple[str, str]] = []
+    for source in args.sources:
+        adapter = providers[source]
+        already_scraped = (
+            [] if args.overwrite else get_ingested_job_ids(data_manager, source)
+        )
+        ingested = await adapter.run(
+            already_scraped=already_scraped,
+            source=source,
+            drop_repeated=not args.overwrite,
+            overwrite=args.overwrite,
+            job_query=args.job_query,
+            city=args.city,
+            categories=args.categories,
+            limit=args.limit,
+        )
+        logger.info(
+            "%s Search ingested %s jobs for %s", LogTag.OK, len(ingested), source
+        )
+        results.extend((source, job_id) for job_id in ingested)
+    for source, job_id in results:
+        print(f"{source}\t{job_id}")
+    return 0
+
+
+async def _run_batch(args: argparse.Namespace) -> int:
+    url = LangGraphAPIClient.ensure_server()
+    client = LangGraphAPIClient(url)
+    data_manager = DataManager()
+
+    jobs: list[tuple[str, str]] = []
+    if args.jobs:
+        jobs.extend(
+            _parse_job_selector(selector, args.sources) for selector in args.jobs
+        )
+    if args.stdin:
+        jobs.extend(_read_jobs_from_stdin(args.sources))
+    if not jobs:
+        jobs = _newest_jobs_for_sources(data_manager, args.sources, args.limit)
+
+    if not jobs:
+        logger.warning("%s No jobs selected for batch run", LogTag.WARN)
+        return 1
+
+    initial_input = _build_pipeline_input(
+        profile_evidence_path=args.profile_evidence,
+        requirements_path=args.requirements,
+    )
+    for source, job_id in jobs:
+        result = await _invoke_remote_pipeline(
+            client,
+            source=source,
+            job_id=job_id,
+            initial_input=initial_input,
+        )
+        logger.info(
+            "%s Batch run %s/%s finished with status %s",
+            LogTag.OK,
+            source,
+            job_id,
+            result.get("status"),
+        )
+        print(f"{source}\t{job_id}\t{result.get('status', 'unknown')}")
     return 0
 
 
 def _run_translate(args: argparse.Namespace) -> int:
-    """Run the translator module."""
     from src.tools.translator.main import main as translator_main
 
-    argv = [
-        "--source",
-        args.source,
-        "--target-lang",
-        args.target_lang,
-    ]
+    argv = ["--source", args.source, "--target-lang", args.target_lang]
     if args.force:
         argv.append("--force")
-
     return translator_main(argv)
 
 
-def _run_match(args: argparse.Namespace) -> int:
-    """Run the match skill module."""
-    from src.ai.match_skill.main import main as match_main
-
-    argv = [
-        "--source",
-        args.source,
-        "--job-id",
-        args.job_id,
-        "--requirements",
-        args.requirements,
-        "--profile-evidence",
-        args.profile_evidence,
-    ]
-
-    return match_main(argv)
+async def _run_match(args: argparse.Namespace) -> int:
+    url = LangGraphAPIClient.ensure_server()
+    client = LangGraphAPIClient(url)
+    initial_input = _build_pipeline_input(
+        profile_evidence_path=args.profile_evidence,
+        requirements_path=args.requirements,
+    )
+    result = await client.invoke_assistant(
+        "match_skill",
+        source=args.source,
+        job_id=args.job_id,
+        initial_input=initial_input,
+    )
+    print(json.dumps({"status": result.get("status")}, indent=2))
+    return 0
 
 
 def _run_generate(args: argparse.Namespace) -> int:
-    """Run the document generation module."""
-    from src.ai.generate_documents import main as generate_main
+    from src.ai.generate_documents.main import main as generate_main
 
-    argv = [
-        "--source",
-        args.source,
-        "--job-id",
-        args.job_id,
-    ]
+    argv = ["--source", args.source, "--job-id", args.job_id]
     if args.profile:
         argv.extend(["--profile", args.profile])
-
     return generate_main(argv)
 
 
 def _run_render(args: argparse.Namespace) -> int:
-    """Run the render module."""
     from src.tools.render.main import main as render_main
 
     argv = [
@@ -304,48 +401,29 @@ def _run_render(args: argparse.Namespace) -> int:
         argv.extend(["--template", args.template])
     if args.output:
         argv.extend(["--output", args.output])
-
     return render_main(argv)
 
 
 def _run_review(args: argparse.Namespace) -> int:
-    """Launch the HITL review TUI."""
-    from src.ai.match_skill.graph import build_match_skill_graph
-    from src.ai.match_skill.storage import MatchArtifactStore
-    from langgraph.checkpoint.sqlite import SqliteSaver
+    from src.review_ui.app import MatchReviewApp
+    from src.review_ui.bus import MatchBus
 
-    jobs_root = DataManager().jobs_root
-    jobs_root.mkdir(parents=True, exist_ok=True)
-    checkpoint_path = jobs_root / "checkpoints.db"
-    store = MatchArtifactStore(jobs_root)
+    url = LangGraphAPIClient.ensure_server()
+    client = LangGraphAPIClient(url)
+    data_manager = DataManager()
+    store = MatchArtifactStore(data_manager.jobs_root)
 
-    thread_id = f"{args.source}_{args.job_id}"
-    config = {"configurable": {"thread_id": thread_id}}
+    config: dict[str, Any] = {"configurable": {}}
+    if args.source and args.job_id:
+        config["configurable"]["thread_id"] = f"{args.source}_{args.job_id}"
 
-    try:
-        with SqliteSaver.from_conn_string(str(checkpoint_path)) as checkpointer:
-            app = build_match_skill_graph(
-                artifact_store=store, checkpointer=checkpointer
-            )
-
-            from src.review_ui.app import MatchReviewApp
-            from src.review_ui.bus import MatchBus
-
-            bus = MatchBus(store=store, app=app, config=config)
-
-            review_app = MatchReviewApp(bus=bus, source=args.source, job_id=args.job_id)
-            review_app.run()
-            return 0
-    except FileNotFoundError as e:
-        print(f"[Error] {e}", file=sys.stderr)
-        return 1
-    except Exception as e:
-        print(f"[Fatal] {e}", file=sys.stderr)
-        return 1
+    bus = MatchBus(store=store, client=client, config=config)
+    review_app = MatchReviewApp(bus=bus, source=args.source, job_id=args.job_id)
+    review_app.run()
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Main entry point for the unified CLI. Returns exit code."""
     parser = _build_parser()
     args = parser.parse_args(argv)
 
@@ -358,22 +436,34 @@ def main(argv: list[str] | None = None) -> int:
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
 
-    if args.command == "pipeline":
-        return asyncio.run(_run_pipeline(args))
-    elif args.command == "scrape":
-        return asyncio.run(_run_scrape(args))
-    elif args.command == "translate":
-        return _run_translate(args)
-    elif args.command == "match":
-        return _run_match(args)
-    elif args.command == "generate":
-        return _run_generate(args)
-    elif args.command == "render":
-        return _run_render(args)
-    elif args.command == "review":
-        return _run_review(args)
-    else:
+    try:
+        if args.command == "api":
+            return asyncio.run(_run_api(args))
+        if args.command == "pipeline":
+            return asyncio.run(_run_pipeline(args))
+        if args.command == "scrape":
+            return asyncio.run(_run_scrape(args))
+        if args.command == "search":
+            return asyncio.run(_run_search(args))
+        if args.command == "run-batch":
+            return asyncio.run(_run_batch(args))
+        if args.command == "translate":
+            return _run_translate(args)
+        if args.command == "match":
+            return asyncio.run(_run_match(args))
+        if args.command == "generate":
+            return _run_generate(args)
+        if args.command == "render":
+            return _run_render(args)
+        if args.command == "review":
+            return _run_review(args)
         parser.print_help()
+        return 1
+    except LangGraphConnectionError as exc:
+        logger.error("%s %s", LogTag.FAIL, exc)
+        return 1
+    except ValueError as exc:
+        logger.error("%s %s", LogTag.FAIL, exc)
         return 1
 
 

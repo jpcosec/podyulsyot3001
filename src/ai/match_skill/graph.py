@@ -148,7 +148,7 @@ def build_match_skill_graph(
 
 
 def build_default_match_chain(
-    *, model_name: str = "gemini-1.5-flash-latest", model: Any | None = None
+    *, model_name: str = "gemini-2.5-flash", model: Any | None = None
 ):
     """Build the default LangChain runnable for the match step.
 

@@ -5,7 +5,7 @@ Handles bilingual (DE/EN) job postings and category-based filters.
 
 import re
 from typing import Any, List
-from src.ai.scraper.smart_adapter import SmartScraperAdapter
+from src.scraper.smart_adapter import SmartScraperAdapter
 
 
 class TUBerlinAdapter(SmartScraperAdapter):
@@ -86,6 +86,7 @@ class TUBerlinAdapter(SmartScraperAdapter):
         The salary is usually a TV-L grade (e.g., 'Salary grade 13 TV-L Berliner Hochschulen').
         The posted date, deadline, and reference are in 'Facts' tables.
         The contact info is usually an email (mailto: link).
+        Capture whether the posting asks for email application or portal application, plus any direct apply link or short application instruction.
         Detect the primary language of the posting and return its ISO 639-1 code in the 'original_language' field (e.g. 'de' or 'en').
         Do not invent data. If a field does not exist, return it as null.
         """

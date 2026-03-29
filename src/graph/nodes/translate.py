@@ -28,17 +28,17 @@ def make_translate_node(data_manager: DataManager):
             raw_state = data_manager.read_json_artifact(
                 source=source,
                 job_id=job_id,
-                node_name="scrape",
+                node_name="ingest",
                 stage="proposed",
                 filename="state.json",
             )
-            raw_content = state.get("artifact_refs", {}).get("scrape_content")
+            raw_content = state.get("artifact_refs", {}).get("ingest_content")
             content_md = ""
             if raw_content:
                 content_md = data_manager.read_text_artifact(
                     source=source,
                     job_id=job_id,
-                    node_name="scrape",
+                    node_name="ingest",
                     stage="proposed",
                     filename="content.md",
                 )

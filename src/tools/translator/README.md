@@ -33,38 +33,46 @@ CLI arguments are defined in `src/tools/translator/main.py`. Run `python -m src.
 
 ## 📝 Data Contract
 
-The adapter contract is `BaseTranslatorAdapter` in `src/tools/translator/base.py`. Operational limits (chunk size, retry budget) are exposed as `@property` on the base class.
+The translator interacts with the canonical job storage via the `DataManager`.
 
-Input artifacts per job (read from `data/source/<source>/<job_id>/`):
-- `extracted_data.json` — fields listed in `P_FIELDS_TO_TRANSLATE` in `src/tools/translator/main.py`
-- `content.md` — full job description body
+**Input Artifacts** (read from `nodes/ingest/proposed/`):
+- `state.json` — Job metadata/payload including fields defined in `P_FIELDS_TO_TRANSLATE`.
+- `content.md` — Full job description text in the original language.
 
-Output artifacts (written to the same job folder):
-- `extracted_data_en.json`
-- `content_en.md`
-
----
-
-## 🛠️ How to Add / Extend (New Provider)
-
-1. Create `src/tools/translator/providers/{new_provider}/`.
-2. Implement `adapter.py` inheriting from `BaseTranslatorAdapter` in `src/tools/translator/base.py`.
-3. Implement required methods: `provider_name`, `translate_chunk`.
-4. Register the provider in the `PROVIDERS` dict in `src/tools/translator/main.py`.
+**Output Artifacts** (written to `nodes/translate/proposed/`):
+- `state.json` — Translated fields, with `original_language` set to the target language (default `en`).
+- `content.md` — Full job description translated to the target language.
 
 ---
 
-## 💻 How to Use (Quickstart)
+## 🏗️ Architecture
 
+1. **Base Framework** (`src/tools/translator/base.py`): Handles chunking (max 4500 chars), retries, and high-level `translate_text`/`translate_fields` logic.
+2. **Providers** (`src/tools/translator/providers/`): Specific implementations (e.g., `google` via `deep-translator`).
+3. **Pipeline Node** (`src/graph/nodes/translate.py`): LangGraph adapter that uses the `DataManager` to persist results across pipeline stages.
+4. **CLI Wrapper** (`src/tools/translator/main.py`): Standalone utility to batch-translate existing ingested jobs.
+
+---
+
+## 🚀 Usage
+
+### As a LangGraph Node
+Ideally used within the `build_pipeline_graph` in `src/graph/__init__.py`:
+```python
+workflow.add_node("translate", make_translate_node(manager))
+workflow.add_edge("ingest", "translate")
+```
+
+### Via CLI (Batch Processing)
 ```bash
-python -m src.tools.translator.main --source stepstone
-python -m src.tools.translator.main --source tuberlin --provider google --target_lang en
+python -m src.tools.translator.main --source stepstone --target_lang en
 ```
 
 ---
 
 ## 🚑 Troubleshooting
 
-- **"ImportError: deep-translator is required"** — run `pip install deep-translator`.
-- **"Translation failed after N attempts"** — rate limit or network issue. Check internet connection or increase `retry_delay_seconds` on the adapter.
-- **Missing translated fields** — ensure the missing fields are listed in `P_FIELDS_TO_TRANSLATE` in `src/tools/translator/main.py`.
+- **"ImportError: deep-translator is required"** — Run `pip install deep-translator`.
+- **"Translation failed after N attempts"** — Network timeout or rate limit. The retry mechanism handles transient issues, but check your internet connection.
+- **Fields not translating** — Ensure the field name is included in `P_FIELDS_TO_TRANSLATE` within `src/tools/translator/main.py`.
+

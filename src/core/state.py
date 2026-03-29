@@ -23,6 +23,7 @@ class GraphState(TypedDict, total=False):
     """
 
     source: str
+    source_url: str
     job_id: str
     run_id: str
     current_node: str

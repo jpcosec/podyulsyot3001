@@ -46,7 +46,7 @@ Use this checklist to evaluate whether a component's documentation meets the sta
 
 ---
 
-## 5. Observability Logs
+## 5. Observability Logs #todo(future): the address might be missplaced
 
 - [ ] All log messages use `LogTag` from `src/shared/log_tags.py` — no hand-written emoji strings.
 - [ ] `LogTag.LLM` is used only on paths that invoke an LLM — not on deterministic logic.

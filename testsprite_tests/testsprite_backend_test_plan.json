@@ -1,0 +1,52 @@
+[
+  {
+    "id": "TC001",
+    "title": "cli pipeline command with valid config",
+    "description": "Test the CLI pipeline command with a valid configuration file. Verify that the pipeline starts, calls the build_pipeline_graph function, executes the LangGraph graph successfully, and completes with exit code 0."
+  },
+  {
+    "id": "TC002",
+    "title": "cli pipeline command with invalid config",
+    "description": "Test the CLI pipeline command with an invalid configuration file. Verify that the CLI returns a non-zero exit code with an 'invalid config' error message and does not call the build_pipeline_graph function."
+  },
+  {
+    "id": "TC003",
+    "title": "datamanager load existing artifact",
+    "description": "Test DataManager's ability to load an existing artifact file. Verify that the artifact is loaded and parsed correctly with schema-v0 validation."
+  },
+  {
+    "id": "TC004",
+    "title": "datamanager load missing artifact",
+    "description": "Test DataManager's behavior when attempting to load a non-existent artifact. Verify that it raises a FileNotFoundError or returns an 'artifact not found' error, and the caller handles the missing artifact appropriately."
+  },
+  {
+    "id": "TC005",
+    "title": "scraper stepstone provider success",
+    "description": "Test the scraper CLI for the stepstone provider with a valid job ID. Verify that the scraper returns HTTP 200, writes the JobPosting JSON artifact to the specified output path, and that DataManager can load the artifact."
+  },
+  {
+    "id": "TC006",
+    "title": "scraper stepstone provider bot protection fallback",
+    "description": "Test the scraper CLI for the stepstone provider when bot protection triggers (e.g., HTTP 429). Verify that the fallback LLM extraction method is invoked, returns a valid JobPosting JSON, and the artifact is saved by DataManager."
+  },
+  {
+    "id": "TC007",
+    "title": "match_skill subgraph execution and artifact persistence",
+    "description": "Test the execution of the match_skill LangGraph subgraph. Verify that the subgraph runs to completion, produces a MatchArtifact, and persists it to the expected path."
+  },
+  {
+    "id": "TC008",
+    "title": "match_skill hitl review approve command",
+    "description": "Test the HITL review approve command in the Textual TUI. Verify that the MatchBus sends the approve decision to LangGraph, which processes it and transitions the subgraph to the generate_documents node."
+  },
+  {
+    "id": "TC009",
+    "title": "generate_documents chain success",
+    "description": "Test the document generation chain with sufficient context. Verify that the chain returns a GeneratedDocuments artifact, which is saved to the expected path and can be loaded by DataManager."
+  },
+  {
+    "id": "TC010",
+    "title": "render coordinator successful rendering",
+    "description": "Test the RenderCoordinator's ability to render a document (e.g., CV) using the tex engine and default template. Verify that it returns binary PDF bytes, writes the output file via WorkspaceManager, and the CLI package command completes successfully."
+  }
+]

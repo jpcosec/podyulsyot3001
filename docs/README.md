@@ -11,6 +11,7 @@ Documentation, planning, navigation, and future work conventions.
 ### code/
 Code quality standards by component type.
 - `standards/code/basic.md` — universal: error contracts, LogTag, docstrings, CLI structure
+- `standards/code/crawl4ai_usage.md` — how scraper code must use Crawl4AI, including bootstrap-via-LLM then converge-to-saved-schema
 - `standards/code/llm_langgraph_components.md` — LangGraph module structure, node taxonomy, HITL contract, Studio pattern
 - `standards/code/llm_langgraph_methodology.md` — build sequence, validation gates, test coverage contract
 - `standards/code/ingestion_layer.md` — boundary ingestion: scraper, review input, future CV ingestion

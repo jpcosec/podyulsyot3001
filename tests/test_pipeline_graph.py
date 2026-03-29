@@ -1,11 +1,15 @@
 """Tests for the top-level pipeline graph."""
 
+import asyncio
+
 import pytest
 from src.graph import (
     GraphState,
     build_pipeline_graph,
     create_studio_graph,
 )
+from src.core.data_manager import DataManager
+from src.graph.nodes.ingest import make_ingest_node
 
 
 def test_graph_state_typing():
@@ -14,9 +18,11 @@ def test_graph_state_typing():
         "source": "test",
         "job_id": "123",
         "run_id": "run-001",
-        "current_node": "scrape",
+        "current_node": "ingest",
         "status": "pending",
-        "artifact_refs": {"scrape_state": "data/source/test/123/extracted_data.json"},
+        "artifact_refs": {
+            "ingest_state": "data/jobs/test/123/nodes/ingest/proposed/state.json"
+        },
     }
     assert state["source"] == "test"
     assert state["job_id"] == "123"
@@ -43,7 +49,7 @@ def test_graph_has_expected_nodes():
     app = build_pipeline_graph()
 
     nodes = app.nodes
-    assert "scrape" in nodes
+    assert "ingest" in nodes
     assert "translate" in nodes
     assert "extract_bridge" in nodes
     assert "match_skill" in nodes
@@ -55,7 +61,7 @@ def test_graph_has_expected_nodes():
 def test_pipeline_accepts_valid_source():
     """Verify the pipeline accepts valid source names."""
     from src.graph import build_pipeline_graph, GraphState
-    from src.ai.scraper.main import PROVIDERS
+    from src.scraper.main import PROVIDERS
 
     app = build_pipeline_graph()
 
@@ -79,3 +85,55 @@ def test_graph_checkpointer():
     """Verify the graph has a checkpointer configured."""
     app = build_pipeline_graph()
     assert app.checkpointer is not None
+
+
+def test_ingest_node_reuses_existing_canonical_artifact(tmp_path):
+    manager = DataManager(tmp_path / "data" / "jobs")
+    manager.ingest_raw_job(
+        source="stepstone",
+        job_id="123",
+        payload={"job_title": "Engineer"},
+        content="# Job",
+    )
+    node = make_ingest_node(manager)
+
+    result = asyncio.run(
+        node({"source": "stepstone", "job_id": "123", "artifact_refs": {}})
+    )
+
+    assert result["status"] == "running"
+    assert result["current_node"] == "ingest"
+    assert "ingest_state" in result["artifact_refs"]
+
+
+def test_ingest_node_fetches_single_job_from_source_url(tmp_path, monkeypatch):
+    manager = DataManager(tmp_path / "data" / "jobs")
+    node = make_ingest_node(manager)
+
+    class FakeAdapter:
+        async def fetch_job(self, url: str) -> str:
+            manager.ingest_raw_job(
+                source="stepstone",
+                job_id="555",
+                payload={"job_title": "Fetched"},
+            )
+            return "555"
+
+    monkeypatch.setattr(
+        "src.graph.nodes.ingest.build_providers",
+        lambda data_manager: {"stepstone": FakeAdapter()},
+    )
+
+    result = asyncio.run(
+        node(
+            {
+                "source": "stepstone",
+                "source_url": "https://example.test/job-555",
+                "artifact_refs": {},
+            }
+        )
+    )
+
+    assert result["status"] == "running"
+    assert result["job_id"] == "555"
+    assert manager.has_ingested_job("stepstone", "555") is True

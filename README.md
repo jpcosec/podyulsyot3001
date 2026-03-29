@@ -8,7 +8,7 @@ This repository is a modernized, modular implementation of the job application a
 
 The system is split into four primary "Skills" and a central core, each residing in its own `src/` sub-package:
 
-1.  **🕵️‍♂️ Scraper (`src/ai/scraper`):** Anti-bot resilient job crawling with LLM-rescue fallbacks.
+1.  **🕵️‍♂️ Scraper (`src/scraper`):** Canonical job ingestion via source discovery and single-target fetches.
 2.  **🌐 Translator (`src/tools/translator`):** Modular field and document translation pipeline.
 3.  **⚖️ Match Skill (`src/ai/match_skill`):** LangGraph-native human-in-the-loop matching engine.
 4.  **📄 Document Generation (`src/ai/generate_documents`):** LangGraph-native CV, letter, and email generation from approved matches.
@@ -36,7 +36,7 @@ PLAYWRIGHT_BROWSERS_PATH="0" # or your local path
 
 To run a full pipeline from scratch:
 
-1.  **Scrape:** `python -m src.ai.scraper.main --source stepstone --limit 5`
+1.  **Scrape:** `python -m src.scraper.main --source stepstone --limit 5`
 2.  **Translate:** `python -m src.tools.translator.main --source stepstone`
 3.  **Match:** `python -m src.ai.match_skill.main --source stepstone --job-id <ID>`
 4.  **Generate:** `python -m src.ai.generate_documents.main --source stepstone --job-id <ID>`
@@ -48,7 +48,11 @@ To run a full pipeline from scratch:
 
 Each module provides its own CLI. Refer to the specific module READMEs for detailed arguments:
 
-- [Scraper Documentation](src/ai/scraper/README.md)
+- `python -m src.cli.main api start` — start or reuse the LangGraph API control plane
+- `python -m src.cli.main search --sources xing stepstone --job-query "data scientist" --city berlin` — ingest jobs across multiple sources
+- `python -m src.cli.main run-batch --sources xing stepstone --limit 5 --profile-evidence data/profile.json` — launch pipeline runs for recent ingested jobs
+- `python -m src.cli.main review` — open the explorer TUI against the LangGraph API
+- [Scraper Documentation](src/scraper/README.md)
 - [Translator Documentation](src/tools/translator/README.md)
 - [Match Skill Documentation](src/ai/match_skill/README.md)
 - [Render Pipeline Documentation](src/tools/render/README.md)
@@ -68,7 +72,7 @@ The system communicates via structured Pydantic models:
 
 Detailed guides for extending specific components can be found in:
 - `docs/standards/docs/documentation_and_planning_guide.md`
-- `src/ai/scraper/README.md`
+- `src/scraper/README.md`
 - `src/tools/render/README.md`
 
 ---

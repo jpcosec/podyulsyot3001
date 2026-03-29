@@ -16,7 +16,7 @@ python -m pytest tests/ -q
 python -m pytest tests/test_match_skill.py -q
 
 # Scrape job postings
-python -m src.ai.scraper.main --source stepstone --limit 5
+python -m src.scraper.main --source stepstone --limit 5
 
 # Translate scraped postings
 python -m src.tools.translator.main --source stepstone
@@ -50,7 +50,7 @@ Each skill is a self-contained package under `src/`:
 - `src/ai/match_skill/` — LangGraph-native matching loop: `graph.py` (StateGraph), `contracts.py` (Pydantic I/O), `storage.py` (artifact persistence), `prompt.py`, `main.py`.
 - `src/ai/generate_documents/` — LangGraph document generation nodes: same structure as match_skill.
 - `src/tools/render/` — typed, engine-agnostic PDF/DOCX rendering via Pandoc + Jinja2. Entry point is `RenderCoordinator` in `coordinator.py`; `RenderRequest` in `request.py` is the unified request model.
-- `src/ai/scraper/` — anti-bot job crawling with LLM fallbacks. Outputs `JobPosting` Pydantic models.
+- `src/scraper/` — anti-bot job crawling with LLM fallbacks. Outputs `JobPosting` Pydantic models.
 - `src/tools/translator/` — field and document translation pipeline.
 - `src/review_ui/` — Textual TUI: `app.py` (`MatchReviewApp`), `bus.py` (`MatchBus` connects UI to LangGraph + disk), `screens/`, `widgets/`.
 
