@@ -19,5 +19,5 @@ These are not Stage 7 hardening items. They are follow-up architecture and contr
 ## Linked TODOs
 
 - `src/cli/main.py` — align the unified review flow with the schema-v0 runtime roots if review should stop depending on `output/match_skill`
-- `src/ai/match_skill/main.py` — decide whether the standalone match CLI remains legacy-rooted or gains a schema-v0 mode
-- `src/ai/match_skill/storage.py` — decide whether the default root should remain `output/match_skill` for compatibility or move to `data/jobs`
+- `src/core/ai/match_skill/main.py` — decide whether the standalone match CLI remains legacy-rooted or gains a schema-v0 mode
+- `src/core/ai/match_skill/storage.py` — decide whether the default root should remain `output/match_skill` for compatibility or move to `data/jobs`

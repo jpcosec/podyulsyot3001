@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from src.ai.match_skill.contracts import RequirementInput
+from src.core.ai.match_skill.contracts import RequirementInput
 from src.shared.log_tags import LogTag
 
 logger = logging.getLogger(__name__)

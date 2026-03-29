@@ -57,9 +57,9 @@ Describe the structural shape, then **link to the exact file**. The file is auth
 
 The match skill runs as a LangGraph `StateGraph` with a single human breakpoint.
 
-- Graph definition and node wiring: `src/ai/match_skill/graph.py`
-- State schema: `MatchSkillState` in `src/ai/match_skill/graph.py`
-- Artifact persistence: `MatchArtifactStore` in `src/ai/match_skill/storage.py`
+- Graph definition and node wiring: `src/core/ai/match_skill/graph.py`
+- State schema: `MatchSkillState` in `src/core/ai/match_skill/graph.py`
+- Artifact persistence: `MatchArtifactStore` in `src/core/ai/match_skill/storage.py`
 ```
 
 Never describe a function signature or field list in a README — that belongs in docstrings.
@@ -72,11 +72,11 @@ Describe the *intent* of the interface. Do not copy argument tables — they dri
 ## 🚀 CLI / Usage
 
 Run a match thread from requirement and profile-evidence JSON files.
-Arguments are defined in the `build_parser()` function in `src/ai/match_skill/main.py`.
+Arguments are defined in the `build_parser()` function in `src/core/ai/match_skill/main.py`.
 
 Resume a paused thread after HITL review:
 
-    python -m src.ai.match_skill.main --source <source> --job-id <id> --resume
+    python -m src.core.ai.match_skill.main --source <source> --job-id <id> --resume
 ```
 
 For Settings-driven configuration, point to the Settings class file instead of `--help`.
@@ -88,7 +88,7 @@ The Pydantic model file **is** the contract. Point to it — do not restate fiel
 ```markdown
 ## 📝 Data Contract
 
-Input and output schemas are defined in `src/ai/match_skill/contracts.py`:
+Input and output schemas are defined in `src/core/ai/match_skill/contracts.py`:
 - `RequirementInput` — one requirement from the job posting
 - `MatchEnvelope` — full LLM structured output
 - `ReviewPayload` — what the TUI sends back into the graph

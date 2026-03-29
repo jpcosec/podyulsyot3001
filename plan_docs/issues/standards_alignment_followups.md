@@ -19,5 +19,5 @@ These do not block the current MVP path, but they should be tracked explicitly s
 ## Linked TODOs
 
 - `src/cli/main.py` — decide whether the unified CLI should continue exposing legacy review storage roots or route entirely through schema-v0 runtime abstractions
-- `src/ai/match_skill/README.md` — keep the README aligned with whichever standalone-vs-schema-v0 decision is taken for match/review flows
+- `src/core/ai/match_skill/README.md` — keep the README aligned with whichever standalone-vs-schema-v0 decision is taken for match/review flows
 - `src/review_ui/README.md` — keep the runtime/storage examples aligned with the final review storage decision

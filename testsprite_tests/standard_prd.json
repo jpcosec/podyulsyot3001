@@ -35,15 +35,15 @@
       "name": "Scraper with anti-bot resilience and LLM fallback",
       "description": "Asynchronous scrapers for providers (stepstone, xing, tuberlin) produce JobPosting artifacts and include LLM-based fallback parsing when scraping fails.",
       "user_flows": [
-        "CLI: python -m src.ai.scraper.main --provider stepstone --job-id 12345 --out data/jobs/stepstone/12345/nodes/scrape/proposed/jobposting.json -> Scraper returns 200 and writes JobPosting JSON to output path -> Python: DataManager.load_artifact('data/jobs/stepstone/12345/nodes/scrape/proposed/jobposting.json') -> Returns JobPosting JSON",
-        "CLI: python -m src.ai.scraper.main --provider stepstone --job-id 99999 -> Scraper returns 429 or raises ScrapeError due to bot protection -> Python: src.ai.scraper.fallback_extract_with_llm(raw_html) is invoked -> Returns extracted JobPosting JSON which is then saved by DataManager"
+        "CLI: python -m src.core.ai.scraper.main --provider stepstone --job-id 12345 --out data/jobs/stepstone/12345/nodes/scrape/proposed/jobposting.json -> Scraper returns 200 and writes JobPosting JSON to output path -> Python: DataManager.load_artifact('data/jobs/stepstone/12345/nodes/scrape/proposed/jobposting.json') -> Returns JobPosting JSON",
+        "CLI: python -m src.core.ai.scraper.main --provider stepstone --job-id 99999 -> Scraper returns 429 or raises ScrapeError due to bot protection -> Python: src.core.ai.scraper.fallback_extract_with_llm(raw_html) is invoked -> Returns extracted JobPosting JSON which is then saved by DataManager"
       ]
     },
     {
       "name": "LangGraph-native match_skill subgraph with HITL review",
       "description": "Run requirement-to-skill matching inside a LangGraph subgraph; persist proposed matches, pause at human_review_node, and resume based on reviewer commands (approve/reject/regenerate).",
       "user_flows": [
-        "Python: src.ai.match_skill.graph.build_match_skill_graph() -> LangGraph: await graph.ainvoke() executes the subgraph and returns a MatchArtifact persisted to data/jobs/.../nodes/match_skill/proposed/match.json -> CLI: python -m src.review_ui.app --artifact data/jobs/.../nodes/match_skill/proposed/match.json -> MatchReviewApp loads artifact via MatchBus and displays ReviewSurface",
+        "Python: src.core.ai.match_skill.graph.build_match_skill_graph() -> LangGraph: await graph.ainvoke() executes the subgraph and returns a MatchArtifact persisted to data/jobs/.../nodes/match_skill/proposed/match.json -> CLI: python -m src.review_ui.app --artifact data/jobs/.../nodes/match_skill/proposed/match.json -> MatchReviewApp loads artifact via MatchBus and displays ReviewSurface",
         "Textual TUI: Reviewer issues 'approve' command in MatchReviewApp -> MatchBus sends review decision payload to LangGraph control-plane -> LangGraph node apply_review_decision processes 'approve' and transitions subgraph to generate_documents",
         "Textual TUI: Reviewer issues 'reject' command in MatchReviewApp -> MatchBus sends 'reject' -> LangGraph apply_review_decision records rejection and subgraph terminates with end state (no generate_documents)"
       ]
@@ -52,8 +52,8 @@
       "name": "Deterministic document generation (CV, letter, email)",
       "description": "Generate structured documents from approved matches via LLM chains and typed contracts, producing DocumentDeltas / GeneratedDocuments artifacts for rendering.",
       "user_flows": [
-        "Python: src.ai.generate_documents.graph.build_default_generate_documents_chain() -> LangChain/LangGraph: await chain.ainvoke() returns GeneratedDocuments artifact saved to data/jobs/.../nodes/generate_documents/approved/generated_documents.json -> Python: DataManager.load_artifact(.../generated_documents.json) -> Returns GeneratedDocuments",
-        "Python: src.ai.generate_documents.graph.build_default_generate_documents_chain() invoked with insufficient context -> Chain returns status 'failed' and error payload -> GeneratedDocuments are not produced and pipeline terminates"
+        "Python: src.core.ai.generate_documents.graph.build_default_generate_documents_chain() -> LangChain/LangGraph: await chain.ainvoke() returns GeneratedDocuments artifact saved to data/jobs/.../nodes/generate_documents/approved/generated_documents.json -> Python: DataManager.load_artifact(.../generated_documents.json) -> Returns GeneratedDocuments",
+        "Python: src.core.ai.generate_documents.graph.build_default_generate_documents_chain() invoked with insufficient context -> Chain returns status 'failed' and error payload -> GeneratedDocuments are not produced and pipeline terminates"
       ]
     },
     {
@@ -141,7 +141,7 @@
       ]
     },
     "project_structure": {
-      "src/ai/scraper/": {
+      "src/core/ai/scraper/": {
         "description": "Job portal web scraping with anti-bot resilience and LLM fallbacks",
         "entry_point": "main.py",
         "providers": [
@@ -152,27 +152,27 @@
         "key_contract": "JobPosting (models.py)",
         "async": true
       },
-      "src/ai/match_skill/": {
+      "src/core/ai/match_skill/": {
         "description": "LangGraph-native requirement matching with HITL review loop",
         "entry_point": "main.py",
         "graph": "build_match_skill_graph() in graph.py",
         "contracts": "RequirementInput, MatchEnvelope, ReviewPayload, ReviewSurface (contracts.py)",
         "storage": "MatchArtifactStore (storage.py)"
       },
-      "src/ai/generate_documents/": {
+      "src/core/ai/generate_documents/": {
         "description": "LLM document generation (CV, letter, email) from approved matches",
         "entry_point": "main.py",
         "graph": "build_default_generate_documents_chain() in graph.py",
         "contracts": "DocumentDeltas, GeneratedDocuments, CVExperienceInjection (contracts.py)"
       },
-      "src/tools/translator/": {
+      "src/core/tools/translator/": {
         "description": "Multi-language translation pipeline with chunking and retries",
         "entry_point": "main.py",
         "providers": [
           "google"
         ]
       },
-      "src/tools/render/": {
+      "src/core/tools/render/": {
         "description": "Typed engine-agnostic document rendering (PDF/DOCX via Pandoc + Jinja2)",
         "entry_point": "main.py",
         "coordinator": "RenderCoordinator (coordinator.py)",
@@ -300,8 +300,8 @@
       "config": "langgraph.json",
       "graphs": [
         "pipeline: src.graph:create_studio_graph",
-        "match_skill: src.ai.match_skill.graph:create_studio_graph",
-        "generate_documents: src.ai.generate_documents.graph:create_studio_graph"
+        "match_skill: src.core.ai.match_skill.graph:create_studio_graph",
+        "generate_documents: src.core.ai.generate_documents.graph:create_studio_graph"
       ]
     }
   }

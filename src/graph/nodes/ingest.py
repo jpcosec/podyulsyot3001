@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from src.core.data_manager import DataManager
@@ -48,7 +49,7 @@ def _artifact_refs(
 def make_ingest_node(data_manager: DataManager):
     """Create the ingest node adapter for canonical raw job artifacts."""
 
-    async def ingest_node(state: GraphState) -> dict:
+    def ingest_node(state: GraphState) -> dict:
         source = state["source"]
         job_id = state.get("job_id")
         source_url = state.get("source_url")
@@ -77,7 +78,7 @@ def make_ingest_node(data_manager: DataManager):
 
             providers = build_providers(data_manager)
             adapter = providers[source]
-            fetched_job_id = await adapter.fetch_job(source_url)
+            fetched_job_id = asyncio.run(adapter.fetch_job(source_url))
             if job_id and fetched_job_id != job_id:
                 raise ValueError(
                     f"source_url resolved to job_id {fetched_job_id}, expected {job_id}"

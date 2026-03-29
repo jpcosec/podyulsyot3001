@@ -39,7 +39,7 @@ Four concrete improvements, in order of implementation cost:
 Every `contracts.py` defines Pydantic models. Export them to static JSON Schema files so an agent (or any consumer) can validate data between modules without importing Python.
 
 ```
-src/ai/match_skill/schemas/
+src/core/ai/match_skill/schemas/
   RequirementInput.schema.json
   MatchEnvelope.schema.json
   ReviewPayload.schema.json

@@ -66,9 +66,13 @@ class JobPosting(BaseModel):
     company_size: Optional[str] = Field(
         default=None, description="Company size (e.g. '1001-5000 employees')"
     )
-    posted_date: str = Field(
-        ...,
-        description="Date of publication or time elapsed (e.g. 'vor 1 Woche', '26.03.2026')",
+    posted_date: Optional[str] = Field(
+        default=None,
+        description="Date of publication when available (e.g. '26.03.2026' or an ISO timestamp after postprocessing)",
+    )
+    days_ago: Optional[str] = Field(
+        default=None,
+        description="Relative publication age when available (e.g. '5 days ago', 'vor 1 Woche')",
     )
     application_deadline: Optional[str] = Field(
         default=None, description="Deadline to apply"

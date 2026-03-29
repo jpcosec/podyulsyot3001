@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 from typing import Any, Iterable
 
-from src.ai.match_skill.storage import MatchArtifactStore
+from src.core.ai.match_skill.storage import MatchArtifactStore
 from src.core import DataManager
 from src.core.api_client import LangGraphAPIClient, LangGraphConnectionError
 from src.shared.log_tags import LogTag
@@ -349,7 +349,7 @@ async def _run_batch(args: argparse.Namespace) -> int:
 
 
 def _run_translate(args: argparse.Namespace) -> int:
-    from src.tools.translator.main import main as translator_main
+    from src.core.tools.translator.main import main as translator_main
 
     argv = ["--source", args.source, "--target-lang", args.target_lang]
     if args.force:
@@ -375,7 +375,7 @@ async def _run_match(args: argparse.Namespace) -> int:
 
 
 def _run_generate(args: argparse.Namespace) -> int:
-    from src.ai.generate_documents.main import main as generate_main
+    from src.core.ai.generate_documents.main import main as generate_main
 
     argv = ["--source", args.source, "--job-id", args.job_id]
     if args.profile:
@@ -384,7 +384,7 @@ def _run_generate(args: argparse.Namespace) -> int:
 
 
 def _run_render(args: argparse.Namespace) -> int:
-    from src.tools.render.main import main as render_main
+    from src.core.tools.render.main import main as render_main
 
     argv = [
         args.document,
@@ -415,7 +415,10 @@ def _run_review(args: argparse.Namespace) -> int:
 
     config: dict[str, Any] = {"configurable": {}}
     if args.source and args.job_id:
-        config["configurable"]["thread_id"] = f"{args.source}_{args.job_id}"
+        config["configurable"]["thread_id"] = LangGraphAPIClient.thread_id_for(
+            args.source,
+            args.job_id,
+        )
 
     bus = MatchBus(store=store, client=client, config=config)
     review_app = MatchReviewApp(bus=bus, source=args.source, job_id=args.job_id)

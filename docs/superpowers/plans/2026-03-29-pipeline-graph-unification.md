@@ -14,7 +14,7 @@
 
 | Action | File | Change |
 |--------|------|--------|
-| Modify | `src/ai/match_skill/graph.py` | Replace `Command`-based routing with `add_conditional_edges`; `apply_review_decision` returns plain dict |
+| Modify | `src/core/ai/match_skill/graph.py` | Replace `Command`-based routing with `add_conditional_edges`; `apply_review_decision` returns plain dict |
 | Modify | `src/core/state.py` | Add `requirements` and `profile_evidence` fields to `GraphState` |
 | Modify | `src/graph/nodes/extract_bridge.py` | Return `requirements` and `profile_evidence` in state update |
 | Modify | `src/graph/__init__.py` | Embed match_skill as compiled subgraph; remove wrapper import; remove TODO comment |
@@ -29,7 +29,7 @@
 ### Task 1: Fix `apply_review_decision` — `Command` → `add_conditional_edges`
 
 **Files:**
-- Modify: `src/ai/match_skill/graph.py`
+- Modify: `src/core/ai/match_skill/graph.py`
 
 The `apply_review_decision` node currently returns `Command(goto=...)` which LangGraph Studio cannot render as static edges. Replace it with a plain state-returning function and a routing function wired via `add_conditional_edges`.
 
@@ -39,7 +39,7 @@ The `apply_review_decision` node currently returns `Command(goto=...)` which Lan
 # In tests/test_match_skill.py — add this test
 def test_apply_review_decision_has_conditional_edges():
     """apply_review_decision must route via edges, not Command, so Studio sees topology."""
-    from src.ai.match_skill.graph import build_match_skill_graph
+    from src.core.ai.match_skill.graph import build_match_skill_graph
     from langgraph.checkpoint.memory import InMemorySaver
 
     app = build_match_skill_graph(checkpointer=InMemorySaver())
@@ -58,7 +58,7 @@ Expected: FAIL — `apply_review_decision` not in outgoing edges
 
 - [ ] **Step 1.2: Replace `Command` return type with plain dict in `apply_review_decision`**
 
-In `src/ai/match_skill/graph.py`, change `_make_apply_review_decision_node`:
+In `src/core/ai/match_skill/graph.py`, change `_make_apply_review_decision_node`:
 
 ```python
 def _make_apply_review_decision_node(store: MatchArtifactStore):
@@ -111,7 +111,7 @@ Also remove the `Command` and `Literal` imports that are no longer used in this 
 
 - [ ] **Step 1.3: Add the routing function and `add_conditional_edges` in `build_match_skill_graph`**
 
-Add this function near the other routing helpers at the bottom of `src/ai/match_skill/graph.py`:
+Add this function near the other routing helpers at the bottom of `src/core/ai/match_skill/graph.py`:
 
 ```python
 def _route_after_apply_review(state: MatchSkillState) -> str:
@@ -163,7 +163,7 @@ Expected: all existing tests pass
 - [ ] **Step 1.6: Commit**
 
 ```bash
-git add src/ai/match_skill/graph.py tests/test_match_skill.py
+git add src/core/ai/match_skill/graph.py tests/test_match_skill.py
 git commit -m "refactor: replace Command routing with add_conditional_edges in match_skill"
 ```
 
@@ -422,8 +422,8 @@ from typing import Any
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 
-from src.ai.match_skill.graph import build_match_skill_graph
-from src.ai.match_skill.storage import MatchArtifactStore
+from src.core.ai.match_skill.graph import build_match_skill_graph
+from src.core.ai.match_skill.storage import MatchArtifactStore
 from src.core.data_manager import DataManager
 from src.core.state import GraphState
 from src.graph.nodes.extract_bridge import extract_requirements_from_job_posting
@@ -584,12 +584,12 @@ git commit -m "refactor: embed match_skill as native LangGraph subgraph in pipel
 ### Task 4: Clean up deferred markers and update docs
 
 **Files:**
-- Modify: `src/ai/match_skill/graph.py` (remove TODO comment)
+- Modify: `src/core/ai/match_skill/graph.py` (remove TODO comment)
 - Modify: `src/graph/__init__.py` (remove TODO comment — already done by rewrite)
 - Modify: `future_docs/issues/pipeline_graph_unification.md` (mark resolved)
 - Modify: `changelog.md`
 
-- [ ] **Step 4.1: Remove the remaining `TODO(future)` comment from `src/ai/match_skill/graph.py`**
+- [ ] **Step 4.1: Remove the remaining `TODO(future)` comment from `src/core/ai/match_skill/graph.py`**
 
 The comment above `apply_review_decision` was added in the docs commit. It should now be removed since the issue is resolved.
 
@@ -623,6 +623,6 @@ Expected: all pass
 - [ ] **Step 4.5: Final commit**
 
 ```bash
-git add src/ai/match_skill/graph.py future_docs/issues/pipeline_graph_unification.md changelog.md
+git add src/core/ai/match_skill/graph.py future_docs/issues/pipeline_graph_unification.md changelog.md
 git commit -m "chore: remove resolved TODOs and update changelog for graph unification"
 ```

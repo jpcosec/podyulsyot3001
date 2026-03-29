@@ -9,8 +9,10 @@ from __future__ import annotations
 import logging
 import os
 import re
+import signal
 import subprocess
 import time
+import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -111,7 +113,7 @@ class LangGraphAPIClient:
         cls,
         *,
         port: int = 8124,
-        timeout_seconds: float = 15.0,
+        timeout_seconds: float = 45.0,
         log_file: str | Path = "logs/langgraph_api.log",
     ) -> str:
         """Ensure a LangGraph API server is reachable.
@@ -121,6 +123,8 @@ class LangGraphAPIClient:
         candidate = cls()
         if candidate.is_healthy():
             return candidate.url
+
+        cls._kill_stale_dev_server(port)
 
         log_path = Path(log_file)
         log_path.parent.mkdir(parents=True, exist_ok=True)
@@ -135,7 +139,15 @@ class LangGraphAPIClient:
         )
         with log_path.open("ab") as stream:
             subprocess.Popen(
-                ["langgraph", "dev", "--port", str(port)],
+                [
+                    "langgraph",
+                    "dev",
+                    "--config",
+                    "langgraph.json",
+                    "--no-browser",
+                    "--port",
+                    str(port),
+                ],
                 stdout=stream,
                 stderr=subprocess.STDOUT,
                 env=env,
@@ -157,6 +169,32 @@ class LangGraphAPIClient:
 
         raise LangGraphConnectionError(f"Timed out waiting for LangGraph API at {url}")
 
+    @staticmethod
+    def _kill_stale_dev_server(port: int) -> None:
+        try:
+            output = subprocess.check_output(["lsof", f"-ti:{port}"], text=True).strip()
+        except Exception:
+            return
+
+        if not output:
+            return
+
+        for line in output.splitlines():
+            try:
+                pid = int(line.strip())
+            except ValueError:
+                continue
+            try:
+                os.kill(pid, signal.SIGTERM)
+                logger.warning(
+                    "%s Terminated stale LangGraph process on port %s (pid=%s)",
+                    LogTag.WARN,
+                    port,
+                    pid,
+                )
+            except ProcessLookupError:
+                continue
+
     def is_healthy(self) -> bool:
         try:
             with httpx.Client(timeout=1.0) as client:
@@ -164,6 +202,11 @@ class LangGraphAPIClient:
                 return resp.status_code == 200
         except Exception:
             return False
+
+    @staticmethod
+    def thread_id_for(source: str, job_id: str) -> str:
+        """Return the deterministic LangGraph thread UUID for one job."""
+        return str(uuid.uuid5(uuid.NAMESPACE_URL, f"postulator:{source}:{job_id}"))
 
     async def list_jobs(self, limit: int = 50) -> List[Dict[str, Any]]:
         """List and enrich all threads managed by the API.
@@ -290,7 +333,7 @@ class LangGraphAPIClient:
         initial_input: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Start a new assistant run for a specific job thread."""
-        thread_id = f"{source}_{job_id}"
+        thread_id = self.thread_id_for(source, job_id)
         logger.info(f"  [⚡] Invoking {assistant_id} for {source}/{job_id}...")
         payload = {
             "source": source,

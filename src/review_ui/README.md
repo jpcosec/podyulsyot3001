@@ -15,7 +15,7 @@ A multi-screen Textual application decoupled from the backend via an async bus.
 - **Review Screen**: `src/review_ui/screens/review_screen.py`
   - Focused HITL gate for approving/rejecting match proposals.
 - **Communication Bus (`MatchBus`)**: `src/review_ui/bus.py`
-  - Bridges TUI events to the `LangGraphAPIClient` or local checkpoints.
+  - Bridges TUI events to the `LangGraphAPIClient` and persisted review artifacts.
 
 ---
 
@@ -28,6 +28,8 @@ The TUI uses the LangGraph API as its only stateful control plane. `postulator r
 ---
 
 ## 🚀 CLI / UI / Usage
+
+Launch the workstation. The CLI parser and direct review entry points live in `src/cli/main.py`.
 
 Launch the workstation:
 
@@ -50,16 +52,19 @@ Keyboard bindings (Review):
 
 ## 📝 Data Contract
 
-- **State Discovery**: Consumes thread metadata from `LangGraphAPIClient.list_jobs()`.
-- **HITL Payload**: `ReviewPayload` sent back to the graph to resume execution.
+The review UI depends on typed contracts from the match skill module and API metadata from the control plane:
+
+- `ReviewSurface` and `ReviewPayload` live in `src/core/ai/match_skill/contracts.py`
+- thread/job metadata comes from `LangGraphAPIClient.list_jobs()` in `src/core/api_client.py`
+- persisted review artifacts live under `data/jobs/<source>/<job_id>/nodes/match_skill/review/`
 
 ---
 
 ## 🛠️ How to Add / Extend
 
-1. **New Screen**: Add to `src/review_ui/screens/` and register in `app.py`.
-2. **New Column in Explorer**: Update `_populate_table` in `explorer_screen.py`.
-3. **Advanced Filtering**: Implement a `FilterWidget` in `widgets/` and bind it to the Explorer's data table.
+1. **New Screen**: Add it under `src/review_ui/screens/` and register it from `src/review_ui/app.py`.
+2. **New Explorer Metadata**: Extend `LangGraphAPIClient.list_jobs()` in `src/core/api_client.py`, then render it in `src/review_ui/screens/explorer_screen.py`.
+3. **New Review Actions**: Route them through `MatchBus` in `src/review_ui/bus.py`; do not mutate LangGraph state locally.
 
 ---
 
@@ -85,6 +90,7 @@ python -m src.cli.main api start
 
 ## 🚑 Troubleshooting
 
-- **Explorer shows no jobs**: Ensure you have launched at least one job through the API-backed CLI, for example `python -m src.cli.main run-batch --sources xing --limit 5`.
-- **Port Conflict**: If the TUI connects to the wrong API, explicitly set `export LANGGRAPH_API_URL="http://localhost:XXXX"`.
-- **API Not Detected**: Check `logs/langgraph_api.log` if `postulator.sh` failed to start the server.
+- **Explorer shows no jobs** -> No API-backed runs exist yet. Start them with `python -m src.cli.main run-batch --sources xing --limit 5`, then reopen the TUI.
+- **Direct review mode fails with missing thread** -> The thread was never created through the API, or the `source/job_id` pair is wrong. Verify it appears in explorer mode first.
+- **TUI connects to the wrong server** -> Export `LANGGRAPH_API_URL="http://localhost:XXXX"` before launching `postulator review`.
+- **API fails to start from the helper script** -> Inspect `logs/langgraph_api.log` and retry with `python -m src.cli.main api start` to isolate the control-plane startup path.

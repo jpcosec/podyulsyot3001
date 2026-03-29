@@ -99,9 +99,9 @@ def test_process_results_persists_listing_and_raw_artifacts(tmp_path) -> None:
     assert (ingest_dir / "listing_page.html").exists()
     assert (ingest_dir / "listing_page.cleaned.html").exists()
 
-    listing_payload = json.loads((ingest_dir / "listing.json").read_text())
+    listing_payload = manager.read_json_path(ingest_dir / "listing.json")
     assert listing_payload["listing_data"]["posted_date"] == "vor 2 Tagen"
-    state_payload = json.loads((ingest_dir / "state.json").read_text())
+    state_payload = manager.read_json_path(ingest_dir / "state.json")
     assert state_payload["listing_case"]["listed_at_relative"] == "vor 2 Tagen"
     assert (
         state_payload["posted_date"] == state_payload["listing_case"]["listed_at_iso"]

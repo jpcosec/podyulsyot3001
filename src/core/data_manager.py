@@ -8,6 +8,7 @@ plus its own internal metadata model.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 from datetime import datetime, timezone
@@ -119,6 +120,40 @@ class DataManager:
         if not resolved.is_relative_to(root):
             raise ValueError("relative_path escapes job root")
         return resolved
+
+    def read_json_path(self, path: str | Path) -> dict:
+        return json.loads(Path(path).read_text(encoding="utf-8"))
+
+    def write_json_path(self, path: str | Path, data: dict) -> Path:
+        target = Path(path)
+        self._write_json_path(target, data)
+        return target
+
+    def read_text_path(self, path: str | Path) -> str:
+        return Path(path).read_text(encoding="utf-8")
+
+    def write_text_path(self, path: str | Path, content: str) -> Path:
+        target = Path(path)
+        self._write_text_path(target, content)
+        return target
+
+    def read_bytes_path(self, path: str | Path) -> bytes:
+        return Path(path).read_bytes()
+
+    def ensure_dir(self, path: str | Path) -> Path:
+        target = Path(path)
+        target.mkdir(parents=True, exist_ok=True)
+        return target
+
+    def write_bytes_path(self, path: str | Path, content: bytes) -> Path:
+        target = Path(path)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(content)
+        return target
+
+    def sha256_path(self, path: str | Path) -> str:
+        digest = hashlib.sha256(self.read_bytes_path(path)).hexdigest()
+        return f"sha256:{digest}"
 
     def ensure_job(self, source: str, job_id: str) -> JobMetadata:
         root = self.job_root(source, job_id)

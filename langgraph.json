@@ -4,7 +4,7 @@
   ],
   "graphs": {
     "pipeline": "src.graph:create_studio_graph",
-    "match_skill": "src.ai.match_skill.graph:create_studio_graph",
-    "generate_documents": "src.ai.generate_documents.graph:create_studio_graph"
+    "match_skill": "src.core.ai.match_skill.graph:create_studio_graph",
+    "generate_documents": "src.core.ai.generate_documents.graph:create_studio_graph"
   }
 }

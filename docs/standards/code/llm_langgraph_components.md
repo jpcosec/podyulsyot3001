@@ -2,7 +2,7 @@
 
 Standards for modules built around LangGraph orchestration and LangChain model invocation. Extends `basic.md`.
 
-Reference implementation: `src/ai/match_skill/`, `src/ai/generate_documents/`.
+Reference implementation: `src/core/ai/match_skill/`, `src/core/ai/generate_documents/`.
 
 ---
 
@@ -36,6 +36,13 @@ Every node in a LangGraph module fits one of these types. Name them accordingly:
 | **Breakpoint anchor** (`*_review_node`) | Pause the graph for human input | Intentionally thin — exists only as an interrupt target |
 | **Review/routing** (`apply_*`) | Validate review payload, hash-check, route via `Command` | Hash validation mandatory. Safe-return if payload absent. |
 | **Context prep** (`prepare_*`) | Merge patch evidence, compute regeneration scope, clear stale inputs | Must confirm routing condition before executing |
+
+For this repository's LangGraph runtime, graph nodes are expected to be synchronous by default.
+
+Rules:
+- Prefer `def node(state) -> dict` over `async def` for graph nodes.
+- Keep blocking file I/O, persistence, rendering, and other deterministic work in sync helpers instead of mixing sync operations into async nodes.
+- Only introduce async nodes when the node's core work is truly async end-to-end and cannot reasonably be handled behind a sync boundary.
 
 ---
 
@@ -117,7 +124,7 @@ review/rounds/round_NNN/    ← immutable per-round snapshots
 Rules:
 - Round directories are immutable once written
 - `approved/state.json` is overwritten only on approval
-- All persisted payloads should carry a `schema_version` field (see `future_docs/match_skill_hardening_roadmap.md`)
+- All persisted payloads should carry a `schema_version` field (see `future_docs/issues/match_skill_hardening_roadmap.md`)
 - Hash the approved artifact and store the hash in state for review validation
 
 ---

@@ -9,8 +9,8 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from src.ai.match_skill.contracts import ReviewPayload, ReviewSurface
-from src.ai.match_skill.storage import MatchArtifactStore
+from src.core.ai.match_skill.contracts import ReviewPayload, ReviewSurface
+from src.core.ai.match_skill.storage import MatchArtifactStore
 from src.core.api_client import LangGraphAPIClient
 import logging
 

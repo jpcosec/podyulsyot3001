@@ -100,7 +100,7 @@ Suggested files:
 
 ### Suggested Steps
 
-1. introduce constants for schema versions in `src/ai/match_skill/storage.py`
+1. introduce constants for schema versions in `src/core/ai/match_skill/storage.py`
 2. write schema version into all persisted payloads
 3. update loaders to validate or at least tolerate the version field
 4. document version semantics in the product guide

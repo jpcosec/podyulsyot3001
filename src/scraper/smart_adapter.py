@@ -463,6 +463,8 @@ class SmartScraperAdapter(ABC):
         merged = dict(payload or {})
         if listing_case:
             merged["listing_case"] = listing_case
+            if listing_case.get("listed_at_relative") and not merged.get("days_ago"):
+                merged["days_ago"] = listing_case["listed_at_relative"]
             if listing_case.get("listed_at_iso"):
                 merged["posted_date"] = listing_case["listed_at_iso"]
         return merged

@@ -19,10 +19,10 @@ python -m pytest tests/test_match_skill.py -q
 python -m src.scraper.main --source stepstone --limit 5
 
 # Translate scraped postings
-python -m src.tools.translator.main --source stepstone
+python -m src.core.tools.translator.main --source stepstone
 
 # Run match skill (start a new thread)
-python -m src.ai.match_skill.main \
+python -m src.core.ai.match_skill.main \
   --source stepstone \
   --job-id <ID> \
   --requirements <path/to/requirements.json> \
@@ -32,13 +32,13 @@ python -m src.ai.match_skill.main \
 python -m src.cli.main review --source stepstone --job-id <ID>
 
 # Render CV to PDF
-python -m src.tools.render.main cv \
+python -m src.core.tools.render.main cv \
   --source stepstone \
   --job-id <ID> \
   --language en
 
 # Render motivation letter
-python -m src.tools.render.main letter --source <path/to/data.json> --language de
+python -m src.core.tools.render.main letter --source <path/to/data.json> --language de
 ```
 
 ## Architecture
@@ -47,16 +47,16 @@ python -m src.tools.render.main letter --source <path/to/data.json> --language d
 
 Each skill is a self-contained package under `src/`:
 
-- `src/ai/match_skill/` — LangGraph-native matching loop: `graph.py` (StateGraph), `contracts.py` (Pydantic I/O), `storage.py` (artifact persistence), `prompt.py`, `main.py`.
-- `src/ai/generate_documents/` — LangGraph document generation nodes: same structure as match_skill.
-- `src/tools/render/` — typed, engine-agnostic PDF/DOCX rendering via Pandoc + Jinja2. Entry point is `RenderCoordinator` in `coordinator.py`; `RenderRequest` in `request.py` is the unified request model.
+- `src/core/ai/match_skill/` — LangGraph-native matching loop: `graph.py` (StateGraph), `contracts.py` (Pydantic I/O), `storage.py` (artifact persistence), `prompt.py`, `main.py`.
+- `src/core/ai/generate_documents/` — LangGraph document generation nodes: same structure as match_skill.
+- `src/core/tools/render/` — typed, engine-agnostic PDF/DOCX rendering via Pandoc + Jinja2. Entry point is `RenderCoordinator` in `coordinator.py`; `RenderRequest` in `request.py` is the unified request model.
 - `src/scraper/` — anti-bot job crawling with LLM fallbacks. Outputs `JobPosting` Pydantic models.
-- `src/tools/translator/` — field and document translation pipeline.
+- `src/core/tools/translator/` — field and document translation pipeline.
 - `src/review_ui/` — Textual TUI: `app.py` (`MatchReviewApp`), `bus.py` (`MatchBus` connects UI to LangGraph + disk), `screens/`, `widgets/`.
 
 ### Control plane vs. data plane
 
-**Control plane** (`MatchSkillState` TypedDict in `src/ai/match_skill/graph.py`): carries routing signals and refs — `source`, `job_id`, requirements, profile evidence, review payload, match result. State is intentionally thin; heavy payloads stay on disk.
+**Control plane** (`MatchSkillState` TypedDict in `src/core/ai/match_skill/graph.py`): carries routing signals and refs — `source`, `job_id`, requirements, profile evidence, review payload, match result. State is intentionally thin; heavy payloads stay on disk.
 
 **Data plane** (disk under `data/jobs/<source>/<job_id>/nodes/match_skill/`): `MatchArtifactStore` in `storage.py` manages immutable round snapshots (JSON), current review surface, and approved payloads.
 
@@ -68,7 +68,7 @@ Review node routes via `Command`: `approve` (continue), `request_regeneration` (
 
 ### Render pipeline
 
-`RenderRequest` → `RenderCoordinator` → resolves document adapter + style manifest + language bundle → `LatexRenderer` (Pandoc) → output file. Document types (`cv`, `letter`) and engines (`tex`, `docx`) are registered in `src/tools/render/registry.py`.
+`RenderRequest` → `RenderCoordinator` → resolves document adapter + style manifest + language bundle → `LatexRenderer` (Pandoc) → output file. Document types (`cv`, `letter`) and engines (`tex`, `docx`) are registered in `src/core/tools/render/registry.py`.
 
 ### HITL review loop
 
@@ -87,7 +87,7 @@ Review node routes via `Command`: `approve` (continue), `request_regeneration` (
 
 ### Failure model
 
-Nodes must fail closed — no silent fallback-to-success. LLM calls use structured output (LangChain `with_structured_output`). Missing credentials fall back to a demo chain in dev only (explicit `os.environ.get` guard in `src/ai/generate_documents/graph.py`).
+Nodes must fail closed — no silent fallback-to-success. LLM calls use structured output (LangChain `with_structured_output`). Missing credentials fall back to a demo chain in dev only (explicit `os.environ.get` guard in `src/core/ai/generate_documents/graph.py`).
 
 ## Key documentation
 

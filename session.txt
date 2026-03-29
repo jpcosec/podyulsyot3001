@@ -4052,7 +4052,7 @@ Let me check the current state to confirm what's committed vs. pending:
 ?? portfolio.html
 ?? skills.html
 ?? skills/
-?? src/tools/
+?? src/core/tools/
 ?? workspace/
 
 ```
@@ -4148,16 +4148,16 @@ _Thinking:_
 
 There's no `render` directory in `src/`. The summary I provided was describing a plan that was discussed but never implemented in this workspace. 
 
-Wait - I notice there's a `src/tools/` directory that appeared (marked with `??` in git status). Maybe there's something there?
+Wait - I notice there's a `src/core/tools/` directory that appeared (marked with `??` in git status). Maybe there's something there?
 
-Actually wait, I see in the git status that `src/tools/` is untracked. Let me check what's in there.
+Actually wait, I see in the git status that `src/core/tools/` is untracked. Let me check what's in there.
 
 **Tool: bash**
 
 **Input:**
 ```json
 {
-  "command": "ls -la src/tools/",
+  "command": "ls -la src/core/tools/",
   "description": "Check src/tools directory"
 }
 ```
@@ -4216,15 +4216,15 @@ The user wants me to show the current working directory.
 
 _Thinking:_
 
-So we're in `/home/jp/phd-workspaces/dev`. There's a `src/tools/render` directory (not `src/render`). Let me check that.
+So we're in `/home/jp/phd-workspaces/dev`. There's a `src/core/tools/render` directory (not `src/render`). Let me check that.
 
 **Tool: bash**
 
 **Input:**
 ```json
 {
-  "command": "ls -la src/tools/render/",
-  "description": "Check src/tools/render directory"
+  "command": "ls -la src/core/tools/render/",
+  "description": "Check src/core/tools/render directory"
 }
 ```
 
@@ -4248,24 +4248,24 @@ drwxrwxr-x 7 jp jp 4096 Mar 27 20:21 ..
 
 _Thinking:_
 
-Ah, so `src/render` doesn't exist - but there's a smaller `src/tools/render` which contains just a few files. The summary I was given described a much more elaborate refactoring that was apparently planned but never committed.
+Ah, so `src/render` doesn't exist - but there's a smaller `src/core/tools/render` which contains just a few files. The summary I was given described a much more elaborate refactoring that was apparently planned but never committed.
 
 Let me show the user what's in these files to clarify.
 
-The full `src/render` doesn't exist. There's only a minimal `src/tools/render/` with a few stub files:
+The full `src/render` doesn't exist. There's only a minimal `src/core/tools/render/` with a few stub files:
 
 **Tool: read**
 
 **Input:**
 ```json
 {
-  "filePath": "/home/jp/phd-workspaces/dev/src/tools/render/__init__.py"
+  "filePath": "/home/jp/phd-workspaces/dev/src/core/tools/render/__init__.py"
 }
 ```
 
 **Output:**
 ```
-<path>/home/jp/phd-workspaces/dev/src/tools/render/__init__.py</path>
+<path>/home/jp/phd-workspaces/dev/src/core/tools/render/__init__.py</path>
 <type>file</type>
 <content>1: """Rendering tools namespace."""
 

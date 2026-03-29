@@ -31,7 +31,7 @@ export LANGGRAPH_API_URL="http://localhost:8124"
 
 ## 🚀 CLI / Usage
 
-Most core features are consumed by the CLI or TUI. 
+Most core features are consumed by the unified CLI and the review TUI. The authoritative command definitions live in `src/cli/main.py`.
 
 Direct usage of the API client:
 
@@ -46,15 +46,19 @@ jobs = await client.list_jobs()
 
 ## 📝 Data Contract
 
-- `ThreadState` — Extracted from LangGraph state dicts to provide clean metadata (`job_id`, `status`, `source`).
-- `Checkpoint` — Pydantic-validated representation of point-in-time graph state.
+The core layer exposes infrastructure contracts rather than product schemas:
+
+- job artifact persistence and refs are defined by `src/core/data_manager.py` and documented in `docs/runtime/data_management.md`
+- profile base data is validated by `src/core/profile.py`
+- LangGraph thread metadata is normalized by `LangGraphAPIClient` for CLI/TUI consumption
 
 ---
 
 ## 🛠️ How to Add / Extend
 
-1. **New API Action**: Add a method to `LangGraphAPIClient` using the underlying `self.client` (LangGraph SDK).
-2. **New Data Path**: Register the path in `DataManager` to ensure it is governed by the workspace standards.
+1. **New API Action**: Add a method to `LangGraphAPIClient` using the underlying SDK client and keep CLI/TUI state mutations API-only.
+2. **New Data Path**: Register the path in `DataManager` and update `docs/runtime/data_management.md`.
+3. **New Profile Surface**: Add validation to `src/core/profile.py` rather than leaving raw profile blobs in callers.
 
 ---
 
@@ -63,13 +67,12 @@ jobs = await client.list_jobs()
 Check the health of the API:
 
 ```bash
-# Via postulator.sh health check logic
-lsof -i:8124
+python -m src.cli.main api status
 ```
 
 ---
 
 ## 🚑 Troubleshooting
 
-- **`[❌] LangGraph API not found`**: Ensure `langgraph dev` is running. `postulator.sh` will attempt to start it on port 8124 if missing.
-- **Permission Denied (ps scan)**: Ensure the user has permissions to see their own processes for port autodetection.
+- **`LangGraph API not reachable`** -> Start it with `python -m src.cli.main api start` and confirm `python -m src.cli.main api status` returns a URL.
+- **Permission denied during process scan** -> Ensure the current user can inspect their own processes, or set `LANGGRAPH_API_URL` explicitly.

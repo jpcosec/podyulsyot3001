@@ -17,7 +17,7 @@ from textual.reactive import reactive
 from textual.widget import Widget
 from textual.widgets import Button, Input, Label, Select, Static
 
-from src.ai.match_skill.contracts import ProfileEvidence, ReviewDecision, ReviewSurfaceItem
+from src.core.ai.match_skill.contracts import ProfileEvidence, ReviewDecision, ReviewSurfaceItem
 
 # Colours mapped to match statuses and decisions
 _STATUS_COLOUR: dict[str, str] = {

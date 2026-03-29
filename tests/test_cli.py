@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from src.cli.main import _build_parser, _newest_jobs_for_sources
+from src.core.api_client import LangGraphAPIClient
 from src.core.data_manager import DataManager
 
 
@@ -45,3 +46,11 @@ def test_newest_jobs_for_sources_returns_most_recent_per_source(tmp_path) -> Non
 
     assert ("xing", "2") in jobs
     assert ("stepstone", "9") in jobs
+
+
+def test_thread_id_for_is_deterministic_uuid() -> None:
+    first = LangGraphAPIClient.thread_id_for("xing", "123")
+    second = LangGraphAPIClient.thread_id_for("xing", "123")
+
+    assert first == second
+    assert len(first) == 36

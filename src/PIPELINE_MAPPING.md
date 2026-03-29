@@ -37,20 +37,20 @@ review_match ──(approve)──→ build_application_context ──(approve)�
 | Old Node | New Module | Purpose |
 |----------|-----------|---------|
 | `scrape` | `src/scraper/` | Job posting ingestion |
-| `translate_if_needed` | `src/tools/translator/` | Field/document translation |
+| `translate_if_needed` | `src/core/tools/translator/` | Field/document translation |
 | `extract_understand` | *(scraper output)* | LLM extraction from scraped HTML |
-| `match` | `src/ai/match_skill/` | **LangGraph** - Requirement matching with HITL |
-| `review_match` | `src/ai/match_skill/` + `src/review_ui/` | Human review breakpoint + TUI |
+| `match` | `src/core/ai/match_skill/` | **LangGraph** - Requirement matching with HITL |
+| `review_match` | `src/core/ai/match_skill/` + `src/review_ui/` | Human review breakpoint + TUI |
 | `build_application_context` | *(inside match_skill)* | Builds approved match payload |
-| `generate_documents` | `src/ai/generate_documents/` | **LangGraph** - CV/letter/email generation |
-| `render` | `src/tools/render/` | **Deterministic** - Pandoc + Jinja2 → PDF/DOCX |
+| `generate_documents` | `src/core/ai/generate_documents/` | **LangGraph** - CV/letter/email generation |
+| `render` | `src/core/tools/render/` | **Deterministic** - Pandoc + Jinja2 → PDF/DOCX |
 | `package` | *(manual)* | Bundles outputs for submission |
 
 ---
 
 ## Module Details
 
-### `src/ai/match_skill/` (LangGraph)
+### `src/core/ai/match_skill/` (LangGraph)
 - **Replaces:** `match` + `review_match` + `build_application_context`
 - **Graph:** `match_skill` (exposed via `langgraph.json`)
 - **Features:**
@@ -60,7 +60,7 @@ review_match ──(approve)──→ build_application_context ──(approve)�
   - Studio-integrated
 - **Artifacts:** `data/jobs/<source>/<job_id>/nodes/match_skill/`
 
-### `src/ai/generate_documents/` (LangGraph)
+### `src/core/ai/generate_documents/` (LangGraph)
 - **Replaces:** `generate_documents` (simplified)
 - **Graph:** `generate_documents` (exposed via `langgraph.json`)
 - **Features:**
@@ -69,14 +69,14 @@ review_match ──(approve)──→ build_application_context ──(approve)�
   - Deterministic review indicators
 - **Artifacts:** `data/jobs/<source>/<job_id>/nodes/generate_documents/`
 
-### `src/tools/render/` (Deterministic)
+### `src/core/tools/render/` (Deterministic)
 - **Replaces:** `render`
 - **Engine:** Pandoc + Jinja2 + LaTeX
 - **Supports:** PDF, DOCX
 - **Documents:** CV, Cover Letter
 - **Entry:** `RenderCoordinator` in `coordinator.py`
 
-### `src/tools/translator/` (Deterministic)
+### `src/core/tools/translator/` (Deterministic)
 - **Replaces:** `translate_if_needed`
 - **Provider:** Google Translate API
 - **Entry:** `translate_text()`, `translate_fields()`
@@ -112,7 +112,7 @@ curl -X POST "http://127.0.0.1:8124/threads/<thread_id>/runs" \
   -d '{"assistant_id": "<generate_documents_id>", "input": {...}}'
 
 # 3. Render to PDF
-python -m src.tools.render.main cv --source <deltas.json> --language en
+python -m src.core.tools.render.main cv --source <deltas.json> --language en
 ```
 
 ---

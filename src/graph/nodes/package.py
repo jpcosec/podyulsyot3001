@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import logging
 from pathlib import Path
 
@@ -16,7 +15,7 @@ logger = logging.getLogger(__name__)
 def make_package_node(data_manager: DataManager):
     """Create the final packaging node for schema-v0 artifacts."""
 
-    async def package_node(state: GraphState) -> dict:
+    def package_node(state: GraphState) -> dict:
         source = state["source"]
         job_id = state["job_id"]
         artifact_refs = dict(state.get("artifact_refs", {}))
@@ -36,14 +35,13 @@ def make_package_node(data_manager: DataManager):
                 ref = artifact_refs.get(name)
                 if not ref:
                     continue
-                source_path = Path(ref)
                 package_path = data_manager.write_bytes_artifact(
                     source=source,
                     job_id=job_id,
                     node_name="package",
                     stage="final",
-                    filename=source_path.name,
-                    content=source_path.read_bytes(),
+                    filename=Path(ref).name,
+                    content=data_manager.read_bytes_path(ref),
                 )
                 manifest["artifacts"][name] = str(package_path)
 
@@ -53,7 +51,7 @@ def make_package_node(data_manager: DataManager):
                 node_name="package",
                 stage="final",
                 filename="manifest.json",
-                data=json.loads(json.dumps(manifest)),
+                data=manifest,
             )
             artifact_refs["package_manifest"] = str(manifest_path)
 

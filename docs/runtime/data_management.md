@@ -167,6 +167,11 @@ Owns:
 - primitive artifact reads and writes
 - lifecycle metadata in `meta.json`
 
+Enforcement rule:
+
+- runtime code under `src/graph/`, `src/core/ai/`, and `src/core/tools/` must not bypass `DataManager` for filesystem operations
+- direct `Path.read_text()`, `read_bytes()`, `write_text()`, `write_bytes()`, and `mkdir()` calls are only allowed inside `src/core/data_manager.py`
+
 Must not own:
 
 - domain validation

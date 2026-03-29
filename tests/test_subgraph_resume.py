@@ -18,13 +18,13 @@ import pytest
 
 from langgraph.checkpoint.memory import InMemorySaver
 
-from src.ai.match_skill.contracts import (
+from src.core.ai.match_skill.contracts import (
     MatchEnvelope,
     RequirementMatch,
     ReviewItemDecision,
     ReviewPayload,
 )
-from src.ai.match_skill.graph import build_match_skill_graph
+from src.core.ai.match_skill.graph import build_match_skill_graph
 
 
 def _stub_match_chain():
@@ -54,7 +54,7 @@ def _stub_match_chain():
 @pytest.fixture()
 def match_skill_app(tmp_path):
     """Build a match_skill graph with a stub chain and in-memory checkpointer."""
-    from src.ai.match_skill.storage import MatchArtifactStore
+    from src.core.ai.match_skill.storage import MatchArtifactStore
 
     store = MatchArtifactStore(tmp_path)
     checkpointer = InMemorySaver()

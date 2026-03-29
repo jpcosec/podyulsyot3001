@@ -14,9 +14,9 @@ from typing import Any
 import pytest
 from langgraph.checkpoint.memory import InMemorySaver
 
-from src.ai.match_skill.contracts import MatchEnvelope
-from src.ai.match_skill.graph import build_match_skill_graph, resume_with_review
-from src.ai.match_skill.storage import MatchArtifactStore
+from src.core.ai.match_skill.contracts import MatchEnvelope
+from src.core.ai.match_skill.graph import build_match_skill_graph, resume_with_review
+from src.core.ai.match_skill.storage import MatchArtifactStore
 
 
 class MockMatchChain:

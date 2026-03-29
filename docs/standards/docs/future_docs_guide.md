@@ -48,8 +48,8 @@ What is wrong or missing, and why it matters. Be specific.
 What the solution looks like at a high level. Not a full spec — enough to resume context later.
 
 ## Linked TODOs
-- `src/ai/match_skill/graph.py` — `# TODO(future): thin state, move payloads to disk refs`
-- `src/tools/render/coordinator.py` — `# TODO(future): add DOCX engine adapter`
+- `src/core/ai/match_skill/graph.py` — `# TODO(future): thin state, move payloads to disk refs`
+- `src/core/tools/render/coordinator.py` — `# TODO(future): add DOCX engine adapter`
 ```
 
 **Stale threshold:** If `Last reviewed` is more than 6 months ago and there is no linked active work, the entry should be deleted or explicitly re-evaluated. A `future_docs/` file that no one has touched in 6 months is a graveyard entry.

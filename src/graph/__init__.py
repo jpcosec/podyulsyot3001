@@ -21,70 +21,70 @@ from src.graph.nodes.render import make_render_node
 from src.graph.nodes.translate import make_translate_node
 
 
-
-
-
-async def _extract_bridge_node(state: GraphState, data_manager: DataManager) -> dict:
-    source = state["source"]
-    job_id = state["job_id"]
-    translated_state = data_manager.read_json_artifact(
-        source=source,
-        job_id=job_id,
-        node_name="translate",
-        stage="proposed",
-        filename="state.json",
-    )
-    requirements = extract_requirements_from_job_posting(translated_state)
-    requirements_dicts = [item.model_dump() for item in requirements]
-    state_payload = {
-        "source": source,
-        "job_id": job_id,
-        "requirements": requirements_dicts,
-        "job_posting": translated_state,
-    }
-    refs = dict(state.get("artifact_refs", {}))
-    bridge_state = data_manager.write_json_artifact(
-        source=source,
-        job_id=job_id,
-        node_name="extract_bridge",
-        stage="proposed",
-        filename="state.json",
-        data=state_payload,
-    )
-    refs["bridge_state"] = str(bridge_state)
-    try:
-        content = data_manager.read_text_artifact(
+def _extract_bridge_node(state: GraphState, data_manager: DataManager) -> dict:
+    def _build_bridge() -> dict:
+        source = state["source"]
+        job_id = state["job_id"]
+        translated_state = data_manager.read_json_artifact(
             source=source,
             job_id=job_id,
             node_name="translate",
             stage="proposed",
-            filename="content.md",
+            filename="state.json",
         )
-        content_ref = data_manager.write_text_artifact(
+        requirements = extract_requirements_from_job_posting(translated_state)
+        requirements_dicts = [item.model_dump() for item in requirements]
+        state_payload = {
+            "source": source,
+            "job_id": job_id,
+            "requirements": requirements_dicts,
+            "job_posting": translated_state,
+        }
+        refs = dict(state.get("artifact_refs", {}))
+        bridge_state = data_manager.write_json_artifact(
             source=source,
             job_id=job_id,
             node_name="extract_bridge",
             stage="proposed",
-            filename="content.md",
-            content=content,
+            filename="state.json",
+            data=state_payload,
         )
-        refs["bridge_content"] = str(content_ref)
-    except FileNotFoundError:
-        pass
+        refs["bridge_state"] = str(bridge_state)
+        try:
+            content = data_manager.read_text_artifact(
+                source=source,
+                job_id=job_id,
+                node_name="translate",
+                stage="proposed",
+                filename="content.md",
+            )
+            content_ref = data_manager.write_text_artifact(
+                source=source,
+                job_id=job_id,
+                node_name="extract_bridge",
+                stage="proposed",
+                filename="content.md",
+                content=content,
+            )
+            refs["bridge_content"] = str(content_ref)
+        except FileNotFoundError:
+            pass
 
-    return {
-        "artifact_refs": refs,
-        "requirements": requirements_dicts,
-        "current_node": "extract_bridge",
-        "status": "running",
-    }
+        return {
+            "artifact_refs": refs,
+            "requirements": requirements_dicts,
+            "current_node": "extract_bridge",
+            "status": "running",
+        }
+
+    return _build_bridge()
 
 
 def make_extract_bridge_node(data_manager: DataManager):
     """Create the extract-bridge node adapter for schema-v0."""
 
-    async def extract_bridge_node(state: GraphState) -> dict:
-        return await _extract_bridge_node(state, data_manager)
+    def extract_bridge_node(state: GraphState) -> dict:
+        return _extract_bridge_node(state, data_manager)
 
     return extract_bridge_node
 
@@ -110,8 +110,8 @@ def _route_after_render(state: GraphState) -> str:
 def build_pipeline_graph(*, data_manager: DataManager | None = None) -> Any:
     """Build the schema-v0 top-level pipeline graph."""
 
-    from src.ai.match_skill.graph import build_match_skill_graph
-    from src.ai.match_skill.storage import MatchArtifactStore
+    from src.core.ai.match_skill.graph import build_match_skill_graph
+    from src.core.ai.match_skill.storage import MatchArtifactStore
 
     manager = data_manager or DataManager()
     match_skill_subgraph = build_match_skill_graph(

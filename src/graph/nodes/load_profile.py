@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 import logging
 import os
 from pathlib import Path
@@ -19,88 +17,16 @@ logger = logging.getLogger(__name__)
 
 class ProfileNotFoundError(Exception):
     """Raised when the master profile cannot be located on disk."""
+
     pass
 
 
 def make_load_profile_node(data_manager: DataManager):
     """Create the profile loading node that resolves and normalizes user evidence."""
 
-    async def load_profile_node(state: GraphState) -> dict:
-        source = state["source"]
-        job_id = state.get("job_id")
-        if not job_id:
-            logger.error(f"{LogTag.FAIL} Load profile node failed: job_id missing in state")
-            return {
-                "current_node": "load_profile",
-                "status": "failed",
-                "error_state": {
-                    "node": "load_profile",
-                    "message": "job_id missing in state",
-                    "details": None,
-                },
-            }
-
+    def load_profile_node(state: GraphState) -> dict:
         try:
-            # 1. Resolve master profile source
-            default_path = "data/reference_data/profile/base_profile/profile_base_data.json"
-            master_path = Path(os.getenv("PROFILE_MASTER_PATH", default_path))
-            
-            if not master_path.exists():
-                raise ProfileNotFoundError(f"Master profile not found at: {master_path}")
-
-            logger.info(f"{LogTag.OK} Loading master profile: {master_path}")
-            raw_master = json.loads(master_path.read_text(encoding="utf-8"))
-            
-            # 2. Schema Validation (Hardening)
-            try:
-                profile_data = ProfileBaseData.model_validate(raw_master)
-            except Exception as e:
-                logger.error(f"{LogTag.FAIL} Master profile schema validation failed: {e}")
-                raise ValueError(f"Invalid master profile schema: {e}")
-
-            # 3. Dynamic Transformation (Legacy 'dev' Logic Ported)
-            evidence = _transform_profile_to_evidence(profile_data)
-            
-            # 4. Side-load Global Patches (Persisted Human Review results)
-            patches_path = master_path.parent / "profile_patches.json"
-            if patches_path.exists():
-                logger.info(f"{LogTag.OK} Loading global profile patches: {patches_path}")
-                try:
-                    global_patches = json.loads(patches_path.read_text(encoding="utf-8"))
-                    evidence = _merge_patches(evidence, global_patches)
-                except Exception as e:
-                    logger.warning(f"{LogTag.WARN} Failed to load profile patches: {e}")
-
-            # 5. Compute Hash for Traceability
-            profile_hash = hashlib.sha256(master_path.read_bytes()).hexdigest()
-            metadata = {
-                "source_profile_path": str(master_path),
-                "source_profile_hash": f"sha256:{profile_hash}",
-                "evidence_count": len(evidence)
-            }
-
-            # 6. Persist normalized artifact for the job
-            ref_path = data_manager.write_json_artifact(
-                source=source,
-                job_id=job_id,
-                node_name="pipeline_inputs",
-                stage="proposed",
-                filename="profile_evidence.json",
-                data={
-                    "metadata": metadata,
-                    "evidence": evidence
-                },
-            )
-
-            logger.info(
-                f"{LogTag.OK} Persisted {len(evidence)} evidence items with hash {profile_hash[:8]}..."
-            )
-            return {
-                "profile_evidence": evidence,
-                "profile_evidence_ref": str(ref_path),
-                "current_node": "load_profile",
-                "status": "running",
-            }
+            return _load_profile_sync(state, data_manager)
 
         except ProfileNotFoundError as exc:
             logger.error(f"{LogTag.FAIL} Profile Error: {exc}")
@@ -126,6 +52,74 @@ def make_load_profile_node(data_manager: DataManager):
             }
 
     return load_profile_node
+
+
+def _load_profile_sync(state: GraphState, data_manager: DataManager) -> dict:
+    source = state["source"]
+    job_id = state.get("job_id")
+    if not job_id:
+        logger.error(f"{LogTag.FAIL} Load profile node failed: job_id missing in state")
+        return {
+            "current_node": "load_profile",
+            "status": "failed",
+            "error_state": {
+                "node": "load_profile",
+                "message": "job_id missing in state",
+                "details": None,
+            },
+        }
+
+    default_path = "data/reference_data/profile/base_profile/profile_base_data.json"
+    master_path = Path(os.getenv("PROFILE_MASTER_PATH", default_path))
+
+    if not master_path.exists():
+        raise ProfileNotFoundError(f"Master profile not found at: {master_path}")
+
+    logger.info(f"{LogTag.OK} Loading master profile: {master_path}")
+    raw_master = data_manager.read_json_path(master_path)
+
+    try:
+        profile_data = ProfileBaseData.model_validate(raw_master)
+    except Exception as e:
+        logger.error(f"{LogTag.FAIL} Master profile schema validation failed: {e}")
+        raise ValueError(f"Invalid master profile schema: {e}")
+
+    evidence = _transform_profile_to_evidence(profile_data)
+
+    patches_path = master_path.parent / "profile_patches.json"
+    if patches_path.exists():
+        logger.info(f"{LogTag.OK} Loading global profile patches: {patches_path}")
+        try:
+            global_patches = data_manager.read_json_path(patches_path)
+            evidence = _merge_patches(evidence, global_patches)
+        except Exception as e:
+            logger.warning(f"{LogTag.WARN} Failed to load profile patches: {e}")
+
+    profile_hash = data_manager.sha256_path(master_path).replace("sha256:", "")
+    metadata = {
+        "source_profile_path": str(master_path),
+        "source_profile_hash": f"sha256:{profile_hash}",
+        "evidence_count": len(evidence),
+    }
+
+    ref_path = data_manager.write_json_artifact(
+        source=source,
+        job_id=job_id,
+        node_name="pipeline_inputs",
+        stage="proposed",
+        filename="profile_evidence.json",
+        data={"metadata": metadata, "evidence": evidence},
+    )
+
+    logger.info(
+        f"{LogTag.OK} Persisted {len(evidence)} evidence items with hash {profile_hash[:8]}..."
+    )
+    return {
+        "profile_evidence": evidence,
+        "profile_evidence_ref": str(ref_path),
+        "current_node": "load_profile",
+        "status": "running",
+    }
 
 
 def _transform_profile_to_evidence(profile: ProfileBaseData) -> List[Dict[str, str]]:
@@ -163,7 +157,10 @@ def _transform_profile_to_evidence(profile: ProfileBaseData) -> List[Dict[str, s
     # Projects
     for prj in profile.projects:
         stack = ", ".join(prj.stack) if prj.stack else "N/A"
-        add(f"Project: {prj.name} ({prj.role or 'Contributor'}). Tech Stack: {stack}.", "P_PRJ")
+        add(
+            f"Project: {prj.name} ({prj.role or 'Contributor'}). Tech Stack: {stack}.",
+            "P_PRJ",
+        )
 
     # Skills
     for category, values in profile.skills.items():
@@ -182,10 +179,10 @@ def _merge_patches(base: List[Dict[str, str]], patches: Any) -> List[Dict[str, s
     """Safe merge of persistent human-provided patches into the evidence set."""
     if not isinstance(patches, list):
         return base
-        
+
     merged = list(base)
     seen_ids = {item["id"] for item in base}
-    
+
     for patch in patches:
         if not isinstance(patch, dict):
             continue
@@ -194,5 +191,5 @@ def _merge_patches(base: List[Dict[str, str]], patches: Any) -> List[Dict[str, s
         if pid and desc and pid not in seen_ids:
             merged.append({"id": pid, "description": desc})
             seen_ids.add(pid)
-            
+
     return merged

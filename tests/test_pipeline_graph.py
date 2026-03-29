@@ -1,6 +1,6 @@
 """Tests for the top-level pipeline graph."""
 
-import asyncio
+import inspect
 
 import pytest
 from src.graph import (
@@ -9,7 +9,13 @@ from src.graph import (
     create_studio_graph,
 )
 from src.core.data_manager import DataManager
+from src.graph import make_extract_bridge_node
+from src.graph.nodes.generate_documents import make_generate_documents_node
 from src.graph.nodes.ingest import make_ingest_node
+from src.graph.nodes.load_profile import make_load_profile_node
+from src.graph.nodes.package import make_package_node
+from src.graph.nodes.render import make_render_node
+from src.graph.nodes.translate import make_translate_node
 
 
 def test_graph_state_typing():
@@ -87,6 +93,22 @@ def test_graph_checkpointer():
     assert app.checkpointer is not None
 
 
+def test_top_level_pipeline_nodes_are_sync(tmp_path):
+    manager = DataManager(tmp_path / "data" / "jobs")
+
+    nodes = [
+        make_ingest_node(manager),
+        make_translate_node(manager),
+        make_extract_bridge_node(manager),
+        make_load_profile_node(manager),
+        make_generate_documents_node(manager),
+        make_render_node(manager),
+        make_package_node(manager),
+    ]
+
+    assert all(not inspect.iscoroutinefunction(node) for node in nodes)
+
+
 def test_ingest_node_reuses_existing_canonical_artifact(tmp_path):
     manager = DataManager(tmp_path / "data" / "jobs")
     manager.ingest_raw_job(
@@ -97,9 +119,7 @@ def test_ingest_node_reuses_existing_canonical_artifact(tmp_path):
     )
     node = make_ingest_node(manager)
 
-    result = asyncio.run(
-        node({"source": "stepstone", "job_id": "123", "artifact_refs": {}})
-    )
+    result = node({"source": "stepstone", "job_id": "123", "artifact_refs": {}})
 
     assert result["status"] == "running"
     assert result["current_node"] == "ingest"
@@ -124,14 +144,12 @@ def test_ingest_node_fetches_single_job_from_source_url(tmp_path, monkeypatch):
         lambda data_manager: {"stepstone": FakeAdapter()},
     )
 
-    result = asyncio.run(
-        node(
-            {
-                "source": "stepstone",
-                "source_url": "https://example.test/job-555",
-                "artifact_refs": {},
-            }
-        )
+    result = node(
+        {
+            "source": "stepstone",
+            "source_url": "https://example.test/job-555",
+            "artifact_refs": {},
+        }
     )
 
     assert result["status"] == "running"
