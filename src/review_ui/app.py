@@ -6,7 +6,7 @@ Launch via the CLI runner::
 
 Or programmatically::
 
-    from src.ui.app import MatchReviewApp
+    from src.review_ui.app import MatchReviewApp
     app = MatchReviewApp(bus=bus, source=source, job_id=job_id)
     app.run()
 """
@@ -17,8 +17,8 @@ from typing import Any
 
 from textual.app import App, ComposeResult
 
-from src.ui.bus import MatchBus
-from src.ui.screens.review_screen import ReviewScreen
+from src.review_ui.bus import MatchBus
+from src.review_ui.screens.review_screen import ReviewScreen
 
 
 class MatchReviewApp(App):

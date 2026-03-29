@@ -36,9 +36,9 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> int:
     parser = _build_parser()
-    args = parser.parse_args()
+    args = parser.parse_args(argv or sys.argv[1:])
     document = args.document or args.legacy_action
     if document is None:
         parser.error("Document type is required. Use 'cv', 'letter', or --action.")
@@ -60,12 +60,14 @@ def main() -> None:
         print(result)
     except ValueError as exc:
         parser.error(str(exc))
+        return 1
     except FileNotFoundError as exc:
         print(f"[Error] {exc}", file=sys.stderr)
-        sys.exit(1)
+        return 1
     except Exception as exc:
         print(f"[Fatal Error] Render failed: {exc}", file=sys.stderr)
-        sys.exit(1)
+        return 1
+    return 0
 
 
 if __name__ == "__main__":

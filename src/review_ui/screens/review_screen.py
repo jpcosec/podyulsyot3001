@@ -23,8 +23,8 @@ from src.ai.match_skill.contracts import (
     ReviewSurface,
     ReviewSurfaceItem,
 )
-from src.ui.bus import MatchBus
-from src.ui.widgets.match_row import MatchRow
+from src.review_ui.bus import MatchBus
+from src.review_ui.widgets.match_row import MatchRow
 
 
 class ReviewScreen(Screen):
@@ -166,7 +166,9 @@ class ReviewScreen(Screen):
         )
         try:
             result = self._bus.resume_with_review(payload)
-            status = result.get("status", "unknown") if isinstance(result, dict) else "done"
+            status = (
+                result.get("status", "unknown") if isinstance(result, dict) else "done"
+            )
             self.app.call_from_thread(
                 self.query_one("#status-log", RichLog).write,
                 f"[green]Graph resumed — final status: [bold]{status}[/bold][/]",
