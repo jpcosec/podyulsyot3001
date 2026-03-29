@@ -107,16 +107,27 @@ class ApplyAdapter(ABC):
         """Mandatory and optional selectors. Validated against the DOM before execution."""
 
     @abstractmethod
-    def get_apply_script(self, profile: dict) -> str:
-        """C4A-Script template for the full apply interaction sequence.
+    def get_open_modal_script(self) -> str:
+        """C4A-Script that only clicks the apply button and waits for the modal container.
+        No field interaction — just opens the form so selectors become queryable.
 
-        Profile values are interpolated into the script by the base class.
-        The script covers: open modal → fill fields → (submit or stop before submit).
-        File upload steps are omitted here — handled by the Playwright hook.
+        Example:
+            CLICK `[data-testid="apply-button"]`
+            WAIT `[data-testid="apply-modal"]` 5
+        """
+
+    @abstractmethod
+    def get_fill_form_script(self, profile: dict) -> str:
+        """C4A-Script for filling text fields and dropdowns. Runs after _validate_selectors.
+
+        Profile values are injected by the base class via _render_script(template, profile),
+        which escapes all values through json.dumps() before interpolation to handle
+        special characters (apostrophes, quotes, etc.) safely.
+
+        File upload steps are omitted — handled by the before_retrieve_html hook
+        in the same arun() call that executes this script.
 
         Example (XING Easy Apply):
-            CLICK `[data-testid="apply-button"]`
-            WAIT `input[name="firstName"]` 5
             SET `input[name="firstName"]` "{{first_name}}"
             SET `input[name="lastName"]` "{{last_name}}"
             SET `input[type="email"]` "{{email}}"
@@ -127,7 +138,7 @@ class ApplyAdapter(ABC):
 
     @abstractmethod
     def get_submit_script(self) -> str:
-        """C4A-Script for the submit step — separated so dry-run can stop before it."""
+        """C4A-Script for the submit action — separated so dry-run can stop before it."""
 
     @abstractmethod
     def get_success_text(self) -> str:
@@ -161,40 +172,36 @@ build BrowserConfig(user_data_dir=profile_dir, use_persistent_context=True)
     ↓
 [try block starts here]
     ↓
-Step 1 — navigate + open apply modal (C4A-Script):
+Step 1 — open modal only (C4A-Script):
   CrawlerRunConfig(
-    c4a_script=adapter.get_apply_script(profile),  ← portal-specific DSL
-    wait_for=f"css:{selectors.cv_upload or selectors.first_name}",  ← first interactable field
+    c4a_script=adapter.get_open_modal_script(),   ← CLICK apply button + WAIT modal container
+    wait_for=f"css:{selectors.cv_upload or selectors.first_name}",
     session_id="apply_{job_id}",
   )
-    ↓  C4A-Script handles: CLICK apply button, WAIT, SET fields, IF/THEN for optional fields
+    ↓  modal open, form fields now exist in DOM — safe to validate
     ↓
-_validate_selectors(result, selectors)   ← runtime check #1
+_validate_selectors(selectors)   ← runtime check #1 — queries DOM via js_code
     ↓ missing mandatory selector → PortalStructureChangedError
     ↓
-Step 2 — file upload (Playwright hook — only exception to crawl4ai-native):
+Step 2 — fill form + upload CV (single arun() call):
   CrawlerRunConfig(
     js_only=True,
-    hooks={"on_page_context_created": _file_upload_hook(cv_path, letter_path, selectors)},
-    session_id="apply_{job_id}",
-  )
-    ↓  hook uses page.set_input_files() — no browser-JS equivalent exists
-    ↓
-  cv fallback: if cv_upload absent but cv_select_existing present →
-    C4A-Script: CLICK `{selectors.cv_select_existing}`
-    ↓
-Step 3 — screenshot before submit (always):
-  CrawlerRunConfig(
-    js_only=True,
+    c4a_script=_render_script(adapter.get_fill_form_script(profile)),
+    hooks={"before_retrieve_html": _file_upload_hook(cv_path, letter_path, selectors)},
     screenshot=True,
     session_id="apply_{job_id}",
   )
-  → proposed/screenshot.png
+    ↓  C4A-Script fills text fields and dropdowns
+    ↓  before_retrieve_html hook runs after script, same browser state — no re-evaluation
+    ↓    page.set_input_files(cv_upload, cv_path)  ← no browser-JS equivalent
+    ↓    if cv_upload absent and cv_select_existing present → page.click(cv_select_existing)
+    ↓  screenshot saved → proposed/screenshot.png
     ↓
 [dry-run] → write ApplicationRecord + ApplyMeta(status=dry_run) → exit
     ↓
-[auto] Step 4 — submit + verify (C4A-Script):
+[auto] Step 3 — submit + verify (C4A-Script):
   CrawlerRunConfig(
+    js_only=True,
     c4a_script=adapter.get_submit_script(),
     wait_for=f"css:{selectors.success_indicator}",
     screenshot=True,
@@ -214,7 +221,11 @@ write ApplicationRecord + ApplyMeta(status=submitted)
 
 ### Why C4A-Script for portal-specific behavior
 
-Each adapter's `get_apply_script()` and `get_submit_script()` are readable, self-documenting sequences. `IF/THEN` handles conditional fields (e.g. salutation dropdowns that only appear on certain locales) without Python branching. `WAIT` with element readiness avoids the flaky "element in DOM but not interactive" problem naturally. `EVAL` is available as escape hatch for edge cases that need raw JS.
+Each adapter expresses its interaction sequence in readable, self-documenting DSL. `IF/THEN` handles conditional fields (e.g. salutation dropdowns that only appear on certain locales) without Python branching. `WAIT` with element readiness avoids the flaky "element in DOM but not interactive" problem naturally. `EVAL` is the escape hatch for edge cases that need raw JS.
+
+### Profile value sanitization
+
+`_render_script(template, profile)` in the base class interpolates `{{field}}` placeholders using `json.dumps(value)` for each profile value before injection. This ensures apostrophes, quotes, and other special characters are properly escaped and never break C4A-Script parsing.
 
 ---
 
@@ -291,7 +302,8 @@ data/jobs/<source>/<job_id>/nodes/apply/
 Each provider implements only:
 - `source_name` property
 - `get_form_selectors()` — CSS selectors discovered by sampling real apply pages
-- `get_apply_script(profile)` — C4A-Script for opening modal + filling text fields
+- `get_open_modal_script()` — C4A-Script that only clicks apply and waits for modal
+- `get_fill_form_script(profile)` — C4A-Script for filling text fields and dropdowns (runs after validation)
 - `get_submit_script()` — C4A-Script for the submit action (separated for dry-run support)
 - `get_success_text()` — expected confirmation copy
 - `get_session_profile_dir()` — path to the persistent browser profile
