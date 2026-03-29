@@ -2,7 +2,7 @@
 
 Standards for modules built around LangGraph orchestration and LangChain model invocation. Extends `basic.md`.
 
-Reference implementation: `src/match_skill/`, `src/generate_documents/`.
+Reference implementation: `src/ai/match_skill/`, `src/ai/generate_documents/`.
 
 ---
 

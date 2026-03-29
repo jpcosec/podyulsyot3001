@@ -4,10 +4,10 @@ import json
 
 from langgraph.checkpoint.memory import InMemorySaver
 
-from src.cli.run_match_skill import main
-from src.match_skill.contracts import MatchEnvelope
-from src.match_skill.graph import build_match_skill_graph
-from src.match_skill.storage import MatchArtifactStore
+from src.ai.match_skill.main import main
+from src.ai.match_skill.contracts import MatchEnvelope
+from src.ai.match_skill.graph import build_match_skill_graph
+from src.ai.match_skill.storage import MatchArtifactStore
 
 
 class FakeMatchChain:
@@ -50,7 +50,7 @@ def test_run_match_skill_cli_run_and_resume(tmp_path, capsys) -> None:
         checkpointer=InMemorySaver(),
     )
 
-    import src.cli.run_match_skill as cli_module
+    import src.ai.match_skill.main as cli_module
 
     def fake_build_match_skill_graph(*, checkpointer=None, artifact_store=None):
         return fake_app

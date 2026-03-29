@@ -36,13 +36,13 @@ review_match ──(approve)──→ build_application_context ──(approve)�
 
 | Old Node | New Module | Purpose |
 |----------|-----------|---------|
-| `scrape` | `src/scraper/` | Job posting scraping |
+| `scrape` | `src/ai/scraper/` | Job posting scraping |
 | `translate_if_needed` | `src/tools/translator/` | Field/document translation |
 | `extract_understand` | *(scraper output)* | LLM extraction from scraped HTML |
-| `match` | `src/match_skill/` | **LangGraph** - Requirement matching with HITL |
-| `review_match` | `src/match_skill/` + `src/review_ui/` | Human review breakpoint + TUI |
+| `match` | `src/ai/match_skill/` | **LangGraph** - Requirement matching with HITL |
+| `review_match` | `src/ai/match_skill/` + `src/review_ui/` | Human review breakpoint + TUI |
 | `build_application_context` | *(inside match_skill)* | Builds approved match payload |
-| `generate_documents` | `src/generate_documents/` | **LangGraph** - CV/letter/email generation |
+| `generate_documents` | `src/ai/generate_documents/` | **LangGraph** - CV/letter/email generation |
 | `render` | `src/tools/render/` | **Deterministic** - Pandoc + Jinja2 → PDF/DOCX |
 | `package` | *(manual)* | Bundles outputs for submission |
 
@@ -50,7 +50,7 @@ review_match ──(approve)──→ build_application_context ──(approve)�
 
 ## Module Details
 
-### `src/match_skill/` (LangGraph)
+### `src/ai/match_skill/` (LangGraph)
 - **Replaces:** `match` + `review_match` + `build_application_context`
 - **Graph:** `match_skill` (exposed via `langgraph.json`)
 - **Features:**
@@ -60,7 +60,7 @@ review_match ──(approve)──→ build_application_context ──(approve)�
   - Studio-integrated
 - **Artifacts:** `output/match_skill/<source>/<job_id>/nodes/match_skill/`
 
-### `src/generate_documents/` (LangGraph)
+### `src/ai/generate_documents/` (LangGraph)
 - **Replaces:** `generate_documents` (simplified)
 - **Graph:** `generate_documents` (exposed via `langgraph.json`)
 - **Features:**
@@ -81,7 +81,7 @@ review_match ──(approve)──→ build_application_context ──(approve)�
 - **Provider:** Google Translate API
 - **Entry:** `translate_text()`, `translate_document()`
 
-### `src/scraper/`
+### `src/ai/scraper/`
 - **Replaces:** `scrape` + `extract_understand`
 - **Adapters:** Generic, Stepstone, Xing
 - **Output:** `JobPosting` Pydantic models

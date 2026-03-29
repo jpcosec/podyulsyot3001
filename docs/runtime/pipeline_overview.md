@@ -8,28 +8,28 @@ Navigation index for the Postulator 3000 pipeline. Each module has its own READM
 
 | Module | Type | README | Purpose |
 |--------|------|--------|---------|
-| `src/scraper/` | Deterministic + LLM fallback | `src/scraper/README.md` | Crawl job portals → `JobPosting` |
+| `src/ai/scraper/` | Deterministic + LLM fallback | `src/ai/scraper/README.md` | Crawl job portals → `JobPosting` |
 | `src/tools/translator/` | Deterministic | `src/tools/translator/README.md` | Translate scraped JSON fields + Markdown body |
-| `src/match_skill/` | LangGraph | `src/match_skill/README.md` | Requirement-to-evidence matching with HITL review |
+| `src/ai/match_skill/` | LangGraph | `src/ai/match_skill/README.md` | Requirement-to-evidence matching with HITL review |
 | `src/review_ui/` | Textual TUI | `src/review_ui/README.md` | Terminal interface for the match review gate |
-| `src/generate_documents/` | LangGraph | `src/generate_documents/README.md` | CV, letter, and email generation from approved matches |
+| `src/ai/generate_documents/` | LangGraph | `src/ai/generate_documents/README.md` | CV, letter, and email generation from approved matches |
 | `src/tools/render/` | Deterministic | `src/tools/render/README.md` | Pandoc + Jinja2 → PDF / DOCX |
 | `src/shared/` | Library | `src/shared/README.md` | Cross-cutting utilities (log tags) |
-| `src/cli/` | Operator entry points | — | `run_match_skill.py` (CLI runner for match skill) |
+| `src/ai/match_skill/main.py` | CLI entry point | `src/ai/match_skill/README.md` | Run or resume the match skill pipeline |
 
 ---
 
 ## Pipeline Sequence
 
 ```
-src/scraper/
+src/ai/scraper/
   ↓  JobPosting (JSON)
 src/tools/translator/
   ↓  translated fields + content.md
-src/match_skill/          ← LangGraph, pauses for HITL review
+src/ai/match_skill/          ← LangGraph, pauses for HITL review
   ↑  review decisions via src/review_ui/ (Textual TUI)
   ↓  approved/state.json
-src/generate_documents/   ← LangGraph
+src/ai/generate_documents/   ← LangGraph
   ↓  cv.md, cover_letter.md, email_body.txt
 src/tools/render/
   ↓  PDF / DOCX artifacts

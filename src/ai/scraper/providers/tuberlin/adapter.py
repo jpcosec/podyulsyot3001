@@ -5,7 +5,7 @@ Handles bilingual (DE/EN) job postings and category-based filters.
 
 import re
 from typing import Any, List
-from src.scraper.smart_adapter import SmartScraperAdapter
+from src.ai.scraper.smart_adapter import SmartScraperAdapter
 
 
 class TUBerlinAdapter(SmartScraperAdapter):

@@ -15,7 +15,7 @@ from textual.containers import Horizontal, ScrollableContainer
 from textual.screen import Screen
 from textual.widgets import Button, Footer, Header, Label, LoadingIndicator, RichLog
 
-from src.match_skill.contracts import (
+from src.ai.match_skill.contracts import (
     ProfileEvidence,
     ReviewDecision,
     ReviewItemDecision,

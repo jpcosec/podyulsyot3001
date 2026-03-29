@@ -8,10 +8,10 @@ Anti-bot resilient job portal crawler with LLM-rescue fallbacks. Extracts struct
 
 Each portal adapter inherits from a shared base and plugs into a central dispatcher.
 
-- Abstract base adapter (concurrent crawling, LLM schema generation, rescue fallback): `src/scraper/smart_adapter.py`
-- CLI entry point and provider registry: `src/scraper/main.py`
-- `JobPosting` Pydantic model: `src/scraper/models.py`
-- Portal-specific adapters: `src/scraper/providers/`
+- Abstract base adapter (concurrent crawling, LLM schema generation, rescue fallback): `src/ai/scraper/smart_adapter.py`
+- CLI entry point and provider registry: `src/ai/scraper/main.py`
+- `JobPosting` Pydantic model: `src/ai/scraper/models.py`
+- Portal-specific adapters: `src/ai/scraper/providers/`
 
 Flow per run: search URL → extract job links → per-job CSS extraction (LLM-generated selectors, cached) → LLM rescue fallback if selectors fail → validate against `JobPosting`.
 
@@ -28,13 +28,13 @@ PLAYWRIGHT_BROWSERS_PATH="0"
 
 ## 🚀 CLI / Usage
 
-CLI arguments are defined in `src/scraper/main.py`. Run `python -m src.scraper.main --help` for the full reference.
+CLI arguments are defined in `src/ai/scraper/main.py`. Run `python -m src.ai.scraper.main --help` for the full reference.
 
 ---
 
 ## 📝 Data Contract
 
-The output contract is `JobPosting` in `src/scraper/models.py`.
+The output contract is `JobPosting` in `src/ai/scraper/models.py`.
 
 MANDATORY fields (extraction failure raises a validation error): `job_title`, `company_name`, `location`, `employment_type`, `posted_date`, `responsibilities`, `requirements`.
 
@@ -44,18 +44,18 @@ OPTIONAL fields (may be absent): `salary`, `remote_policy`, `benefits`, `company
 
 ## 🛠️ How to Add / Extend (New Portal)
 
-1. Create a folder under `src/scraper/providers/{new_source}/`.
-2. Implement `adapter.py` inheriting from `SmartScraperAdapter` in `src/scraper/smart_adapter.py`.
+1. Create a folder under `src/ai/scraper/providers/{new_source}/`.
+2. Implement `adapter.py` inheriting from `SmartScraperAdapter` in `src/ai/scraper/smart_adapter.py`.
 3. Implement the required abstract methods: `source_name`, `supported_params`, `get_search_url`, `extract_job_id`, `extract_links`, `get_llm_instructions`.
-4. Register the adapter in the `PROVIDERS` dict in `src/scraper/main.py`.
+4. Register the adapter in the `PROVIDERS` dict in `src/ai/scraper/main.py`.
 
 ---
 
 ## 💻 How to Use (Quickstart)
 
 ```bash
-python -m src.scraper.main --source stepstone --limit 10
-python -m src.scraper.main --source tuberlin --job_query "Data Scientist" --limit 5
+python -m src.ai.scraper.main --source stepstone --limit 10
+python -m src.ai.scraper.main --source tuberlin --job_query "Data Scientist" --limit 5
 ```
 
 ---

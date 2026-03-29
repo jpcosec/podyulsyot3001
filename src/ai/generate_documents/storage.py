@@ -6,8 +6,8 @@ import json
 from pathlib import Path
 from typing import Any
 
-from src.generate_documents.contracts import DocumentDeltas, GeneratedDocuments, TextReviewAssistEnvelope
-from src.match_skill.storage import MatchArtifactStore
+from src.ai.generate_documents.contracts import DocumentDeltas, GeneratedDocuments, TextReviewAssistEnvelope
+from src.ai.match_skill.storage import MatchArtifactStore
 
 
 class DocumentArtifactStore(MatchArtifactStore):

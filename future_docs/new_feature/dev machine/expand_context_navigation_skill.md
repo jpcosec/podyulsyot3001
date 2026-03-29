@@ -28,23 +28,23 @@ This is the "Wikipedia book export" pattern: one article plus all articles it di
 ### Script: `scripts/expand_context.py`
 
 ```
-python scripts/expand_context.py src/match_skill
+python scripts/expand_context.py src/ai/match_skill
 ```
 
 Output: a single markdown bundle (stdout or file) structured as:
 
 ```
-## Context Bundle: src/match_skill
+## Context Bundle: src/ai/match_skill
 Generated: <timestamp>
 
 ### [1/3] README
-<content of src/match_skill/README.md>
+<content of src/ai/match_skill/README.md>
 
 ### [2/3] Architecture Files
-#### src/match_skill/graph.py
+#### src/ai/match_skill/graph.py
 <content>
 
-#### src/match_skill/storage.py
+#### src/ai/match_skill/storage.py
 <content>
 
 ### [3/3] Data Contracts (JSON Schema)

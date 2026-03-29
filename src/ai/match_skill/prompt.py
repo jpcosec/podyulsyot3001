@@ -10,7 +10,7 @@ from typing import Iterable
 
 from langchain_core.prompts import ChatPromptTemplate
 
-from src.match_skill.contracts import FeedbackItem, ProfileEvidence, RequirementInput
+from src.ai.match_skill.contracts import FeedbackItem, ProfileEvidence, RequirementInput
 
 
 def build_match_prompt() -> ChatPromptTemplate:

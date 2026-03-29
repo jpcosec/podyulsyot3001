@@ -8,9 +8,9 @@
 - Added `test_assets/` Markdown examples for CV and motivation letter rendering and verified PDF/DOCX generation end-to-end.
 - Updated the Pandoc LaTeX path so sample metadata-driven images and CV semantic blocks render successfully to PDF.
 - Rebased the `classic` CV template on the proven `Legacy_assets/general_cv` moderncv structure so the new Markdown pipeline uses the more familiar legacy layout.
-- Added `src/match_skill/` as a JSON-first LangGraph/LangChain-native reference implementation of the dev-branch match-review-regeneration loop.
+- Added `src/ai/match_skill/` as a JSON-first LangGraph/LangChain-native reference implementation of the dev-branch match-review-regeneration loop.
 - Replaced markdown review as the control surface in the new match skill with checkpointed HITL state updates plus structured review payloads.
-- Added `src/cli/run_match_skill.py` so the new match skill can be run and resumed with JSON inputs plus SQLite-backed checkpoints.
+- Added `src/ai/match_skill/main.py` so the new match skill can be run and resumed with JSON inputs plus SQLite-backed checkpoints.
 - Added `langgraph.json` and a Studio-specific graph factory so `match_skill` can be inspected in LangGraph Studio.
 - Refreshed `requirements.txt` to current direct dependency versions, added Studio/dev-server support via `langgraph-cli[inmem]`, and added `pytest` for clean env rebuild verification.
 - Added sample match-skill payloads under `test_assets/match_assets/` and ignored local LangGraph/output runtime state.

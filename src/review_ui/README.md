@@ -35,7 +35,7 @@ The LangGraph app and `MatchArtifactStore` are passed in at construction — no 
 
 ## 🚀 CLI / UI / Usage
 
-The TUI is launched programmatically by assembling a `MatchBus` and passing it to `MatchReviewApp`. A CLI entry point (`src/cli/review_tui.py`) is planned but not yet implemented — see `future_docs/issues/review_ui_wiring.md`.
+The TUI is launched programmatically by assembling a `MatchBus` and passing it to `MatchReviewApp`. A dedicated CLI entry point is planned but not yet implemented — see `future_docs/issues/review_ui_wiring.md`.
 
 Keyboard bindings (active in `ReviewScreen`):
 
@@ -50,7 +50,7 @@ Keyboard bindings (active in `ReviewScreen`):
 
 ## 📝 Data Contract
 
-Contracts are defined in `src/match_skill/contracts.py` (the review UI consumes match_skill contracts directly):
+Contracts are defined in `src/ai/match_skill/contracts.py` (the review UI consumes match_skill contracts directly):
 
 - `ReviewSurface` / `ReviewSurfaceItem` — loaded from disk and rendered as rows
 - `ReviewPayload` / `ReviewItemDecision` — built by the UI and sent back to the graph
@@ -71,8 +71,8 @@ Contracts are defined in `src/match_skill/contracts.py` (the review UI consumes 
 ## 💻 How to Use
 
 ```python
-from src.match_skill.graph import build_match_skill_graph
-from src.match_skill.storage import MatchArtifactStore
+from src.ai.match_skill.graph import build_match_skill_graph
+from src.ai.match_skill.storage import MatchArtifactStore
 from src.review_ui.bus import MatchBus
 from src.review_ui.app import MatchReviewApp
 from langgraph.checkpoint.sqlite import SqliteSaver
@@ -90,5 +90,5 @@ with SqliteSaver.from_conn_string("output/match_skill/checkpoints.db") as checkp
 ## 🚑 Troubleshooting
 
 - **`ModuleNotFoundError: src.ui`** — import paths in `app.py` and `review_screen.py` reference `src.ui.*` instead of `src.review_ui.*`. Fix the imports or wait for the wiring resolution tracked in `future_docs/issues/review_ui_wiring.md`.
-- **`FileNotFoundError: No review surface found`** — run the match skill first (`src/cli/run_match_skill.py`) to generate `review/current.json` before launching the TUI.
+- **`FileNotFoundError: No review surface found`** — run the match skill first (`src/ai/match_skill/main.py`) to generate `review/current.json` before launching the TUI.
 - **Graph resume fails** — ensure the `thread_id` in `MatchBus.config` matches the thread started by `run_match_skill`.

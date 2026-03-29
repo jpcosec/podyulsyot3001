@@ -48,7 +48,7 @@ What is wrong or missing, and why it matters. Be specific.
 What the solution looks like at a high level. Not a full spec — enough to resume context later.
 
 ## Linked TODOs
-- `src/match_skill/graph.py` — `# TODO(future): thin state, move payloads to disk refs`
+- `src/ai/match_skill/graph.py` — `# TODO(future): thin state, move payloads to disk refs`
 - `src/tools/render/coordinator.py` — `# TODO(future): add DOCX engine adapter`
 ```
 

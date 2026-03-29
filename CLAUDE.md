@@ -16,26 +16,21 @@ python -m pytest tests/ -q
 python -m pytest tests/test_match_skill.py -q
 
 # Scrape job postings
-python -m src.scraper.main --source stepstone --limit 5
+python -m src.ai.scraper.main --source stepstone --limit 5
 
 # Translate scraped postings
 python -m src.tools.translator.main --source stepstone
 
 # Run match skill (start a new thread)
-python -m src.cli.run_match_skill \
+python -m src.ai.match_skill.main \
   --source stepstone \
   --job-id <ID> \
   --requirements <path/to/requirements.json> \
   --profile-evidence <path/to/evidence.json>
 
 # Launch HITL review TUI (after graph pauses at breakpoint)
-python -m src.cli.review_tui \
-  --source stepstone \
-  --job_id <ID> \
-  --thread-id <langgraph-thread-id>
-
-# Review TUI in read-only preview mode (omit --thread-id)
-python -m src.cli.review_tui --source stepstone --job_id <ID>
+# Note: no CLI entry point yet — launch programmatically via src/review_ui/app.py
+# See future_docs/issues/review_ui_wiring.md for the wiring plan.
 
 # Render CV to PDF
 python -m src.tools.render.main cv \
@@ -52,17 +47,16 @@ python -m src.tools.render.main letter --source <path/to/data.json> --language d
 
 Each skill is a self-contained package under `src/`:
 
-- `src/match_skill/` — LangGraph-native matching loop: `graph.py` (StateGraph), `contracts.py` (Pydantic I/O), `storage.py` (artifact persistence), `prompt.py`, `main.py`.
-- `src/generate_documents/` — LangGraph document generation nodes: same structure as match_skill.
+- `src/ai/match_skill/` — LangGraph-native matching loop: `graph.py` (StateGraph), `contracts.py` (Pydantic I/O), `storage.py` (artifact persistence), `prompt.py`, `main.py`.
+- `src/ai/generate_documents/` — LangGraph document generation nodes: same structure as match_skill.
 - `src/tools/render/` — typed, engine-agnostic PDF/DOCX rendering via Pandoc + Jinja2. Entry point is `RenderCoordinator` in `coordinator.py`; `RenderRequest` in `request.py` is the unified request model.
-- `src/scraper/` — anti-bot job crawling with LLM fallbacks. Outputs `JobPosting` Pydantic models.
+- `src/ai/scraper/` — anti-bot job crawling with LLM fallbacks. Outputs `JobPosting` Pydantic models.
 - `src/tools/translator/` — field and document translation pipeline.
-- `src/ui/` — Textual TUI: `app.py` (`MatchReviewApp`), `bus.py` (`MatchBus` connects UI to LangGraph + disk), `screens/`, `widgets/`.
-- `src/cli/` — operator entry points: `run_match_skill.py`, `review_tui.py`.
+- `src/review_ui/` — Textual TUI: `app.py` (`MatchReviewApp`), `bus.py` (`MatchBus` connects UI to LangGraph + disk), `screens/`, `widgets/`.
 
 ### Control plane vs. data plane
 
-**Control plane** (`MatchSkillState` TypedDict in `src/match_skill/graph.py`): carries routing signals and refs — `source`, `job_id`, requirements, profile evidence, review payload, match result. State is intentionally thin; heavy payloads stay on disk.
+**Control plane** (`MatchSkillState` TypedDict in `src/ai/match_skill/graph.py`): carries routing signals and refs — `source`, `job_id`, requirements, profile evidence, review payload, match result. State is intentionally thin; heavy payloads stay on disk.
 
 **Data plane** (disk under `output/match_skill/<source>/<job_id>/nodes/match_skill/`): `MatchArtifactStore` in `storage.py` manages immutable round snapshots (JSON), current review surface, and approved payloads. Artifact layout mirrors the old project: `review/rounds/round_NNN/`, `approved/`, etc.
 
@@ -93,13 +87,13 @@ Review node routes via `Command`: `approve` (continue), `request_regeneration` (
 
 ### Failure model
 
-Nodes must fail closed — no silent fallback-to-success. LLM calls use structured output (LangChain `with_structured_output`). Missing credentials fall back to a demo chain in dev only (explicit `os.environ.get` guard in `src/generate_documents/graph.py`).
+Nodes must fail closed — no silent fallback-to-success. LLM calls use structured output (LangChain `with_structured_output`). Missing credentials fall back to a demo chain in dev only (explicit `os.environ.get` guard in `src/ai/generate_documents/graph.py`).
 
 ## Key documentation
 
 - LangGraph component standards: `docs/standards/code/llm_langgraph_components.md`
 - LangGraph methodology: `docs/standards/code/llm_langgraph_methodology.md`
-- Match skill hardening roadmap: `future_docs/match_skill_hardening_roadmap.md`
+- Match skill hardening roadmap: `future_docs/issues/match_skill_hardening_roadmap.md`
 - Documentation & planning guide: `docs/standards/docs/documentation_and_planning_guide.md`
 
 ## Environment

@@ -15,9 +15,9 @@ logger = logging.getLogger(__name__)
 
 import argparse
 from typing import List
-from src.scraper.providers.tuberlin.adapter import TUBerlinAdapter
-from src.scraper.providers.stepstone.adapter import StepStoneAdapter
-from src.scraper.providers.xing.adapter import XingAdapter
+from src.ai.scraper.providers.tuberlin.adapter import TUBerlinAdapter
+from src.ai.scraper.providers.stepstone.adapter import StepStoneAdapter
+from src.ai.scraper.providers.xing.adapter import XingAdapter
 
 # Registry of available portal adapters
 PROVIDERS = {

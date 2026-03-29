@@ -33,8 +33,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from src.match_skill.graph import build_match_skill_graph, resume_with_review
-from src.match_skill.storage import MatchArtifactStore
+from src.ai.match_skill.graph import build_match_skill_graph, resume_with_review
+from src.ai.match_skill.storage import MatchArtifactStore
 
 _DEFAULT_OUTPUT_DIR = "output/match_skill"
 _CHECKPOINT_DB_NAME = "checkpoints.db"

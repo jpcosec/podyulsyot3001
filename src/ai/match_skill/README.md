@@ -8,11 +8,11 @@ This module provides a LangGraph + LangChain-native matching loop with a determi
 
 The match skill is a reusable LangGraph subgraph with a single human review breakpoint.
 
-- Graph definition and node wiring: `src/match_skill/graph.py`
-- State schema (`MatchSkillState`): `src/match_skill/graph.py`
-- LLM prompt construction: `src/match_skill/prompt.py`
-- Artifact persistence (immutable rounds, review surface): `src/match_skill/storage.py`
-- Input/output contracts: `src/match_skill/contracts.py`
+- Graph definition and node wiring: `src/ai/match_skill/graph.py`
+- State schema (`MatchSkillState`): `src/ai/match_skill/graph.py`
+- LLM prompt construction: `src/ai/match_skill/prompt.py`
+- Artifact persistence (immutable rounds, review surface): `src/ai/match_skill/storage.py`
+- Input/output contracts: `src/ai/match_skill/contracts.py`
 
 Full graph flow:
 
@@ -43,7 +43,7 @@ GOOGLE_API_KEY="your_gemini_api_key_here"
 
 ## 🚀 CLI / Usage
 
-CLI arguments are defined in `src/cli/run_match_skill.py`. Run `python -m src.cli.run_match_skill --help` for the full reference.
+CLI arguments are defined in `src/ai/match_skill/main.py`. Run `python -m src.ai.match_skill.main --help` for the full reference.
 
 The TUI review interface is in `src/review_ui/`.
 
@@ -51,7 +51,7 @@ The TUI review interface is in `src/review_ui/`.
 
 ## 📝 Data Contract
 
-Input and output schemas are defined in `src/match_skill/contracts.py`:
+Input and output schemas are defined in `src/ai/match_skill/contracts.py`:
 - `RequirementInput` — one requirement from the job posting
 - `ProfileEvidence` — one evidence item from the candidate profile
 - `RequirementMatch` — LLM output for one matched requirement
@@ -90,9 +90,9 @@ Review is payload-driven, not acknowledgement-driven. Pressing Continue alone do
 
 ## 🛠️ How to Add / Extend
 
-1. **Modify matching logic**: update nodes in `src/match_skill/graph.py`.
-2. **Refine prompts**: update `src/match_skill/prompt.py`.
-3. **Add contract fields**: extend models in `src/match_skill/contracts.py` — update `Field(description=...)` for any LLM-consumed field.
+1. **Modify matching logic**: update nodes in `src/ai/match_skill/graph.py`.
+2. **Refine prompts**: update `src/ai/match_skill/prompt.py`.
+3. **Add contract fields**: extend models in `src/ai/match_skill/contracts.py` — update `Field(description=...)` for any LLM-consumed field.
 
 ---
 
@@ -100,7 +100,7 @@ Review is payload-driven, not acknowledgement-driven. Pressing Continue alone do
 
 Start a new match thread:
 ```bash
-python -m src.cli.run_match_skill \
+python -m src.ai.match_skill.main \
   --source demo \
   --job-id 123 \
   --requirements requirements.json \
@@ -109,7 +109,7 @@ python -m src.cli.run_match_skill \
 
 Resume after HITL review:
 ```bash
-python -m src.cli.run_match_skill \
+python -m src.ai.match_skill.main \
   --source demo \
   --job-id 123 \
   --resume \
@@ -120,7 +120,7 @@ python -m src.cli.run_match_skill \
 
 ## 🚑 Troubleshooting
 
-- **Graph fails to start**: ensure input JSON files conform to `RequirementInput` and `ProfileEvidence` schemas in `src/match_skill/contracts.py`.
+- **Graph fails to start**: ensure input JSON files conform to `RequirementInput` and `ProfileEvidence` schemas in `src/ai/match_skill/contracts.py`.
 - **Studio connection failure**: check `langgraph.json` and API keys.
 - **Studio runs but match produces dummy output**: `GOOGLE_API_KEY` is absent — the graph uses a deterministic demo chain. Set the key for real matching.
-- **Missing artifacts**: ensure `output/` is writable; check `MatchArtifactStore` initialisation in `src/match_skill/storage.py`.
+- **Missing artifacts**: ensure `output/` is writable; check `MatchArtifactStore` initialisation in `src/ai/match_skill/storage.py`.

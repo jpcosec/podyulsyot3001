@@ -100,7 +100,7 @@ Suggested files:
 
 ### Suggested Steps
 
-1. introduce constants for schema versions in `src/match_skill/storage.py`
+1. introduce constants for schema versions in `src/ai/match_skill/storage.py`
 2. write schema version into all persisted payloads
 3. update loaders to validate or at least tolerate the version field
 4. document version semantics in the product guide
@@ -172,10 +172,10 @@ Today the real review action is the submission of `review_payload`, not just pre
 Building a reactive terminal-based review TUI allows for structured decisions and evidence patching without manual JSON editing.
 
 **Implementation Details:**
-- `src.ui.app.MatchReviewApp`: Main Textual application.
-- `src.ui.screens.ReviewScreen`: Structured review form with `MatchRow` widgets.
-- `src.ui.bus.MatchBus`: Async bridge for LangGraph thread resumption.
-- `src.cli.review_tui`: Dedicated CLI entry point for human reviewers.
+- `src.review_ui.app.MatchReviewApp`: Main Textual application.
+- `src.review_ui.screens.ReviewScreen`: Structured review form with `MatchRow` widgets.
+- `src.review_ui.bus.MatchBus`: Async bridge for LangGraph thread resumption.
+- CLI entry point for human reviewers: planned, see `future_docs/issues/review_ui_wiring.md`.
 
 ### Minimum Useful UX
 

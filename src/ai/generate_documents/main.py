@@ -30,8 +30,8 @@ from typing import Any
 
 from langgraph.checkpoint.memory import InMemorySaver
 
-from src.generate_documents.graph import build_default_generate_documents_chain, _make_generate_documents_node
-from src.generate_documents.storage import DocumentArtifactStore
+from src.ai.generate_documents.graph import build_default_generate_documents_chain, _make_generate_documents_node
+from src.ai.generate_documents.storage import DocumentArtifactStore
 
 
 def _build_parser() -> argparse.ArgumentParser:

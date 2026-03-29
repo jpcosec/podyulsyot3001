@@ -11,8 +11,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from src.match_skill.contracts import ReviewPayload, ReviewSurface
-from src.match_skill.storage import MatchArtifactStore
+from src.ai.match_skill.contracts import ReviewPayload, ReviewSurface
+from src.ai.match_skill.storage import MatchArtifactStore
 
 
 class MatchBus:

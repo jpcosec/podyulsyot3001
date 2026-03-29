@@ -12,7 +12,7 @@ import json
 from pathlib import Path
 from typing import Any, Iterable
 
-from src.match_skill.contracts import (
+from src.ai.match_skill.contracts import (
     FeedbackItem,
     MatchEnvelope,
     ProfileEvidence,

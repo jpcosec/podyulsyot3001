@@ -38,18 +38,18 @@ class TemplateRenderError(DocumentGenerationError):
     pass
 
 
-from src.generate_documents.contracts import (
+from src.ai.generate_documents.contracts import (
     CVExperienceInjection,
     DocumentDeltas,
     GeneratedDocuments,
     MotivationLetterDeltas,
     TextReviewAssistEnvelope,
 )
-from src.generate_documents.prompt import build_generate_documents_prompt, SYSTEM_PROMPT
-from src.generate_documents.review import build_deterministic_indicators
-from src.generate_documents.storage import DocumentArtifactStore
-from src.match_skill.contracts import MatchEnvelope
-from src.match_skill.storage import MatchArtifactStore
+from src.ai.generate_documents.prompt import build_generate_documents_prompt, SYSTEM_PROMPT
+from src.ai.generate_documents.review import build_deterministic_indicators
+from src.ai.generate_documents.storage import DocumentArtifactStore
+from src.ai.match_skill.contracts import MatchEnvelope
+from src.ai.match_skill.storage import MatchArtifactStore
 
 
 def create_studio_graph():

@@ -5,7 +5,7 @@ Uses data-testid selectors and URL slug patterns for link discovery.
 
 import re
 from typing import Any, List
-from src.scraper.smart_adapter import SmartScraperAdapter
+from src.ai.scraper.smart_adapter import SmartScraperAdapter
 
 
 class XingAdapter(SmartScraperAdapter):

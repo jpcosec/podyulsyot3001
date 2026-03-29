@@ -5,7 +5,7 @@ Uses URL patterns and data-attribute selectors rescued from the legacy dev branc
 
 import re
 from typing import Any, List
-from src.scraper.smart_adapter import SmartScraperAdapter
+from src.ai.scraper.smart_adapter import SmartScraperAdapter
 
 
 class StepStoneAdapter(SmartScraperAdapter):

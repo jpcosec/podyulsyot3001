@@ -8,7 +8,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from src.generate_documents.contracts import (
+from src.ai.generate_documents.contracts import (
     DocumentDeltas,
     TextReviewIndicator,
 )

@@ -18,7 +18,7 @@ from langgraph.graph import START, StateGraph
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.types import Command
 
-from src.match_skill.contracts import (
+from src.ai.match_skill.contracts import (
     FeedbackItem,
     MatchEnvelope,
     ProfileEvidence,
@@ -27,8 +27,8 @@ from src.match_skill.contracts import (
     ReviewDecision,
     ReviewPayload,
 )
-from src.match_skill.prompt import build_match_prompt, build_prompt_input
-from src.match_skill.storage import MatchArtifactStore
+from src.ai.match_skill.prompt import build_match_prompt, build_prompt_input
+from src.ai.match_skill.storage import MatchArtifactStore
 
 
 class MatchSkillState(TypedDict, total=False):
@@ -81,7 +81,7 @@ def build_match_skill_graph(
     Returns:
         A compiled LangGraph app ready for invoke/update_state usage.
     """
-    from src.generate_documents.graph import (
+    from src.ai.generate_documents.graph import (
         _make_generate_documents_node,
         build_default_generate_documents_chain,
     )
