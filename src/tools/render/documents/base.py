@@ -8,8 +8,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-from src.render.request import RenderRequest
-from src.render.shared.paths import JobRenderPaths
+from src.tools.render.request import RenderRequest
+from src.tools.render.shared.paths import JobRenderPaths
 
 
 class DocumentPayload(BaseModel):

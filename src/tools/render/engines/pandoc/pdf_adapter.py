@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from src.render.documents.base import DocumentPayload
-from src.render.engines.base import EngineAdapter, ResolvedRenderConfig
-from src.render.engines.pandoc.renderer import PandocRenderer
+from src.tools.render.documents.base import DocumentPayload
+from src.tools.render.engines.base import EngineAdapter, ResolvedRenderConfig
+from src.tools.render.engines.pandoc.renderer import PandocRenderer
 
 
 class PandocPdfEngineAdapter(EngineAdapter):

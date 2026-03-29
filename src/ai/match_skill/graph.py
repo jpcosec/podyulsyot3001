@@ -83,11 +83,19 @@ def build_match_skill_graph(
     """
     from src.ai.generate_documents.graph import (
         _make_generate_documents_node,
+        _make_demo_generate_documents_chain,
         build_default_generate_documents_chain,
     )
+    from src.ai.generate_documents.storage import DocumentArtifactStore
 
+    injected_match_chain = match_chain is not None
     match_chain = match_chain or build_default_match_chain()
-    gen_chain = gen_chain or build_default_generate_documents_chain()
+    if gen_chain is None:
+        gen_chain = (
+            _make_demo_generate_documents_chain()
+            if injected_match_chain
+            else build_default_generate_documents_chain()
+        )
     store = artifact_store or MatchArtifactStore()
     workflow = StateGraph(MatchSkillState)
 
@@ -100,7 +108,15 @@ def build_match_skill_graph(
         "prepare_regeneration_context",
         _make_prepare_regeneration_context_node(store),
     )
-    workflow.add_node("generate_documents", _make_generate_documents_node(gen_chain))
+    workflow.add_node(
+        "generate_documents",
+        _make_generate_documents_node(
+            gen_chain,
+            store=DocumentArtifactStore(store.root),
+            match_store=store,
+            final_status="completed",
+        ),
+    )
 
     workflow.add_edge(START, "load_match_inputs")
     workflow.add_edge("load_match_inputs", "run_match_llm")
@@ -131,7 +147,7 @@ def build_default_match_chain(
     """
 
     from langchain_google_genai import ChatGoogleGenerativeAI
-    
+
     if not (os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")):
         return _build_studio_match_chain()
 
@@ -426,7 +442,9 @@ def _make_apply_review_decision_node(store: MatchArtifactStore):
             feedback_items=feedback_items,
             routing_decision=routing_decision,
         )
-        goto: Literal["prepare_regeneration_context", "generate_documents", "__end__"] = (
+        goto: Literal[
+            "prepare_regeneration_context", "generate_documents", "__end__"
+        ] = (
             "prepare_regeneration_context"
             if routing_decision == "request_regeneration"
             else "generate_documents"

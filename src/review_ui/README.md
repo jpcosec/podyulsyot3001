@@ -1,7 +1,5 @@
 # 🖥️ Review UI
 
-<!-- # TODO(future): update the review UI README to match the implemented imports, CLI path, and bus contract — see future_docs/issues/standards_alignment_followups.md -->
-
 Textual-based terminal UI for the match skill HITL review gate. Loads the persisted `ReviewSurface`, lets the operator make per-requirement decisions, and resumes the paused LangGraph thread via `MatchBus`.
 
 ---
@@ -19,8 +17,6 @@ A thin Textual application wired to LangGraph and disk via a decoupled bus layer
 
 Flow: `ReviewScreen` mounts → `MatchBus.load_current_review_surface()` loads `review/current.json` → one `MatchRow` per requirement → operator makes decisions → `ReviewScreen.action_submit()` builds `ReviewPayload` → `MatchBus.resume_with_review()` resumes the graph thread.
 
-> **Note:** The module import paths in `app.py` and `review_screen.py` currently reference `src.ui.*` instead of `src.review_ui.*`. These are broken until resolved. See `future_docs/issues/review_ui_wiring.md`.
-
 ---
 
 ## ⚙️ Configuration
@@ -37,7 +33,7 @@ The LangGraph app and `MatchArtifactStore` are passed in at construction — no 
 
 ## 🚀 CLI / UI / Usage
 
-The TUI is launched programmatically by assembling a `MatchBus` and passing it to `MatchReviewApp`. A dedicated CLI entry point is planned but not yet implemented — see `future_docs/issues/review_ui_wiring.md`.
+The TUI is launched through the unified CLI `review` command in `src/cli/main.py`, or programmatically by assembling a `MatchBus` and passing it to `MatchReviewApp`.
 
 Keyboard bindings (active in `ReviewScreen`):
 
@@ -91,6 +87,5 @@ with SqliteSaver.from_conn_string("output/match_skill/checkpoints.db") as checkp
 
 ## 🚑 Troubleshooting
 
-- **`ModuleNotFoundError: src.ui`** — import paths in `app.py` and `review_screen.py` reference `src.ui.*` instead of `src.review_ui.*`. Fix the imports or wait for the wiring resolution tracked in `future_docs/issues/review_ui_wiring.md`.
 - **`FileNotFoundError: No review surface found`** — run the match skill first (`src/ai/match_skill/main.py`) to generate `review/current.json` before launching the TUI.
 - **Graph resume fails** — ensure the `thread_id` in `MatchBus.config` matches the thread started by `run_match_skill`.

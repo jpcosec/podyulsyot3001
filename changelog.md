@@ -2,6 +2,11 @@
 
 ## 2026-03-29
 
+- Added `docs/runtime/data_management.md` and introduced schema-v0 data-plane rules centered on `data/jobs/<source>/<job_id>/` plus per-job `meta.json` lifecycle metadata.
+- Added `src/core/data_manager.py`, `src/core/state.py`, and `tests/test_data_manager.py` as the first central schema-v0 runtime layer.
+- Refactored `src/graph/` into thinner node adapters under `src/graph/nodes/` and moved top-level shared state imports to `src/core/state.py`.
+- Reworked `src/ai/generate_documents/graph.py` around `generate_documents_bundle()` so generation can run on in-memory inputs while persistence happens at the orchestration layer.
+- Updated the generate-documents CLI and runtime docs to use the new schema-v0 data manager flow.
 - Added `future_docs/issues/pipeline_unification_followups.md` and `future_docs/issues/standards_alignment_followups.md` to track the remaining non-Stage-7 pipeline gaps and the current standards-alignment debt.
 - Added inline `TODO(future)` markers in the affected pipeline, generation, CLI, test, package-surface, and README files so the deferred follow-up work is discoverable from the exact correction points.
 - Created `plan_docs/pipeline_unification.md` — implementation plan for orchestrating all modules under a single LangGraph pipeline with unified CLI and TUI wiring.

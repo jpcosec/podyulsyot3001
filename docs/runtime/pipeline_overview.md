@@ -35,7 +35,7 @@ src/tools/render/
   ↓  PDF / DOCX artifacts
 ```
 
-The relationship between `match_skill` and `generate_documents` (embedded node vs. standalone graph) is an open architectural question tracked in `future_docs/issues/orchestration.md`.
+Schema-v0 runtime rules for artifact placement, job metadata, and the central data manager are defined in `docs/runtime/data_management.md`.
 
 ---
 
@@ -47,18 +47,13 @@ All LangGraph state (`MatchSkillState`) carries only routing signals — source,
 
 ### Artifact layout
 
+```text
+data/jobs/<source>/<job_id>/
+  meta.json
+  nodes/<node>/<stage>/<artifact>
 ```
-output/match_skill/<source>/<job_id>/
-  nodes/match_skill/
-    approved/state.json
-    review/current.json
-    review/rounds/round_<NNN>/
-  nodes/generate_documents/
-    deltas.json
-    cv.md
-    cover_letter.md
-    email_body.txt
-```
+
+See `docs/runtime/data_management.md` for the schema-v0 canonical layout.
 
 ### Failure model
 
@@ -76,4 +71,4 @@ All log lines use `LogTag` from `src/shared/log_tags.py`. Never write emoji stri
 - Match skill implementation retrospective: `docs/runtime/match_skill_implementation_methodology.md`
 - Documentation conventions: `docs/standards/docs/documentation_and_planning_guide.md`
 - Old pipeline → new module mapping: `src/PIPELINE_MAPPING.md`
-- Open architectural issues: `future_docs/issues/`
+- Schema-v0 data plane: `docs/runtime/data_management.md`

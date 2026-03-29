@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
-from src.render.documents.base import DocumentPayload
-from src.render.engines.base import EngineAdapter, ResolvedRenderConfig
-from src.render.engines.docx.renderer import DocxRenderer
+from pathlib import Path
+
+from src.tools.render.documents.base import DocumentPayload
+from src.tools.render.engines.base import EngineAdapter, ResolvedRenderConfig
+from src.tools.render.engines.pandoc.renderer import PandocRenderer
 
 
 class PandocDocxEngineAdapter(EngineAdapter):
@@ -12,16 +14,17 @@ class PandocDocxEngineAdapter(EngineAdapter):
 
     engine_name = "docx"
 
-    def __init__(self, renderer: DocxRenderer | None = None):
-        self.renderer = renderer or DocxRenderer()
+    def __init__(self, renderer: PandocRenderer | None = None):
+        self.renderer = renderer or PandocRenderer()
 
-    def render(self, payload: DocumentPayload, config: ResolvedRenderConfig):
+    def render(self, payload: DocumentPayload, config: ResolvedRenderConfig) -> Path:
         if payload.source_kind != "markdown":
             raise ValueError("Pandoc DOCX adapter only supports Markdown payloads")
-        return self.renderer.render_markdown(
+        return self.renderer.render(
             payload.source_path,
             config.output_path,
-            reference_doc=config.reference_doc,
+            target_format="docx",
+            template_path=config.reference_doc,
             lua_filters=config.lua_filters,
             asset_roots=config.asset_roots,
             metadata=config.metadata,

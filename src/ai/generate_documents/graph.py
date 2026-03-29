@@ -7,7 +7,7 @@ import logging
 import os
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Callable, Mapping
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
@@ -51,8 +51,8 @@ from src.ai.generate_documents.prompt import (
 )
 from src.ai.generate_documents.review import build_deterministic_indicators
 from src.ai.generate_documents.storage import DocumentArtifactStore
-from src.ai.match_skill.contracts import MatchEnvelope
 from src.ai.match_skill.storage import MatchArtifactStore
+from src.shared.log_tags import LogTag
 
 
 def create_studio_graph():
@@ -128,14 +128,213 @@ def _make_demo_generate_documents_chain() -> Any:
     return DemoChain()
 
 
+def _default_profile_base_data() -> dict[str, Any]:
+    """Return a minimal profile payload that satisfies the document templates."""
+
+    return {
+        "owner": {
+            "full_name": "Demo Candidate",
+            "contact": {
+                "phone": "+00 000 0000",
+                "email": "demo@example.com",
+                "addresses": [{"value": "Demo Street 1"}],
+            },
+            "links": {"linkedin": "https://linkedin.com/in/demo-candidate"},
+        },
+        "cv_generation_context": {"tagline_seed": "Applied AI and software systems"},
+        "experience": [],
+        "education": [],
+        "publications": [],
+        "languages": [],
+        "skills": {
+            "programming_languages": [],
+            "ml_ai": [],
+            "data_platforms": [],
+            "orchestration_devops": [],
+            "electronics_robotics": [],
+        },
+    }
+
+
+def generate_documents_bundle(
+    *,
+    source: str,
+    job_id: str,
+    chain: Any,
+    profile_base: dict[str, Any],
+    approved_matches_raw: list[dict[str, Any]],
+    requirements_raw: list[dict[str, Any]],
+    review_items: list[dict[str, Any]],
+    approved_state_hash: str,
+    state: Mapping[str, Any],
+) -> tuple[DocumentDeltas, GeneratedDocuments, TextReviewAssistEnvelope]:
+    """Generate document payloads from in-memory primitive inputs only."""
+
+    req_lookup = {
+        item["id"]: item["text"]
+        for item in requirements_raw
+        if "id" in item and "text" in item
+    }
+    enriched_matches = [
+        {
+            **match,
+            "requirement_text": req_lookup.get(
+                match.get("requirement_id"), "Unknown Requirement"
+            ),
+        }
+        for match in approved_matches_raw
+    ]
+
+    logger.info(f"{LogTag.LLM} Building prompt and invoking document generator")
+    prompt = build_generate_documents_prompt(
+        profile_base=profile_base,
+        approved_matches=enriched_matches,
+        review_items=review_items,
+    )
+    deltas: DocumentDeltas = chain.invoke({"system": SYSTEM_PROMPT, "user": prompt})
+    logger.info(
+        f"{LogTag.LLM} Generated document deltas for {source}/{job_id}: cv_injections={len(deltas.cv_injections)}"
+    )
+
+    logger.info(f"{LogTag.FAST} Building deterministic review indicators")
+    indicators = build_deterministic_indicators(deltas)
+    review_assist = TextReviewAssistEnvelope(
+        job_id=job_id,
+        source_state_hash=approved_state_hash,
+        indicators=indicators,
+        summary=(
+            f"Found {len(indicators)} deterministic warnings"
+            if indicators
+            else "Clean output"
+        ),
+    )
+
+    logger.info(f"{LogTag.FAST} Rendering markdown documents")
+    rendered = _render_documents_internal(profile_base, deltas, state)
+    return deltas, rendered, review_assist
+
+
+def _load_generation_inputs_from_disk(
+    state: Mapping[str, Any],
+    match_store: MatchArtifactStore,
+) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, Any]], str]:
+    """Load profile, requirements, approved matches, and hash from disk."""
+
+    source = state.get("source")
+    job_id = state.get("job_id")
+    profile_base = state.get("profile_base_data")
+    if not profile_base:
+        profile_path = Path(
+            "data/reference_data/profile/base_profile/profile_base_data.json"
+        )
+        try:
+            profile_base = json.loads(profile_path.read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            logger.warning(
+                f"{LogTag.WARN} Profile base data not found in state or file"
+            )
+            profile_base = _default_profile_base_data()
+        except json.JSONDecodeError as exc:
+            logger.error(f"{LogTag.FAIL} Invalid JSON in profile file: {exc}")
+            raise ProfileLoadError(f"Invalid profile JSON: {exc}") from exc
+
+    requirements_raw = state.get("requirements") or []
+    if not requirements_raw:
+        reqs_path = match_store.job_root(source, job_id) / "requirements.json"
+        if reqs_path.exists():
+            requirements_raw = json.loads(reqs_path.read_text(encoding="utf-8"))
+
+    approved_path = match_store.job_root(source, job_id) / "approved" / "state.json"
+    if not approved_path.exists():
+        logger.error(f"{LogTag.FAIL} Approved matches not found at {approved_path}")
+        raise ApprovedMatchesNotFoundError(
+            f"No approved matches found for {source}/{job_id}. "
+            "Run match_skill and approve matches first."
+        )
+
+    approved_match_raw = match_store.load_json(approved_path)
+    approved_matches_raw = (
+        approved_match_raw.get("matches")
+        if isinstance(approved_match_raw, dict)
+        else []
+    )
+    source_hash = match_store.sha256_file(approved_path)
+    return profile_base, requirements_raw, approved_matches_raw, source_hash
+
+
+def _persist_generation_outputs_to_store(
+    *,
+    artifact_store: DocumentArtifactStore,
+    source: str,
+    job_id: str,
+    deltas: DocumentDeltas,
+    rendered: GeneratedDocuments,
+    review_assist: TextReviewAssistEnvelope,
+) -> dict[str, str]:
+    """Persist generated document artifacts using the module store."""
+
+    return artifact_store.write_document_payload(
+        source=source,
+        job_id=job_id,
+        deltas=deltas,
+        rendered=rendered,
+        review_assist=review_assist,
+    )
+
+
 def _make_generate_documents_node(
-    chain: Any, store: DocumentArtifactStore | None = None
+    chain: Any,
+    store: DocumentArtifactStore | None = None,
+    match_store: MatchArtifactStore | None = None,
+    final_status: str = "documents_generated",
+    load_inputs: Callable[
+        [Mapping[str, Any]],
+        tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, Any]], str],
+    ]
+    | None = None,
+    persist_outputs: Callable[
+        [str, str, DocumentDeltas, GeneratedDocuments, TextReviewAssistEnvelope],
+        dict[str, str],
+    ]
+    | None = None,
 ):
     """Factory for the document generation node."""
 
     # TODO(future): inject match/document stores from the pipeline runtime instead of constructing default-root stores here — see future_docs/issues/pipeline_unification_followups.md
     # TODO(future): move match/document artifact reads and writes behind storage helpers and replace literal log tags with LogTag — see future_docs/issues/standards_alignment_followups.md
     artifact_store = store or DocumentArtifactStore()
+    approved_match_store = match_store or MatchArtifactStore()
+
+    def _current_loader(
+        current_state: Mapping[str, Any],
+    ) -> tuple[dict[str, Any], list[dict[str, Any]], list[dict[str, Any]], str]:
+        if load_inputs is not None:
+            return load_inputs(current_state)
+        return _load_generation_inputs_from_disk(current_state, approved_match_store)
+
+    def _current_persist(
+        out_source: str,
+        out_job_id: str,
+        out_deltas: DocumentDeltas,
+        out_rendered: GeneratedDocuments,
+        out_review: TextReviewAssistEnvelope,
+    ) -> dict[str, str]:
+        if persist_outputs is not None:
+            return persist_outputs(
+                out_source,
+                out_job_id,
+                out_deltas,
+                out_rendered,
+                out_review,
+            )
+        return _persist_generation_outputs_to_store(
+            artifact_store=artifact_store,
+            source=out_source,
+            job_id=out_job_id,
+            deltas=out_deltas,
+            rendered=out_rendered,
+            review_assist=out_review,
+        )
 
     def generate_documents_node(state: Mapping[str, Any]) -> dict[str, Any]:
         """Generate tailored application documents based on approved matches.
@@ -163,119 +362,37 @@ def _make_generate_documents_node(
 
         source = state.get("source")
         job_id = state.get("job_id")
-        review_payload_raw = state.get("review_payload") or {}
+        review_items = (state.get("review_payload") or {}).get("items", [])
 
-        logger.info(f"  [⚡] Starting document generation for {source}/{job_id}")
+        logger.info(f"{LogTag.FAST} Starting document generation for {source}/{job_id}")
 
-        # 1. Load context data
-        logger.info("  [📦] Loading profile base data")
-        profile_base = state.get("profile_base_data")
-        if not profile_base:
-            profile_path = Path(
-                "data/reference_data/profile/base_profile/profile_base_data.json"
-            )
-            try:
-                profile_base = json.loads(profile_path.read_text(encoding="utf-8"))
-            except FileNotFoundError:
-                logger.warning("  [⚠️] Profile base data not found in state or file")
-                profile_base = {}
-            except json.JSONDecodeError as e:
-                logger.error(f"  [❌] Invalid JSON in profile file: {e}")
-                raise ProfileLoadError(f"Invalid profile JSON: {e}") from e
-
-        # 2. Extract approved matches and patches
-        logger.info("  [📦] Loading approved matches from match_skill")
-        match_store = MatchArtifactStore()
-
-        # Load requirements to get human-readable text
-        reqs_raw = state.get("requirements") or []
-        if not reqs_raw:
-            reqs_path = match_store.job_root(source, job_id) / "requirements.json"
-            if reqs_path.exists():
-                reqs_raw = json.loads(reqs_path.read_text(encoding="utf-8"))
-                logger.info(f"  [📦] Loaded {len(reqs_raw)} requirements")
-
-        req_lookup = {r["id"]: r["text"] for r in reqs_raw if "id" in r and "text" in r}
-
-        approved_path = match_store.job_root(source, job_id) / "approved" / "state.json"
-        if not approved_path.exists():
-            logger.error(f"  [❌] Approved matches not found at {approved_path}")
-            raise ApprovedMatchesNotFoundError(
-                f"No approved matches found for {source}/{job_id}. "
-                "Run match_skill and approve matches first."
-            )
-
-        approved_match_raw = match_store.load_json(approved_path)
-        approved_matches_raw = (
-            approved_match_raw.get("matches")
-            if isinstance(approved_match_raw, dict)
-            else []
-        )
-        logger.info(f"  [📦] Loaded {len(approved_matches_raw)} approved matches")
-
-        # We enrich the matches with their original text for the prompt
-        enriched_matches = []
-        for m in approved_matches_raw:
-            enriched_matches.append(
-                {
-                    **m,
-                    "requirement_text": req_lookup.get(
-                        m.get("requirement_id"), "Unknown Requirement"
-                    ),
-                }
-            )
-
-        # 3. Build prompt and invoke LLM
-        logger.info("  [🧠] Building prompt and invoking LLM")
-        prompt = build_generate_documents_prompt(
-            profile_base=profile_base,
-            approved_matches=enriched_matches,
-            review_items=review_payload_raw.get("items", []),
+        profile_base, requirements_raw, approved_matches_raw, source_hash = (
+            _current_loader(state)
         )
 
-        # Call the chain (model)
-        deltas: DocumentDeltas = chain.invoke({"system": SYSTEM_PROMPT, "user": prompt})
-        logger.info(
-            f"  [🧠] LLM returned deltas: cv_injections={len(deltas.cv_injections)}"
-        )
-
-        # 4. Deterministic Review
-        logger.info("  [⚡] Building deterministic review indicators")
-        indicators = build_deterministic_indicators(deltas)
-        source_hash = artifact_store.sha256_file(approved_path)
-
-        review_assist = TextReviewAssistEnvelope(
-            job_id=job_id,
-            source_state_hash=source_hash,
-            indicators=indicators,
-            summary=f"Found {len(indicators)} deterministic warnings"
-            if indicators
-            else "Clean output",
-        )
-
-        # 5. Render Documents
-        logger.info("  [⚡] Rendering Jinja2 templates")
-        rendered = _render_documents_internal(profile_base, deltas, state)
-
-        # 6. Persist
-        logger.info("  [📦] Persisting document artifacts")
-        refs = artifact_store.write_document_payload(
+        deltas, rendered, review_assist = generate_documents_bundle(
             source=source,
             job_id=job_id,
-            deltas=deltas,
-            rendered=rendered,
-            review_assist=review_assist,
+            chain=chain,
+            profile_base=profile_base,
+            approved_matches_raw=approved_matches_raw,
+            requirements_raw=requirements_raw,
+            review_items=review_items,
+            approved_state_hash=source_hash,
+            state=state,
         )
+
+        refs = _current_persist(source, job_id, deltas, rendered, review_assist)
 
         artifact_refs = dict(state.get("artifact_refs") or {})
         artifact_refs.update(refs)
 
-        logger.info("  [✅] Document generation complete")
+        logger.info(f"{LogTag.OK} Document generation complete")
         return {
             "document_deltas": deltas.model_dump(),
             "generated_documents": rendered.model_dump(),
             "artifact_refs": artifact_refs,
-            "status": "documents_generated",
+            "status": final_status,
         }
 
     return generate_documents_node
@@ -339,9 +456,9 @@ def _render_documents_internal(
             **context
         )
         email_markdown = env.get_template("email_template.jinja2").render(**context)
-    except Exception as e:
-        logger.error(f"  [❌] Template rendering failed: {e}")
-        raise TemplateRenderError(f"Failed to render templates: {e}") from e
+    except Exception as exc:
+        logger.error(f"{LogTag.FAIL} Template rendering failed: {exc}")
+        raise TemplateRenderError(f"Failed to render templates: {exc}") from exc
 
     return GeneratedDocuments(
         cv_markdown=cv_markdown,

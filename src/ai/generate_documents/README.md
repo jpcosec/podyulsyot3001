@@ -1,8 +1,6 @@
 # 📝 Generate Documents
 
-<!-- # TODO(future): update the module README to match the standalone graph/runtime role and current storage layout — see future_docs/issues/standards_alignment_followups.md -->
-
-Generates tailored CV, motivation letter, and email body from approved match skill output. Runs as a LangGraph node embedded in the match skill pipeline, and can also be invoked standalone via CLI.
+Generates tailored CV, motivation letter, and email body from approved match output. The core generation path works on in-memory payloads, while the schema-v0 pipeline and standalone CLI persist canonical artifacts under `data/jobs/<source>/<job_id>/...`.
 
 ---
 
@@ -15,9 +13,10 @@ Post-approval document generation using structured LLM output + Jinja2 rendering
 - Input/output contracts: `src/ai/generate_documents/contracts.py`
 - Jinja2 templates (CV, letter, email): `src/ai/generate_documents/templates/`
 - Deterministic review indicators: `src/ai/generate_documents/review.py`
-- Artifact persistence: `src/ai/generate_documents/storage.py`
+- Artifact persistence helpers: `src/ai/generate_documents/storage.py`
+- Schema-v0 CLI orchestration via the central data manager: `src/ai/generate_documents/main.py`
 
-Reads approved match artifacts written by `MatchArtifactStore` (`src/ai/match_skill/storage.py`). Writes rendered documents to `DocumentArtifactStore`.
+The pure generation helper is `generate_documents_bundle()` in `src/ai/generate_documents/graph.py`. It receives primitive or validated in-memory inputs and returns structured outputs. Persistence happens at the orchestration layer.
 
 ---
 
@@ -35,7 +34,7 @@ Falls back to a demo chain when `GOOGLE_API_KEY` is absent (Studio/local preview
 
 CLI arguments are defined in `_build_parser()` in `src/ai/generate_documents/main.py`. Run `python -m src.ai.generate_documents.main --help` for the full reference.
 
-This module is also invoked automatically as a node in the match skill graph after an approve decision — no CLI call needed in that path.
+This module is invoked automatically after approved match output exists, and it can also be run standalone against the canonical schema-v0 artifacts already stored under `data/jobs/...`.
 
 ---
 
@@ -53,7 +52,7 @@ Input and output schemas are defined in `src/ai/generate_documents/contracts.py`
 
 ## 📂 Artifacts & Storage
 
-Outputs are written under `output/<source>/<job_id>/nodes/generate_documents/`:
+Schema-v0 pipeline outputs are written under `data/jobs/<source>/<job_id>/nodes/generate_documents/`:
 
 - `deltas.json` — raw LLM structured output
 - `cv.md` — rendered CV markdown
@@ -93,6 +92,6 @@ python -m src.ai.generate_documents.main \
 ## 🚑 Troubleshooting
 
 - **"No approved matches found"**: run the match skill and approve at least one match before generating documents.
-- **Missing profile data**: provide `--profile` or ensure `data/reference_data/profile/base_profile/profile_base_data.json` exists.
+- **Missing profile data**: provide `--profile` or ensure `data/reference_data/profile/base_profile/profile_base_data.json` exists; the CLI falls back to a minimal demo-safe profile structure for template rendering.
 - **Template errors**: check Jinja2 syntax in `src/ai/generate_documents/templates/`.
 - **LLM failures**: verify `GOOGLE_API_KEY` is set; falls back to demo chain if missing.

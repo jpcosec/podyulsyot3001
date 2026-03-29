@@ -5,9 +5,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from src.render.documents.base import DocumentAdapter, DocumentPayload
-from src.render.request import RenderRequest
-from src.render.shared.paths import JobRenderPaths
+from src.tools.render.documents.base import DocumentAdapter, DocumentPayload
+from src.tools.render.request import RenderRequest
+from src.tools.render.shared.paths import JobRenderPaths
 
 _PROFILE_PATH = Path("data/reference_data/profile/base_profile/profile_base_data.json")
 
@@ -78,8 +78,8 @@ class CVDocumentAdapter(DocumentAdapter):
 
     def resolve_job_source(self, request: RenderRequest, paths: JobRenderPaths) -> Path:
         candidates = [
-            paths.application_dir / f"cv.{request.language}.md",
-            paths.application_dir / "cv.md",
+            paths.generate_dir / f"cv.{request.language}.md",
+            paths.generate_dir / "cv.md",
         ]
         for candidate in candidates:
             if candidate.exists():

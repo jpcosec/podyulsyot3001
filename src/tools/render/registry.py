@@ -7,11 +7,11 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from src.render.documents.cv.adapter import CVDocumentAdapter
-from src.render.documents.letter.adapter import LetterDocumentAdapter
-from src.render.engines.base import EngineAdapter
-from src.render.engines.pandoc.docx_adapter import PandocDocxEngineAdapter
-from src.render.engines.pandoc.pdf_adapter import PandocPdfEngineAdapter
+from src.tools.render.documents.cv.adapter import CVDocumentAdapter
+from src.tools.render.documents.letter.adapter import LetterDocumentAdapter
+from src.tools.render.engines.base import EngineAdapter
+from src.tools.render.engines.pandoc.docx_adapter import PandocDocxEngineAdapter
+from src.tools.render.engines.pandoc.pdf_adapter import PandocPdfEngineAdapter
 
 _TEMPLATES_ROOT = Path(__file__).parent / "templates"
 _FILTERS_ROOT = Path(__file__).parent / "engines" / "pandoc" / "filters"

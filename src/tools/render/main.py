@@ -5,9 +5,9 @@ from __future__ import annotations
 import argparse
 import sys
 
-from src.render.coordinator import RenderCoordinator
-from src.render.request import RenderRequest
-from src.render.shared.metadata import parse_extra_vars
+from src.tools.render.coordinator import RenderCoordinator
+from src.tools.render.request import RenderRequest
+from src.tools.render.shared.metadata import parse_extra_vars
 
 
 def _build_parser() -> argparse.ArgumentParser:

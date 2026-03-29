@@ -1,14 +1,10 @@
 """Spanish language bundle."""
 
-from src.render.languages.es.common import COMMON
-from src.render.languages.es.cv import CV
-from src.render.languages.es.letter import LETTER
-
 LANGUAGE = {
     "code": "es",
-    "common": COMMON,
+    "common": {"lang_tag": "es-ES", "babel_language": "spanish"},
     "documents": {
-        "cv": CV,
-        "letter": LETTER,
+        "cv": {"title": "Curriculum Vitae"},
+        "letter": {"title": "Carta de motivacion"},
     },
 }

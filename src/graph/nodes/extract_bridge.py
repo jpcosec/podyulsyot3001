@@ -90,14 +90,7 @@ def extract_bridge(
         )
         return _create_error_requirement(str(e))
 
-    requirement_inputs = [
-        RequirementInput(
-            id=f"REQ_{i:03d}",
-            text=req,
-            priority="must",
-        )
-        for i, req in enumerate(requirements, 1)
-    ]
+    requirement_inputs = extract_requirements_from_job_posting(raw_data)
 
     if workspace is not None:
         _write_output_workspace(
@@ -132,6 +125,25 @@ def extract_bridge(
         f"{LogTag.OK} Extracted bridge completed: {len(requirement_inputs)} requirements"
     )
     return requirement_inputs
+
+
+def extract_requirements_from_job_posting(
+    raw_data: dict[str, Any],
+) -> list[RequirementInput]:
+    """Transform a raw JobPosting-like payload into requirement inputs only."""
+
+    requirements = raw_data.get("requirements", [])
+    if not requirements:
+        raise ValueError("No requirements field in JobPosting")
+
+    return [
+        RequirementInput(
+            id=f"REQ_{i:03d}",
+            text=req,
+            priority="must",
+        )
+        for i, req in enumerate(requirements, 1)
+    ]
 
 
 def _create_error_requirement(error_message: str) -> list[RequirementInput]:

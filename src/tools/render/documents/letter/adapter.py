@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from src.render.documents.base import DocumentAdapter, DocumentPayload
-from src.render.request import RenderRequest
-from src.render.shared.paths import JobRenderPaths
+from src.tools.render.documents.base import DocumentAdapter, DocumentPayload
+from src.tools.render.request import RenderRequest
+from src.tools.render.shared.paths import JobRenderPaths
 
 
 class LetterDocumentAdapter(DocumentAdapter):
@@ -17,14 +17,14 @@ class LetterDocumentAdapter(DocumentAdapter):
 
     def resolve_job_source(self, request: RenderRequest, paths: JobRenderPaths) -> Path:
         candidates = [
-            paths.application_dir / f"motivation_letter.{request.language}.md",
-            paths.application_dir / "motivation_letter.md",
+            paths.generate_dir / f"cover_letter.{request.language}.md",
+            paths.generate_dir / "cover_letter.md",
         ]
         for candidate in candidates:
             if candidate.exists():
                 return candidate
         raise FileNotFoundError(
-            f"motivation_letter markdown not found in {paths.application_dir}"
+            f"cover_letter markdown not found in {paths.generate_dir}"
         )
 
     def build_payload(

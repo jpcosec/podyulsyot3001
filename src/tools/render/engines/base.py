@@ -7,7 +7,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field
 
-from src.render.documents.base import DocumentPayload
+from src.tools.render.documents.base import DocumentPayload
 
 
 class ResolvedRenderConfig(BaseModel):

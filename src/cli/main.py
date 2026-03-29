@@ -14,14 +14,17 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import logging
 import sys
+from pathlib import Path
 from typing import Any
+
+from src.core import DataManager
 
 logger = logging.getLogger(__name__)
 
 
-# TODO(future): route unified CLI through stable module entrypoints instead of deep internal imports where packages expose a public surface — see future_docs/issues/standards_alignment_followups.md
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="postulator",
@@ -162,34 +165,49 @@ async def _run_pipeline(args: argparse.Namespace) -> int:
     """Run the full pipeline via the graph module."""
     from src.graph import build_pipeline_graph
 
+    if not args.job_id:
+        raise ValueError("pipeline requires --job-id in schema-v0")
+
+    data_manager = DataManager()
     state: dict[str, Any] = {
         "source": args.source,
+        "job_id": args.job_id,
         "status": "pending",
         "artifact_refs": {},
     }
 
-    if args.job_id:
-        state["job_id"] = args.job_id
     if args.source_url:
         state["source_url"] = args.source_url
     if args.profile_evidence:
-        import json
-        from pathlib import Path
-
-        state["profile_evidence"] = json.loads(Path(args.profile_evidence).read_text())
+        payload = json.loads(Path(args.profile_evidence).read_text(encoding="utf-8"))
+        ref = data_manager.write_json_artifact(
+            source=args.source,
+            job_id=args.job_id,
+            node_name="pipeline_inputs",
+            stage="proposed",
+            filename="profile_evidence.json",
+            data=payload,
+        )
+        state["profile_evidence_ref"] = str(ref)
     if args.requirements:
-        import json
-        from pathlib import Path
-
-        state["requirements"] = json.loads(Path(args.requirements).read_text())
+        payload = json.loads(Path(args.requirements).read_text(encoding="utf-8"))
+        ref = data_manager.write_json_artifact(
+            source=args.source,
+            job_id=args.job_id,
+            node_name="pipeline_inputs",
+            stage="proposed",
+            filename="requirements.json",
+            data={"requirements": payload},
+        )
+        state["artifact_refs"]["requirements_ref"] = str(ref)
 
     try:
         app = build_pipeline_graph()
-        thread_id = f"{args.source}_{args.job_id or 'new'}"
+        thread_id = f"{args.source}_{args.job_id}"
         config = {"configurable": {"thread_id": thread_id}}
 
         result = app.invoke(state, config=config)
-        logger.info(f"Pipeline completed: {result.get('status')}")
+        print(json.dumps(result, indent=2, default=str))
         return 0
     except Exception as e:
         logger.error(f"Pipeline failed: {e}")
@@ -220,9 +238,6 @@ async def _run_scrape(args: argparse.Namespace) -> int:
 def _run_translate(args: argparse.Namespace) -> int:
     """Run the translator module."""
     from src.tools.translator.main import main as translator_main
-    from src.tools.translator import main as translator_module
-
-    import os
 
     argv = [
         "--source",
@@ -233,13 +248,12 @@ def _run_translate(args: argparse.Namespace) -> int:
     if args.force:
         argv.append("--force")
 
-    translator_module.main(argv)
-    return 0
+    return translator_main(argv)
 
 
 def _run_match(args: argparse.Namespace) -> int:
     """Run the match skill module."""
-    from src.ai.match_skill import main as match_module
+    from src.ai.match_skill.main import main as match_main
 
     argv = [
         "--source",
@@ -252,12 +266,12 @@ def _run_match(args: argparse.Namespace) -> int:
         args.profile_evidence,
     ]
 
-    return match_module.main(argv)
+    return match_main(argv)
 
 
 def _run_generate(args: argparse.Namespace) -> int:
     """Run the document generation module."""
-    from src.ai.generate_documents import main as generate_module
+    from src.ai.generate_documents import main as generate_main
 
     argv = [
         "--source",
@@ -268,12 +282,12 @@ def _run_generate(args: argparse.Namespace) -> int:
     if args.profile:
         argv.extend(["--profile", args.profile])
 
-    return generate_module.main(argv)
+    return generate_main(argv)
 
 
 def _run_render(args: argparse.Namespace) -> int:
     """Run the render module."""
-    from src.tools.render import main as render_module
+    from src.tools.render.main import main as render_main
 
     argv = [
         args.document,
@@ -291,7 +305,7 @@ def _run_render(args: argparse.Namespace) -> int:
     if args.output:
         argv.extend(["--output", args.output])
 
-    return render_module.main(argv)
+    return render_main(argv)
 
 
 def _run_review(args: argparse.Namespace) -> int:

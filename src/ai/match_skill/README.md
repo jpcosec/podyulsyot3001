@@ -1,7 +1,5 @@
 # ⚖️ Match Skill
 
-<!-- # TODO(future): update the module README so the graph flow no longer describes generate_documents as embedded in match_skill — see future_docs/issues/standards_alignment_followups.md -->
-
 This module provides a LangGraph + LangChain-native matching loop with a deterministic human-in-the-loop review workflow. It replaces manual markdown review files with structured JSON artifacts and a Textual TUI.
 
 ---

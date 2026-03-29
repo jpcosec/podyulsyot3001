@@ -1,14 +1,10 @@
 """German language bundle."""
 
-from src.render.languages.de.common import COMMON
-from src.render.languages.de.cv import CV
-from src.render.languages.de.letter import LETTER
-
 LANGUAGE = {
     "code": "de",
-    "common": COMMON,
+    "common": {"lang_tag": "de-DE", "babel_language": "ngerman"},
     "documents": {
-        "cv": CV,
-        "letter": LETTER,
+        "cv": {"title": "Lebenslauf"},
+        "letter": {"title": "Motivationsschreiben"},
     },
 }
