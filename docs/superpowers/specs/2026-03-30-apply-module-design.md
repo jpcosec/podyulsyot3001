@@ -24,19 +24,30 @@ src/apply/
 ## 2. CLI
 
 ```bash
+# Apply to a job
 python -m src.apply.main \
   --source xing \
   --job-id 12345 \
   --cv path/to/cv.pdf \
   [--letter path/to/letter.pdf] \
   [--dry-run]
+
+# First-time session setup for a portal (mutually exclusive with the above)
+python -m src.apply.main --source xing --setup-session
 ```
 
-**Inputs:**
+**Apply mode inputs:**
 - `--source` + `--job-id`: locates the job. Reads `data/jobs/<source>/<job_id>/nodes/ingest/proposed/state.json` to get `application_url`, `job_title`, `company_name`.
 - `--cv`: path to the CV PDF. Passed explicitly — the module does not search for it in artifacts.
 - `--letter`: optional. If the portal does not request it, it is ignored.
 - `--dry-run`: activates marcha blanca mode (see Section 5).
+
+**`--setup-session` mode** is mutually exclusive with `--job-id` / `--cv`. When present:
+1. Opens `BrowserConfig(user_data_dir=profile_dir, use_persistent_context=True, headless=False)`
+2. Navigates to the portal's base URL
+3. Prints "Log in manually. Press Enter when done." and waits for input
+4. Closes the context — cookies and session tokens are now persisted in the profile dir
+No validation, no C4A-Script, no artifacts written.
 
 ---
 
@@ -111,9 +122,14 @@ class ApplyAdapter(ABC):
         """C4A-Script that only clicks the apply button and waits for the modal container.
         No field interaction — just opens the form so selectors become queryable.
 
+        Must be idempotent: if the modal is already open (e.g. on a retry with persistent
+        session), the script must not click again or break. Use IF/THEN to check first.
+
         Example:
-            CLICK `[data-testid="apply-button"]`
-            WAIT `[data-testid="apply-modal"]` 5
+            IF NOT `[data-testid="apply-modal"]` THEN
+              CLICK `[data-testid="apply-button"]`
+              WAIT `[data-testid="apply-modal"]` 5
+            END
         """
 
     @abstractmethod
@@ -163,7 +179,10 @@ The flow uses crawl4ai natively throughout. Each step is a separate `arun()` cal
 ```
 read ingest artifact → get application_url, job_title, company_name
     ↓
-idempotency check: if apply_meta.json status=submitted → abort with warning
+idempotency check:
+  status=submitted  → abort with warning (already applied)
+  status=dry_run    → allow (dry-run artifacts will be overwritten by real run)
+  status=failed / portal_changed → allow retry (prior artifacts overwritten)
     ↓
 build BrowserConfig(user_data_dir=profile_dir, use_persistent_context=True)
     ↓  session carries prior login cookies — no credential handling in code
@@ -194,7 +213,9 @@ Step 2 — fill form + upload CV (single arun() call):
     ↓  C4A-Script fills text fields and dropdowns
     ↓  before_retrieve_html hook runs after script, same browser state — no re-evaluation
     ↓    page.set_input_files(cv_upload, cv_path)  ← no browser-JS equivalent
-    ↓    if cv_upload absent and cv_select_existing present → page.click(cv_select_existing)
+    ↓    if cv_upload absent and cv_select_existing present:
+    ↓      page.click(cv_select_existing)
+    ↓      page.wait_for_timeout(500)  ← stabilize DOM if click triggers submenu/animation
     ↓  screenshot saved → proposed/screenshot.png
     ↓
 [dry-run] → write ApplicationRecord + ApplyMeta(status=dry_run) → exit
@@ -294,6 +315,8 @@ data/jobs/<source>/<job_id>/nodes/apply/
   meta/
     apply_meta.json           # status, timestamp, error
 ```
+
+Running in auto mode after a dry-run overwrites all artifacts — the dry-run state is not preserved. This is intentional: `status=dry_run` in `apply_meta.json` does not block re-execution (see idempotency rules in Section 5). If a dry-run reference needs to be kept, copy the artifacts manually before running in auto mode.
 
 ---
 
