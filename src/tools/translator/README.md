@@ -1,83 +1,70 @@
-# 🌐 Translator Pipeline
+# 🌐 Translator
 
-The `src/translator` module provides a deterministic, modular pipeline for translating JSON records and Markdown artifacts extracted by the scraper.
+Deterministic, modular pipeline for translating scraped job posting artifacts (JSON fields and Markdown bodies) into a target language.
 
 ---
 
 ## 🏗️ Architecture & Features
 
-The translation engine consists of a central coordinator and provider-specific adapters:
-- **`BaseTranslatorAdapter`**: An abstract base class defining the contract for translation providers.
-- **`GoogleTranslatorAdapter`**: A default adapter powered by `deep-translator`.
-- **Automatic Text Chunking**: Extremely long texts (like job descriptions) are safely split based on API character limits (`max_chunk_chars`).
-- **Resilience**: Built-in bounded retries and exponential fallbacks to handle transient API rate limits.
-- **Deep Translation**: Capable of translating both raw Markdown (`translate_text()`) and nested JSON dictionaries (`translate_fields()`).
+A coordinator delegates translation to provider-specific adapters, with chunking and retry handling at the base level.
+
+- Abstract base adapter (chunking, retries, `translate_text`, `translate_fields`): `src/tools/translator/base.py`
+- CLI entry point and provider registry: `src/tools/translator/main.py`
+- Provider implementations: `src/tools/translator/providers/`
+- Default provider: `GoogleTranslatorAdapter` (uses `deep-translator`)
 
 ---
 
 ## ⚙️ Configuration
 
-Set your translation source and credentials in the root `.env` file:
-```env
-# No environment variables are strictly required for the default Google adapter,
-# but it requires an active internet connection and certain packages:
-# - deep-translator (pip install deep-translator)
-```
+No environment variables required for the default Google adapter. Requires an active internet connection and `deep-translator` installed.
 
----
-
-## 💻 How to Use (Quickstart)
-
-Translate all scraped jobs from a specific source:
 ```bash
-# Translate StepStone results into English
-python -m src.translator.main --source stepstone
-
-# Translate TU Berlin results using a specific provider
-python -m src.translator.main --source tuberlin --provider google --target_lang en
+pip install deep-translator
 ```
 
 ---
 
 ## 🚀 CLI / Usage
 
-| Argument | Description | Default |
-|---|---|---|
-| `--source` | **(Required)** The job portal source folder (e.g. `stepstone`, `xing`) in `data/source/`. | |
-| `--provider` | The translation provider to use (currently `google`). | `google` |
-| `--target_lang` | The ISO language code to translate into. | `en` |
-| `--data_dir` | The root data directory containing the scraped outputs. | `data/source` |
-| `--force` | Force re-translation even if `_en` translated artifacts already exist. | `False` |
+CLI arguments are defined in `src/tools/translator/main.py`. Run `python -m src.tools.translator.main --help` for the full reference.
 
 ---
 
-## 📝 The Data Contract
+## 📝 Data Contract
 
-The pipeline translates the following standard artifacts:
-- **`extracted_data.json`**: Translates string fields defined in `P_FIELDS_TO_TRANSLATE` (e.g., `job_title`, `responsibilities`).
-- **`content.md`**: Translates the full body text of the job description.
-- **Result**: Generates `extracted_data_en.json` and `content_en.md` in the original job folder.
+The adapter contract is `BaseTranslatorAdapter` in `src/tools/translator/base.py`. Operational limits (chunk size, retry budget) are exposed as `@property` on the base class.
+
+Input artifacts per job (read from `data/source/<source>/<job_id>/`):
+- `extracted_data.json` — fields listed in `P_FIELDS_TO_TRANSLATE` in `src/tools/translator/main.py`
+- `content.md` — full job description body
+
+Output artifacts (written to the same job folder):
+- `extracted_data_en.json`
+- `content_en.md`
 
 ---
 
 ## 🛠️ How to Add / Extend (New Provider)
 
-1.  Create a folder under `src/translator/providers/{new_provider}/`.
-2.  Implement `adapter.py` by inheriting from `BaseTranslatorAdapter`.
-3.  Implement the required methods: `provider_name` and `translate_chunk`.
-4.  Register your provider in the `PROVIDERS` dictionary in `src/translator/main.py`.
+1. Create `src/tools/translator/providers/{new_provider}/`.
+2. Implement `adapter.py` inheriting from `BaseTranslatorAdapter` in `src/tools/translator/base.py`.
+3. Implement required methods: `provider_name`, `translate_chunk`.
+4. Register the provider in the `PROVIDERS` dict in `src/tools/translator/main.py`.
+
+---
+
+## 💻 How to Use (Quickstart)
+
+```bash
+python -m src.tools.translator.main --source stepstone
+python -m src.tools.translator.main --source tuberlin --provider google --target_lang en
+```
 
 ---
 
 ## 🚑 Troubleshooting
 
-- **"ImportError: deep-translator is required"**:
-    - *Symptom:* The Google adapter fails to import.
-    - *Solution:* Run `pip install deep-translator`.
-- **"Translation failed after N attempts"**:
-    - *Symptom:* Logs show multiple retry warnings then a final failure.
-    - *Diagnosis:* API rate limits or network issues.
-    - *Solution:* Check your internet connection or increase `retry_delay_seconds` in the adapter.
-- **Missing Translations**:
-    - *Symptom:* Only some fields in the JSON are translated.
-    - *Solution:* Ensure the missing fields are listed in `P_FIELDS_TO_TRANSLATE` in `src/translator/main.py`.
+- **"ImportError: deep-translator is required"** — run `pip install deep-translator`.
+- **"Translation failed after N attempts"** — rate limit or network issue. Check internet connection or increase `retry_delay_seconds` on the adapter.
+- **Missing translated fields** — ensure the missing fields are listed in `P_FIELDS_TO_TRANSLATE` in `src/tools/translator/main.py`.

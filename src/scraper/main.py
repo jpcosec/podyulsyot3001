@@ -1,3 +1,11 @@
+"""CLI entry point and provider registry for the job portal scraper.
+
+Dispatches scrape runs to the correct portal adapter based on ``--source``.
+Logs each run to a timestamped file under ``logs/`` and prints structured
+output to stdout. All portals produce ``JobPosting`` artifacts
+under ``data/source/<source>/<job_id>/``.
+"""
+
 import logging
 import asyncio
 import os

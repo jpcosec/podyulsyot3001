@@ -377,7 +377,26 @@ def _make_apply_review_decision_node(store: MatchArtifactStore):
     ) -> Command[
         Literal["human_review_node", "prepare_regeneration_context", "__end__"]
     ]:
-        """Normalize human review input and route the graph accordingly."""
+        """Normalize human review input and route the graph accordingly.
+
+        Missing payload is treated as a safe no-op: returns to
+        ``human_review_node`` without crashing (guards against bare Studio
+        Continue). A payload with a stale hash is rejected with ValueError.
+
+        Args:
+            state: Must contain ``source``, ``job_id``, ``match_result_hash``,
+                and ``match_result``. ``review_payload`` is optional; its
+                absence triggers the safe no-op path.
+
+        Returns:
+            A ``Command`` routing to ``human_review_node`` (no payload),
+            ``prepare_regeneration_context`` (request_regeneration),
+            ``generate_documents`` (approve), or ``__end__`` (reject).
+
+        Raises:
+            ValueError: If the payload's ``source_state_hash`` does not match
+                the current ``match_result_hash``.
+        """
 
         source = _require_non_empty_text(state, "source")
         job_id = _require_non_empty_text(state, "job_id")
@@ -438,7 +457,27 @@ def _make_prepare_regeneration_context_node(store: MatchArtifactStore):
     """Create the node that prepares the next regeneration round."""
 
     def prepare_regeneration_context(state: MatchSkillState) -> MatchSkillState:
-        """Merge patch evidence and restrict the next round to scoped items."""
+        """Merge patch evidence and restrict the next round to scoped items.
+
+        Computes the regeneration scope from feedback items whose action is
+        ``patch``, merges all historical patch evidence from disk into the
+        effective profile, and clears the stale review payload so the next
+        ``run_match_llm`` starts clean.
+
+        Args:
+            state: Must contain ``review_decision`` == ``request_regeneration``,
+                ``source``, ``job_id``, ``profile_evidence``, and
+                ``active_feedback``.
+
+        Returns:
+            Partial state update with ``effective_profile_evidence``,
+            ``review_feedback``, ``regeneration_scope``, cleared
+            ``review_payload``, and ``status`` set to ``"running"``.
+
+        Raises:
+            ValueError: If ``review_decision`` is not ``request_regeneration``
+                or if no patch decisions exist in the feedback items.
+        """
 
         if state.get("review_decision") != "request_regeneration":
             raise ValueError(

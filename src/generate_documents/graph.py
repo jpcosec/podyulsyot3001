@@ -133,7 +133,28 @@ def _make_generate_documents_node(
     artifact_store = store or DocumentArtifactStore()
 
     def generate_documents_node(state: Mapping[str, Any]) -> dict[str, Any]:
-        """Generate tailored application documents based on approved matches."""
+        """Generate tailored application documents based on approved matches.
+
+        Steps: load profile → load approved matches → build prompt → invoke
+        LLM chain → run deterministic review indicators → render Jinja2
+        templates → persist artifacts.
+
+        Args:
+            state: LangGraph state mapping containing at minimum ``source``
+                and ``job_id``. Optionally ``profile_base_data``,
+                ``requirements``, ``review_payload``, and context overrides
+                (``city``, ``receiver_name``, etc.).
+
+        Returns:
+            Dict with keys ``document_deltas``, ``generated_documents``,
+            ``artifact_refs`` (merged), and ``status`` set to
+            ``"documents_generated"``.
+
+        Raises:
+            ProfileLoadError: If the profile JSON is missing or malformed.
+            ApprovedMatchesNotFoundError: If no approved matches exist on disk.
+            TemplateRenderError: If Jinja2 template rendering fails.
+        """
 
         source = state.get("source")
         job_id = state.get("job_id")
@@ -260,7 +281,28 @@ def _render_documents_internal(
     deltas: DocumentDeltas,
     state: Mapping[str, Any],
 ) -> GeneratedDocuments:
-    """Render Jinja2 templates for tailored documents."""
+    """Render Jinja2 templates into Markdown strings for each document type.
+
+    Loads templates from ``src/generate_documents/templates/`` using
+    ``StrictUndefined`` so missing variables fail loudly. Context keys
+    ``city``, ``receiver_name``, ``receiver_department``, and
+    ``receiver_institution`` are read from ``state`` when present, otherwise
+    sensible defaults are used.
+
+    Args:
+        profile_base: Candidate base profile dict passed directly to templates.
+        deltas: Structured LLM output containing CV summary, injections,
+            letter deltas, and email body.
+        state: LangGraph state mapping; read-only — used only for context
+            overrides.
+
+    Returns:
+        ``GeneratedDocuments`` with ``cv_markdown``, ``letter_markdown``, and
+        ``email_markdown`` populated.
+
+    Raises:
+        TemplateRenderError: If any Jinja2 template fails to render.
+    """
 
     template_root = Path(__file__).parent / "templates"
     env = Environment(

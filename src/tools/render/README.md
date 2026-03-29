@@ -1,95 +1,68 @@
 # 📄 Render Pipeline
 
-The `src/render` module provides a typed, engine-agnostic document rendering pipeline, decoupling document logic from rendering backends (PDF, DOCX).
+Typed, engine-agnostic document rendering pipeline. Decouples document logic from rendering backends (PDF via LaTeX, DOCX via Pandoc).
 
 ---
 
 ## 🏗️ Architecture & Features
 
-The pipeline uses a **Coordinator Pattern** to orchestrate document resolution:
-- **`coordinator.py`**: The central entry point. Resolves adapters, manifests, locale bundles, and output paths.
-- **`documents/`**: Adapters that normalize domain inputs (CV, Letter) into a shared intermediate state.
-- **`engines/`**: Backend-specific rendering logic (Pandoc, LaTeX, Docx).
-- **`languages/`**: Typed locale bundles (`common`, `cv`, `letter`) using Pydantic validation.
-- **`templates/`**: Central registry for style templates and their respective manifests.
+Uses a Coordinator pattern — one entry point resolves adapters, manifests, locale bundles, and output paths.
+
+- Central coordinator (facade, orchestrates the full render): `src/tools/render/coordinator.py`
+- Unified request model: `src/tools/render/request.py`
+- Adapter and manifest registry: `src/tools/render/registry.py`
+- Document adapters (CV, Letter — normalize inputs to intermediate state): `src/tools/render/documents/`
+- Rendering backends (LaTeX/Pandoc): `src/tools/render/engines/`
+- Typed locale bundles (common, cv, letter): `src/tools/render/languages/`
+- Style templates and manifests: `src/tools/render/templates/`
+- CLI entry point: `src/tools/render/main.py`
 
 ---
 
 ## ⚙️ Configuration
 
-Rendering requires external system dependencies:
-```env
-# No environment variables are strictly required, but the following paths must be on your $PATH:
-# - pandoc (>= 2.x)
-# - pdflatex (or xelatex)
-# - libreoffice (only for docx -> pdf conversions)
-```
+No environment variables required. The following binaries must be on `$PATH`:
 
----
-
-## 💻 How to Use (Quickstart)
-
-Render a localized CV from markdown:
-```bash
-python -m src.render.main cv \
-  --source test_assets/cv/en.md \
-  --language en \
-  --template classic \
-  --engine tex \
-  --output output/cv-en.pdf
-```
-
-Render a professional letter:
-```bash
-python -m src.render.main letter \
-  --source test_assets/letter/de.md \
-  --language de \
-  --template default \
-  --engine tex \
-  --output output/letter-de.pdf
-```
+- `pandoc` (>= 2.x)
+- `pdflatex` or `xelatex`
+- `libreoffice` (only for DOCX → PDF conversions)
 
 ---
 
 ## 🚀 CLI / Usage
 
-| Argument | Description | Default |
-|---|---|---|
-| `cv \| letter` | **(Required)** The document type to render. | |
-| `--source` | Path to the source file (Markdown or JSON). | |
-| `--language` | ISO language code (e.g. `en`, `de`, `es`). | `en` |
-| `--template` | Style template name (e.g. `classic`, `default`). | `classic` |
-| `--engine` | Rendering backend (`tex`, `docx`, `pandoc`). | `tex` |
-| `--output` | Destination path for the rendered file. | `output/rendered.pdf` |
-| `--job-id` | (Optional) Job ID for automated folder resolution. | |
+CLI arguments are defined in `_build_parser()` in `src/tools/render/main.py`. Run `python -m src.tools.render.main --help` for the full reference.
 
 ---
 
-## 📝 The Data Contract
+## 📝 Data Contract
 
-The pipeline operates on a unified **`RenderRequest`** model:
-- **`DocumentType`**: Enum (`cv`, `letter`).
-- **`RenderEngine`**: Enum (`tex`, `docx`).
-- **`Locale`**: Standardized language and region metadata.
-- **`TemplateManifest`**: JSON-based style declaration (found in `src/render/templates/**/manifest.json`).
+The request contract is `RenderRequest` in `src/tools/render/request.py`. All renders go through `RenderCoordinator.render(request)` in `src/tools/render/coordinator.py`.
 
 ---
 
 ## 🛠️ How to Add / Extend
 
-1.  **Add a new Template**:
-    - Create a new folder under `src/render/templates/{doc_type}/{template_name}/`.
-    - Create a `manifest.json` defining the engine-specific files.
-2.  **Add a Language**:
-    - Create a new locale sub-package in `src/render/languages/{iso_code}/`.
-    - Implement the `CvLocale`, `LetterLocale`, and `CommonLocale` bundles.
-3.  **Add an Engine**:
-    - Implement the `BaseRenderEngine` abstract class in `src/render/engines/`.
+1. **New template**: create `src/tools/render/templates/{doc_type}/{name}/` with a `manifest.json`.
+2. **New language**: create `src/tools/render/languages/{iso_code}/` and implement `CvLocale`, `LetterLocale`, `CommonLocale`.
+3. **New engine**: implement `BaseRenderEngine` in `src/tools/render/engines/` and register it in `src/tools/render/registry.py`.
+
+---
+
+## 💻 How to Use (Quickstart)
+
+```bash
+python -m src.tools.render.main cv \
+  --source test_assets/cv/en.md --language en --engine tex
+
+python -m src.tools.render.main letter \
+  --source test_assets/letter/de.md --language de --engine tex
+```
 
 ---
 
 ## 🚑 Troubleshooting
 
-- **"Pandoc not found"**: Ensure the `pandoc` binary is in your system `PATH`.
-- **LaTeX Compilation Errors**: Check `logs/render_*.log` for specific TeX errors. Often caused by missing character support in the selected font.
-- **DOCX Formatting Issues**: The `pandoc` docx engine is sensitive to the reference document structure. Verify your template manifest points to a valid `.docx` reference file.
+- **"Pandoc not found"** — ensure `pandoc` is on `$PATH`.
+- **LaTeX compilation errors** — check `logs/render_*.log` for TeX errors. Often caused by missing character support in the selected font.
+- **DOCX formatting issues** — the Pandoc DOCX engine is sensitive to the reference document. Verify your template manifest points to a valid `.docx` reference file.

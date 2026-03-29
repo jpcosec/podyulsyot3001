@@ -1,87 +1,67 @@
-# 🕵️‍♂️ Scraper Adapter Framework
+# 🕵️‍♂️ Scraper
 
-This framework provides a deterministic, highly concurrent, and anti-bot resilient way to scrape job portals using **Crawl4AI**. It separates logic by **Responsibilities** and enforces a strict data contract using Pydantic, with automatic LLM-rescue fallbacks.
+Anti-bot resilient job portal crawler with LLM-rescue fallbacks. Extracts structured job postings validated against a shared Pydantic contract.
 
 ---
 
 ## 🏗️ Architecture & Features
 
-Each portal adapter (e.g., `StepStone`, `TUBerlin`, `Xing`) inherits from `SmartScraperAdapter`:
+Each portal adapter inherits from a shared base and plugs into a central dispatcher.
 
-- **Concurrent Crawling**: Uses `arun_many` with `SemaphoreDispatcher` and `RateLimiter` to scrape multiple jobs while avoiding rate limits.
-- **Anti-Bot Stealth**: Simulates human behavior (`simulate_user`, `magic`, `override_navigator`).
-- **LLM-First Schema Generation**: Automatically generates CSS selectors using an LLM on the first run, then caches them for performance.
-- **LLM Rescue Fallback**: If CSS selectors fail, the engine falls back to direct Markdown extraction via Google Gemini.
-- **Strict Data Contract**: All extracted data is validated against the `JobPosting` Pydantic model.
+- Abstract base adapter (concurrent crawling, LLM schema generation, rescue fallback): `src/scraper/smart_adapter.py`
+- CLI entry point and provider registry: `src/scraper/main.py`
+- `JobPosting` Pydantic model: `src/scraper/models.py`
+- Portal-specific adapters: `src/scraper/providers/`
+
+Flow per run: search URL → extract job links → per-job CSS extraction (LLM-generated selectors, cached) → LLM rescue fallback if selectors fail → validate against `JobPosting`.
 
 ---
 
 ## ⚙️ Configuration
 
-The framework relies on the root `.env` file:
 ```env
-# Required for LLM schema generation and rescue fallback
 GOOGLE_API_KEY="your_gemini_api_key_here"
-
-# Optional: Path to Playwright browsers
 PLAYWRIGHT_BROWSERS_PATH="0"
-```
-
----
-
-## 💻 How to Use (Quickstart)
-
-Scrape a portal for the latest jobs:
-```bash
-# Full crawl of StepStone
-python -m src.scraper.main --source stepstone --limit 10
-
-# Targeted crawl for TU Berlin
-python -m src.scraper.main --source tuberlin --job_query "Data Scientist" --limit 5
 ```
 
 ---
 
 ## 🚀 CLI / Usage
 
-| Argument | Description | Default |
-|---|---|---|
-| `--source` | **(Required)** Job portal to crawl (e.g., `tuberlin`, `stepstone`, `xing`). | |
-| `--limit` | Maximum number of job postings to scrape in this run. | |
-| `--job_query` | Text search for specific professional roles or keywords. | |
-| `--categories` | Job categories to filter by (space separated). | |
-| `--city` | City or location to search in. | |
-| `--drop_repeated` | Skip jobs that have already been crawled. | `True` |
-| `--overwrite` | Force re-download and re-extraction of existing data. | `False` |
+CLI arguments are defined in `src/scraper/main.py`. Run `python -m src.scraper.main --help` for the full reference.
 
 ---
 
-## 📝 The Data Contract
+## 📝 Data Contract
 
-All scraped jobs are uniformly mapped to the **`JobPosting`** model in `models.py`:
-- **Mandatory Fields**: `job_title`, `company_name`, `location`, `employment_type`, `posted_date`, `responsibilities`, `requirements`
-- **Optional Fields**: `salary`, `remote_policy`, `benefits`, `company_description`, `company_industry`, `company_size`, `application_deadline`, `contact_info`
+The output contract is `JobPosting` in `src/scraper/models.py`.
+
+MANDATORY fields (extraction failure raises a validation error): `job_title`, `company_name`, `location`, `employment_type`, `posted_date`, `responsibilities`, `requirements`.
+
+OPTIONAL fields (may be absent): `salary`, `remote_policy`, `benefits`, `company_description`, `company_industry`, `company_size`, `application_deadline`, `contact_info`.
 
 ---
 
 ## 🛠️ How to Add / Extend (New Portal)
 
-1.  Create a folder under `src/scraper/providers/{new_source}/`.
-2.  Implement `adapter.py` by inheriting from `SmartScraperAdapter`.
-3.  Define the required abstract methods: `source_name`, `supported_params`, `get_search_url`, `extract_job_id`, `extract_links`, and `get_llm_instructions`.
-4.  Register your new adapter in the `PROVIDERS` dictionary in `src/scraper/main.py`.
+1. Create a folder under `src/scraper/providers/{new_source}/`.
+2. Implement `adapter.py` inheriting from `SmartScraperAdapter` in `src/scraper/smart_adapter.py`.
+3. Implement the required abstract methods: `source_name`, `supported_params`, `get_search_url`, `extract_job_id`, `extract_links`, `get_llm_instructions`.
+4. Register the adapter in the `PROVIDERS` dict in `src/scraper/main.py`.
+
+---
+
+## 💻 How to Use (Quickstart)
+
+```bash
+python -m src.scraper.main --source stepstone --limit 10
+python -m src.scraper.main --source tuberlin --job_query "Data Scientist" --limit 5
+```
 
 ---
 
 ## 🚑 Troubleshooting
 
-- **"Structured extraction failed"**:
-    - *Symptom:* `scrape_meta.json` indicates failure and `extracted_data.json` is empty.
-    - *Diagnosis:* The URL was invalid or the layout changed.
-    - *Solution:* Verify `extract_links()` in your adapter or delete the cached schema in `scrapping_schemas/` to trigger a re-learn.
-- **Rate Limited**:
-    - *Symptom:* Scraper stops or logs 429 errors.
-    - *Solution:* Check your `RateLimiter` settings and ensure `simulate_user` is enabled.
-- **Missing Fields**:
-    - *Symptom:* LLM rescue works but certain fields are still null.
-    - *Solution:* Refine `get_llm_instructions()` in your adapter to focus on those specific missing fields.
+- **"Structured extraction failed"** — `scrape_meta.json` indicates failure, `extracted_data.json` is empty. Verify `extract_links()` in your adapter, or delete the cached schema in `scrapping_schemas/` to trigger a re-learn.
+- **Rate limited** — logs show 429 errors. Check `RateLimiter` settings in your adapter and ensure `simulate_user` is enabled.
+- **Missing fields** — LLM rescue works but certain fields are null. Refine `get_llm_instructions()` in your adapter to target those fields explicitly.

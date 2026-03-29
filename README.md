@@ -47,9 +47,9 @@ To run a full pipeline from scratch:
 Each module provides its own CLI. Refer to the specific module READMEs for detailed arguments:
 
 - [Scraper Documentation](src/scraper/README.md)
-- [Translator Documentation](src/translator/README.md)
+- [Translator Documentation](src/tools/translator/README.md)
 - [Match Skill Documentation](src/match_skill/README.md)
-- [Render Pipeline Documentation](src/render/README.md)
+- [Render Pipeline Documentation](src/tools/render/README.md)
 
 ---
 
@@ -65,9 +65,9 @@ The system communicates via structured Pydantic models:
 ## 🛠️ How to Add / Extend
 
 Detailed guides for extending specific components can be found in:
-- `docs/standards/documentation_methodology_guide.md`
-- `src/scraper/README.md#how-to-add-a-new-job-portal`
-- `src/render/README.md#adding-new-templates`
+- `docs/standards/docs/documentation_and_planning_guide.md`
+- `src/scraper/README.md`
+- `src/tools/render/README.md`
 
 ---
 

@@ -1,3 +1,12 @@
+"""CLI entry point for the translation pipeline.
+
+Scans ``data/source/<source>/`` for job folders that contain
+``extracted_data.json`` and ``content.md``, translates all fields listed in
+``P_FIELDS_TO_TRANSLATE`` and the Markdown body, and writes
+``extracted_data_en.json`` and ``content_en.md`` to the same folder.
+Already-translated jobs are skipped unless ``--force`` is set.
+"""
+
 import argparse
 import logging
 import os

@@ -75,7 +75,22 @@ def build_generate_documents_prompt_input(
     approved_matches: list[Any],
     review_items: list[Any],
 ) -> dict[str, Any]:
-    """Prepare variables for the generation prompt."""
+    """Prepare the Jinja2 variable dict for the generation user prompt.
+
+    Strips empty and metadata-only fields from the profile to reduce token
+    usage before serialising it to JSON.
+
+    Args:
+        profile_base: Candidate base profile dict loaded from disk.
+        approved_matches: Enriched match dicts (requirement_id, evidence_ids,
+            reasoning, requirement_text).
+        review_items: Raw review payload items; used to surface human patches
+            in the ``<human_patches>`` block.
+
+    Returns:
+        Dict with keys ``filtered_profile_json``, ``approved_matches``, and
+        ``review_items`` ready to be passed to the Jinja2 USER_TEMPLATE.
+    """
     
     # We strip empty fields from profile to save tokens
     filtered_profile = {
@@ -94,7 +109,20 @@ def build_generate_documents_prompt(
     approved_matches: list[Any],
     review_items: list[Any],
 ) -> str:
-    """Render the user prompt for document generation."""
+    """Render the Jinja2 USER_TEMPLATE into the final user prompt string.
+
+    Args:
+        profile_base: Candidate base profile dict loaded from disk.
+        approved_matches: Enriched match dicts to populate the
+            ``<validated_matches>`` block.
+        review_items: Raw review payload items; patches surface in the
+            ``<human_patches>`` block when decision is
+            ``request_regeneration``.
+
+    Returns:
+        Rendered prompt string ready to be passed as the ``user`` message
+        in a ``ChatPromptTemplate``.
+    """
     env = Environment(undefined=StrictUndefined)
     template = env.from_string(USER_TEMPLATE)
     
