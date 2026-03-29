@@ -14,10 +14,13 @@ import json
 import logging
 import shutil
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from src.ai.match_skill.contracts import RequirementInput
 from src.shared.log_tags import LogTag
+
+if TYPE_CHECKING:
+    from src.core.io import WorkspaceManager
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +36,7 @@ def extract_bridge(
     job_id: str,
     data_root: str | Path = "data/source",
     output_root: str | Path = "output/match_skill",
+    workspace: WorkspaceManager | None = None,
 ) -> list[RequirementInput]:
     """Transform job posting requirements to match_skill RequirementInput format.
 
@@ -44,6 +48,7 @@ def extract_bridge(
         job_id: Unique job posting identifier.
         data_root: Root directory for scraped/translated data.
         output_root: Root directory for match_skill artifacts.
+        workspace: Optional WorkspaceManager for I/O operations.
 
     Returns:
         List of RequirementInput objects derived from job posting requirements.
@@ -93,20 +98,34 @@ def extract_bridge(
         for i, req in enumerate(requirements, 1)
     ]
 
-    _write_output(
-        source=source,
-        job_id=job_id,
-        requirements=requirement_inputs,
-        raw_data=raw_data,
-        output_root=output_root,
-    )
-
-    _copy_content_file(
-        source_path=source_path,
-        source=source,
-        job_id=job_id,
-        output_root=output_root,
-    )
+    if workspace is not None:
+        _write_output_workspace(
+            workspace=workspace,
+            source=source,
+            job_id=job_id,
+            requirements=requirement_inputs,
+            raw_data=raw_data,
+        )
+        _copy_content_workspace(
+            workspace=workspace,
+            source_path=source_path,
+            source=source,
+            job_id=job_id,
+        )
+    else:
+        _write_output(
+            source=source,
+            job_id=job_id,
+            requirements=requirement_inputs,
+            raw_data=raw_data,
+            output_root=output_root,
+        )
+        _copy_content_file(
+            source_path=source_path,
+            source=source,
+            job_id=job_id,
+            output_root=output_root,
+        )
 
     logger.info(
         f"{LogTag.OK} Extracted bridge completed: {len(requirement_inputs)} requirements"
@@ -173,3 +192,57 @@ def _copy_content_file(
     content_dst = output_path / "content.md"
     shutil.copy2(content_src, content_dst)
     logger.debug(f"{LogTag.FAST} Copied content.md to {content_dst}")
+
+
+def _write_output_workspace(
+    workspace: WorkspaceManager,
+    source: str,
+    job_id: str,
+    requirements: list[RequirementInput],
+    raw_data: dict[str, Any],
+) -> None:
+    """Write transformed requirements to match_skill artifact directory using workspace."""
+    state_payload = {
+        "source": source,
+        "job_id": job_id,
+        "requirements": [req.model_dump() for req in requirements],
+        "job_posting": raw_data,
+    }
+
+    artifact_path = workspace.node_stage_artifact(
+        source=source,
+        job_id=job_id,
+        node_name="extract_bridge",
+        stage="proposed",
+        filename="state.json",
+    )
+    workspace.ensure_parent(artifact_path)
+    artifact_path.write_text(
+        json.dumps(state_payload, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    logger.debug(f"{LogTag.FAST} Wrote state to {artifact_path}")
+
+
+def _copy_content_workspace(
+    workspace: WorkspaceManager,
+    source_path: Path,
+    source: str,
+    job_id: str,
+) -> None:
+    """Copy content.md to match_skill artifact directory if it exists using workspace."""
+    content_src = source_path / "content.md"
+    if not content_src.exists():
+        logger.debug(f"{LogTag.SKIP} No content.md to copy for {source}/{job_id}")
+        return
+
+    artifact_path = workspace.node_stage_artifact(
+        source=source,
+        job_id=job_id,
+        node_name="extract_bridge",
+        stage="proposed",
+        filename="content.md",
+    )
+    workspace.ensure_parent(artifact_path)
+    shutil.copy2(content_src, artifact_path)
+    logger.debug(f"{LogTag.FAST} Copied content.md to {artifact_path}")

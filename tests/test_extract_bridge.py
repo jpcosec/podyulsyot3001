@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from src.core.io import WorkspaceManager
 from src.graph.nodes.extract_bridge import (
     ExtractBridgeError,
     extract_bridge,
@@ -160,7 +161,7 @@ def test_extract_bridge_missing_file_returns_error_requirement(
     """Test that missing data file returns error dummy requirement."""
     result = extract_bridge(
         source="stepstone",
-        job_id="nonexistent",
+        job_id="12345",
         data_root=temp_data_root,
         output_root=temp_output_root,
     )
@@ -168,6 +169,42 @@ def test_extract_bridge_missing_file_returns_error_requirement(
     assert len(result) == 1
     assert result[0].id == "REQ_ERROR"
     assert "[ERROR:" in result[0].text
+
+
+def test_extract_bridge_with_workspace(temp_data_root: Path, tmp_path: Path) -> None:
+    """Test that extract_bridge works with WorkspaceManager."""
+    job_data = {
+        "job_title": "Test Engineer",
+        "company_name": "Test Corp",
+        "requirements": [
+            "5+ years Python experience",
+            "Experience with LangGraph",
+        ],
+    }
+    _write_job_data(temp_data_root, "stepstone", "12345", job_data)
+
+    workspace = WorkspaceManager(jobs_root=tmp_path / "output")
+
+    result = extract_bridge(
+        source="stepstone",
+        job_id="12345",
+        data_root=temp_data_root,
+        workspace=workspace,
+    )
+
+    assert len(result) == 2
+    assert result[0].id == "REQ_001"
+    assert result[0].text == "5+ years Python experience"
+    assert result[1].id == "REQ_002"
+
+    state_path = workspace.node_stage_artifact(
+        "stepstone", "12345", "extract_bridge", "proposed", "state.json"
+    )
+    assert state_path.exists()
+
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    assert state["source"] == "stepstone"
+    assert state["job_id"] == "12345"
 
 
 def test_extract_bridge_copies_content_md(
