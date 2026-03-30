@@ -41,6 +41,62 @@ P_FIELDS_TO_TRANSLATE = [
 ]
 
 
+def translate_single_job(
+    data_manager: DataManager,
+    adapter,
+    source: str,
+    job_id: str,
+    *,
+    target_lang: str = "en",
+    force: bool = False,
+) -> bool:
+    """Translate a single job's ingest artifacts to the target language.
+
+    Returns True on success or skip, raises on unrecoverable error.
+    """
+    json_path = data_manager.artifact_path(source, job_id, "ingest", "proposed", "state.json")
+    md_path = data_manager.artifact_path(source, job_id, "ingest", "proposed", "content.md")
+    out_json_path = data_manager.artifact_path(source, job_id, "translate", "proposed", "state.json")
+    out_md_path = data_manager.artifact_path(source, job_id, "translate", "proposed", "content.md")
+
+    if not json_path.exists():
+        raise FileNotFoundError(f"Ingest artifact not found: {json_path}")
+
+    if not force and out_json_path.exists() and out_md_path.exists():
+        logger.info(f"  [skip] {job_id} already translated")
+        return True
+
+    with open(json_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    orig_lang = data.get("original_language", "auto")
+
+    if orig_lang == target_lang:
+        logger.info(f"  [skip] {job_id} already in target language '{orig_lang}'")
+        data_manager.write_json_artifact(source, job_id, "translate", "proposed", "state.json", data)
+        md_content = data_manager.read_text_path(md_path) if md_path.exists() else ""
+        data_manager.write_text_artifact(source, job_id, "translate", "proposed", "content.md", md_content)
+        return True
+
+    logger.info(f"  [translate] {job_id}: '{orig_lang}' -> '{target_lang}'")
+
+    translated_data = adapter.translate_fields(
+        data,
+        fields=P_FIELDS_TO_TRANSLATE,
+        target_lang=target_lang,
+        source_lang=orig_lang,
+    )
+    translated_data["original_language"] = target_lang
+
+    md_content = data_manager.read_text_path(md_path) if md_path.exists() else ""
+    translated_md = adapter.translate_text(md_content, target_lang=target_lang, source_lang=orig_lang)
+
+    data_manager.write_json_artifact(source, job_id, "translate", "proposed", "state.json", translated_data)
+    data_manager.write_text_artifact(source, job_id, "translate", "proposed", "content.md", translated_md)
+    logger.info(f"  [done] {job_id} translated successfully")
+    return True
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Deterministic Translation Pipeline")
     parser.add_argument(
@@ -105,106 +161,20 @@ def main(argv: list[str] | None = None) -> None:
             stage="proposed",
             filename="state.json",
         )
-        md_path = data_manager.artifact_path(
-            source=args.source,
-            job_id=job_dir,
-            node_name="ingest",
-            stage="proposed",
-            filename="content.md",
-        )
-        out_json_path = data_manager.artifact_path(
-            source=args.source,
-            job_id=job_dir,
-            node_name="translate",
-            stage="proposed",
-            filename="state.json",
-        )
-        out_md_path = data_manager.artifact_path(
-            source=args.source,
-            job_id=job_dir,
-            node_name="translate",
-            stage="proposed",
-            filename="content.md",
-        )
-
         if not json_path.exists():
             continue
 
-        if not args.force and out_json_path.exists() and out_md_path.exists():
-            logger.info(f"  [⏭️] Skipping {job_dir} (Already translated)")
-            continue
-
         try:
-            with open(json_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
-
-            orig_lang = data.get("original_language", "auto")
-
-            if orig_lang == args.target_lang:
-                logger.info(
-                    f"  [⏭️] Skipping {job_dir} (Already matches target language: '{orig_lang}')"
-                )
-                data_manager.write_json_artifact(
-                    source=args.source,
-                    job_id=job_dir,
-                    node_name="translate",
-                    stage="proposed",
-                    filename="state.json",
-                    data=data,
-                )
-                data_manager.write_text_artifact(
-                    source=args.source,
-                    job_id=job_dir,
-                    node_name="translate",
-                    stage="proposed",
-                    filename="content.md",
-                    content=data_manager.read_text_path(md_path)
-                    if md_path.exists()
-                    else "",
-                )
-                continue
-
-            logger.info(
-                f"  [🔄] Translating {job_dir} from '{orig_lang}' to '{args.target_lang}' using {args.provider}..."
-            )
-
-            # 1. Translate JSON Dictionary Elements
-            translated_data = adapter.translate_fields(
-                data,
-                fields=P_FIELDS_TO_TRANSLATE,
+            translate_single_job(
+                data_manager,
+                adapter,
+                args.source,
+                job_dir,
                 target_lang=args.target_lang,
-                source_lang=orig_lang,
+                force=args.force,
             )
-            translated_data["original_language"] = args.target_lang
-
-            # 2. Translate body markdown
-            md_content = (
-                data_manager.read_text_path(md_path) if md_path.exists() else ""
-            )
-            translated_md = adapter.translate_text(
-                md_content, target_lang=args.target_lang, source_lang=orig_lang
-            )
-
-            data_manager.write_json_artifact(
-                source=args.source,
-                job_id=job_dir,
-                node_name="translate",
-                stage="proposed",
-                filename="state.json",
-                data=translated_data,
-            )
-            data_manager.write_text_artifact(
-                source=args.source,
-                job_id=job_dir,
-                node_name="translate",
-                stage="proposed",
-                filename="content.md",
-                content=translated_md,
-            )
-            logger.info(f"  [✅] {job_dir} successfully translated.")
-
         except Exception as e:
-            logger.error(f"  [❌] Failed to translate {job_dir}: {str(e)}")
+            logger.error(f"  [error] Failed to translate {job_dir}: {e}")
 
 
 if __name__ == "__main__":

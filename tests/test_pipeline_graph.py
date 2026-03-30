@@ -197,3 +197,62 @@ def test_extract_bridge_fails_on_missing_translate_artifact(tmp_path):
     assert result["status"] == "failed"
     assert result["current_node"] == "extract_bridge"
     assert "translate" in result["error_state"]["message"].lower()
+
+
+def test_translate_single_job_skips_when_already_translated(tmp_path):
+    """translate_single_job must skip and return True when output files already exist."""
+    from unittest.mock import MagicMock
+    from src.core.tools.translator.main import translate_single_job
+    from src.core.data_manager import DataManager
+
+    ingest_json = tmp_path / "ingest_state.json"
+    ingest_json.write_text('{"job_title": "Test", "original_language": "de"}')
+    out_json = tmp_path / "translate_state.json"
+    out_json.write_text("{}")  # already exists
+
+    dm = MagicMock(spec=DataManager)
+
+    def _artifact_path(source, job_id, node_name, stage, filename):
+        if node_name == "ingest":
+            return ingest_json
+        return out_json  # translate output already exists
+
+    dm.artifact_path.side_effect = _artifact_path
+
+    adapter = MagicMock()
+    result = translate_single_job(dm, adapter, "test", "job1", target_lang="en", force=False)
+    assert result is True
+    adapter.translate_fields.assert_not_called()
+
+
+def test_translate_single_job_translates_non_english(tmp_path):
+    """translate_single_job must call translation for non-English jobs."""
+    import json
+    from unittest.mock import MagicMock
+    from src.core.tools.translator.main import translate_single_job
+    from src.core.data_manager import DataManager
+
+    ingest_json = tmp_path / "ingest_state.json"
+    ingest_json.write_text(json.dumps({"job_title": "Ingenieur", "original_language": "de"}))
+    ingest_md = tmp_path / "content.md"
+    ingest_md.write_text("Beschreibung")
+    out_json = tmp_path / "translate_state.json"
+    out_md = tmp_path / "translate_content.md"
+    # out files do NOT exist yet
+
+    dm = MagicMock(spec=DataManager)
+
+    def _artifact_path(source, job_id, node_name, stage, filename):
+        if node_name == "ingest":
+            return ingest_json if filename == "state.json" else ingest_md
+        return out_json if filename == "state.json" else out_md
+
+    dm.artifact_path.side_effect = _artifact_path
+
+    adapter = MagicMock()
+    translated = {"job_title": "Engineer", "original_language": "en"}
+    adapter.translate_fields.return_value = translated
+
+    result = translate_single_job(dm, adapter, "test", "job1", target_lang="en", force=False)
+    assert result is True
+    adapter.translate_fields.assert_called_once()
