@@ -190,8 +190,8 @@ class MatchArtifactStore:
             # but we should log it
             import logging
 
-            logging.getLogger(__name__).warning(
-                f"Failed to propagate profile patches: {e}"
+            logging.getLogger(__name__).error(
+                f"_propagate_patches_to_global_profile: patch write failed — reviewer feedback was lost: {e}"
             )
 
     def get_all_feedback_patches(
