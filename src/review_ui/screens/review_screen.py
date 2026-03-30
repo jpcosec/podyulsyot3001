@@ -160,6 +160,7 @@ class ReviewScreen(Screen):
     @work(thread=True, exit_on_error=False)
     def _submit_review(self, payload: ReviewPayload) -> None:
         """Submit the review payload to LangGraph in a background thread."""
+        self.app.call_from_thread(self._disable_submit)
         self.app.call_from_thread(
             self.query_one("#status-log", RichLog).write,
             "[yellow]Submitting review to LangGraph…[/]",
@@ -178,10 +179,21 @@ class ReviewScreen(Screen):
                 self.query_one("#status-log", RichLog).write,
                 f"[red]Error: {exc}[/]",
             )
+            self.app.call_from_thread(self._re_enable_submit)
 
     # ------------------------------------------------------------------
     # UI updates (called via call_from_thread)
     # ------------------------------------------------------------------
+
+    def _disable_submit(self) -> None:
+        """Disable the submit button to prevent double-submit during submission."""
+        btn = self.query_one("#btn-submit", Button)
+        btn.disabled = True
+
+    def _re_enable_submit(self) -> None:
+        """Re-enable the submit button after a failed submission (allows retry)."""
+        btn = self.query_one("#btn-submit", Button)
+        btn.disabled = False
 
     def _render_surface(self, surface: ReviewSurface) -> None:
         """Populate the screen with loaded review surface data."""
