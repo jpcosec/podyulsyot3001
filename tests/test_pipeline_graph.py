@@ -155,3 +155,45 @@ def test_ingest_node_fetches_single_job_from_source_url(tmp_path, monkeypatch):
     assert result["status"] == "running"
     assert result["job_id"] == "555"
     assert manager.has_ingested_job("stepstone", "555") is True
+
+
+def test_extract_bridge_skips_when_upstream_failed(tmp_path):
+    """extract_bridge must return status=failed immediately if upstream status is failed."""
+    from src.graph import _extract_bridge_node
+    from unittest.mock import MagicMock
+    from src.core.data_manager import DataManager
+
+    dm = MagicMock(spec=DataManager)
+    state = {
+        "source": "test",
+        "job_id": "999",
+        "status": "failed",
+        "error_state": {"node": "translate", "message": "artifact missing", "details": None},
+        "artifact_refs": {},
+    }
+    result = _extract_bridge_node(state, dm)
+
+    assert result["status"] == "failed"
+    assert result["current_node"] == "extract_bridge"
+    assert "translate" in result["error_state"]["message"]
+
+
+def test_extract_bridge_fails_on_missing_translate_artifact(tmp_path):
+    """extract_bridge must return status=failed with actionable message when translate artifact missing."""
+    from src.graph import _extract_bridge_node
+    from unittest.mock import MagicMock
+    from src.core.data_manager import DataManager
+
+    dm = MagicMock(spec=DataManager)
+    dm.read_json_artifact.side_effect = FileNotFoundError("not found")
+    state = {
+        "source": "test",
+        "job_id": "999",
+        "status": "running",
+        "artifact_refs": {},
+    }
+    result = _extract_bridge_node(state, dm)
+
+    assert result["status"] == "failed"
+    assert result["current_node"] == "extract_bridge"
+    assert "translate" in result["error_state"]["message"].lower()

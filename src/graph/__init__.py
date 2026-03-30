@@ -22,16 +22,45 @@ from src.graph.nodes.translate import make_translate_node
 
 
 def _extract_bridge_node(state: GraphState, data_manager: DataManager) -> dict:
+    if state.get("status") == "failed":
+        prior = state.get("error_state") or {}
+        return {
+            "current_node": "extract_bridge",
+            "status": "failed",
+            "error_state": {
+                "node": "extract_bridge",
+                "message": (
+                    f"Skipped: upstream node '{prior.get('node', 'unknown')}' failed — "
+                    f"{prior.get('message', '')}"
+                ),
+                "details": None,
+            },
+        }
+
     def _build_bridge() -> dict:
         source = state["source"]
         job_id = state["job_id"]
-        translated_state = data_manager.read_json_artifact(
-            source=source,
-            job_id=job_id,
-            node_name="translate",
-            stage="proposed",
-            filename="state.json",
-        )
+        try:
+            translated_state = data_manager.read_json_artifact(
+                source=source,
+                job_id=job_id,
+                node_name="translate",
+                stage="proposed",
+                filename="state.json",
+            )
+        except FileNotFoundError:
+            return {
+                "current_node": "extract_bridge",
+                "status": "failed",
+                "error_state": {
+                    "node": "extract_bridge",
+                    "message": (
+                        "translate/proposed/state.json not found — "
+                        "translation must complete before extract_bridge"
+                    ),
+                    "details": None,
+                },
+            }
         requirements = extract_requirements_from_job_posting(translated_state)
         requirements_dicts = [item.model_dump() for item in requirements]
         state_payload = {
