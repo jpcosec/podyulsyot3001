@@ -54,10 +54,10 @@ def translate_single_job(
 
     Returns True on success or skip, raises on unrecoverable error.
     """
-    json_path = data_manager.artifact_path(source, job_id, "ingest", "proposed", "state.json")
-    md_path = data_manager.artifact_path(source, job_id, "ingest", "proposed", "content.md")
-    out_json_path = data_manager.artifact_path(source, job_id, "translate", "proposed", "state.json")
-    out_md_path = data_manager.artifact_path(source, job_id, "translate", "proposed", "content.md")
+    json_path = data_manager.artifact_path(source=source, job_id=job_id, node_name="ingest", stage="proposed", filename="state.json")
+    md_path = data_manager.artifact_path(source=source, job_id=job_id, node_name="ingest", stage="proposed", filename="content.md")
+    out_json_path = data_manager.artifact_path(source=source, job_id=job_id, node_name="translate", stage="proposed", filename="state.json")
+    out_md_path = data_manager.artifact_path(source=source, job_id=job_id, node_name="translate", stage="proposed", filename="content.md")
 
     if not json_path.exists():
         raise FileNotFoundError(f"Ingest artifact not found: {json_path}")
@@ -73,9 +73,9 @@ def translate_single_job(
 
     if orig_lang == target_lang:
         logger.info(f"  [skip] {job_id} already in target language '{orig_lang}'")
-        data_manager.write_json_artifact(source, job_id, "translate", "proposed", "state.json", data)
+        data_manager.write_json_artifact(source=source, job_id=job_id, node_name="translate", stage="proposed", filename="state.json", data=data)
         md_content = data_manager.read_text_path(md_path) if md_path.exists() else ""
-        data_manager.write_text_artifact(source, job_id, "translate", "proposed", "content.md", md_content)
+        data_manager.write_text_artifact(source=source, job_id=job_id, node_name="translate", stage="proposed", filename="content.md", content=md_content)
         return True
 
     logger.info(f"  [translate] {job_id}: '{orig_lang}' -> '{target_lang}'")
@@ -91,8 +91,8 @@ def translate_single_job(
     md_content = data_manager.read_text_path(md_path) if md_path.exists() else ""
     translated_md = adapter.translate_text(md_content, target_lang=target_lang, source_lang=orig_lang)
 
-    data_manager.write_json_artifact(source, job_id, "translate", "proposed", "state.json", translated_data)
-    data_manager.write_text_artifact(source, job_id, "translate", "proposed", "content.md", translated_md)
+    data_manager.write_json_artifact(source=source, job_id=job_id, node_name="translate", stage="proposed", filename="state.json", data=translated_data)
+    data_manager.write_text_artifact(source=source, job_id=job_id, node_name="translate", stage="proposed", filename="content.md", content=translated_md)
     logger.info(f"  [done] {job_id} translated successfully")
     return True
 
