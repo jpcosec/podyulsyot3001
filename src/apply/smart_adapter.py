@@ -324,6 +324,10 @@ class ApplyAdapter(ABC):
         (first_name, email, etc.) should override this method and merge in candidate
         data from their own source.
         """
+        # TODO: override in adapter or subclass to include candidate personal fields
+        # (first_name, last_name, email, phone) so fill scripts can substitute them.
+        # Without this, {{first_name}} etc. will remain as literal strings in the
+        # rendered C4A-Script.
         return {
             "job_title": ingest_data.get("job_title", ""),
             "company_name": ingest_data.get("company_name", ""),

@@ -99,7 +99,7 @@ def test_render_script_injects_values(adapter):
 
 
 def test_get_portal_base_url(adapter):
-    assert "stepstone" in adapter._get_portal_base_url().lower()
+    assert "stepstone.de" in adapter._get_portal_base_url().lower()
 
 
 def test_get_success_text_not_empty(adapter):
