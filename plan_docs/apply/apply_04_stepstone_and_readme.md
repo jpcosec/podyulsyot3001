@@ -178,13 +178,18 @@ def test_optional_selectors_found_in_fixture(adapter, stepstone_html):
 
 def test_open_modal_script_is_idempotent(adapter):
     script = adapter.get_open_modal_script()
-    assert "IF NOT" in script or "IF" in script
+    assert "IF NOT" in script
 
 
 def test_fill_form_script_uses_placeholders(adapter):
     profile = {"first_name": "Alice", "last_name": "Smith", "email": "a@b.com"}
     script = adapter.get_fill_form_script(profile)
-    assert "{{" in script or "first_name" not in script or "Alice" not in script
+    assert "{{" in script, (
+        "get_fill_form_script() must use {{placeholder}} syntax. "
+        "Do not interpolate profile values directly — let _render_script() handle escaping."
+    )
+    assert "Alice" not in script
+    assert "Smith" not in script
 
 
 def test_render_script_injects_values(adapter):
