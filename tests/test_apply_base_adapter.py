@@ -122,8 +122,8 @@ class TestRenderScript:
         adapter = _ConcreteAdapter()
         template = 'SET `input` "{{name}}"'
         result = adapter._render_script(template, {"name": "O'Connor"})
-        # json.dumps("O'Connor") = '"O\'Connor"' — apostrophe safe in C4A-Script
-        assert "O'Connor" in result or "O\\u0027Connor" not in result
+        # json.dumps does not escape apostrophes — they pass through literally
+        assert "O'Connor" in result
 
     def test_unused_placeholder_preserved(self):
         """Placeholders with no matching profile key are left as-is."""

@@ -281,6 +281,7 @@ class ApplyAdapter(ABC):
         )
 
     def _save_screenshot(self, screenshot_bytes: bytes, job_id: str, filename: str) -> None:
+        # DataManager has no binary-write method; write directly via artifact_path.
         path = self.data_manager.artifact_path(
             source=self.source_name,
             job_id=job_id,
@@ -316,7 +317,13 @@ class ApplyAdapter(ABC):
     # ── Main execution flow ──────────────────────────────────────────────────
 
     def _build_profile(self, ingest_data: dict) -> dict:
-        """Build the profile dict used for C4A-Script placeholder injection."""
+        """Build job-context metadata for C4A-Script placeholder injection.
+
+        Returns only job-level fields (job_title, company_name, application_url)
+        extracted from the ingest artifact. Adapters that need per-candidate fields
+        (first_name, email, etc.) should override this method and merge in candidate
+        data from their own source.
+        """
         return {
             "job_title": ingest_data.get("job_title", ""),
             "company_name": ingest_data.get("company_name", ""),
