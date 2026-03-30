@@ -1,4 +1,8 @@
-"""Pipeline translate node adapters for schema-v0."""
+"""Pipeline translate node — verify-only adapter.
+
+Translation is performed as a CLI pre-processing step (src.core.tools.translator.main).
+This node verifies the translated artifact is present and populates artifact_refs.
+"""
 
 from __future__ import annotations
 
@@ -12,107 +16,58 @@ logger = logging.getLogger(__name__)
 
 
 def make_translate_node(data_manager: DataManager):
-    """Create the translate node adapter that persists canonical translated artifacts."""
+    """Create the translate verify node."""
 
-    def _translate_sync(
-        source: str, job_id: str, artifact_refs: dict[str, str]
-    ) -> dict:
-        from src.core.tools.translator.main import P_FIELDS_TO_TRANSLATE
-        from src.core.tools.translator.providers.google.adapter import (
-            GoogleTranslatorAdapter,
-        )
+    def translate_node(state: GraphState) -> dict:
+        source = state["source"]
+        job_id = state["job_id"]
+        refs = dict(state.get("artifact_refs", {}))
 
-        adapter = GoogleTranslatorAdapter()
-        raw_state = data_manager.read_json_artifact(
-            source=source,
-            job_id=job_id,
-            node_name="ingest",
-            stage="proposed",
-            filename="state.json",
-        )
-        raw_content = artifact_refs.get("ingest_content")
-        content_md = ""
-        if raw_content:
-            content_md = data_manager.read_text_artifact(
-                source=source,
-                job_id=job_id,
-                node_name="ingest",
-                stage="proposed",
-                filename="content.md",
-            )
-
-        original_language = raw_state.get("original_language", "auto")
-        if original_language == "en":
-            translated_state = raw_state
-            translated_content = content_md
-        else:
-            translated_state = adapter.translate_fields(
-                raw_state,
-                fields=P_FIELDS_TO_TRANSLATE,
-                target_lang="en",
-                source_lang=original_language,
-            )
-            translated_state["original_language"] = "en"
-            translated_content = (
-                adapter.translate_text(
-                    content_md,
-                    target_lang="en",
-                    source_lang=original_language,
-                )
-                if content_md
-                else ""
-            )
-
-        state_ref = data_manager.write_json_artifact(
+        state_path = data_manager.artifact_path(
             source=source,
             job_id=job_id,
             node_name="translate",
             stage="proposed",
             filename="state.json",
-            data=translated_state,
         )
-        refs = {
-            **artifact_refs,
-            "translated_state": str(state_ref),
-        }
-        if translated_content:
-            content_ref = data_manager.write_text_artifact(
-                source=source,
-                job_id=job_id,
-                node_name="translate",
-                stage="proposed",
-                filename="content.md",
-                content=translated_content,
+
+        if not state_path.exists():
+            logger.error(
+                "%s translate/proposed/state.json missing for %s/%s — run 'translate' step before pipeline",
+                LogTag.FAIL,
+                source,
+                job_id,
             )
-            refs["translated_content"] = str(content_ref)
-
-        return refs
-
-    def translate_node(state: GraphState) -> dict:
-        source = state["source"]
-        job_id = state["job_id"]
-
-        try:
-            refs = _translate_sync(source, job_id, state.get("artifact_refs", {}))
-
-            logger.info(
-                f"{LogTag.OK} Persisted translated artifacts for {source}/{job_id}"
-            )
-            return {
-                "artifact_refs": refs,
-                "current_node": "translate",
-                "status": "running",
-            }
-        except Exception as exc:
-            logger.error(f"{LogTag.FAIL} Translate node failed: {exc}")
             return {
                 "current_node": "translate",
                 "status": "failed",
                 "error_state": {
                     "node": "translate",
-                    "message": str(exc),
+                    "message": (
+                        f"translate/proposed/state.json not found for {source}/{job_id}. "
+                        "Translation must be run before launching the pipeline."
+                    ),
                     "details": None,
                 },
             }
+
+        refs["translated_state"] = str(state_path)
+
+        content_path = data_manager.artifact_path(
+            source=source,
+            job_id=job_id,
+            node_name="translate",
+            stage="proposed",
+            filename="content.md",
+        )
+        if content_path.exists():
+            refs["translated_content"] = str(content_path)
+
+        logger.info("%s Translate artifact verified for %s/%s", LogTag.OK, source, job_id)
+        return {
+            "artifact_refs": refs,
+            "current_node": "translate",
+            "status": "running",
+        }
 
     return translate_node

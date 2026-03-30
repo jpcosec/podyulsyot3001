@@ -256,3 +256,52 @@ def test_translate_single_job_translates_non_english(tmp_path):
     result = translate_single_job(dm, adapter, "test", "job1", target_lang="en", force=False)
     assert result is True
     adapter.translate_fields.assert_called_once()
+
+
+def test_translate_node_fails_when_artifact_missing(tmp_path):
+    """translate node must return status=failed when translate/state.json is absent."""
+    from unittest.mock import MagicMock
+    from src.graph.nodes.translate import make_translate_node
+    from src.core.data_manager import DataManager
+
+    dm = MagicMock(spec=DataManager)
+    # artifact_path returns a path that does NOT exist
+    dm.artifact_path.return_value = tmp_path / "nonexistent.json"
+
+    node = make_translate_node(dm)
+    result = node({"source": "test", "job_id": "999", "artifact_refs": {}})
+
+    assert result["status"] == "failed"
+    assert result["current_node"] == "translate"
+    assert "translate" in result["error_state"]["message"].lower()
+
+
+def test_translate_node_succeeds_when_artifact_present(tmp_path):
+    """translate node must return status=running and populate artifact_refs when artifact exists."""
+    import json
+    from unittest.mock import MagicMock
+    from src.graph.nodes.translate import make_translate_node
+    from src.core.data_manager import DataManager
+
+    state_file = tmp_path / "state.json"
+    state_file.write_text(json.dumps({"job_title": "Engineer"}))
+
+    dm = MagicMock(spec=DataManager)
+    # First call returns state_file (exists), second call returns content path (doesn't exist)
+    content_file = tmp_path / "content.md"
+    call_count = {"n": 0}
+
+    def _artifact_path(**kw):
+        call_count["n"] += 1
+        if call_count["n"] == 1:
+            return state_file
+        return content_file  # doesn't exist
+
+    dm.artifact_path.side_effect = _artifact_path
+
+    node = make_translate_node(dm)
+    result = node({"source": "test", "job_id": "999", "artifact_refs": {}})
+
+    assert result["status"] == "running"
+    assert result["current_node"] == "translate"
+    assert "translated_state" in result["artifact_refs"]
