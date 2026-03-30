@@ -6,6 +6,8 @@ Usage:
 
     # First-time session setup (mutually exclusive with apply mode)
     python -m src.apply.main --source xing --setup-session
+
+Spec reference: docs/superpowers/specs/2026-03-30-apply-module-design.md Section 2
 """
 from __future__ import annotations
 
@@ -87,11 +89,9 @@ async def main(argv: list[str] | None = None) -> None:
         )
         sys.exit(1)
 
-    providers = build_providers()
-    adapter = providers[args.source]
-
     if args.setup_session:
-        await adapter.setup_session()
+        providers = build_providers()
+        await providers[args.source].setup_session()
         return
 
     if not args.job_id or not args.cv_path:
@@ -100,7 +100,8 @@ async def main(argv: list[str] | None = None) -> None:
         )
         sys.exit(1)
 
-    meta = await adapter.run(
+    providers = build_providers()
+    meta = await providers[args.source].run(
         job_id=args.job_id,
         cv_path=Path(args.cv_path),
         letter_path=Path(args.letter_path) if args.letter_path else None,

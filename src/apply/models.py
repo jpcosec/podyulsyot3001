@@ -1,4 +1,7 @@
-"""Pydantic models for the apply module."""
+"""Pydantic models for the apply module.
+
+Spec reference: docs/superpowers/specs/2026-03-30-apply-module-design.md Section 3
+"""
 from __future__ import annotations
 
 from typing import Literal
