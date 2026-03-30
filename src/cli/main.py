@@ -236,8 +236,8 @@ async def _run_api(args: argparse.Namespace) -> int:
         if client.is_healthy():
             print(client.url)
             return 0
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.debug("LangGraph API health check raised: %s", exc)
     print("LangGraph API not reachable", file=sys.stderr)
     return 1
 
