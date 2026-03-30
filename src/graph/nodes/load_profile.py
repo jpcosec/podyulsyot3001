@@ -86,6 +86,8 @@ def _load_profile_sync(state: GraphState, data_manager: DataManager) -> dict:
 
     evidence = _transform_profile_to_evidence(profile_data)
 
+    # TODO(future): propagate_profile_patches swallows write failures silently
+    #   see future_docs/issues/load_profile_patches_silent_failure.md
     patches_path = master_path.parent / "profile_patches.json"
     if patches_path.exists():
         logger.info(f"{LogTag.OK} Loading global profile patches: {patches_path}")
