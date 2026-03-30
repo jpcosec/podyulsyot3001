@@ -2,7 +2,7 @@
   "document_type": "letter",
   "style": "default",
   "asset_roots": [
-    "../../shared/latex_assets"
+    "../../../latex_assets"
   ],
   "engines": {
     "tex": {

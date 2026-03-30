@@ -30,6 +30,7 @@ class GraphState(TypedDict, total=False):
     status: RunStatus
     artifact_refs: dict[str, str]
     profile_evidence_ref: str
+    auto_approve_review: bool
     requirements: list[dict[str, Any]]
     profile_evidence: list[dict[str, Any]]
     generated_documents_summary: dict[str, Any]

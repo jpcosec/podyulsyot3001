@@ -56,6 +56,7 @@ class MatchSkillState(TypedDict, total=False):
     profile_base_data: dict[str, Any]  # Ported from generate_documents
     document_deltas: dict[str, Any]
     generated_documents: dict[str, Any]
+    auto_approve_review: bool
 
 
 def build_match_skill_graph(
@@ -102,6 +103,7 @@ def build_match_skill_graph(
     workflow.add_node("load_match_inputs", _make_load_match_inputs_node(store))
     workflow.add_node("run_match_llm", _make_run_match_llm_node(match_chain))
     workflow.add_node("persist_match_round", _make_persist_match_round_node(store))
+    workflow.add_node("auto_review_node", _make_auto_review_node(store))
     workflow.add_node("human_review_node", _human_review_node)
     workflow.add_node("apply_review_decision", _make_apply_review_decision_node(store))
     workflow.add_node(
@@ -131,7 +133,15 @@ def build_match_skill_graph(
     workflow.add_edge(START, "load_match_inputs")
     workflow.add_edge("load_match_inputs", "run_match_llm")
     workflow.add_edge("run_match_llm", "persist_match_round")
-    workflow.add_edge("persist_match_round", "human_review_node")
+    workflow.add_conditional_edges(
+        "persist_match_round",
+        _route_after_persist_match_round,
+        {
+            "human_review_node": "human_review_node",
+            "auto_review_node": "auto_review_node",
+        },
+    )
+    workflow.add_edge("auto_review_node", "apply_review_decision")
     workflow.add_edge("human_review_node", "apply_review_decision")
     workflow.add_conditional_edges(
         "apply_review_decision",
@@ -397,6 +407,41 @@ def _human_review_node(state: MatchSkillState) -> MatchSkillState:
     """
 
     return {"status": state.get("status", "pending_review")}
+
+
+def _make_auto_review_node(store: MatchArtifactStore):
+    """Create a smoke-test review node that auto-approves every row."""
+
+    def auto_review_node(state: MatchSkillState) -> MatchSkillState:
+        source = _require_non_empty_text(state, "source")
+        job_id = _require_non_empty_text(state, "job_id")
+        review_ref = state.get("artifact_refs", {}).get("review_surface_ref")
+        if not review_ref:
+            review_ref = str(store.job_root(source, job_id) / "review" / "current.json")
+        review_surface = store.load_json(review_ref)
+        items = [
+            {
+                "requirement_id": item["requirement_id"],
+                "decision": "approve",
+                "note": "Auto-approved for pipeline smoke test",
+            }
+            for item in review_surface.get("items", [])
+        ]
+        return {
+            "review_payload": {
+                "source_state_hash": review_surface["source_state_hash"],
+                "items": items,
+            },
+            "status": "pending_review",
+        }
+
+    return auto_review_node
+
+
+def _route_after_persist_match_round(state: MatchSkillState) -> str:
+    if state.get("auto_approve_review"):
+        return "auto_review_node"
+    return "human_review_node"
 
 
 def _make_route_after_apply_review(include_document_generation: bool):

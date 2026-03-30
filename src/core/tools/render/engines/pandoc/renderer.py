@@ -30,6 +30,8 @@ class PandocRenderer:
         if pandoc is None:
             raise FileNotFoundError("pandoc is required for rendering")
 
+        source_path = source_path.resolve()
+        output_path = output_path.resolve()
         self.data_manager.ensure_dir(output_path.parent)
         command = [
             pandoc,
@@ -54,5 +56,6 @@ class PandocRenderer:
         if resource_paths:
             command.extend(["--resource-path", ":".join(resource_paths)])
 
-        subprocess.run(command, check=True)
+        working_dir = next((path for path in asset_roots or [] if path.exists()), None)
+        subprocess.run(command, check=True, cwd=working_dir)
         return output_path

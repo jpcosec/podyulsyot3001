@@ -174,6 +174,8 @@ def generate_documents_bundle(
 ) -> tuple[DocumentDeltas, GeneratedDocuments, TextReviewAssistEnvelope]:
     """Generate document payloads from in-memory primitive inputs only."""
 
+    profile_base = _normalize_profile_base(profile_base)
+
     req_lookup = {
         item["id"]: item["text"]
         for item in requirements_raw
@@ -216,6 +218,19 @@ def generate_documents_bundle(
     logger.info(f"{LogTag.FAST} Rendering markdown documents")
     rendered = _render_documents_internal(profile_base, deltas, state)
     return deltas, rendered, review_assist
+
+
+def _normalize_profile_base(profile_base: dict[str, Any]) -> dict[str, Any]:
+    """Ensure template- and prompt-critical profile keys exist deterministically."""
+
+    normalized = dict(profile_base)
+    experience = []
+    for index, item in enumerate(profile_base.get("experience", []), start=1):
+        current = dict(item)
+        current.setdefault("id", f"EXP{index:03d}")
+        experience.append(current)
+    normalized["experience"] = experience
+    return normalized
 
 
 def _load_generation_inputs_from_disk(

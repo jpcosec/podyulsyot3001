@@ -2,7 +2,7 @@
   "document_type": "cv",
   "style": "classic",
   "asset_roots": [
-    "../../shared/latex_assets"
+    "../../../latex_assets"
   ],
   "engines": {
     "tex": {

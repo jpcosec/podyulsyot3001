@@ -54,6 +54,7 @@ def _add_pipeline_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("--source-url", dest="source_url", help="Source URL override")
     p.add_argument("--profile-evidence", dest="profile_evidence")
     p.add_argument("--requirements")
+    p.add_argument("--auto-approve-review", action="store_true")
 
 
 def _add_scrape_parser(subparsers: argparse._SubParsersAction) -> None:
@@ -101,6 +102,7 @@ def _add_run_batch_parser(subparsers: argparse._SubParsersAction) -> None:
     )
     p.add_argument("--profile-evidence", dest="profile_evidence")
     p.add_argument("--requirements")
+    p.add_argument("--auto-approve-review", action="store_true")
 
 
 def _add_translate_parser(subparsers: argparse._SubParsersAction) -> None:
@@ -247,6 +249,8 @@ async def _run_pipeline(args: argparse.Namespace) -> int:
         profile_evidence_path=args.profile_evidence,
         requirements_path=args.requirements,
     )
+    if args.auto_approve_review:
+        initial_input["auto_approve_review"] = True
     result = await _invoke_remote_pipeline(
         client,
         source=args.source,
@@ -330,6 +334,8 @@ async def _run_batch(args: argparse.Namespace) -> int:
         profile_evidence_path=args.profile_evidence,
         requirements_path=args.requirements,
     )
+    if args.auto_approve_review:
+        initial_input["auto_approve_review"] = True
     for source, job_id in jobs:
         result = await _invoke_remote_pipeline(
             client,

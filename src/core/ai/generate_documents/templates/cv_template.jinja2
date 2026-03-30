@@ -16,7 +16,7 @@ EXPERIENCE
 - {{ achievement }}
 {% endfor %}
 {% for injection in document_deltas.cv_injections %}
-{% if injection.experience_id == job.id %}
+{% if injection.experience_id == job.id | default('', true) %}
 {% for new_bullet in injection.new_bullets %}
 - {{ new_bullet }}
 {% endfor %}
@@ -34,13 +34,13 @@ EDUCATION
 PUBLICATIONS
 
 {% for pub in profile.publications %}
-- {{ pub.year }} - {{ pub.title }}. {{ pub.venue }}
+- {{ pub.year | default('', true) }} - {{ pub.title | default('', true) }}{% if pub.venue is defined and pub.venue %}. {{ pub.venue }}{% endif %}
 {% endfor %}
 
 LANGUAGES
 
 {% for lang in profile.languages %}
-- {{ lang.name }}: {{ lang.level }}{% if lang.note %} ({{ lang.note }}){% endif %}
+- {{ lang.name }}: {{ lang.level }}{% if lang.note is defined and lang.note %} ({{ lang.note }}){% endif %}
 {% endfor %}
 
 SKILLS
