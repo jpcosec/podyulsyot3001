@@ -1,0 +1,52 @@
+{{ profile.owner.full_name }}
+{{ profile.cv_generation_context.tagline_seed }}
+{{ profile.owner.contact.phone }} | {{ profile.owner.contact.email }}
+
+SUMMARY
+
+{{ document_deltas.cv_summary }}
+
+EXPERIENCE
+
+{% for job in profile.experience %}
+{{ job.organization }} - {{ job.role }}
+{{ job.start_date }} - {{ job.end_date }}
+
+{% for achievement in job.achievements | default([], true) %}
+- {{ achievement }}
+{% endfor %}
+{% for injection in document_deltas.cv_injections %}
+{% if injection.experience_id == job.id | default('', true) %}
+{% for new_bullet in injection.new_bullets %}
+- {{ new_bullet }}
+{% endfor %}
+{% endif %}
+{% endfor %}
+
+{% endfor %}
+EDUCATION
+
+{% for edu in profile.education %}
+{{ edu.degree }} {% if edu.specialization %}({{ edu.specialization }}){% endif %} - {{ edu.institution }}, {{ edu.location }}
+{{ edu.start_date }} - {{ edu.end_date }}
+{% endfor %}
+
+PUBLICATIONS
+
+{% for pub in profile.publications %}
+- {{ pub.year | default('', true) }} - {{ pub.title | default('', true) }}{% if pub.venue is defined and pub.venue %}. {{ pub.venue }}{% endif %}
+{% endfor %}
+
+LANGUAGES
+
+{% for lang in profile.languages %}
+- {{ lang.name }}: {{ lang.level }}{% if lang.note is defined and lang.note %} ({{ lang.note }}){% endif %}
+{% endfor %}
+
+SKILLS
+
+- Programming Languages: {{ profile.skills.programming_languages | join(', ') }}
+- ML AI: {{ profile.skills.ml_ai | join(', ') }}
+- Data Platforms: {{ profile.skills.data_platforms | join(', ') }}
+- Orchestration Devops: {{ profile.skills.orchestration_devops | join(', ') }}
+- Electronics Robotics: {{ profile.skills.electronics_robotics | join(', ') }}

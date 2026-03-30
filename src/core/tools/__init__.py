@@ -1,1 +1,1 @@
-"""Core toolset grouped by execution taxonomy."""
+"""Deterministic core tools used by graph nodes and CLIs."""

@@ -1,0 +1,17 @@
+{
+  "document_type": "letter",
+  "style": "default",
+  "asset_roots": [
+    "../../../latex_assets"
+  ],
+  "engines": {
+    "tex": {
+      "template": "base.tex",
+      "lua_filters": []
+    },
+    "docx": {
+      "reference_doc": null,
+      "lua_filters": []
+    }
+  }
+}

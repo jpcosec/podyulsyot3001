@@ -69,4 +69,18 @@ Thumbs.db
 # --- Local AI tooling / scratch ---
 .superpowers/
 tmp-*.png
-examples*.html
+/examples*.html
+
+# --- Tooling caches / runtime state ---
+.playwright-mcp/
+.tmp_logs/
+.langgraph_api/
+/output/
+
+# --- TestSprite generated outputs (keep TC*.py test cases) ---
+testsprite_tests/tmp/
+testsprite_tests/*.html
+testsprite_tests/testsprite-mcp-test-report.md
+
+# --- Screenshots / loose PNGs in root ---
+/*.png

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this project is
 
-PhD 2.0 is a graph-driven pipeline that produces PhD application artifacts (motivation letter, tailored CV, email) from job postings and a candidate profile knowledge base. It combines deterministic node contracts with LLM generation and mandatory human-in-the-loop review at each semantic gate.
+Postulator 3000 is a modular job application pipeline that produces tailored CV and motivation letter documents from job postings. It combines a scraper, translator, LangGraph-native matching engine (with HITL review via a Textual TUI), document generation, and a typed render pipeline.
 
 ## Commands
 
@@ -12,96 +12,96 @@ PhD 2.0 is a graph-driven pipeline that produces PhD application artifacts (moti
 # Run all tests
 python -m pytest tests/ -q
 
-# Run tests for a specific module
-python -m pytest tests/core/tools -q
-python -m pytest tests/nodes/match -q
-
 # Run a single test file
-python -m pytest tests/core/tools/test_translation_service.py -q
+python -m pytest tests/test_match_skill.py -q
 
-# Run the prep-match flow (scrape -> translate -> extract -> match -> review_match)
-python -m src.cli.run_prep_match \
-  --source tu_berlin \
-  --job-id 201399 \
-  --source-url <URL> \
+# Scrape job postings
+python -m src.scraper.main --source stepstone --limit 5
+
+# Translate scraped postings
+python -m src.core.tools.translator.main --source stepstone
+
+# Run match skill (start a new thread)
+python -m src.core.ai.match_skill.main \
+  --source stepstone \
+  --job-id <ID> \
+  --requirements <path/to/requirements.json> \
   --profile-evidence <path/to/evidence.json>
 
-# Resume after HITL review decision
-python -m src.cli.run_prep_match \
-  --source tu_berlin \
-  --job-id 201399 \
-  --resume
+# Launch HITL review TUI (after graph pauses at breakpoint)
+python -m src.cli.main review --source stepstone --job-id <ID>
 
-# Select Gemini model (default: gemini-2.5-flash)
-PHD2_GEMINI_MODEL=gemini-2.0-flash python -m src.cli.run_prep_match ...
+# Render CV to PDF
+python -m src.core.tools.render.main cv \
+  --source stepstone \
+  --job-id <ID> \
+  --language en
+
+# Render motivation letter
+python -m src.core.tools.render.main letter --source <path/to/data.json> --language de
 ```
 
 ## Architecture
 
-### Three-layer source structure
+### Module layout
 
-- `src/core/` — deterministic only: contracts, tools (scraping, translation), round management, I/O layer. **Must never import from `src/ai/`.**
-- `src/ai/` — LLM boundary: `LLMRuntime` (Gemini wrapper), `PromptManager` (Jinja2 template renderer).
-- `src/nodes/` — per-node packages (`contract.py`, `logic.py`); LLM nodes also have `prompt/system.md` and `prompt/user_template.md`.
-- `src/cli/` — operator entry points.
-- `src/graph.py` — LangGraph app assembly and routing.
+Each skill is a self-contained package under `src/`:
 
-### Control plane vs. Data plane
+- `src/core/ai/match_skill/` — LangGraph-native matching loop: `graph.py` (StateGraph), `contracts.py` (Pydantic I/O), `storage.py` (artifact persistence), `prompt.py`, `main.py`.
+- `src/core/ai/generate_documents/` — LangGraph document generation nodes: same structure as match_skill.
+- `src/core/tools/render/` — typed, engine-agnostic PDF/DOCX rendering via Pandoc + Jinja2. Entry point is `RenderCoordinator` in `coordinator.py`; `RenderRequest` in `request.py` is the unified request model.
+- `src/scraper/` — anti-bot job crawling with LLM fallbacks. Outputs `JobPosting` Pydantic models.
+- `src/core/tools/translator/` — field and document translation pipeline.
+- `src/review_ui/` — Textual TUI: `app.py` (`MatchReviewApp`), `bus.py` (`MatchBus` connects UI to LangGraph + disk), `screens/`, `widgets/`.
 
-**Control plane** (`GraphState` TypedDict in `src/core/graph/state.py`): carries only routing signals — `source`, `job_id`, `run_id`, `current_node`, `status`, `review_decision`, `error_state`. No artifact payloads in state.
+### Control plane vs. data plane
 
-**Data plane** (disk): all artifact content lives under `data/jobs/<source>/<job_id>/`. Each node writes to `nodes/<node>/{input,proposed,review,approved,meta}/`. JSON = machine truth, Markdown = human review surface.
+**Control plane** (`MatchSkillState` TypedDict in `src/core/ai/match_skill/graph.py`): carries routing signals and refs — `source`, `job_id`, requirements, profile evidence, review payload, match result. State is intentionally thin; heavy payloads stay on disk.
 
-### Node shape
+**Data plane** (disk under `data/jobs/<source>/<job_id>/nodes/match_skill/`): `MatchArtifactStore` in `storage.py` manages immutable round snapshots (JSON), current review surface, and approved payloads.
 
-Every node follows this package layout:
-```
-src/nodes/<node_name>/
-  contract.py     # Pydantic input/output schemas
-  logic.py        # pure business logic; no LangGraph coupling
-  __init__.py
-  prompt/         # LLM nodes only
-    system.md
-    user_template.md   # Jinja2 template
-```
+### Match skill graph flow
 
-`logic.py` exports `run_logic(state: Mapping) -> dict` and is the LangGraph node handler. Full nodes (target architecture) will separate into `node.py` (orchestration) + `logic.py` (pure logic) using `WorkspaceManager` / `ArtifactReader` / `ArtifactWriter` from `src/core/io/` (not yet implemented; nodes currently do inline path I/O).
+`match_node → [interrupt_before review] → review_node`
 
-### Graph topology (`src/graph.py`)
+Review node routes via `Command`: `approve` (continue), `request_regeneration` (loop back to `match_node`), `reject` (end). Checkpointed with `SqliteSaver` (prod) or `InMemorySaver` (tests). `thread_id` is the LangGraph handle for resume.
 
-Full pipeline: `scrape -> translate_if_needed -> extract_understand -> match -> review_match -> build_application_context -> review_application_context -> generate_motivation_letter -> review_motivation_letter -> tailor_cv -> review_cv -> draft_email -> review_email -> render -> package`
+### Render pipeline
 
-Review nodes have three branches: `approve` (continue), `request_regeneration` (loop back to generator), `reject` (end). Graph is checkpointed with SQLite (`langgraph.checkpoint.sqlite`). `thread_id` is `"{source}_{job_id}"`.
+`RenderRequest` → `RenderCoordinator` → resolves document adapter + style manifest + language bundle → `LatexRenderer` (Pandoc) → output file. Document types (`cv`, `letter`) and engines (`tex`, `docx`) are registered in `src/core/tools/render/registry.py`.
 
 ### HITL review loop
 
-1. Generator node writes `nodes/<node>/approved/state.json` and `nodes/<node>/review/decision.md`.
-2. Graph pauses (`interrupt_before` review node).
-3. Human edits `decision.md` in Obsidian or any editor.
-4. Human runs `--resume`; review node parses `decision.md`, validates `source_state_hash` against `proposed/state.json`, routes on `approve`/`request_regeneration`/`reject`.
+1. `run_match_skill` starts a thread; graph pauses at the review breakpoint.
+2. Operator launches the `review` CLI command with the thread ID context.
+3. `MatchBus` loads the review surface from `MatchArtifactStore` and holds the paused graph handle.
+4. Reviewer approves/rejects/requests regeneration in the TUI; `MatchBus` resumes the thread via `Command`.
+5. Immutable round snapshots are written to disk after each decision.
 
-The `RoundManager` (`src/core/round_manager.py`) tracks regeneration rounds under `nodes/match/review/rounds/round_<NNN>/`. Each regeneration round persists an immutable `decision.md` and `feedback.json`.
+### Shared data contracts
 
-### Prompt rendering
-
-`PromptManager` (`src/ai/prompt_manager.py`) loads node-local templates and renders them with Jinja2 (`StrictUndefined`). It validates required and optional XML tags (e.g. `<job_requirements>`, `<profile_evidence>`) in the rendered user prompt.
+- `JobPosting` — standardized job schema across scrapers and translators.
+- `MatchEnvelope` / `RequirementMatch` — LLM structured output for match decisions.
+- `ReviewSurface` / `ReviewPayload` — the JSON artifact exchanged between graph, TUI, and storage.
+- `RenderRequest` — unified input model for the render coordinator.
 
 ### Failure model
 
-Nodes must fail closed — no silent fallback-to-success. Failure types are defined in `GraphState.ErrorContext`: `MODEL_FAILURE`, `TOOL_FAILURE`, `IO_FAILURE`, `INPUT_MISSING`, `SCHEMA_INVALID`, `POLICY_VIOLATION`, `PARSER_REJECTED`, `REVIEW_LOCK_MISSING`, `INTERNAL_ERROR`.
+Nodes must fail closed — no silent fallback-to-success. LLM calls use structured output (LangChain `with_structured_output`). Missing credentials fall back to a demo chain in dev only (explicit `os.environ.get` guard in `src/core/ai/generate_documents/graph.py`).
 
 ## Key documentation
 
-- Graph topology and node roles: `docs/runtime/graph_flow.md`
-- Node I/O contracts and artifact schemas: `docs/runtime/node_io_matrix.md`, `plan/runtime/artifact_schemas.md`
-- Node template discipline: `plan/runtime/node_template_discipline.md`
-- Core I/O layer spec (target): `docs/runtime/core_io_and_provenance.md`
-- `sync_json_md` review surface service spec: `plan/runtime/sync_json_md.md`
-- Business rules: `plan/runtime/claim_admissibility_and_policy.md`
-- Step-by-step rebuild plan: `plan/archive/phd2_stepwise_plan.md`
+- LangGraph component standards: `docs/standards/code/llm_langgraph_components.md`
+- LangGraph methodology: `docs/standards/code/llm_langgraph_methodology.md`
+- Match skill hardening roadmap: `future_docs/issues/match_skill_hardening_roadmap.md`
+- Documentation & planning guide: `docs/standards/docs/documentation_and_planning_guide.md`
 
-## Implementation status
+## Environment
 
-The `core/io/` layer (`WorkspaceManager`, `ArtifactReader`, `ArtifactWriter`, `ProvenanceService`) now exists and is partially adopted. Some nodes still do inline path construction. When implementing new nodes, follow the target/shared pattern from `docs/runtime/core_io_and_provenance.md`.
+```env
+GOOGLE_API_KEY=...       # Gemini API access
+GEMINI_API_KEY=...       # same key, both names accepted
+PLAYWRIGHT_BROWSERS_PATH=0  # for scraper browser automation
+```
 
-The currently implemented runnable flow is `prep_match`: scrape, translate_if_needed, extract_understand, match, review_match, generate_documents, render, package.
+Requires: `pandoc` and `texlive-full` (or equivalent) installed for PDF rendering.
