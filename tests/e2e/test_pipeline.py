@@ -4,13 +4,19 @@ Verifies:
 1. Pipeline graph can be built and compiled
 2. Pipeline can be invoked with mock data
 3. HITL pause/resume flow works (interrupt_before)
+4. Full live pipeline: scrape → translate → match (auto-approve) → generate → render → package
 """
 
 from __future__ import annotations
 
+import asyncio
 import json
+import os
+import shutil
+from pathlib import Path
 from typing import Any
 
+import httpx
 import pytest
 from langgraph.checkpoint.memory import InMemorySaver
 
@@ -403,3 +409,168 @@ class TestArtifactPersistence:
         review_data = json.loads(review_file.read_text(encoding="utf-8"))
         assert "items" in review_data
         assert len(review_data["items"]) > 0
+
+
+# ---------------------------------------------------------------------------
+# Full pipeline e2e — requires live LangGraph server on port 8124
+# ---------------------------------------------------------------------------
+
+FIXTURES = Path(__file__).parent / "fixtures"
+SERVER_URL = "http://localhost:8124"
+PROFILE_PATH = "data/reference_data/profile/base_profile/profile_base_data.json"
+
+
+def _server_available() -> bool:
+    try:
+        return httpx.get(f"{SERVER_URL}/ok", timeout=2).status_code == 200
+    except Exception:
+        return False
+
+
+@pytest.fixture()
+def stub_profile():
+    """Install stub profile_base_data.json at the expected default path and clean up after."""
+    dest = Path(PROFILE_PATH)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy(FIXTURES / "stub_profile.json", dest)
+    yield dest
+    dest.unlink(missing_ok=True)
+
+
+@pytest.fixture()
+def fresh_job(stub_profile):
+    """Scrape a fresh tuberlin job, yield (source, job_id), delete data/jobs/tuberlin after test."""
+    from src.scraper.main import build_providers
+    from src.core.data_manager import DataManager
+
+    dm = DataManager()
+    adapter = build_providers(dm)["tuberlin"]
+    job_ids = asyncio.run(
+        adapter.run(already_scraped=[], limit=1, drop_repeated=False)
+    )
+    assert job_ids, "Scraper returned no jobs — check network or tuberlin availability"
+    yield "tuberlin", job_ids[0]
+
+    shutil.rmtree("data/jobs/tuberlin", ignore_errors=True)
+
+
+@pytest.mark.e2e
+@pytest.mark.skipif(not _server_available(), reason="LangGraph server not running on port 8124")
+class TestFullPipelineE2E:
+    """Full pipeline e2e: scrape → translate → match (auto-approve) → generate → render → package."""
+
+    def test_scrape_produces_ingest_artifact(self, fresh_job):
+        source, job_id = fresh_job
+        state_file = Path(f"data/jobs/{source}/{job_id}/nodes/ingest/proposed/state.json")
+        assert state_file.exists(), f"Ingest artifact missing: {state_file}"
+        data = json.loads(state_file.read_text())
+        assert data.get("job_title"), "Ingest state has no job_title"
+        assert data.get("original_language"), "Ingest state has no original_language"
+
+    def test_translate_produces_artifact(self, fresh_job):
+        from src.core.tools.translator.main import translate_single_job, PROVIDERS
+        from src.core.data_manager import DataManager
+
+        source, job_id = fresh_job
+        dm = DataManager()
+        translate_single_job(dm, PROVIDERS["google"], source, job_id)
+
+        out = Path(f"data/jobs/{source}/{job_id}/nodes/translate/proposed/state.json")
+        assert out.exists(), f"Translate artifact missing: {out}"
+        data = json.loads(out.read_text())
+        assert data.get("original_language") == "en", "Translated state language not set to 'en'"
+
+    def test_full_pipeline_reaches_completed(self, fresh_job):
+        """Full pipeline with auto-approve must reach status=completed and produce a manifest."""
+        from src.core.tools.translator.main import translate_single_job, PROVIDERS
+        from src.core.data_manager import DataManager
+        from src.core.api_client import LangGraphAPIClient
+
+        source, job_id = fresh_job
+
+        dm = DataManager()
+        translate_single_job(dm, PROVIDERS["google"], source, job_id)
+
+        async def _run():
+            client = LangGraphAPIClient(SERVER_URL)
+            return await client.invoke_pipeline(
+                source=source,
+                job_id=job_id,
+                initial_input={"auto_approve_review": True},
+            )
+
+        asyncio.run(_run())
+
+        thread_id = LangGraphAPIClient.thread_id_for(source, job_id)
+        r = httpx.get(f"{SERVER_URL}/threads/{thread_id}/state")
+        state_values = r.json().get("values", {})
+        final_status = state_values.get("status")
+
+        assert final_status == "completed", (
+            f"Pipeline did not complete. status={final_status!r}, "
+            f"error_state={state_values.get('error_state')}"
+        )
+
+    def test_all_stage_artifacts_present(self, fresh_job):
+        """After a completed pipeline run, every stage must have written its expected artifact."""
+        from src.core.tools.translator.main import translate_single_job, PROVIDERS
+        from src.core.data_manager import DataManager
+        from src.core.api_client import LangGraphAPIClient
+
+        source, job_id = fresh_job
+        dm = DataManager()
+        translate_single_job(dm, PROVIDERS["google"], source, job_id)
+
+        async def _run():
+            client = LangGraphAPIClient(SERVER_URL)
+            return await client.invoke_pipeline(
+                source=source,
+                job_id=job_id,
+                initial_input={"auto_approve_review": True},
+            )
+
+        asyncio.run(_run())
+
+        base = Path(f"data/jobs/{source}/{job_id}/nodes")
+        expected = {
+            "ingest":       base / "ingest/proposed/state.json",
+            "translate":    base / "translate/proposed/state.json",
+            "load_profile": base / "pipeline_inputs/proposed/profile_evidence.json",
+            "match_skill":  base / "match_skill/approved/state.json",
+        }
+
+        missing = [name for name, path in expected.items() if not path.exists()]
+        assert not missing, f"Missing artifacts after completed run: {missing}"
+
+    def test_package_manifest_references_valid_files(self, fresh_job):
+        """The final manifest must list files that actually exist on disk."""
+        from src.core.tools.translator.main import translate_single_job, PROVIDERS
+        from src.core.data_manager import DataManager
+        from src.core.api_client import LangGraphAPIClient
+
+        source, job_id = fresh_job
+        dm = DataManager()
+        translate_single_job(dm, PROVIDERS["google"], source, job_id)
+
+        async def _run():
+            client = LangGraphAPIClient(SERVER_URL)
+            return await client.invoke_pipeline(
+                source=source,
+                job_id=job_id,
+                initial_input={"auto_approve_review": True},
+            )
+
+        asyncio.run(_run())
+
+        manifest_path = Path(f"data/jobs/{source}/{job_id}/nodes/package/final/manifest.json")
+        assert manifest_path.exists(), "manifest.json not written"
+
+        manifest = json.loads(manifest_path.read_text())
+        artifacts = manifest.get("artifacts", {})
+        assert artifacts, "Manifest has no artifacts"
+
+        missing_files = [
+            ref for ref in artifacts.values()
+            if not Path(ref).exists()
+        ]
+        assert not missing_files, f"Manifest references files that do not exist: {missing_files}"
