@@ -163,6 +163,28 @@ def _build_pipeline_input(
     return initial_input
 
 
+def _translate_jobs(jobs: list[tuple[str, str]], *, force: bool = False) -> list[tuple[str, str]]:
+    """Translate all jobs in-place before pipeline invocation. Returns successfully translated jobs."""
+    from src.core.tools.translator.main import translate_single_job, PROVIDERS
+    from src.core import DataManager
+
+    data_manager = DataManager()
+    adapter = PROVIDERS["google"]
+    ready: list[tuple[str, str]] = []
+
+    for source, job_id in jobs:
+        try:
+            translate_single_job(data_manager, adapter, source, job_id, force=force)
+            ready.append((source, job_id))
+        except Exception as exc:
+            logger.error(
+                "%s Translation failed for %s/%s — skipping: %s",
+                LogTag.FAIL, source, job_id, exc,
+            )
+
+    return ready
+
+
 def _parse_job_selector(selector: str, sources: list[str]) -> tuple[str, str]:
     if ":" in selector:
         source, job_id = selector.split(":", 1)
@@ -245,6 +267,10 @@ async def _run_api(args: argparse.Namespace) -> int:
 async def _run_pipeline(args: argparse.Namespace) -> int:
     url = LangGraphAPIClient.ensure_server()
     client = LangGraphAPIClient(url)
+    ready = _translate_jobs([(args.source, args.job_id)])
+    if not ready:
+        logger.error("%s Translation failed for %s/%s — aborting", LogTag.FAIL, args.source, args.job_id)
+        return 1
     initial_input = _build_pipeline_input(
         profile_evidence_path=args.profile_evidence,
         requirements_path=args.requirements,
@@ -328,6 +354,11 @@ async def _run_batch(args: argparse.Namespace) -> int:
 
     if not jobs:
         logger.warning("%s No jobs selected for batch run", LogTag.WARN)
+        return 1
+
+    jobs = _translate_jobs(jobs)
+    if not jobs:
+        logger.error("%s All jobs failed translation — nothing to run", LogTag.FAIL)
         return 1
 
     initial_input = _build_pipeline_input(
