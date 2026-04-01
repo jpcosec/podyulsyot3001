@@ -22,7 +22,9 @@ def job_render_paths(source: str, job_id: str, document_type: str) -> JobRenderP
 
     del document_type
     job_root = Path("data/jobs") / source / job_id
-    generate_dir = job_root / "nodes" / "generate_documents" / "proposed"
+    v2_generate_dir = job_root / "nodes" / "generate_documents_v2" / "proposed"
+    legacy_generate_dir = job_root / "nodes" / "generate_documents" / "proposed"
+    generate_dir = v2_generate_dir if v2_generate_dir.exists() else legacy_generate_dir
     render_dir = job_root / "nodes" / "render" / "proposed"
     build_dir = job_root / "nodes" / "render" / "build"
     data_manager = DataManager()

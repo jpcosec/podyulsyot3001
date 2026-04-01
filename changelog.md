@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-03-31
+
+- Added `docs/superpowers/specs/2026-03-31-generate-documents-spec.md` as a consolidated, quick-reference specification distilled from the exploratory generate-documents delta design notes.
+- Added a split spec set for generate-documents under `docs/superpowers/specs/`: graph flow, Pydantic contracts, HITL behavior, regional cases, examples, and extension guidance for faster lookup by topic.
+- Implemented `src/core/ai/generate_documents_v2/` Plan 1 with new contracts, stage artifact storage, profile loading, canonical section mapping fixture, and the first job-side nodes for ingestion (`J1 -> J2`) and requirement filtering (`J2 -> J3`).
+- Expanded `generate_documents_v2` ingestion to consume a bundled ingest surface (`state.json`, `listing.json`, `listing_case.json`) instead of a single reconstructed raw string, and updated `JobKG` to preserve original titles while keeping audit-facing semantic fields in English.
+- Extended `generate_documents_v2` with the next pipeline layer: profile-job alignment, blueprint generation, document drafting, and deterministic Markdown assembly, plus tests and a real end-to-end smoke run over a Stepstone artifact with live Gemini calls.
+- Integrated final-stage localization, render-compatible Markdown persistence, LangGraph wiring with HITL checkpoints and profile patch persistence, updated the CLI and top-level pipeline to use `generate_documents_v2`, and removed obsolete match-skill-era tests after validating the new path with live API calls and PDF output generation.
+
 ## 2026-03-29 (future follow-up notes)
 
 - Added `future_docs/issues/profile_input_loading_node.md` to capture a pipeline design gap: profile evidence loading and legacy normalization are currently embedded in orchestration glue instead of a dedicated node with a single canonical contract.

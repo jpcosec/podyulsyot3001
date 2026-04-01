@@ -10,7 +10,6 @@ import sys
 from pathlib import Path
 from typing import Any, Iterable
 
-from src.core.ai.match_skill.storage import MatchArtifactStore
 from src.core import DataManager
 from src.core.api_client import LangGraphAPIClient, LangGraphConnectionError
 from src.shared.log_tags import LogTag
@@ -125,6 +124,9 @@ def _add_generate_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("--source", required=True)
     p.add_argument("--job-id", dest="job_id", required=True)
     p.add_argument("--profile")
+    p.add_argument("--language", default="en")
+    p.add_argument("--render", action="store_true")
+    p.add_argument("--engine", default="tex", choices=["tex", "docx"])
 
 
 def _add_render_parser(subparsers: argparse._SubParsersAction) -> None:
@@ -163,7 +165,9 @@ def _build_pipeline_input(
     return initial_input
 
 
-def _translate_jobs(jobs: list[tuple[str, str]], *, force: bool = False) -> list[tuple[str, str]]:
+def _translate_jobs(
+    jobs: list[tuple[str, str]], *, force: bool = False
+) -> list[tuple[str, str]]:
     """Translate all jobs in-place before pipeline invocation. Returns successfully translated jobs."""
     from src.core.tools.translator.main import translate_single_job, PROVIDERS
     from src.core import DataManager
@@ -179,7 +183,10 @@ def _translate_jobs(jobs: list[tuple[str, str]], *, force: bool = False) -> list
         except Exception as exc:
             logger.error(
                 "%s Translation failed for %s/%s — skipping: %s",
-                LogTag.FAIL, source, job_id, exc,
+                LogTag.FAIL,
+                source,
+                job_id,
+                exc,
             )
 
     return ready
@@ -269,7 +276,12 @@ async def _run_pipeline(args: argparse.Namespace) -> int:
     client = LangGraphAPIClient(url)
     ready = _translate_jobs([(args.source, args.job_id)])
     if not ready:
-        logger.error("%s Translation failed for %s/%s — aborting", LogTag.FAIL, args.source, args.job_id)
+        logger.error(
+            "%s Translation failed for %s/%s — aborting",
+            LogTag.FAIL,
+            args.source,
+            args.job_id,
+        )
         return 1
     initial_input = _build_pipeline_input(
         profile_evidence_path=args.profile_evidence,
@@ -277,13 +289,39 @@ async def _run_pipeline(args: argparse.Namespace) -> int:
     )
     if args.auto_approve_review:
         initial_input["auto_approve_review"] = True
-    result = await _invoke_remote_pipeline(
-        client,
+
+    thread_id = client.thread_id_for(args.source, args.job_id)
+    assistant_id = "generate_documents_v2"
+
+    logger.info(f"{LogTag.LLM} Starting/Resuming pipeline for {args.source}/{args.job_id}...")
+    
+    # Try to start or resume
+    result = await client.invoke_assistant(
+        assistant_id,
         source=args.source,
         job_id=args.job_id,
         source_url=args.source_url,
         initial_input=initial_input,
     )
+
+    # Loop while interrupted to auto-approve if requested
+    while result.get("status") == "interrupted":
+        if not args.auto_approve_review:
+            logger.info("%s Pipeline paused for human review.", LogTag.WARN)
+            break
+        
+        # Determine which node we are at
+        state = await client.client.threads.get_state(thread_id)
+        next_nodes = state.get("next", [])
+        if not next_nodes:
+            break
+            
+        target_node = next_nodes[0]
+        logger.info("%s Auto-approving at %s...", LogTag.FAST, target_node)
+        
+        # Resume with empty payload (defaults to approved in the graph for auto_approve_review=True)
+        result = await client.resume_thread(thread_id, {}, node_name=target_node)
+
     logger.info("%s Pipeline finished with status: %s", LogTag.OK, result.get("status"))
     return 0
 
@@ -402,22 +440,38 @@ async def _run_match(args: argparse.Namespace) -> int:
         requirements_path=args.requirements,
     )
     result = await client.invoke_assistant(
-        "match_skill",
+        "generate_documents_v2",
         source=args.source,
         job_id=args.job_id,
         initial_input=initial_input,
     )
+
     print(json.dumps({"status": result.get("status")}, indent=2))
     return 0
 
 
 def _run_generate(args: argparse.Namespace) -> int:
-    from src.core.ai.generate_documents.main import main as generate_main
+    from src.core.ai.generate_documents_v2 import generate_application_documents
 
-    argv = ["--source", args.source, "--job-id", args.job_id]
-    if args.profile:
-        argv.extend(["--profile", args.profile])
-    return generate_main(argv)
+    profile_path = args.profile or "tests/e2e/fixtures/stub_profile.json"
+    result = generate_application_documents(
+        source=args.source,
+        job_id=args.job_id,
+        profile_path=profile_path,
+        target_language=args.language,
+        render=args.render,
+        render_engine=args.engine,
+    )
+    print(
+        json.dumps(
+            {
+                "status": result.get("status"),
+                "render_outputs": result.get("render_outputs", {}),
+            },
+            indent=2,
+        )
+    )
+    return 0
 
 
 def _run_render(args: argparse.Namespace) -> int:
@@ -444,6 +498,7 @@ def _run_render(args: argparse.Namespace) -> int:
 def _run_review(args: argparse.Namespace) -> int:
     from src.review_ui.app import MatchReviewApp
     from src.review_ui.bus import MatchBus
+    from src.core.ai.match_skill.storage import MatchArtifactStore
 
     url = LangGraphAPIClient.ensure_server()
     client = LangGraphAPIClient(url)

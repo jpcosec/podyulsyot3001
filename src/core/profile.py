@@ -28,6 +28,7 @@ class ProfileEducation(BaseModel):
     end_date: Optional[str] = None
     level_reference: Optional[str] = None
     equivalency_note: Optional[str] = None
+    grade: Optional[str] = None
 
 class ProfileExperience(BaseModel):
     role: str

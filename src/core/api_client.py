@@ -37,6 +37,8 @@ class LangGraphAPIClient:
     for the API port by scanning running processes and common ports.
     """
 
+    DEFAULT_PORT = 8124
+
     def __init__(self, url: Optional[str] = None):
         """Initialize the client, attempting autodetection if no URL is provided.
 
@@ -54,22 +56,24 @@ class LangGraphAPIClient:
             raise LangGraphConnectionError(f"Could not connect to {self.url}") from e
 
     def _detect_url(self) -> str:
-        """Attempt to find where the LangGraph API is running.
-
-        Checks environment variables, scans running processes for 'langgraph dev',
-        and probes common ports (8124, 8123, 8125).
-
-        Returns:
-            The detected API base URL.
-        """
+        """Attempt to find where the LangGraph API is running."""
         # 1. Env Var (User explicit)
         explicit = os.getenv("LANGGRAPH_API_URL")
         if explicit:
             return explicit
 
-        # 2. Scan processes for 'langgraph dev'
+        # 2. Try default port (Health Check)
+        url = f"http://localhost:{self.DEFAULT_PORT}"
         try:
-            # Look for langgraph dev --port XXXX
+            with httpx.Client(timeout=0.5) as client:
+                resp = client.get(f"{url}/ok")
+                if resp.status_code == 200:
+                    return url
+        except Exception:
+            pass
+
+        # 3. Scan processes for 'langgraph dev'
+        try:
             cmd = "ps aux | grep 'langgraph dev' | grep -v grep"
             output = subprocess.check_output(cmd, shell=True).decode()
             match = re.search(r"--port\s+(\d+)", output)
@@ -80,49 +84,34 @@ class LangGraphAPIClient:
                     with httpx.Client(timeout=0.5) as client:
                         resp = client.get(f"{url}/ok")
                         if resp.status_code == 200:
-                            logger.info(
-                                f"{LogTag.FAST} Autodetected LangGraph API on port {port} via process scan."
-                            )
                             return url
                 except Exception:
                     pass
         except Exception:
             pass
 
-        # 3. Try common ports (Health Check)
-        common_ports = [8124, 8123, 8125]
-        for port in common_ports:
-            url = f"http://localhost:{port}"
-            try:
-                # Use httpx for a quick check
-                with httpx.Client(timeout=0.5) as client:
-                    resp = client.get(f"{url}/ok")
-                    if resp.status_code == 200:
-                        logger.info(
-                            f"{LogTag.OK} Found active LangGraph API on port {port}."
-                        )
-                        return url
-            except Exception:
-                continue
-
-        # Default fallback
-        return "http://localhost:8124"
+        return f"http://localhost:{self.DEFAULT_PORT}"
 
     @classmethod
     def ensure_server(
         cls,
         *,
         port: int = 8124,
-        timeout_seconds: float = 45.0,
+        timeout_seconds: float = 60.0,
         log_file: str | Path = "logs/langgraph_api.log",
     ) -> str:
-        """Ensure a LangGraph API server is reachable.
-
-        Starts `langgraph dev` if necessary and returns the active base URL.
-        """
-        candidate = cls()
-        if candidate.is_healthy():
-            return candidate.url
+        """Ensure a LangGraph API server is reachable."""
+        url = f"http://localhost:{port}"
+        
+        # Check if already healthy
+        try:
+            with httpx.Client(timeout=1.0) as client:
+                resp = client.get(f"{url}/ok")
+                if resp.status_code == 200:
+                    os.environ["LANGGRAPH_API_URL"] = url
+                    return url
+        except Exception:
+            pass
 
         cls._kill_stale_dev_server(port)
 
@@ -132,12 +121,14 @@ class LangGraphAPIClient:
         env["PYTHONPATH"] = os.pathsep.join(
             [p for p in [env.get("PYTHONPATH", ""), os.getcwd()] if p]
         )
+        
         logger.info(
-            "%s LangGraph API not reachable. Starting dev server on port %s",
+            "%s Starting LangGraph dev server on port %s...",
             LogTag.FAST,
             port,
         )
-        with log_path.open("ab") as stream:
+        
+        with log_path.open("wb") as stream:
             subprocess.Popen(
                 [
                     "langgraph",
@@ -154,20 +145,22 @@ class LangGraphAPIClient:
                 start_new_session=True,
             )
 
-        url = f"http://localhost:{port}"
         deadline = time.time() + timeout_seconds
         while time.time() < deadline:
             try:
                 with httpx.Client(timeout=1.0) as client:
                     resp = client.get(f"{url}/ok")
                     if resp.status_code == 200:
+                        # Server is up, wait a bit more for graphs to load
+                        time.sleep(2.0)
                         os.environ["LANGGRAPH_API_URL"] = url
                         logger.info("%s LangGraph API ready at %s", LogTag.OK, url)
                         return url
             except Exception:
-                time.sleep(0.5)
+                pass
+            time.sleep(1.0)
 
-        raise LangGraphConnectionError(f"Timed out waiting for LangGraph API at {url}")
+        raise LangGraphConnectionError(f"Timed out waiting for LangGraph API at {url}. Check {log_file} for details.")
 
     @staticmethod
     def _kill_stale_dev_server(port: int) -> None:
@@ -185,14 +178,14 @@ class LangGraphAPIClient:
             except ValueError:
                 continue
             try:
-                os.kill(pid, signal.SIGTERM)
+                os.kill(pid, signal.SIGKILL) # Be more aggressive
                 logger.warning(
                     "%s Terminated stale LangGraph process on port %s (pid=%s)",
                     LogTag.WARN,
                     port,
                     pid,
                 )
-            except ProcessLookupError:
+            except (ProcessLookupError, PermissionError):
                 continue
 
     def is_healthy(self) -> bool:
@@ -209,16 +202,7 @@ class LangGraphAPIClient:
         return str(uuid.uuid5(uuid.NAMESPACE_URL, f"postulator:{source}:{job_id}"))
 
     async def list_jobs(self, limit: int = 50) -> List[Dict[str, Any]]:
-        """List and enrich all threads managed by the API.
-
-        Queries the API for all threads and extracts their latest state metadata.
-
-        Args:
-            limit: Maximum number of threads to return.
-
-        Returns:
-             List of thread state dictionaries.
-        """
+        """List and enrich all threads managed by the API."""
         try:
             threads = await self.client.threads.search(limit=limit)
             enriched_threads = []
@@ -253,7 +237,6 @@ class LangGraphAPIClient:
 
     async def get_pending_reviews(self) -> List[Dict[str, Any]]:
         """List jobs that are currently at a human review breakpoint."""
-        logger.info(f"  [🔗] Fetching pending reviews from {self.url}...")
         try:
             threads = await self.list_jobs()
             pending = []
@@ -300,7 +283,7 @@ class LangGraphAPIClient:
         logger.info(f"  [🚀] Resuming thread {thread_id} at node {node_name}...")
         try:
             state = await self.client.threads.get_state(thread_id, subgraphs=True)
-            assistant_id = state.get("metadata", {}).get("graph_id", "pipeline")
+            assistant_id = state.get("metadata", {}).get("graph_id", "generate_documents_v2")
             checkpoint = state.get("checkpoint")
             checkpoint_id = state.get("checkpoint_id")
             await self.client.threads.update_state(
@@ -365,7 +348,7 @@ class LangGraphAPIClient:
     ) -> Dict[str, Any]:
         """Start a new pipeline run for a specific job."""
         return await self.invoke_assistant(
-            "pipeline",
+            "generate_documents_v2",
             source=source,
             job_id=job_id,
             source_url=source_url,
