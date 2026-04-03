@@ -8,7 +8,7 @@ Applies to `src/scraper/`, especially:
 
 - `src/scraper/smart_adapter.py`
 - `src/scraper/providers/`
-- `scrapping_schemas/`
+- `data/ariadne/assets/crawl4ai_schemas/`
 
 This is a project-level engineering standard, not a replacement for the upstream docs.
 
@@ -38,7 +38,7 @@ Every new source follows this progression:
 
 1. start with Crawl4AI-assisted extraction to get the source working quickly
 2. learn the DOM and stabilize selectors across multiple real pages
-3. persist a deterministic schema in `scrapping_schemas/<source>_schema.json`
+3. persist a deterministic schema in `data/ariadne/assets/crawl4ai_schemas/<source>_schema.json`
 4. switch the source to prefer the saved schema for steady-state extraction
 5. keep LLM extraction only as a fallback or temporary bootstrap tool
 

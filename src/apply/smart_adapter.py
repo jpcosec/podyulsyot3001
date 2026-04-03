@@ -3,7 +3,7 @@
 Adapters provide portal-specific knowledge only (selectors, C4A-Scripts, profile dir).
 All flow control lives here: navigate → validate → fill → upload → submit → persist.
 
-Design reference: `src/apply/README.md` and `plan_docs/applying/applying_feature_design.md`
+Design reference: `src/apply/README.md`
 
 Crawl4AI docs:
   C4A-Script DSL:    https://docs.crawl4ai.com/core/c4a-script/

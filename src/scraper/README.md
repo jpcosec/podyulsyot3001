@@ -10,7 +10,7 @@ The scraper is an ingestion module, not a LangGraph-native skill. Discovery runs
 - CLI entry point and provider registry: `src/scraper/main.py`
 - Schema contract for extracted jobs: `src/scraper/models.py`
 - Portal-specific adapters: `src/scraper/providers/`
-- Cached CSS extraction schemas used by the adapters: `scrapping_schemas/README.md`
+- Cached CSS extraction schemas used by the adapters: `data/ariadne/assets/crawl4ai_schemas/README.md`
 - Crawl4AI usage standard for this repository: `docs/standards/code/crawl4ai_usage.md`
 
 Canonical ingest artifacts now preserve both the broad raw surfaces and the current best-effort structured payload:
@@ -45,7 +45,7 @@ Use this module for source-level discovery ingestion. Per-job processing happens
 
 The downstream job contract is defined in `src/scraper/models.py` as `JobPosting`.
 
-The cached selector schemas used to satisfy that contract are documented in `scrapping_schemas/README.md`.
+The cached selector schemas used to satisfy that contract are documented in `data/ariadne/assets/crawl4ai_schemas/README.md`.
 This scraper stage also preserves the broader raw listing/detail surfaces so later stages can re-extract fields without depending on what the initial deterministic pass kept. The per-job payload in `state.json` now also carries `listing_case` when listing-side evidence exists for that specific job.
 The contract now also includes optional application-routing fields such as `application_method`, `application_url`, `application_email`, and `application_instructions`.
 
@@ -67,7 +67,7 @@ python -m src.scraper.main --source tuberlin --job-query "Data Scientist" --limi
 
 ## 🚑 Troubleshooting
 
-- **Structured extraction fails** -> inspect `scrape_meta.json`, `raw_extracted.json`, `content.md`, and `raw_page.html` under the job's ingest folder; if the selector cache is stale, remove the matching file documented in `scrapping_schemas/README.md` and re-run.
+- **Structured extraction fails** -> inspect `scrape_meta.json`, `raw_extracted.json`, `content.md`, and `raw_page.html` under the job's ingest folder; if the selector cache is stale, remove the matching file documented in `data/ariadne/assets/crawl4ai_schemas/README.md` and re-run.
 - **A field exists in listing cards but not in detail pages** -> inspect `listing_case.json` and `listing_case.md` first; those are the job-scoped listing artifacts that should feed the next stage instead of the full listing page.
 - **Rate limits or blocking** -> inspect scraper logs under `logs/`; reduce concurrency or tighten provider filters.
 - **Fields still come back empty after rescue** -> refine `get_llm_instructions()` in the provider adapter and validate against `JobPosting` in `src/scraper/models.py`.

@@ -1,6 +1,6 @@
 """XING Easy Apply adapter.
 
-Design reference: `src/apply/README.md` and `plan_docs/applying/applying_feature_design.md`
+Design reference: `src/apply/README.md`
 
 Selector discovery: inspect tests/fixtures/apply/xing_apply_modal.html
   - Prefer data-testid attributes over generated class names (more stable)

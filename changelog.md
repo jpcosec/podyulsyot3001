@@ -7,6 +7,8 @@
 - Added `plan_docs/automation/superpowers_audit.md` to classify the remaining `docs/superpowers/` files as implemented, partial, stale, or broken-reference material before deleting that folder.
 - Removed the old `docs/superpowers/` tree after preserving current behavior in `src/core/ai/generate_documents_v2/README.md`, moving deferred work into `future_docs/issues/`, and fixing broken apply-doc references.
 - Removed stale render/test compatibility references by dropping the old `src.graph` test/script artifacts and retiring the `generate_documents` render dual-write fallback.
+- Removed the old `plan_docs/applying/` bucket by deleting stale apply implementation checklists, deleting the legacy `manual_usuario`, moving apply traces into `data/ariadne/reference_data/applying_traces/`, moving BrowserOS/Crawl4AI external-library references into `docs/reference/external_libs/`, and rehoming future/issue material into `future_docs/` and `plan_docs/automation/`.
+- Moved the Crawl4AI schema cache into `data/ariadne/assets/crawl4ai_schemas/` and removed root clutter files and folders (`uuid`, `session.txt`, `testsprite_tests/`, `logs/`, `output/`, and LaTeX aux files).
 
 ## 2026-03-31
 

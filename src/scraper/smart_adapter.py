@@ -227,7 +227,9 @@ class SmartScraperAdapter(ABC):
     @property
     def schema_cache_path(self) -> Path:
         """Return the path used to cache the generated CSS extraction schema."""
-        return Path(f"./scrapping_schemas/{self.source_name}_schema.json")
+        return Path(
+            f"./data/ariadne/assets/crawl4ai_schemas/{self.source_name}_schema.json"
+        )
 
     def get_schema_generation_hints(self) -> str:
         """Provider-specific hints for CSS schema generation."""

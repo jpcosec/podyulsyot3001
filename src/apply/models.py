@@ -1,6 +1,6 @@
 """Pydantic models for the apply module.
 
-Design reference: `src/apply/README.md` and `plan_docs/applying/applying_feature_design.md`
+Design reference: `src/apply/README.md`
 """
 
 from __future__ import annotations

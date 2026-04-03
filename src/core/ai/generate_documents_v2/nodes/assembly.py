@@ -128,8 +128,6 @@ def _persist_render_inputs(
         "cover_letter.md": bundle.letter_full_md,
         "email_body.txt": bundle.email_body_md,
     }
-    # TODO(future): remove the compatibility dual-write once the old
-    # generate_documents render input path is fully retired.
     for node_name in ("generate_documents_v2", "generate_documents"):
         for filename, content in files.items():
             path = data_manager.write_text_artifact(

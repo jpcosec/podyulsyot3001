@@ -4,8 +4,6 @@ Standalone CLI module for automated job application using Crawl4AI and BrowserOS
 
 Reads from existing ingested job artifacts and runs portal-specific application flows through a shared apply CLI.
 
-**Current design references:** `plan_docs/applying/applying_feature_design.md`, `plan_docs/applying/browseros_apply_design.md`
-
 ---
 
 ## Usage

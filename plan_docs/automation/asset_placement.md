@@ -16,7 +16,7 @@ Use these rules before moving anything:
 
 ## Existing asset groups
 
-### 1. `plan_docs/applying/traces/`
+### 1. `data/ariadne/reference_data/applying_traces/`
 
 Current meaning:
 
@@ -38,7 +38,7 @@ plan_docs/automation/ariadne/traces/    # screenshots, exploratory evidence, wal
 
 Concrete implication:
 
-- `plan_docs/applying/traces/linkedin_easy_apply/playbook_linkedin_easy_apply_v1.json`
+- `data/ariadne/reference_data/applying_traces/linkedin_easy_apply/playbook_linkedin_easy_apply_v1.json`
   - if it remains a reference/source artifact, keep it under docs
   - if it becomes the canonical packaged replay path, move/copy the normalized form under the packaged Ariadne trace area
 
@@ -56,7 +56,7 @@ Reason:
 
 - packaged replay paths are Ariadne assets, not BrowserOS-only assets
 
-### 3. `scrapping_schemas/`
+### 3. `data/ariadne/assets/crawl4ai_schemas/`
 
 Current meaning:
 
@@ -81,10 +81,10 @@ Decision rule:
 
 Current examples:
 
-- `plan_docs/applying/applying_feature_design.md`
-- `plan_docs/applying/browseros_apply_design.md`
-- `plan_docs/applying/browseros_interfaces.md`
-- `plan_docs/applying/apply_01_models_and_cli.md`
+- `future_docs/new_feature/applying_feature_design.md`
+- `plan_docs/automation/2026-04-03-unified-automation-refactor-plan.md`
+- `docs/reference/external_libs/browseros_interfaces.md`
+- `future_docs/issues/scraper_fragility.md`
 
 Target placement:
 
@@ -153,9 +153,10 @@ Where:
 | Apply runtime code | `src/apply/smart_adapter.py` | Crawl4AI motor + portals area |
 | BrowserOS runtime code | `src/apply/browseros_client.py` | BrowserOS CLI motor |
 | Ariadne packaged path | `src/apply/playbooks/linkedin_easy_apply_v1.json` | packaged Ariadne trace area |
-| Exploratory screenshot trace | `plan_docs/applying/traces/xing/*.png` | `plan_docs/automation/ariadne/traces/` |
-| Crawl4AI schema cache | `scrapping_schemas/*` | Crawl4AI motor-local `schemas/` folder or runtime cache |
-| Planning/design doc | `plan_docs/applying/browseros_apply_design.md` | `plan_docs/automation/...` |
+| Exploratory screenshot trace | `data/ariadne/reference_data/applying_traces/xing/*.png` | `data/ariadne/reference_data/applying_traces/` |
+| Crawl4AI schema cache | `data/ariadne/assets/crawl4ai_schemas/*` | Ariadne assets for now; later a Crawl4AI motor-local `schemas/` folder or runtime cache |
+| Planning/design doc | `plan_docs/automation/2026-04-03-unified-automation-refactor-plan.md` | `plan_docs/automation/...` |
+| External library reference | `docs/reference/external_libs/browseros_interfaces.md` | `docs/reference/external_libs/` |
 
 ## Migration gate
 

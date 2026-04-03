@@ -7,7 +7,7 @@ Usage:
     # First-time session setup (mutually exclusive with apply mode)
     python -m src.apply.main --source xing --setup-session
 
-Design reference: `src/apply/README.md` and `plan_docs/applying/applying_feature_design.md`
+Design reference: `src/apply/README.md`
 """
 
 from __future__ import annotations

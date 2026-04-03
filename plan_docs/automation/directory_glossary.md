@@ -134,7 +134,7 @@ Example shape:
 
 ### Crawl4AI `schema_cache.py`
 
-- management of Crawl4AI extraction schemas now stored in `scrapping_schemas/`
+- management of Crawl4AI extraction schemas now stored in `data/ariadne/assets/crawl4ai_schemas/`
 
 ### Crawl4AI `contracts.py`
 
@@ -198,5 +198,5 @@ Example shape:
 
 - the future automation package should not swallow unrelated LangGraph pipeline code
 - Ariadne should not be nested under BrowserOS
-- `scrapping_schemas/` should not be moved under Ariadne
+- `data/ariadne/assets/crawl4ai_schemas/` is a temporary practical home and should be revisited during the automation refactor
 - exploratory screenshots and note-heavy traces should not live inside runtime code folders

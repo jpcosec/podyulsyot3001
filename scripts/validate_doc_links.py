@@ -31,7 +31,6 @@ _ARTIFACT_PREFIXES = (
     "approved/",
     "review/",
     "logs/",
-    "scrapping_schemas/",
 )
 
 # Paths documented as not-yet-existing (future work). Skip them.
@@ -77,7 +76,9 @@ def _check_file(md_path: Path, repo_root: Path) -> list[str]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate file references in markdown docs.")
+    parser = argparse.ArgumentParser(
+        description="Validate file references in markdown docs."
+    )
     parser.add_argument("--root", default=".", help="Repository root (default: cwd)")
     args = parser.parse_args()
 
@@ -88,9 +89,9 @@ def main() -> int:
     ignore_dirs = {".git", "node_modules", "__pycache__", ".venv", "venv"}
     ignore_files = {"changelog.md"}
     md_files = [
-        f for f in md_files
-        if not any(p in ignore_dirs for p in f.parts)
-        and f.name not in ignore_files
+        f
+        for f in md_files
+        if not any(p in ignore_dirs for p in f.parts) and f.name not in ignore_files
     ]
 
     all_errors: list[str] = []
