@@ -30,7 +30,7 @@ def test_generate_application_documents_runs_end_to_end(store, tmp_path):
     result = generate_application_documents(
         source="demo",
         job_id="job-1",
-        profile_path="tests/e2e/fixtures/stub_profile.json",
+        profile_path="tests/legacy/e2e/fixtures/stub_profile.json",
         target_language="en",
         store=store,
     )

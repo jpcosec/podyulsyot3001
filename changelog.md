@@ -10,6 +10,7 @@
 - Removed the old `plan_docs/applying/` bucket by deleting stale apply implementation checklists, deleting the legacy `manual_usuario`, moving apply traces into `data/ariadne/reference_data/applying_traces/`, moving BrowserOS/Crawl4AI external-library references into `docs/reference/external_libs/`, and rehoming future/issue material into `future_docs/` and `plan_docs/automation/`.
 - Moved the Crawl4AI schema cache into `data/ariadne/assets/crawl4ai_schemas/` and removed root clutter files and folders (`uuid`, `session.txt`, `testsprite_tests/`, `logs/`, `output/`, and LaTeX aux files).
 - Removed outdated global `future_docs/issues/` entries, rehomed live deferred items into mirrored paths, and then moved apply/scraper issue docs into `plan_docs/issues/{apply,scraper}/` with updated code references.
+- Replaced the obsolete dev-branch `extract_understand` future doc with a narrower `generate_documents_v2` semantic-gap audit under `future_docs/issues/core/ai/generate_documents_v2/`.
 
 ## 2026-03-31
 
