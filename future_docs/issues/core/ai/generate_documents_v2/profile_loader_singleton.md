@@ -24,4 +24,4 @@ Remove `_DATA_MANAGER` entirely. Replace all `_DATA_MANAGER.read_json_path(p)` c
 
 ## Linked TODOs
 
-- `src/core/ai/generate_documents_v2/profile_loader.py:15` — `# TODO(future): module-level singleton locks path at import time — see future_docs/issues/generate_documents_v2_profile_loader_singleton.md`
+- `src/core/ai/generate_documents_v2/profile_loader.py:15` — `# TODO(future): module-level singleton locks path at import time — see future_docs/issues/core/ai/generate_documents_v2/profile_loader_singleton.md`

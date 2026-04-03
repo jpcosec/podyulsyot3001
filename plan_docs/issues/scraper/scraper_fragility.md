@@ -35,7 +35,7 @@ The StepStone adapter returns `list[str]` from `extract_links`, discarding per-c
 
 ## Linked TODOs
 
-- `src/scraper/main.py:34` — `# TODO(future): PROVIDERS is built at import time — see future_docs/issues/scraper_fragility.md`
-- `src/scraper/smart_adapter.py` — `# TODO(future): detect_language is a naive heuristic, fails on short/mixed-language postings — see future_docs/issues/scraper_fragility.md`
-- `src/scraper/providers/stepstone/adapter.py` — `# TODO(future): extract_links returns plain strings, losing listing-side metadata — see future_docs/issues/scraper_fragility.md`
-- `src/scraper/providers/xing/adapter.py` — `# TODO(future): _listing_data uses generated CSS class names that break on portal rebuilds — see future_docs/issues/scraper_fragility.md`
+- `src/scraper/main.py:34` — `# TODO(future): PROVIDERS is built at import time — see plan_docs/issues/scraper/scraper_fragility.md`
+- `src/scraper/smart_adapter.py` — `# TODO(future): detect_language is a naive heuristic, fails on short/mixed-language postings — see plan_docs/issues/scraper/scraper_fragility.md`
+- `src/scraper/providers/stepstone/adapter.py` — `# TODO(future): extract_links returns plain strings, losing listing-side metadata — see plan_docs/issues/scraper/scraper_fragility.md`
+- `src/scraper/providers/xing/adapter.py` — `# TODO(future): _listing_data uses generated CSS class names that break on portal rebuilds — see plan_docs/issues/scraper/scraper_fragility.md`

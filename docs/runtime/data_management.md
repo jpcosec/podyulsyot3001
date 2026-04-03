@@ -104,14 +104,15 @@ data/jobs/stepstone/12345/
             proposal.json
             decision.json
             feedback.json
-    generate_documents/
+    generate_documents_v2/
       proposed/
-        deltas.json
-        cv.md
-        cover_letter.md
-        email_body.txt
-      review/
-        assist.json
+        generate_documents_v2_cv.en.md
+        generate_documents_v2_letter.en.md
+        generate_documents_v2_email.en.md
+        cv.en.md
+        letter.en.md
+        email_body.en.txt
+        current.json
     render/
       proposed/
         cv.pdf
@@ -169,7 +170,7 @@ Owns:
 
 Enforcement rule:
 
-- runtime code under `src/graph/`, `src/core/ai/`, and `src/core/tools/` must not bypass `DataManager` for filesystem operations
+- runtime code under `src/core/ai/`, `src/core/tools/`, `src/scraper/`, and `src/apply/` must not bypass `DataManager` for filesystem operations
 - direct `Path.read_text()`, `read_bytes()`, `write_text()`, `write_bytes()`, and `mkdir()` calls are only allowed inside `src/core/data_manager.py`
 
 Must not own:

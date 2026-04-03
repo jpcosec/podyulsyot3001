@@ -77,7 +77,7 @@ class JobPosting(BaseModel):
     application_deadline: Optional[str] = Field(
         default=None, description="Deadline to apply"
     )
-    # TODO(future): validate whether application routing belongs in scrape-time contract or a later interpretation step — see future_docs/issues/application_routing_extraction.md
+    # TODO(future): validate whether application routing belongs in scrape-time contract or a later interpretation step — see plan_docs/issues/scraper/application_routing_extraction.md
     application_method: Optional[str] = Field(
         default=None,
         description="How to apply when explicitly stated (e.g. 'email', 'external portal', 'company portal', 'XING Easy Apply')",

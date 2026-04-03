@@ -105,7 +105,7 @@ class XingAdapter(SmartScraperAdapter):
             cards[url] = str(card)
         return cards
 
-    # TODO(future): _listing_data uses generated CSS class names that break silently on portal rebuilds — see future_docs/issues/scraper_fragility.md
+    # TODO(future): _listing_data uses generated CSS class names that break silently on portal rebuilds — see plan_docs/issues/scraper/scraper_fragility.md
     def _listing_data(self, card: BeautifulSoup) -> dict[str, Any]:
         title = card.find("h2")
         company = card.find(class_=re.compile("Company"))

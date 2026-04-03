@@ -12,7 +12,7 @@ from src.core.ai.generate_documents_v2.contracts.profile import (
     SectionMappingItem,
 )
 
-# TODO(future): module-level singleton locks path at import time — see future_docs/issues/generate_documents_v2_profile_loader_singleton.md
+# TODO(future): module-level singleton locks path at import time — see future_docs/issues/core/ai/generate_documents_v2/profile_loader_singleton.md
 _DATA_MANAGER = DataManager()
 
 
@@ -81,7 +81,7 @@ def _build_education_entries(education: list[dict]) -> list[ProfileEntry]:
         spec = item.get("specialization")
         if spec:
             role = f"{role} ({spec})"
-        
+
         achievements = []
         if item.get("equivalency_note"):
             achievements.append(item["equivalency_note"])

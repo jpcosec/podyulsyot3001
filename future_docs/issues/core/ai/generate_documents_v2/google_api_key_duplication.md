@@ -37,4 +37,4 @@ If the key resolution logic ever changes (e.g. adding a third env var, reading f
 - `src/core/ai/generate_documents_v2/nodes/blueprint.py:23`
 - `src/core/ai/generate_documents_v2/nodes/drafting.py:21`
 
-All marked: `# TODO(future): extract to shared helper — see future_docs/issues/generate_documents_v2_google_api_key_duplication.md`
+All marked: `# TODO(future): extract to shared helper — see future_docs/issues/core/ai/generate_documents_v2/google_api_key_duplication.md`

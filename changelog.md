@@ -9,6 +9,7 @@
 - Removed stale render/test compatibility references by dropping the old `src.graph` test/script artifacts and retiring the `generate_documents` render dual-write fallback.
 - Removed the old `plan_docs/applying/` bucket by deleting stale apply implementation checklists, deleting the legacy `manual_usuario`, moving apply traces into `data/ariadne/reference_data/applying_traces/`, moving BrowserOS/Crawl4AI external-library references into `docs/reference/external_libs/`, and rehoming future/issue material into `future_docs/` and `plan_docs/automation/`.
 - Moved the Crawl4AI schema cache into `data/ariadne/assets/crawl4ai_schemas/` and removed root clutter files and folders (`uuid`, `session.txt`, `testsprite_tests/`, `logs/`, `output/`, and LaTeX aux files).
+- Removed outdated global `future_docs/issues/` entries, rehomed live deferred items into mirrored paths, and then moved apply/scraper issue docs into `plan_docs/issues/{apply,scraper}/` with updated code references.
 
 ## 2026-03-31
 
@@ -38,7 +39,7 @@
 - Scraper ingestion now fails closed for success accounting: invalid extractions persist diagnostics under `nodes/ingest/failed/` and no longer count as successful ingests.
 - Extended the scraper contract with optional application-routing fields so sources can capture whether to apply by email or portal, plus direct application URLs and instructions when present.
 - Added `future_docs/issues/application_routing_extraction.md` and linked a `TODO(future)` in `src/scraper/models.py` because application routing may belong in a later interpretation stage rather than deterministic scrape-time extraction.
-- Added `future_docs/issues/logging_layer_conflicts.md` to track the mixed logging setup and the need for a shared application logging bootstrap.
+- Added `future_docs/new_feature/logging_layer_conflicts.md` to track the mixed logging setup and the need for a shared application logging bootstrap.
 
 ## 2026-03-29 (data manager standardization)
 

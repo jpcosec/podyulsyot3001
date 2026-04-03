@@ -29,7 +29,7 @@ Current limitations that are intentionally not documented as supported behavior:
 
 - profile updater is a no-op in `src/core/ai/generate_documents_v2/graph.py`
 - review pauses exist in the graph, but there is no full generate-documents-specific GraphPatch editing UI yet
-- regional document strategies are not fully implemented; deferred items live in `future_docs/issues/`
+- regional document strategies are not fully implemented; deferred items live in `future_docs/issues/core/ai/generate_documents_v2/`
 
 ## ⚙️ Configuration
 
@@ -73,7 +73,7 @@ The contract layer lives in `src/core/ai/generate_documents_v2/contracts/`.
 3. Wire or adjust the corresponding subgraph in `src/core/ai/generate_documents_v2/subgraphs/`.
 4. Persist new stage outputs through `PipelineArtifactStore` in `src/core/ai/generate_documents_v2/storage.py`.
 5. Add focused tests under `tests/test_generate_documents_v2/`.
-6. If the change is deferred or intentionally not implemented now, record it in `future_docs/issues/` instead of over-documenting it here.
+6. If the change is deferred or intentionally not implemented now, record it in `future_docs/issues/core/ai/generate_documents_v2/` instead of over-documenting it here.
 
 ## 💻 How to Use
 
@@ -89,5 +89,5 @@ python -m src.cli.main generate --source stepstone --job-id <ID> --language en -
 
 - **Pipeline stops before documents are produced** -> inspect stage artifacts under `data/jobs/<source>/<job_id>/nodes/generate_documents_v2/`.
 - **Profile data is missing or wrong** -> verify the profile JSON path or the default base profile file consumed by `src/core/ai/generate_documents_v2/graph.py`.
-- **Review flow feels incomplete** -> this is expected; richer generate-documents review editing is tracked in `future_docs/issues/`.
-- **Regional formatting expectations are missing** -> current behavior is generic; advanced regional strategies are deferred and tracked in `future_docs/issues/`.
+- **Review flow feels incomplete** -> this is expected; richer generate-documents review editing is tracked in `future_docs/issues/core/ai/generate_documents_v2/`.
+- **Regional formatting expectations are missing** -> current behavior is generic; advanced regional strategies are deferred and tracked in `future_docs/issues/core/ai/generate_documents_v2/`.

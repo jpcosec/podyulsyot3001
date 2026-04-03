@@ -29,5 +29,5 @@ Option B: Remove `auto_approve_review` from state entirely. Control batch vs HIT
 
 ## Linked TODOs
 
-- `src/core/ai/generate_documents_v2/graph.py:320` — `# TODO(future): default True silently bypasses HITL — see future_docs/issues/generate_documents_v2_auto_approve_review_default.md`
+- `src/core/ai/generate_documents_v2/graph.py:320` — `# TODO(future): default True silently bypasses HITL — see future_docs/issues/core/ai/generate_documents_v2/auto_approve_review_default.md`
 - `src/core/ai/generate_documents_v2/graph.py:393` — same

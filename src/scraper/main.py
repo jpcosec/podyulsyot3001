@@ -39,7 +39,7 @@ def build_providers(data_manager: DataManager | None = None) -> dict[str, object
     }
 
 
-# TODO(future): PROVIDERS is built at import time, creating a DataManager on module load — see future_docs/issues/scraper_fragility.md
+# TODO(future): PROVIDERS is built at import time, creating a DataManager on module load — see plan_docs/issues/scraper/scraper_fragility.md
 PROVIDERS = build_providers()
 
 

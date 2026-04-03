@@ -110,7 +110,7 @@ def normalize_relative_date(
     return text, None
 
 
-# TODO(future): detect_language is a naive heuristic, fails on short/mixed-language postings — see future_docs/issues/scraper_fragility.md
+# TODO(future): detect_language is a naive heuristic, fails on short/mixed-language postings — see plan_docs/issues/scraper/scraper_fragility.md
 def detect_language(markdown_text: str) -> str:
     """Naive fallback to detect if a text is German or English."""
     german_markers = [

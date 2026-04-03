@@ -52,7 +52,7 @@ class StepStoneAdapter(SmartScraperAdapter):
         match = re.search(r"--(\d+)-inline\.html", url)
         return match.group(1) if match else "unknown"
 
-    # TODO(future): extract_links returns plain URL strings, losing listing-side metadata — see future_docs/issues/scraper_fragility.md
+    # TODO(future): extract_links returns plain URL strings, losing listing-side metadata — see plan_docs/issues/scraper/scraper_fragility.md
     def extract_links(self, crawl_result: Any) -> List[str]:
         """Discover job URLs using crawl4ai's native link discovery."""
         job_links = []

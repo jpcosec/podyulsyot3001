@@ -2,7 +2,7 @@
 
 Standards for modules built around LangGraph orchestration and LangChain model invocation. Extends `basic.md`.
 
-Reference implementation: `src/core/ai/match_skill/`, `src/core/ai/generate_documents/`.
+Reference implementation: `src/core/ai/generate_documents_v2/`.
 
 ---
 
@@ -124,7 +124,7 @@ review/rounds/round_NNN/    ← immutable per-round snapshots
 Rules:
 - Round directories are immutable once written
 - `approved/state.json` is overwritten only on approval
-- All persisted payloads should carry a `schema_version` field (see `future_docs/issues/match_skill_hardening_roadmap.md`)
+- All persisted payloads should carry a `schema_version` field when the module defines versioned artifacts.
 - Hash the approved artifact and store the hash in state for review validation
 
 ---

@@ -27,7 +27,7 @@ class MatchResult(BaseModel):
     matches: list[MatchEdge] = Field(default_factory=list)
 
 
-# TODO(future): extract to shared helper — see future_docs/issues/generate_documents_v2_google_api_key_duplication.md
+# TODO(future): extract to shared helper — see future_docs/issues/core/ai/generate_documents_v2/google_api_key_duplication.md
 def _google_api_key() -> str | None:
     return os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
 

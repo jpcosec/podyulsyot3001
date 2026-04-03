@@ -81,10 +81,10 @@ Decision rule:
 
 Current examples:
 
-- `future_docs/new_feature/applying_feature_design.md`
+- `plan_docs/issues/apply/applying_feature_design.md`
 - `plan_docs/automation/2026-04-03-unified-automation-refactor-plan.md`
 - `docs/reference/external_libs/browseros_interfaces.md`
-- `future_docs/issues/scraper_fragility.md`
+- `plan_docs/issues/scraper/scraper_fragility.md`
 
 Target placement:
 

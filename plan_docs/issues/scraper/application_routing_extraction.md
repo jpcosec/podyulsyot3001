@@ -28,4 +28,4 @@ That step can combine source-specific heuristics with LLM interpretation when ne
 
 ## Linked TODOs
 
-- `src/scraper/models.py` — `# TODO(future): validate whether application routing belongs in scrape-time contract or a later interpretation step — see future_docs/issues/application_routing_extraction.md`
+- `src/scraper/models.py` — `# TODO(future): validate whether application routing belongs in scrape-time contract or a later interpretation step — see plan_docs/issues/scraper/application_routing_extraction.md`
