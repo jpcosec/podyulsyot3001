@@ -9,46 +9,76 @@ Usage:
 
 Spec reference: docs/superpowers/specs/2026-03-30-apply-module-design.md Section 2
 """
+
 from __future__ import annotations
 
 import argparse
 import asyncio
 import datetime
+import json
 import logging
 import os
 import sys
 from pathlib import Path
 
+from src.apply.browseros_backend import build_browseros_providers
 from src.core.data_manager import DataManager
 from src.shared.log_tags import LogTag
 
 logger = logging.getLogger(__name__)
 
 
-def build_providers(data_manager: DataManager | None = None) -> dict[str, object]:
+def build_crawl4ai_providers(
+    data_manager: DataManager | None = None,
+) -> dict[str, object]:
     """Lazy import adapters to avoid import-time crawl4ai initialization."""
+    from src.apply.providers.linkedin.adapter import LinkedInApplyAdapter
     from src.apply.providers.stepstone.adapter import StepStoneApplyAdapter
     from src.apply.providers.xing.adapter import XingApplyAdapter
 
     manager = data_manager or DataManager()
     return {
+        "linkedin": LinkedInApplyAdapter(manager),
         "xing": XingApplyAdapter(manager),
         "stepstone": StepStoneApplyAdapter(manager),
     }
 
 
+def build_providers(
+    backend: str,
+    data_manager: DataManager | None = None,
+    profile_data: dict | None = None,
+) -> dict[str, object]:
+    if backend == "browseros":
+        return build_browseros_providers(data_manager, profile_data=profile_data)
+    return build_crawl4ai_providers(data_manager)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Job auto-application CLI")
     parser.add_argument(
+        "--backend",
+        choices=["crawl4ai", "browseros"],
+        default="crawl4ai",
+        help="Execution backend for apply automation.",
+    )
+    parser.add_argument(
         "--source",
         required=True,
-        choices=["xing", "stepstone"],
+        choices=["xing", "stepstone", "linkedin"],
         help="Job portal to apply on.",
     )
     # Apply mode
     parser.add_argument("--job-id", dest="job_id", help="Job ID to apply to.")
     parser.add_argument("--cv", dest="cv_path", help="Path to CV PDF.")
-    parser.add_argument("--letter", dest="letter_path", help="Path to cover letter PDF (optional).")
+    parser.add_argument(
+        "--letter", dest="letter_path", help="Path to cover letter PDF (optional)."
+    )
+    parser.add_argument(
+        "--profile-json",
+        dest="profile_json",
+        help="Optional JSON file with candidate fields for BrowserOS playbooks.",
+    )
     parser.add_argument(
         "--dry-run",
         dest="dry_run",
@@ -89,18 +119,28 @@ async def main(argv: list[str] | None = None) -> None:
         )
         sys.exit(1)
 
+    profile_data = None
+    if args.profile_json:
+        profile_data = json.loads(Path(args.profile_json).read_text(encoding="utf-8"))
+
+    providers = build_providers(args.backend, profile_data=profile_data)
+    if args.source not in providers:
+        logger.error(
+            "%s Backend '%s' does not support source '%s'.",
+            LogTag.FAIL,
+            args.backend,
+            args.source,
+        )
+        sys.exit(1)
+
     if args.setup_session:
-        providers = build_providers()
         await providers[args.source].setup_session()
         return
 
     if not args.job_id or not args.cv_path:
-        logger.error(
-            "%s --job-id and --cv are required in apply mode.", LogTag.FAIL
-        )
+        logger.error("%s --job-id and --cv are required in apply mode.", LogTag.FAIL)
         sys.exit(1)
 
-    providers = build_providers()
     meta = await providers[args.source].run(
         job_id=args.job_id,
         cv_path=Path(args.cv_path),

@@ -1,10 +1,12 @@
 """Tests for apply module models (spec Section 3)."""
+
 from src.apply.models import ApplicationRecord, ApplyMeta, FormSelectors
 
 
 def test_form_selectors_mandatory_fields_required():
     """FormSelectors requires all four mandatory selectors."""
     import pytest
+
     with pytest.raises(Exception):
         FormSelectors()  # missing mandatory fields
 
@@ -35,6 +37,7 @@ def test_form_selectors_optional_fields():
 def test_apply_meta_status_values():
     """ApplyMeta accepts only the four defined status values."""
     import pytest
+
     for status in ("submitted", "dry_run", "failed", "portal_changed"):
         m = ApplyMeta(status=status, timestamp="2026-03-30T00:00:00Z")
         assert m.status == status
@@ -75,6 +78,7 @@ def test_build_parser_requires_source():
     """build_parser() creates a parser that requires --source."""
     import pytest
     from src.apply.main import build_parser
+
     parser = build_parser()
     with pytest.raises(SystemExit):
         parser.parse_args([])
@@ -83,24 +87,57 @@ def test_build_parser_requires_source():
 def test_build_parser_apply_mode():
     """build_parser() parses apply mode args."""
     from src.apply.main import build_parser
+
     parser = build_parser()
-    args = parser.parse_args([
-        "--source", "xing",
-        "--job-id", "12345",
-        "--cv", "/path/cv.pdf",
-        "--dry-run",
-    ])
+    args = parser.parse_args(
+        [
+            "--source",
+            "xing",
+            "--job-id",
+            "12345",
+            "--cv",
+            "/path/cv.pdf",
+            "--dry-run",
+        ]
+    )
     assert args.source == "xing"
     assert args.job_id == "12345"
     assert args.cv_path == "/path/cv.pdf"
     assert args.dry_run is True
     assert args.setup_session is False
+    assert args.backend == "crawl4ai"
 
 
 def test_build_parser_setup_session_mode():
     """build_parser() parses setup-session mode."""
     from src.apply.main import build_parser
+
     parser = build_parser()
     args = parser.parse_args(["--source", "xing", "--setup-session"])
     assert args.setup_session is True
     assert args.job_id is None
+
+
+def test_build_parser_browseros_backend_and_linkedin_source():
+    """build_parser() supports the BrowserOS backend and LinkedIn source."""
+    from src.apply.main import build_parser
+
+    parser = build_parser()
+    args = parser.parse_args(
+        [
+            "--backend",
+            "browseros",
+            "--source",
+            "linkedin",
+            "--job-id",
+            "12345",
+            "--cv",
+            "/path/cv.pdf",
+            "--profile-json",
+            "/tmp/profile.json",
+        ]
+    )
+
+    assert args.backend == "browseros"
+    assert args.source == "linkedin"
+    assert args.profile_json == "/tmp/profile.json"
