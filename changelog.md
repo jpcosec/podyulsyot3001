@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-04-03
+
+- Added repo map documents under `docs/repo_maps/` covering the current repo and the `feat-apply-module` worktree, focused on scraping, Crawl4AI, BrowserOS, applying docs, and Ariadne-related files.
+
 ## 2026-03-31
 
 - Added `docs/superpowers/specs/2026-03-31-generate-documents-spec.md` as a consolidated, quick-reference specification distilled from the exploratory generate-documents delta design notes.

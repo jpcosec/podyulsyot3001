@@ -84,3 +84,8 @@ testsprite_tests/testsprite-mcp-test-report.md
 
 # --- Screenshots / loose PNGs in root ---
 /*.png
+
+
+# --- Ariadne ---
+docs/repo_maps/
+plan_docs/applying/traces
