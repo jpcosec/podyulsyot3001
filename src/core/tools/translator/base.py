@@ -2,6 +2,7 @@
 
 Implements chunking, retries, and explicit errors.
 """
+
 from abc import ABC, abstractmethod
 import time
 from typing import Any, List, Optional
@@ -11,11 +12,14 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class ToolDependencyError(Exception):
-    pass
+    """Raised when a required translation dependency is unavailable."""
+
 
 class ToolFailureError(Exception):
-    pass
+    """Raised when translation retries are exhausted."""
+
 
 class BaseTranslatorAdapter(ABC):
     """Abstract base class for all translation engines."""
@@ -28,14 +32,17 @@ class BaseTranslatorAdapter(ABC):
 
     @property
     def max_chunk_chars(self) -> int:
+        """Maximum characters allowed in a translated chunk."""
         return 4500
 
     @property
     def max_attempts(self) -> int:
+        """Maximum attempts allowed for translating one chunk."""
         return 2
 
     @property
     def retry_delay_seconds(self) -> float:
+        """Delay between chunk translation retries in seconds."""
         return 1.0
 
     @abstractmethod
@@ -78,7 +85,9 @@ class BaseTranslatorAdapter(ABC):
 
         return chunks
 
-    def translate_text(self, text: str, target_lang: str = "en", source_lang: str = "auto") -> str:
+    def translate_text(
+        self, text: str, target_lang: str = "en", source_lang: str = "auto"
+    ) -> str:
         """Translate full text with bounded retries and automatic chunking."""
         if not text or not text.strip():
             return text
@@ -98,7 +107,9 @@ class BaseTranslatorAdapter(ABC):
                     break
                 except Exception as exc:
                     last_error = exc
-                    logger.warning(f"[{self.provider_name}] Chunk translation failed on attempt {attempt}: {exc}")
+                    logger.warning(
+                        f"[{self.provider_name}] Chunk translation failed on attempt {attempt}: {exc}"
+                    )
                     if attempt < self.max_attempts and self.retry_delay_seconds > 0:
                         time.sleep(self.retry_delay_seconds)
             else:
@@ -107,16 +118,31 @@ class BaseTranslatorAdapter(ABC):
         if translated_chunks and len(translated_chunks) == len(chunks):
             return "\n".join(translated_chunks)
 
-        raise ToolFailureError(f"Translation failed after {self.max_attempts} attempts.") from last_error
+        raise ToolFailureError(
+            f"Translation failed after {self.max_attempts} attempts."
+        ) from last_error
 
-    def translate_fields(self, payload: dict[str, Any], fields: List[str], target_lang: str = "en", source_lang: str = "auto") -> dict[str, Any]:
+    def translate_fields(
+        self,
+        payload: dict[str, Any],
+        fields: List[str],
+        target_lang: str = "en",
+        source_lang: str = "auto",
+    ) -> dict[str, Any]:
         """Translate selected top-level string fields in a JSON/dict payload."""
         out = dict(payload)
         for field in fields:
             value = out.get(field)
             if isinstance(value, str) and value:
-                out[field] = self.translate_text(value, target_lang=target_lang, source_lang=source_lang)
+                out[field] = self.translate_text(
+                    value, target_lang=target_lang, source_lang=source_lang
+                )
             elif isinstance(value, list) and all(isinstance(i, str) for i in value):
                 # Handle lists of strings (e.g. responsibilities, requirements)
-                out[field] = [self.translate_text(item, target_lang=target_lang, source_lang=source_lang) for item in value]
+                out[field] = [
+                    self.translate_text(
+                        item, target_lang=target_lang, source_lang=source_lang
+                    )
+                    for item in value
+                ]
         return out

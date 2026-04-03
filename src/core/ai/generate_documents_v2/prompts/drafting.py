@@ -15,14 +15,15 @@ Rules:
 
 
 def build_drafting_user_prompt(doc_type: str, blueprint: GlobalBlueprint) -> str:
+    """Build the user prompt for drafting one document type from a blueprint."""
     context_lines = []
     if blueprint.job_title:
         context_lines.append(f"JOB TITLE: {blueprint.job_title}")
     if blueprint.source:
         context_lines.append(f"SOURCE PLATFORM: {blueprint.source}")
-    
+
     context_block = "\n".join(context_lines)
-    
+
     return f"""Draft the `{doc_type}` document from this blueprint.
 
 {context_block}

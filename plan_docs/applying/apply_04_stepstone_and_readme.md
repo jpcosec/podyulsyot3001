@@ -230,7 +230,7 @@ Expected: `ImportError: cannot import name 'StepStoneApplyAdapter'`
 ```python
 """StepStone Easy Apply adapter.
 
-Spec reference: docs/superpowers/specs/2026-03-30-apply-module-design.md Section 9
+Design reference: `src/apply/README.md` and `plan_docs/applying/applying_feature_design.md`
 
 Selector discovery: inspect tests/fixtures/apply/stepstone_apply_modal.html
   - Prefer data-at attributes — StepStone commonly uses these for test targeting
@@ -359,7 +359,7 @@ Standalone CLI module for automated job application via XING Easy Apply and Step
 
 Reads from an existing ingested job artifact, fills and submits the application form using a persistent browser session.
 
-**Spec:** `docs/superpowers/specs/2026-03-30-apply-module-design.md`
+**Design references:** `src/apply/README.md`, `plan_docs/applying/applying_feature_design.md`
 
 ---
 

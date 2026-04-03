@@ -42,6 +42,11 @@ class BrowserOSApplyProvider:
         self.executor = BrowserOSPlaybookExecutor(self.client)
 
     async def setup_session(self) -> None:
+        """Open a visible BrowserOS page and wait for manual login.
+
+        Returns:
+            None.
+        """
         page_id = self.client.new_page()
         self.client.navigate(self.portal_base_url, page_id)
         self.client.show_page(page_id)
@@ -56,6 +61,17 @@ class BrowserOSApplyProvider:
         letter_path: Path | None,
         dry_run: bool,
     ) -> ApplyMeta:
+        """Run a BrowserOS-backed application flow for one job.
+
+        Args:
+            job_id: Job identifier under canonical storage.
+            cv_path: Local CV path for upload or selection context.
+            letter_path: Unused placeholder for API compatibility.
+            dry_run: Whether to stop before the final submit step.
+
+        Returns:
+            Apply status metadata written for the run.
+        """
         del letter_path
         self._check_idempotency(job_id)
         ingest_data = self._read_ingest_artifact(job_id)
@@ -231,6 +247,15 @@ def build_browseros_providers(
     *,
     profile_data: dict[str, Any] | None = None,
 ) -> dict[str, BrowserOSApplyProvider]:
+    """Build BrowserOS-backed apply providers.
+
+    Args:
+        data_manager: Optional data manager used for artifact IO.
+        profile_data: Optional candidate profile payload injected into playbooks.
+
+    Returns:
+        A mapping from source name to BrowserOS provider.
+    """
     manager = data_manager or DataManager()
     playbook_dir = Path(__file__).resolve().parent / "playbooks"
     return {

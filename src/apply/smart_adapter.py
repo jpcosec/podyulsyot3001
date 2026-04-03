@@ -3,7 +3,7 @@
 Adapters provide portal-specific knowledge only (selectors, C4A-Scripts, profile dir).
 All flow control lives here: navigate → validate → fill → upload → submit → persist.
 
-Spec reference: docs/superpowers/specs/2026-03-30-apply-module-design.md Sections 4-8
+Design reference: `src/apply/README.md` and `plan_docs/applying/applying_feature_design.md`
 
 Crawl4AI docs:
   C4A-Script DSL:    https://docs.crawl4ai.com/core/c4a-script/
@@ -11,6 +11,7 @@ Crawl4AI docs:
   Hooks:             https://docs.crawl4ai.com/advanced/hooks-auth/
   Session mgmt:      https://docs.crawl4ai.com/advanced/session-management/
 """
+
 from __future__ import annotations
 
 import json
@@ -34,6 +35,13 @@ class PortalStructureChangedError(Exception):
 
 
 class ApplyAdapter(ABC):
+    """Abstract base class for deterministic portal-specific apply adapters.
+
+    Implementations provide selector knowledge, session profile location, and the
+    portal-specific scripts needed to open, fill, and submit a form. This base
+    class owns validation, artifact persistence, idempotency checks, and shared
+    execution flow.
+    """
 
     def __init__(self, data_manager: DataManager | None = None) -> None:
         self.data_manager = data_manager or DataManager()
@@ -115,14 +123,21 @@ class ApplyAdapter(ABC):
                 f"Mandatory selectors absent from DOM on {self.source_name}: {missing}"
             )
         optional = {
-            "first_name", "last_name", "email", "phone",
-            "letter_upload", "error_indicator", "cv_select_existing",
+            "first_name",
+            "last_name",
+            "email",
+            "phone",
+            "letter_upload",
+            "error_indicator",
+            "cv_select_existing",
         }
         for field in optional:
             if getattr(selectors, field) is not None and not results.get(field, False):
                 logger.warning(
                     "%s Optional selector '%s' absent from DOM on %s; skipping.",
-                    LogTag.WARN, field, self.source_name,
+                    LogTag.WARN,
+                    field,
+                    self.source_name,
                 )
 
     def _check_idempotency(self, job_id: str) -> None:
@@ -148,7 +163,9 @@ class ApplyAdapter(ABC):
             )
         logger.warning(
             "%s Prior apply attempt found for %s with status=%s; retrying.",
-            LogTag.WARN, job_id, meta.get("status"),
+            LogTag.WARN,
+            job_id,
+            meta.get("status"),
         )
 
     # ── crawl4ai helpers ─────────────────────────────────────────────────────
@@ -213,6 +230,7 @@ class ApplyAdapter(ABC):
         If cv_upload selector is absent but cv_select_existing is present,
         click it instead and wait 500ms for DOM stabilization.
         """
+
         async def _hook(page: Any, **kwargs: Any) -> Any:
             if selectors.cv_upload:
                 await page.set_input_files(selectors.cv_upload, str(cv_path))
@@ -234,9 +252,8 @@ class ApplyAdapter(ABC):
         expected = self.get_success_text().lower()
         content = ""
         if result.markdown:
-            content = (
-                getattr(result.markdown, "raw_markdown", None)
-                or str(result.markdown)
+            content = getattr(result.markdown, "raw_markdown", None) or str(
+                result.markdown
             )
         if not content and result.cleaned_html:
             content = result.cleaned_html
@@ -245,7 +262,9 @@ class ApplyAdapter(ABC):
             logger.warning(
                 "%s Success text '%s' not found on %s. "
                 "Portal copy may have changed (non-fatal).",
-                LogTag.WARN, self.get_success_text(), self.source_name,
+                LogTag.WARN,
+                self.get_success_text(),
+                self.source_name,
             )
         return found
 
@@ -280,7 +299,9 @@ class ApplyAdapter(ABC):
             data=record.model_dump(),
         )
 
-    def _save_screenshot(self, screenshot_bytes: bytes, job_id: str, filename: str) -> None:
+    def _save_screenshot(
+        self, screenshot_bytes: bytes, job_id: str, filename: str
+    ) -> None:
         # DataManager has no binary-write method; write directly via artifact_path.
         path = self.data_manager.artifact_path(
             source=self.source_name,
@@ -301,7 +322,9 @@ class ApplyAdapter(ABC):
         reuse the session headlessly.
         """
         self.get_session_profile_dir().mkdir(parents=True, exist_ok=True)
-        async with AsyncWebCrawler(config=self._browser_config(headless=False)) as crawler:
+        async with AsyncWebCrawler(
+            config=self._browser_config(headless=False)
+        ) as crawler:
             await crawler.arun(
                 url=self._get_portal_base_url(),
                 config=CrawlerRunConfig(wait_for="body"),
@@ -310,9 +333,7 @@ class ApplyAdapter(ABC):
                 f"\n[{self.source_name}] Log in manually in the browser. "
                 "Press Enter when done.\n"
             )
-        logger.info(
-            "%s Session saved to %s", LogTag.OK, self.get_session_profile_dir()
-        )
+        logger.info("%s Session saved to %s", LogTag.OK, self.get_session_profile_dir())
 
     # ── Main execution flow ──────────────────────────────────────────────────
 
@@ -368,8 +389,17 @@ class ApplyAdapter(ABC):
         try:
             async with AsyncWebCrawler(config=self._browser_config()) as crawler:
                 # Step 1: Navigate to job page + open apply modal
-                logger.info("%s Opening apply modal for %s/%s", LogTag.FAST, self.source_name, job_id)
-                first_field = selectors.cv_upload or selectors.first_name or selectors.apply_button
+                logger.info(
+                    "%s Opening apply modal for %s/%s",
+                    LogTag.FAST,
+                    self.source_name,
+                    job_id,
+                )
+                first_field = (
+                    selectors.cv_upload
+                    or selectors.first_name
+                    or selectors.apply_button
+                )
                 open_result = await crawler.arun(
                     url=application_url,
                     config=CrawlerRunConfig(
@@ -406,11 +436,15 @@ class ApplyAdapter(ABC):
                     ),
                 )
                 if fill_result.screenshot:
-                    self._save_screenshot(fill_result.screenshot, job_id, "screenshot.png")
+                    self._save_screenshot(
+                        fill_result.screenshot, job_id, "screenshot.png"
+                    )
 
                 # Dry-run stops before submit
                 if dry_run:
-                    logger.info("%s Dry-run complete for %s; not submitting.", LogTag.OK, job_id)
+                    logger.info(
+                        "%s Dry-run complete for %s; not submitting.", LogTag.OK, job_id
+                    )
                     record = self._build_application_record(
                         ingest_data=ingest_data,
                         job_id=job_id,
@@ -428,7 +462,12 @@ class ApplyAdapter(ABC):
                     return meta
 
                 # Step 4: Submit and verify
-                logger.info("%s Submitting application for %s/%s", LogTag.FAST, self.source_name, job_id)
+                logger.info(
+                    "%s Submitting application for %s/%s",
+                    LogTag.FAST,
+                    self.source_name,
+                    job_id,
+                )
                 submit_result = await crawler.arun(
                     url=application_url,
                     config=CrawlerRunConfig(
@@ -440,13 +479,14 @@ class ApplyAdapter(ABC):
                     ),
                 )
                 if submit_result.screenshot:
-                    self._save_screenshot(submit_result.screenshot, job_id, "screenshot_submitted.png")
+                    self._save_screenshot(
+                        submit_result.screenshot, job_id, "screenshot_submitted.png"
+                    )
 
                 confirmation_text = None
                 if submit_result.markdown:
-                    raw = (
-                        getattr(submit_result.markdown, "raw_markdown", None)
-                        or str(submit_result.markdown)
+                    raw = getattr(submit_result.markdown, "raw_markdown", None) or str(
+                        submit_result.markdown
                     )
                     confirmation_text = raw[:500]
 
@@ -467,12 +507,19 @@ class ApplyAdapter(ABC):
                 self._write_application_record(job_id, record)
                 meta = ApplyMeta(status="submitted", timestamp=submitted_at)
                 self._write_apply_meta(job_id, meta)
-                logger.info("%s Application submitted for %s/%s", LogTag.OK, self.source_name, job_id)
+                logger.info(
+                    "%s Application submitted for %s/%s",
+                    LogTag.OK,
+                    self.source_name,
+                    job_id,
+                )
                 return meta
 
         except Exception as exc:
             error_status = (
-                "portal_changed" if isinstance(exc, PortalStructureChangedError) else "failed"
+                "portal_changed"
+                if isinstance(exc, PortalStructureChangedError)
+                else "failed"
             )
             # Best-effort error screenshot — never let this shadow the original exception
             try:
@@ -486,7 +533,9 @@ class ApplyAdapter(ABC):
                         ),
                     )
                     if err_result.screenshot:
-                        self._save_screenshot(err_result.screenshot, job_id, "error_state.png")
+                        self._save_screenshot(
+                            err_result.screenshot, job_id, "error_state.png"
+                        )
             except Exception:
                 pass
             meta = ApplyMeta(status=error_status, timestamp=timestamp, error=str(exc))

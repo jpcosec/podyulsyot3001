@@ -1,7 +1,8 @@
 """Pydantic models for the apply module.
 
-Spec reference: docs/superpowers/specs/2026-03-30-apply-module-design.md Section 3
+Design reference: `src/apply/README.md` and `plan_docs/applying/applying_feature_design.md`
 """
+
 from __future__ import annotations
 
 from typing import Literal
@@ -35,6 +36,12 @@ class FormSelectors(BaseModel):
 
 
 class ApplicationRecord(BaseModel):
+    """Persisted record of one apply attempt for a specific job.
+
+    Stores the source, files used, filled fields, and any confirmation metadata
+    needed for later audit or debugging.
+    """
+
     source: str
     job_id: str
     job_title: str
@@ -49,6 +56,8 @@ class ApplicationRecord(BaseModel):
 
 
 class ApplyMeta(BaseModel):
+    """Small status artifact describing the outcome of an apply run."""
+
     status: Literal["submitted", "dry_run", "failed", "portal_changed"]
     timestamp: str
     error: str | None = None

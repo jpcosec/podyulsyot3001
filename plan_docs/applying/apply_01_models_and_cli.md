@@ -4,7 +4,7 @@
 
 **Goal:** Create the foundational scaffolding for `src/apply/` — Pydantic models, the CLI entry point, and the `__init__.py` exports.
 
-**Architecture:** Mirror the `src/scraper/` pattern exactly — a `build_providers()` function, argparse, `asyncio.run(main())`. Models follow the spec at `docs/superpowers/specs/2026-03-30-apply-module-design.md` Section 3 verbatim.
+**Architecture:** Mirror the `src/scraper/` pattern exactly — a `build_providers()` function, argparse, `asyncio.run(main())`. Models follow the design described in `src/apply/README.md` and `plan_docs/applying/applying_feature_design.md`.
 
 **Tech Stack:** Python stdlib only for this task (Pydantic, argparse, asyncio). No crawl4ai dependency yet.
 
@@ -127,7 +127,7 @@ Expected: `ModuleNotFoundError: No module named 'src.apply'`
 ```python
 """Pydantic models for the apply module.
 
-Spec reference: docs/superpowers/specs/2026-03-30-apply-module-design.md Section 3
+Design reference: `src/apply/README.md` and `plan_docs/applying/applying_feature_design.md`
 """
 from __future__ import annotations
 
@@ -281,7 +281,7 @@ Usage:
     # First-time session setup (mutually exclusive with apply mode)
     python -m src.apply.main --source xing --setup-session
 
-Spec reference: docs/superpowers/specs/2026-03-30-apply-module-design.md Section 2
+Design reference: `src/apply/README.md` and `plan_docs/applying/applying_feature_design.md`
 """
 from __future__ import annotations
 

@@ -8,9 +8,20 @@ class GoogleTranslatorAdapter(BaseTranslatorAdapter):
 
     @property
     def provider_name(self) -> str:
+        """Return the canonical provider key for the Google adapter."""
         return "google"
 
     def translate_chunk(self, text: str, source_lang: str, target_lang: str) -> str:
+        """Translate one text chunk with ``deep_translator``.
+
+        Args:
+            text: Text chunk to translate.
+            source_lang: Source language code.
+            target_lang: Target language code.
+
+        Returns:
+            The translated text chunk.
+        """
         try:
             from deep_translator import GoogleTranslator
         except ImportError as exc:

@@ -1,3 +1,5 @@
+"""Lightweight path and text/JSON IO helpers scoped to one job workspace."""
+
 from __future__ import annotations
 
 import json
@@ -8,6 +10,8 @@ _SEGMENT_RE = re.compile(r"^[A-Za-z0-9._-]+$")
 
 
 class WorkspaceManager:
+    """Resolve and read/write files safely under a canonical job workspace."""
+
     def __init__(self, jobs_root: str | Path = "data/jobs"):
         self.jobs_root = Path(jobs_root)
 
@@ -28,11 +32,21 @@ class WorkspaceManager:
         return candidate
 
     def job_root(self, source: str, job_id: str) -> Path:
+        """Return the root directory for one job.
+
+        Args:
+            source: Source name.
+            job_id: Job identifier.
+
+        Returns:
+            The canonical root path for that job.
+        """
         src = self._validated_segment(source, "source")
         jid = self._validated_segment(job_id, "job_id")
         return self.jobs_root / src / jid
 
     def node_root(self, source: str, job_id: str, node_name: str) -> Path:
+        """Return the root directory for one pipeline node under a job."""
         node = self._validated_segment(node_name, "node_name")
         return self.job_root(source, job_id) / "nodes" / node
 
@@ -43,6 +57,7 @@ class WorkspaceManager:
         node_name: str,
         stage: str,
     ) -> Path:
+        """Return the directory for one node stage under a job."""
         stage_name = self._validated_segment(stage, "stage")
         return self.node_root(source, job_id, node_name) / stage_name
 
@@ -54,10 +69,21 @@ class WorkspaceManager:
         stage: str,
         filename: str,
     ) -> Path:
+        """Return the full path for one artifact under a node stage."""
         file_name = self._validated_segment(filename, "filename")
         return self.node_stage_dir(source, job_id, node_name, stage) / file_name
 
     def resolve_under_job(self, source: str, job_id: str, relative_path: str) -> Path:
+        """Resolve a relative path under the job root and prevent escape.
+
+        Args:
+            source: Source name.
+            job_id: Job identifier.
+            relative_path: Relative path within the job workspace.
+
+        Returns:
+            The resolved filesystem path inside the job root.
+        """
         root = self.job_root(source, job_id).resolve()
         relative = self._safe_relative_path(relative_path)
         resolved = (root / relative).resolve()
@@ -67,15 +93,18 @@ class WorkspaceManager:
 
     @staticmethod
     def ensure_parent(path: Path) -> None:
+        """Ensure the parent directory for a path exists."""
         path.parent.mkdir(parents=True, exist_ok=True)
 
     def read_json(self, source: str, job_id: str, relative_path: str) -> dict:
+        """Read a JSON artifact relative to a job root."""
         path = self.resolve_under_job(source, job_id, relative_path)
         return json.loads(path.read_text(encoding="utf-8"))
 
     def write_json(
         self, source: str, job_id: str, relative_path: str, data: dict
     ) -> None:
+        """Write a JSON artifact relative to a job root."""
         path = self.resolve_under_job(source, job_id, relative_path)
         self.ensure_parent(path)
         path.write_text(
@@ -83,12 +112,14 @@ class WorkspaceManager:
         )
 
     def read_text(self, source: str, job_id: str, relative_path: str) -> str:
+        """Read a text artifact relative to a job root."""
         path = self.resolve_under_job(source, job_id, relative_path)
         return path.read_text(encoding="utf-8")
 
     def write_text(
         self, source: str, job_id: str, relative_path: str, content: str
     ) -> None:
+        """Write a text artifact relative to a job root."""
         path = self.resolve_under_job(source, job_id, relative_path)
         self.ensure_parent(path)
         path.write_text(content, encoding="utf-8")

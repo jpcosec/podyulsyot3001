@@ -1,3 +1,5 @@
+"""Drafting-stage contracts for section and document text outputs."""
+
 from __future__ import annotations
 
 from typing import Literal
@@ -6,6 +8,8 @@ from pydantic import BaseModel, Field, model_validator
 
 
 class DraftedSection(BaseModel):
+    """One drafted section produced from a section blueprint."""
+
     section_id: str
     raw_markdown: str
     is_cohesive: bool = True
@@ -19,6 +23,8 @@ class DraftedSection(BaseModel):
 
 
 class DraftedDocument(BaseModel):
+    """A drafted document grouped by section identifier."""
+
     doc_type: Literal["cv", "letter", "email"]
     sections_md: dict[str, str] = Field(default_factory=dict)
     cohesion_score: float = Field(ge=0.0, le=1.0, default=1.0)

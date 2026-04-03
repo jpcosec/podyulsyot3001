@@ -23,6 +23,14 @@ logger = logging.getLogger(__name__)
 
 
 def build_providers(data_manager: DataManager | None = None) -> dict[str, object]:
+    """Build scraper providers keyed by source name.
+
+    Args:
+        data_manager: Optional shared data manager instance.
+
+    Returns:
+        A mapping from source name to provider instance.
+    """
     manager = data_manager or DataManager()
     return {
         "tuberlin": TUBerlinAdapter(manager),
@@ -36,6 +44,15 @@ PROVIDERS = build_providers()
 
 
 def get_ingested_job_ids(data_manager: DataManager, source: str) -> list[str]:
+    """Return job ids that already have canonical ingest artifacts.
+
+    Args:
+        data_manager: Data manager used to inspect job roots.
+        source: Source name whose jobs should be scanned.
+
+    Returns:
+        Sorted ingested job ids for the source.
+    """
     source_root = data_manager.source_root(source)
     if not source_root.exists():
         return []
@@ -47,6 +64,11 @@ def get_ingested_job_ids(data_manager: DataManager, source: str) -> list[str]:
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """Build the scraper CLI parser.
+
+    Returns:
+        The parser describing discovery and ingest options.
+    """
     parser = argparse.ArgumentParser(description="Job discovery and ingestion CLI")
     parser.add_argument(
         "--source",
@@ -82,6 +104,14 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 async def main(argv: list[str] | None = None) -> None:
+    """Run the scraper CLI.
+
+    Args:
+        argv: Optional command-line arguments. Defaults to ``sys.argv[1:]``.
+
+    Returns:
+        None.
+    """
     args = build_parser().parse_args(argv or sys.argv[1:])
 
     os.makedirs("logs", exist_ok=True)

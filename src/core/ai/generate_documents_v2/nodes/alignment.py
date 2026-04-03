@@ -22,6 +22,8 @@ logger = logging.getLogger(__name__)
 
 
 class MatchResult(BaseModel):
+    """Structured output returned by the alignment chain."""
+
     matches: list[MatchEdge] = Field(default_factory=list)
 
 
@@ -39,6 +41,19 @@ def run_alignment(
     chain: Any,
     store: PipelineArtifactStore,
 ) -> dict[str, Any]:
+    """Run profile-to-job alignment and persist the resulting matches.
+
+    Args:
+        source: Source name for artifact placement.
+        job_id: Job identifier for artifact placement.
+        profile_kg: Canonical profile knowledge graph.
+        job_kg: Canonical job knowledge graph.
+        chain: Structured-output chain used for alignment.
+        store: Artifact store for stage persistence.
+
+    Returns:
+        Serialized matches plus artifact refs and a stage status string.
+    """
     logger.info("%s Alignment: matching profile to %s/%s", LogTag.LLM, source, job_id)
     user_prompt = build_alignment_user_prompt(profile_kg, job_kg)
     result: MatchResult = chain.invoke(
@@ -50,6 +65,14 @@ def run_alignment(
 
 
 def build_alignment_chain(model: Any | None = None) -> Any:
+    """Build the alignment chain or a demo fallback when no API key exists.
+
+    Args:
+        model: Optional preconfigured chat model.
+
+    Returns:
+        A chain compatible with ``run_alignment``.
+    """
     from langchain_core.prompts import ChatPromptTemplate
     from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -67,6 +90,7 @@ def build_alignment_chain(model: Any | None = None) -> Any:
 
 class _DemoAlignmentChain:
     def invoke(self, payload: dict[str, str]) -> MatchResult:
+        """Return a deterministic demo alignment result when no API key exists."""
         del payload
         return MatchResult(
             matches=[

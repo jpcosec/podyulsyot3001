@@ -32,6 +32,19 @@ def run_drafting(
     chain: Any,
     store: PipelineArtifactStore,
 ) -> dict[str, Any]:
+    """Run drafting for one document type and persist the result.
+
+    Args:
+        source: Source name for artifact placement.
+        job_id: Job identifier for artifact placement.
+        doc_type: Target document type such as ``cv`` or ``letter``.
+        blueprint: Approved blueprint to draft from.
+        chain: Structured-output chain used for drafting.
+        store: Artifact store for stage persistence.
+
+    Returns:
+        Serialized drafted document plus artifact refs and status.
+    """
     logger.info(
         "%s Drafting: writing %s for %s/%s", LogTag.LLM, doc_type, source, job_id
     )
@@ -48,6 +61,14 @@ def run_drafting(
 
 
 def build_drafting_chain(model: Any | None = None) -> Any:
+    """Build the drafting chain or a deterministic demo fallback.
+
+    Args:
+        model: Optional preconfigured chat model.
+
+    Returns:
+        A chain compatible with ``run_drafting``.
+    """
     from langchain_core.prompts import ChatPromptTemplate
     from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -65,5 +86,6 @@ def build_drafting_chain(model: Any | None = None) -> Any:
 
 class _DemoDraftingChain:
     def invoke(self, payload: dict[str, str]) -> DraftedDocument:
+        """Return a deterministic demo drafted document when no API key exists."""
         del payload
         return DraftedDocument(doc_type="cv", sections_md={"summary": "Demo summary."})

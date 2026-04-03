@@ -25,15 +25,37 @@ class PipelineArtifactStore:
         stage: str,
         payload: dict[str, Any],
     ) -> dict[str, str]:
+        """Persist one stage payload and return its reference.
+
+        Args:
+            source: Source name for artifact placement.
+            job_id: Job identifier for artifact placement.
+            stage: Stage name used as the directory key.
+            payload: JSON-serializable stage payload.
+
+        Returns:
+            A mapping containing the artifact reference path.
+        """
         path = self._stage_dir(source, job_id, stage) / "current.json"
         self._dm.write_json_path(path, payload)
         return {f"{stage}_ref": str(path)}
 
     def load_stage(self, source: str, job_id: str, stage: str) -> dict[str, Any] | None:
+        """Load a previously persisted stage payload if it exists.
+
+        Args:
+            source: Source name for artifact placement.
+            job_id: Job identifier for artifact placement.
+            stage: Stage name used as the directory key.
+
+        Returns:
+            The parsed stage payload, or ``None`` if no artifact exists.
+        """
         path = self._stage_dir(source, job_id, stage) / "current.json"
         if not path.exists():
             return None
         return self._dm.read_json_path(path)
 
     def sha256_file(self, path: str | Path) -> str:
+        """Return a sha256 digest string for a file path."""
         return self._dm.sha256_path(path)

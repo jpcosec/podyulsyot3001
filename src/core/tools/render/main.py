@@ -37,6 +37,14 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run the render CLI and return a process exit code.
+
+    Args:
+        argv: Optional command-line arguments. Defaults to ``sys.argv[1:]``.
+
+    Returns:
+        Process exit code where ``0`` means success.
+    """
     parser = _build_parser()
     args = parser.parse_args(argv or sys.argv[1:])
     document = args.document or args.legacy_action

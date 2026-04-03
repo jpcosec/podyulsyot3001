@@ -1,3 +1,5 @@
+"""Contract models shared across generate_documents_v2 stages."""
+
 from src.core.ai.generate_documents_v2.contracts.assembly import (
     FinalMarkdownBundle,
     MarkdownDocument,
@@ -48,3 +50,4 @@ __all__ = [
     "FinalMarkdownBundle",
     "GraphPatch",
 ]
+"""Contract models shared across generate_documents_v2 stages."""

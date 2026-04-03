@@ -116,6 +116,7 @@ class _DemoIngestionChain:
     """Minimal demo chain when no API key is present."""
 
     def invoke(self, payload: dict[str, str]) -> JobKG:
+        """Return a deterministic demo JobKG when no API key exists."""
         del payload
 
         return JobKG(

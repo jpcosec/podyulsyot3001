@@ -1,6 +1,7 @@
 """StepStone job portal adapter.
 
-Uses URL patterns and data-attribute selectors rescued from the legacy dev branch.
+Uses URL patterns and data-attribute selectors tuned for the current StepStone
+detail and listing layouts.
 """
 
 import re
@@ -13,10 +14,12 @@ class StepStoneAdapter(SmartScraperAdapter):
 
     @property
     def source_name(self) -> str:
+        """Return the canonical provider key for StepStone scraping."""
         return "stepstone"
 
     @property
     def supported_params(self) -> List[str]:
+        """Return the search parameters supported by the StepStone portal."""
         return ["job_query", "city", "max_days"]
 
     def get_search_url(self, **kwargs) -> str:

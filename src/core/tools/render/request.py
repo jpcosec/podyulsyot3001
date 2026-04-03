@@ -26,6 +26,7 @@ class RenderRequest(BaseModel):
     @field_validator("language")
     @classmethod
     def normalize_language(cls, value: str) -> str:
+        """Normalize common language aliases to the renderer's short codes."""
         aliases = {
             "english": "en",
             "en-us": "en",

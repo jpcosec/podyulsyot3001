@@ -1,9 +1,4 @@
-"""generate_documents_v2 - new multi-stage document generation pipeline.
-
-Stage 1 (this plan): Contracts, Storage, Profile Loader, Job Pipeline (J1->J2->J3).
-Stage 2 (Plan 2): Alignment Engine, Blueprint, Drafting.
-Stage 3 (Plan 3): Assembly, HITL graph wiring, Profile Updater.
-"""
+"""Public exports for the generate_documents_v2 document generation pipeline."""
 
 from src.core.ai.generate_documents_v2.nodes.ingestion import (
     build_ingestion_chain,

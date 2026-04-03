@@ -24,6 +24,8 @@ class BrowserOSError(RuntimeError):
 
 @dataclass(frozen=True)
 class SnapshotElement:
+    """One interactive element parsed from BrowserOS snapshot text output."""
+
     element_id: int
     element_type: str
     text: str
@@ -52,6 +54,11 @@ class BrowserOSClient:
         self._initialized = False
 
     def initialize(self) -> None:
+        """Initialize the MCP session and store any returned session id.
+
+        Returns:
+            None.
+        """
         if self._initialized:
             return
         response = self._post(
@@ -69,24 +76,72 @@ class BrowserOSClient:
         logger.info("%s BrowserOS MCP initialized", LogTag.OK)
 
     def browseros_info(self) -> dict[str, Any]:
+        """Fetch BrowserOS server metadata.
+
+        Returns:
+            The tool payload returned by ``browseros_info``.
+        """
         return self.call_tool("browseros_info", {})
 
     def new_page(self) -> int:
+        """Create a visible BrowserOS page.
+
+        Returns:
+            The created page id.
+        """
         return self._extract_page_id(self.call_tool("new_page", {}))
 
     def new_hidden_page(self) -> int:
+        """Create a hidden BrowserOS page.
+
+        Returns:
+            The created page id.
+        """
         return self._extract_page_id(self.call_tool("new_hidden_page", {}))
 
     def close_page(self, page_id: int) -> None:
+        """Close a BrowserOS page.
+
+        Args:
+            page_id: Page identifier to close.
+
+        Returns:
+            None.
+        """
         self.call_tool("close_page", {"page": page_id})
 
     def show_page(self, page_id: int) -> None:
+        """Bring a BrowserOS page to the foreground.
+
+        Args:
+            page_id: Page identifier to reveal.
+
+        Returns:
+            None.
+        """
         self.call_tool("show_page", {"page": page_id})
 
     def navigate(self, url: str, page_id: int) -> None:
+        """Navigate a page to the provided URL.
+
+        Args:
+            url: Destination URL.
+            page_id: Page identifier to navigate.
+
+        Returns:
+            None.
+        """
         self.call_tool("navigate_page", {"url": url, "page": page_id})
 
     def take_snapshot(self, page_id: int) -> list[SnapshotElement]:
+        """Capture and parse the current interactive BrowserOS snapshot.
+
+        Args:
+            page_id: Page identifier to inspect.
+
+        Returns:
+            Parsed interactive elements extracted from the snapshot text.
+        """
         result = self.call_tool("take_snapshot", {"page": page_id})
         text = "\n".join(self._collect_text_chunks(result))
         elements: list[SnapshotElement] = []
@@ -105,36 +160,103 @@ class BrowserOSClient:
         return elements
 
     def click(self, page_id: int, element_id: int) -> None:
+        """Click an element identified from a BrowserOS snapshot.
+
+        Args:
+            page_id: Page identifier containing the element.
+            element_id: BrowserOS element id to click.
+
+        Returns:
+            None.
+        """
         self.call_tool("click", {"page": page_id, "element": element_id})
 
     def fill(self, page_id: int, element_id: int, value: str) -> None:
+        """Fill a text-like element with a value.
+
+        Args:
+            page_id: Page identifier containing the element.
+            element_id: BrowserOS element id to fill.
+            value: Text value to write.
+
+        Returns:
+            None.
+        """
         self.call_tool("fill", {"page": page_id, "element": element_id, "value": value})
 
     def select_option(self, page_id: int, element_id: int, value: str) -> None:
+        """Select an option in a native select element.
+
+        Args:
+            page_id: Page identifier containing the element.
+            element_id: BrowserOS element id to update.
+            value: Option value or label to select.
+
+        Returns:
+            None.
+        """
         self.call_tool(
             "select_option",
             {"page": page_id, "element": element_id, "value": value},
         )
 
     def upload_file(self, page_id: int, element_id: int, file_path: Path) -> None:
+        """Upload a local file into a file input element.
+
+        Args:
+            page_id: Page identifier containing the element.
+            element_id: BrowserOS element id to target.
+            file_path: Local file path to upload.
+
+        Returns:
+            None.
+        """
         self.call_tool(
             "upload_file",
             {"page": page_id, "element": element_id, "filePath": str(file_path)},
         )
 
     def save_screenshot(self, page_id: int, file_path: Path) -> None:
+        """Save a BrowserOS screenshot to disk.
+
+        Args:
+            page_id: Page identifier to capture.
+            file_path: Destination file path.
+
+        Returns:
+            None.
+        """
         self.call_tool(
             "save_screenshot",
             {"page": page_id, "path": str(file_path)},
         )
 
     def evaluate_script(self, page_id: int, expression: str) -> Any:
+        """Evaluate raw JavaScript on a BrowserOS page.
+
+        Args:
+            page_id: Page identifier to evaluate against.
+            expression: JavaScript expression to execute.
+
+        Returns:
+            The raw tool result payload.
+        """
         return self.call_tool(
             "evaluate_script",
             {"page": page_id, "expression": expression},
         )
 
     def evaluate_script_react(self, page_id: int, selector: str, value: str) -> Any:
+        """Update an input value through the DOM setter and dispatch input.
+
+        Args:
+            page_id: Page identifier to evaluate against.
+            selector: CSS selector for the target element.
+            value: Value to inject.
+
+        Returns:
+            The raw tool result payload.
+        """
         safe_selector = json.dumps(selector)
         safe_value = json.dumps(value)
         script = (
@@ -147,6 +269,15 @@ class BrowserOSClient:
         return self.evaluate_script(page_id, script)
 
     def call_tool(self, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
+        """Call a BrowserOS MCP tool after ensuring initialization.
+
+        Args:
+            name: Tool name to invoke.
+            arguments: JSON-serializable tool arguments.
+
+        Returns:
+            The ``result`` object from the MCP response.
+        """
         self.initialize()
         response = self._post(
             method="tools/call",

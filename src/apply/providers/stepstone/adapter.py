@@ -1,6 +1,6 @@
 """StepStone Easy Apply adapter.
 
-Spec reference: docs/superpowers/specs/2026-03-30-apply-module-design.md Section 9
+Design reference: `src/apply/README.md` and `plan_docs/applying/applying_feature_design.md`
 
 Selector discovery: inspect tests/fixtures/apply/stepstone_apply_modal.html
   - Prefer data-at attributes — StepStone commonly uses these for test targeting
@@ -8,6 +8,7 @@ Selector discovery: inspect tests/fixtures/apply/stepstone_apply_modal.html
 
 C4A-Script docs: https://docs.crawl4ai.com/core/c4a-script/
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -21,12 +22,14 @@ class StepStoneApplyAdapter(ApplyAdapter):
 
     @property
     def source_name(self) -> str:
+        """Return the canonical provider key for StepStone apply."""
         return "stepstone"
 
     def _get_portal_base_url(self) -> str:
         return "https://www.stepstone.de"
 
     def get_session_profile_dir(self) -> Path:
+        """Return the persistent browser profile directory for StepStone."""
         return Path("data/profiles/stepstone_profile")
 
     def get_form_selectors(self) -> FormSelectors:

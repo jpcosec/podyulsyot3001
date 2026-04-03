@@ -20,6 +20,7 @@ Rules:
 
 
 def build_filter_user_prompt(job_kg: JobKG) -> str:
+    """Build the user prompt for converting a JobKG into a focused JobDelta."""
     hard = [
         f"[{req.id}] {req.text} (priority={req.priority})"
         for req in job_kg.hard_requirements

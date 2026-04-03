@@ -26,6 +26,16 @@ def assemble_markdown_document(
     job_kg: JobKG,
     profile_data: dict[str, Any] | None = None,
 ) -> MarkdownDocument:
+    """Assemble one drafted document into a MarkdownDocument payload.
+
+    Args:
+        document: Drafted document content.
+        job_kg: Job context used for lightweight header data.
+        profile_data: Optional profile data used to build rich CV markdown.
+
+    Returns:
+        The assembled markdown document payload.
+    """
     title = (
         job_kg.job_title_original or job_kg.job_title_english or "Application Document"
     )
@@ -52,6 +62,22 @@ def run_assembly(
     target_language: str = "en",
     store: PipelineArtifactStore,
 ) -> dict[str, Any]:
+    """Assemble final Markdown outputs and persist render inputs.
+
+    Args:
+        source: Source name for artifact placement.
+        job_id: Job identifier for artifact placement.
+        job_kg: Canonical job context for assembly metadata.
+        cv_document: Drafted CV document.
+        letter_document: Drafted letter document.
+        email_document: Drafted email document.
+        profile_data: Optional profile data used for CV enrichment.
+        target_language: Target language suffix used for persisted files.
+        store: Artifact store for stage persistence.
+
+    Returns:
+        Serialized markdown bundle plus artifact refs and status.
+    """
     data_manager = DataManager(store.root)
     cv = assemble_markdown_document(
         document=cv_document, job_kg=job_kg, profile_data=profile_data
@@ -102,7 +128,8 @@ def _persist_render_inputs(
         "cover_letter.md": bundle.letter_full_md,
         "email_body.txt": bundle.email_body_md,
     }
-    # TODO(future): dual-write is a bridge until render.py reads from generate_documents_v2 — see future_docs/issues/generate_documents_v2_assembly_dual_write.md
+    # TODO(future): remove the compatibility dual-write once the old
+    # generate_documents render input path is fully retired.
     for node_name in ("generate_documents_v2", "generate_documents"):
         for filename, content in files.items():
             path = data_manager.write_text_artifact(

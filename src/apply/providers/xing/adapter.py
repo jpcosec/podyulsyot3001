@@ -1,6 +1,6 @@
 """XING Easy Apply adapter.
 
-Spec reference: docs/superpowers/specs/2026-03-30-apply-module-design.md Section 9
+Design reference: `src/apply/README.md` and `plan_docs/applying/applying_feature_design.md`
 
 Selector discovery: inspect tests/fixtures/apply/xing_apply_modal.html
   - Prefer data-testid attributes over generated class names (more stable)
@@ -8,6 +8,7 @@ Selector discovery: inspect tests/fixtures/apply/xing_apply_modal.html
 
 C4A-Script docs: https://docs.crawl4ai.com/core/c4a-script/
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -21,12 +22,14 @@ class XingApplyAdapter(ApplyAdapter):
 
     @property
     def source_name(self) -> str:
+        """Return the canonical provider key for XING apply."""
         return "xing"
 
     def _get_portal_base_url(self) -> str:
         return "https://www.xing.com"
 
     def get_session_profile_dir(self) -> Path:
+        """Return the persistent browser profile directory for XING."""
         return Path("data/profiles/xing_profile")
 
     def get_form_selectors(self) -> FormSelectors:

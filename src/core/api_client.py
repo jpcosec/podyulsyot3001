@@ -102,7 +102,7 @@ class LangGraphAPIClient:
     ) -> str:
         """Ensure a LangGraph API server is reachable."""
         url = f"http://localhost:{port}"
-        
+
         # Check if already healthy
         try:
             with httpx.Client(timeout=1.0) as client:
@@ -121,13 +121,13 @@ class LangGraphAPIClient:
         env["PYTHONPATH"] = os.pathsep.join(
             [p for p in [env.get("PYTHONPATH", ""), os.getcwd()] if p]
         )
-        
+
         logger.info(
             "%s Starting LangGraph dev server on port %s...",
             LogTag.FAST,
             port,
         )
-        
+
         with log_path.open("wb") as stream:
             subprocess.Popen(
                 [
@@ -160,7 +160,9 @@ class LangGraphAPIClient:
                 pass
             time.sleep(1.0)
 
-        raise LangGraphConnectionError(f"Timed out waiting for LangGraph API at {url}. Check {log_file} for details.")
+        raise LangGraphConnectionError(
+            f"Timed out waiting for LangGraph API at {url}. Check {log_file} for details."
+        )
 
     @staticmethod
     def _kill_stale_dev_server(port: int) -> None:
@@ -178,7 +180,7 @@ class LangGraphAPIClient:
             except ValueError:
                 continue
             try:
-                os.kill(pid, signal.SIGKILL) # Be more aggressive
+                os.kill(pid, signal.SIGKILL)  # Be more aggressive
                 logger.warning(
                     "%s Terminated stale LangGraph process on port %s (pid=%s)",
                     LogTag.WARN,
@@ -189,6 +191,7 @@ class LangGraphAPIClient:
                 continue
 
     def is_healthy(self) -> bool:
+        """Check whether the LangGraph API health endpoint responds successfully."""
         try:
             with httpx.Client(timeout=1.0) as client:
                 resp = client.get(f"{self.url}/ok")
@@ -283,7 +286,9 @@ class LangGraphAPIClient:
         logger.info(f"  [🚀] Resuming thread {thread_id} at node {node_name}...")
         try:
             state = await self.client.threads.get_state(thread_id, subgraphs=True)
-            assistant_id = state.get("metadata", {}).get("graph_id", "generate_documents_v2")
+            assistant_id = state.get("metadata", {}).get(
+                "graph_id", "generate_documents_v2"
+            )
             checkpoint = state.get("checkpoint")
             checkpoint_id = state.get("checkpoint_id")
             await self.client.threads.update_state(

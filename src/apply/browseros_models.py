@@ -17,6 +17,8 @@ ActionTool = Literal[
 
 
 class PlaybookMeta(BaseModel):
+    """Metadata describing one normalized BrowserOS/Ariadne playbook."""
+
     source: str
     flow: str
     version: str
@@ -28,6 +30,8 @@ class PlaybookMeta(BaseModel):
 
 
 class PlaybookEntryPoint(BaseModel):
+    """Entry-point hints used to detect or open the intended apply flow."""
+
     description: str | None = None
     url_pattern: str | None = None
     trigger_element_text: str | None = None
@@ -35,22 +39,30 @@ class PlaybookEntryPoint(BaseModel):
 
 
 class ExpectedElement(BaseModel):
+    """One element that must be observable before a step can proceed."""
+
     text: str
     type: str | None = None
 
 
 class ObserveBlock(BaseModel):
+    """Snapshot observation requirements for a playbook step."""
+
     tool: Literal["take_snapshot"] = "take_snapshot"
     expected_elements: list[ExpectedElement] = Field(default_factory=list)
 
 
 class PlaybookFallback(BaseModel):
+    """Fallback action to try when the primary action target is absent."""
+
     tool: ActionTool
     selector_text: str
     value: str | None = None
 
 
 class PlaybookAction(BaseModel):
+    """Executable action inside a BrowserOS playbook step."""
+
     tool: ActionTool
     selector_text: str
     value: str | None = None
@@ -59,6 +71,8 @@ class PlaybookAction(BaseModel):
 
 
 class PlaybookStep(BaseModel):
+    """One replayable step in a normalized BrowserOS playbook."""
+
     step: int
     name: str
     screenshot: str | None = None
@@ -75,6 +89,8 @@ class PlaybookStep(BaseModel):
 
 
 class BrowserOSPlaybook(BaseModel):
+    """Full BrowserOS playbook used for deterministic apply replay."""
+
     meta: PlaybookMeta
     entry_point: PlaybookEntryPoint
     path: str

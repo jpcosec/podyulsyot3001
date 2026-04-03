@@ -13,7 +13,16 @@ from textual import on, work
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
-from textual.widgets import Button, DataTable, Footer, Header, Input, Label, LoadingIndicator, Static
+from textual.widgets import (
+    Button,
+    DataTable,
+    Footer,
+    Header,
+    Input,
+    Label,
+    LoadingIndicator,
+    Static,
+)
 
 from src.review_ui.bus import MatchBus
 from src.review_ui.screens.review_screen import ReviewScreen
@@ -80,16 +89,19 @@ class JobExplorerScreen(Screen):
         with Vertical(id="explorer-header"):
             yield Label("[bold]Job Application Manager[/bold]", id="title")
             yield Label("Browse and manage LangGraph pipeline threads", id="subtitle")
-        
+
         with Horizontal(id="filter-container"):
-            yield Input(placeholder="Filter jobs (source, id, city, status)...", id="filter-input")
+            yield Input(
+                placeholder="Filter jobs (source, id, city, status)...",
+                id="filter-input",
+            )
             yield Button("Refresh", id="btn-refresh", variant="primary")
 
         yield DataTable(cursor_type="row", id="jobs-table")
-        
+
         with Vertical(id="loading-overlay"):
             yield LoadingIndicator(id="loading")
-        
+
         yield Footer()
 
     def on_mount(self) -> None:
@@ -106,9 +118,12 @@ class JobExplorerScreen(Screen):
         """
         self.query_one("#loading").display = True
         self.query_one("#jobs-table").display = False
-        
+
         if not self._bus.client:
-            self.notify("No API client configured. Run with LangGraph API active.", severity="error")
+            self.notify(
+                "No API client configured. Run with LangGraph API active.",
+                severity="error",
+            )
             return
 
         try:
@@ -131,9 +146,9 @@ class JobExplorerScreen(Screen):
         """
         table = self.query_one("#jobs-table", DataTable)
         table.clear()
-        
+
         filter_text = filter_text.lower()
-        
+
         for job in jobs:
             # Simple matching for filter across all visible fields
             search_str = f"{job.get('source')} {job.get('job_id')} {job.get('location')} {job.get('status')}".lower()
@@ -142,7 +157,7 @@ class JobExplorerScreen(Screen):
 
             status = job.get("status", "unknown")
             status_style = ""
-            
+
             # Semantic status mapping
             if status == "pending_review":
                 status_display = "⏳ PENDING"
@@ -163,7 +178,7 @@ class JobExplorerScreen(Screen):
                 job.get("location", "N/A"),
                 job.get("updated_at", "N/A"),
                 key=job["thread_id"],
-                label=status_style
+                label=status_style,
             )
 
     @on(Input.Changed, "#filter-input")
@@ -188,14 +203,14 @@ class JobExplorerScreen(Screen):
             # We need to update the bus config with the correct thread_id
             self._bus.config = {"configurable": {"thread_id": thread_id}}
             self.app.push_screen(
-                ReviewScreen(
-                    bus=self._bus,
-                    source=job["source"],
-                    job_id=job["job_id"]
-                )
+                ReviewScreen(bus=self._bus, source=job["source"], job_id=job["job_id"])
             )
         else:
-            self.notify(f"Job {job['job_id']} is {job['status']}. No review needed.", severity="information")
+            self.notify(
+                f"Job {job['job_id']} is {job['status']}. No review needed.",
+                severity="information",
+            )
 
     def action_focus_filter(self) -> None:
+        """Focus the filter input widget for keyboard-driven searching."""
         self.query_one("#filter-input").focus()

@@ -19,6 +19,7 @@ Rules:
 
 
 def build_alignment_user_prompt(profile_kg: ProfileKG, job_kg: JobKG) -> str:
+    """Build the user prompt for profile-to-job alignment."""
     profile_entries = [
         {
             "id": entry.id,

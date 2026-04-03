@@ -13,6 +13,7 @@ class TUBerlinAdapter(SmartScraperAdapter):
 
     @property
     def source_name(self) -> str:
+        """Return the canonical provider key for TU Berlin scraping."""
         return "tuberlin"
 
     @property
@@ -43,7 +44,6 @@ class TUBerlinAdapter(SmartScraperAdapter):
         if not categories:
             cat_list = list(mapping.keys())
         else:
-            # Fixed: Validate if the key 'k' is in the categories requested by the user
             cat_list = [k for k in mapping.keys() if k in categories]
 
         for cat in cat_list:

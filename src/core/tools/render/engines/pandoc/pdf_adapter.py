@@ -18,6 +18,15 @@ class PandocPdfEngineAdapter(EngineAdapter):
         self.renderer = renderer or PandocRenderer()
 
     def render(self, payload: DocumentPayload, config: ResolvedRenderConfig) -> Path:
+        """Render a markdown payload to PDF.
+
+        Args:
+            payload: Normalized document payload to render.
+            config: Resolved engine/template/output configuration.
+
+        Returns:
+            The rendered output path.
+        """
         if payload.source_kind != "markdown":
             raise ValueError("Pandoc PDF adapter only supports Markdown payloads")
         return self.renderer.render(

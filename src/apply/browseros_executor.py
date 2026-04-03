@@ -27,6 +27,8 @@ class BrowserOSObserveError(RuntimeError):
 
 @dataclass
 class BrowserOSExecutionResult:
+    """Outcome summary returned after replaying a BrowserOS playbook."""
+
     status: str
     fields_filled: list[str]
     confirmation_text: str | None = None
@@ -48,6 +50,18 @@ class BrowserOSPlaybookExecutor:
         cv_path: Path,
         dry_run: bool,
     ) -> BrowserOSExecutionResult:
+        """Execute a BrowserOS playbook against an already-open page.
+
+        Args:
+            page_id: BrowserOS page identifier to operate on.
+            playbook: Parsed playbook definition to replay.
+            context: Template context for selector and value interpolation.
+            cv_path: Local CV path used by upload steps.
+            dry_run: Whether execution should stop at a dry-run guard step.
+
+        Returns:
+            A summary of execution status and touched fields.
+        """
         fields_filled: list[str] = []
 
         for step in playbook.steps:
@@ -88,6 +102,16 @@ class BrowserOSPlaybookExecutor:
         )
 
     def render_template(self, template: str, context: dict[str, Any]) -> str:
+        """Render ``{{key}}`` placeholders from a nested context mapping.
+
+        Args:
+            template: Template string containing zero or more placeholders.
+            context: Nested dictionary used for placeholder resolution.
+
+        Returns:
+            The rendered string. Unresolved placeholders are left unchanged.
+        """
+
         def _replace(match: re.Match[str]) -> str:
             key = match.group(1)
             value = self._lookup_context_value(context, key)

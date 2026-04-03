@@ -16,6 +16,15 @@ class LetterDocumentAdapter(DocumentAdapter):
     default_style = "default"
 
     def resolve_job_source(self, request: RenderRequest, paths: JobRenderPaths) -> Path:
+        """Resolve the best available cover-letter markdown source.
+
+        Args:
+            request: Render request describing language and engine.
+            paths: Precomputed render paths for the target job.
+
+        Returns:
+            The first matching markdown source path.
+        """
         candidates = [
             paths.generate_dir / f"cover_letter.{request.language}.md",
             paths.generate_dir / "cover_letter.md",
@@ -30,6 +39,15 @@ class LetterDocumentAdapter(DocumentAdapter):
     def build_payload(
         self, source_path: Path, request: RenderRequest
     ) -> DocumentPayload:
+        """Build the render payload for a letter source.
+
+        Args:
+            source_path: Resolved source path for the letter.
+            request: Render request describing engine and language.
+
+        Returns:
+            The normalized document payload consumed by the render coordinator.
+        """
         del request
         return DocumentPayload(
             document_type=self.document_type,

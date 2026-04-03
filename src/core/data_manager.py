@@ -35,7 +35,6 @@ class JobMetadata(BaseModel):
     updated_at: str
 
 
-# todo(future) merge with log. document
 class DataManager:
     """Manage schema-v0 job metadata and primitive artifact IO under ``data/jobs``."""
 
@@ -62,15 +61,26 @@ class DataManager:
         return datetime.now(timezone.utc).isoformat()
 
     def job_root(self, source: str, job_id: str) -> Path:
+        """Return the canonical filesystem root for one job.
+
+        Args:
+            source: Source name.
+            job_id: Job identifier.
+
+        Returns:
+            The root directory for the job.
+        """
         src = self._validated_segment(source, "source")
         jid = self._validated_segment(job_id, "job_id")
         return self.jobs_root / src / jid
 
     def source_root(self, source: str) -> Path:
+        """Return the root directory containing jobs for one source."""
         src = self._validated_segment(source, "source")
         return self.jobs_root / src
 
     def node_root(self, source: str, job_id: str, node_name: str) -> Path:
+        """Return the root directory for one node within a job."""
         node = self._validated_segment(node_name, "node_name")
         return self.job_root(source, job_id) / "nodes" / node
 
@@ -81,6 +91,7 @@ class DataManager:
         node_name: str,
         stage: str,
     ) -> Path:
+        """Return the directory for one node stage within a job."""
         stage_name = self._validated_segment(stage, "stage")
         return self.node_root(source, job_id, node_name) / stage_name
 
@@ -93,6 +104,7 @@ class DataManager:
         stage: str,
         filename: str,
     ) -> Path:
+        """Return the canonical path for one artifact file."""
         file_name = self._validated_segment(filename, "filename")
         return self.node_stage_dir(source, job_id, node_name, stage) / file_name
 
@@ -105,6 +117,7 @@ class DataManager:
         stage: str,
         filename: str,
     ) -> bool:
+        """Check whether a canonical artifact already exists."""
         return self.artifact_path(
             source=source,
             job_id=job_id,
@@ -114,6 +127,16 @@ class DataManager:
         ).exists()
 
     def resolve_under_job(self, source: str, job_id: str, relative_path: str) -> Path:
+        """Resolve a safe relative path under the job root.
+
+        Args:
+            source: Source name.
+            job_id: Job identifier.
+            relative_path: Relative path inside the job root.
+
+        Returns:
+            A resolved path guaranteed to stay under the job directory.
+        """
         root = self.job_root(source, job_id).resolve()
         relative = self._safe_relative_path(relative_path)
         resolved = (root / relative).resolve()
@@ -122,40 +145,57 @@ class DataManager:
         return resolved
 
     def read_json_path(self, path: str | Path) -> dict:
+        """Read a JSON file from an arbitrary path."""
         return json.loads(Path(path).read_text(encoding="utf-8"))
 
     def write_json_path(self, path: str | Path, data: dict) -> Path:
+        """Write JSON content to an arbitrary path and return that path."""
         target = Path(path)
         self._write_json_path(target, data)
         return target
 
     def read_text_path(self, path: str | Path) -> str:
+        """Read text content from an arbitrary path."""
         return Path(path).read_text(encoding="utf-8")
 
     def write_text_path(self, path: str | Path, content: str) -> Path:
+        """Write text content to an arbitrary path and return that path."""
         target = Path(path)
         self._write_text_path(target, content)
         return target
 
     def read_bytes_path(self, path: str | Path) -> bytes:
+        """Read bytes from an arbitrary path."""
         return Path(path).read_bytes()
 
     def ensure_dir(self, path: str | Path) -> Path:
+        """Ensure a directory exists and return its path."""
         target = Path(path)
         target.mkdir(parents=True, exist_ok=True)
         return target
 
     def write_bytes_path(self, path: str | Path, content: bytes) -> Path:
+        """Write bytes to an arbitrary path and return that path."""
         target = Path(path)
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(content)
         return target
 
     def sha256_path(self, path: str | Path) -> str:
+        """Return a ``sha256:...`` digest for a file path."""
         digest = hashlib.sha256(self.read_bytes_path(path)).hexdigest()
         return f"sha256:{digest}"
 
     def ensure_job(self, source: str, job_id: str) -> JobMetadata:
+        """Ensure a job root and metadata file exist.
+
+        Args:
+            source: Source name.
+            job_id: Job identifier.
+
+        Returns:
+            The current job metadata after touching its timestamp.
+        """
         root = self.job_root(source, job_id)
         root.mkdir(parents=True, exist_ok=True)
         meta_path = root / "meta.json"
@@ -173,6 +213,7 @@ class DataManager:
         return metadata
 
     def get_job_metadata(self, source: str, job_id: str) -> JobMetadata:
+        """Return lifecycle metadata for a job, creating it if needed."""
         meta_path = self.job_root(source, job_id) / "meta.json"
         if not meta_path.exists():
             return self.ensure_job(source, job_id)
@@ -181,6 +222,7 @@ class DataManager:
     def update_job_status(
         self, source: str, job_id: str, status: JobStatus
     ) -> JobMetadata:
+        """Update and persist the lifecycle status for a job."""
         metadata = self.get_job_metadata(source, job_id)
         metadata.status = status
         metadata.updated_at = self._timestamp()
@@ -200,6 +242,7 @@ class DataManager:
         filename: str,
         data: dict,
     ) -> Path:
+        """Write a canonical JSON artifact under a job node stage."""
         self.ensure_job(source, job_id)
         path = self.artifact_path(
             source=source,
@@ -221,6 +264,7 @@ class DataManager:
         stage: str,
         filename: str,
     ) -> dict:
+        """Read a canonical JSON artifact from a job node stage."""
         path = self.artifact_path(
             source=source,
             job_id=job_id,
@@ -240,6 +284,7 @@ class DataManager:
         filename: str,
         content: str,
     ) -> Path:
+        """Write a canonical text artifact under a job node stage."""
         self.ensure_job(source, job_id)
         path = self.artifact_path(
             source=source,
@@ -261,6 +306,7 @@ class DataManager:
         stage: str,
         filename: str,
     ) -> str:
+        """Read a canonical text artifact from a job node stage."""
         path = self.artifact_path(
             source=source,
             job_id=job_id,
@@ -283,6 +329,22 @@ class DataManager:
         node_name: str = "ingest",
         stage: str = "proposed",
     ) -> dict[str, Path]:
+        """Write the canonical raw ingest artifact bundle for one job.
+
+        Args:
+            source: Source name.
+            job_id: Job identifier.
+            payload: Canonical structured job payload.
+            content: Optional markdown content extracted from the posting.
+            metadata: Optional scrape metadata payload.
+            raw_html: Optional raw HTML capture.
+            cleaned_html: Optional cleaned HTML capture.
+            node_name: Node name to write under.
+            stage: Stage name to write under.
+
+        Returns:
+            Paths keyed by the artifacts that were written.
+        """
         refs = {
             "state": self.write_json_artifact(
                 source=source,
@@ -339,6 +401,7 @@ class DataManager:
         node_name: str = "ingest",
         stage: str = "proposed",
     ) -> bool:
+        """Return whether the canonical ingest ``state.json`` exists for a job."""
         return self.artifact_exists(
             source=source,
             job_id=job_id,
@@ -357,6 +420,7 @@ class DataManager:
         filename: str,
         content: bytes,
     ) -> Path:
+        """Write a canonical bytes artifact under a job node stage."""
         self.ensure_job(source, job_id)
         path = self.artifact_path(
             source=source,

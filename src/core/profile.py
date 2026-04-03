@@ -7,6 +7,8 @@ from pydantic import BaseModel, Field
 
 
 class ProfileOwner(BaseModel):
+    """Identity and contact information for the profile owner."""
+
     full_name: str
     preferred_name: Optional[str] = None
     email: Optional[str] = None
@@ -19,7 +21,10 @@ class ProfileOwner(BaseModel):
     professional_summary: Optional[str] = None
     tagline: Optional[str] = None
 
+
 class ProfileEducation(BaseModel):
+    """One education entry in the canonical profile."""
+
     degree: str
     institution: str
     specialization: Optional[str] = None
@@ -30,7 +35,10 @@ class ProfileEducation(BaseModel):
     equivalency_note: Optional[str] = None
     grade: Optional[str] = None
 
+
 class ProfileExperience(BaseModel):
+    """One work experience entry in the canonical profile."""
+
     role: str
     organization: str
     location: Optional[str] = None
@@ -39,24 +47,35 @@ class ProfileExperience(BaseModel):
     achievements: List[str] = Field(default_factory=list)
     keywords: List[str] = Field(default_factory=list)
 
+
 class ProfileProject(BaseModel):
+    """One project entry in the canonical profile."""
+
     name: str
     role: Optional[str] = None
     stack: List[str] = Field(default_factory=list)
 
+
 class ProfilePublication(BaseModel):
+    """One publication entry in the canonical profile."""
+
     title: str
     venue: str
     year: Optional[int] = None
     url: Optional[str] = None
 
+
 class ProfileLanguage(BaseModel):
+    """One language proficiency entry in the canonical profile."""
+
     name: str
     level: str
     note: Optional[str] = None
 
+
 class ProfileBaseData(BaseModel):
     """Canonical structure of the master profile JSON."""
+
     snapshot_version: Optional[str] = None
     captured_on: Optional[str] = None
     owner: ProfileOwner

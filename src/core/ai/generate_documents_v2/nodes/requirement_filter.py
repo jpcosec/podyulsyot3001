@@ -75,6 +75,7 @@ class _DemoFilterChain:
     """Minimal demo chain when no API key is present."""
 
     def invoke(self, payload: dict[str, str]) -> JobDelta:
+        """Return a deterministic demo job delta when no API key exists."""
         del payload
         return JobDelta(
             must_highlight_skills=["Demo Skill A", "Demo Skill B"],

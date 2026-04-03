@@ -293,8 +293,10 @@ async def _run_pipeline(args: argparse.Namespace) -> int:
     thread_id = client.thread_id_for(args.source, args.job_id)
     assistant_id = "generate_documents_v2"
 
-    logger.info(f"{LogTag.LLM} Starting/Resuming pipeline for {args.source}/{args.job_id}...")
-    
+    logger.info(
+        f"{LogTag.LLM} Starting/Resuming pipeline for {args.source}/{args.job_id}..."
+    )
+
     # Try to start or resume
     result = await client.invoke_assistant(
         assistant_id,
@@ -309,16 +311,16 @@ async def _run_pipeline(args: argparse.Namespace) -> int:
         if not args.auto_approve_review:
             logger.info("%s Pipeline paused for human review.", LogTag.WARN)
             break
-        
+
         # Determine which node we are at
         state = await client.client.threads.get_state(thread_id)
         next_nodes = state.get("next", [])
         if not next_nodes:
             break
-            
+
         target_node = next_nodes[0]
         logger.info("%s Auto-approving at %s...", LogTag.FAST, target_node)
-        
+
         # Resume with empty payload (defaults to approved in the graph for auto_approve_review=True)
         result = await client.resume_thread(thread_id, {}, node_name=target_node)
 
@@ -519,6 +521,14 @@ def _run_review(args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run the top-level operator CLI.
+
+    Args:
+        argv: Optional command-line arguments. Defaults to parsed process args.
+
+    Returns:
+        Process exit code where ``0`` means success.
+    """
     parser = _build_parser()
     args = parser.parse_args(argv)
 

@@ -28,6 +28,7 @@ def build_blueprint_user_prompt(
     job_title: str | None = None,
     source: str | None = None,
 ) -> str:
+    """Build the user prompt for macroplanning a global blueprint."""
     mapping_payload = [item.model_dump() for item in section_mapping]
     matches_payload = [item.model_dump() for item in matches]
     return f"""Build a GlobalBlueprint for this application.

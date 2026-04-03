@@ -13,6 +13,7 @@ class LanguageBundle(BaseModel):
     documents: dict[str, dict[str, str]] = Field(default_factory=dict)
 
     def metadata_for(self, document_type: str, style: str) -> dict[str, str]:
+        """Return merged language metadata for one document/style pair."""
         metadata = dict(self.common)
         metadata.update(self.documents.get(document_type, {}))
         metadata.setdefault("style", style)

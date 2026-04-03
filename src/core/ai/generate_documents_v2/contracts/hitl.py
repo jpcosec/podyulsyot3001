@@ -1,3 +1,5 @@
+"""Review and patch contracts for generate_documents_v2 interruptions."""
+
 from __future__ import annotations
 
 from typing import Any, Literal
@@ -14,6 +16,8 @@ PatchAction = Literal[
 
 
 class GraphPatch(BaseModel):
+    """One operator action applied to a reviewable graph artifact."""
+
     action: PatchAction
     target_id: str
     new_value: Any | None = None

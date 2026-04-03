@@ -170,6 +170,11 @@ class SmartScraperAdapter(ABC):
         """Return portal-specific extraction hints."""
 
     def get_llm_config(self) -> LLMConfig:
+        """Return the default LLM configuration for rescue extraction.
+
+        Returns:
+            The configured LLM settings for provider fallback extraction.
+        """
         return LLMConfig(
             provider="gemini/gemini-2.5-flash",
             api_token=os.environ.get("GOOGLE_API_KEY", ""),
@@ -180,9 +185,19 @@ class SmartScraperAdapter(ABC):
         return bool(os.environ.get("GOOGLE_API_KEY"))
 
     def get_browser_config(self) -> BrowserConfig:
+        """Return the default browser configuration for scraping runs.
+
+        Returns:
+            Browser settings tuned for text-first ingestion.
+        """
         return BrowserConfig(headless=True, text_mode=True)
 
     def get_base_crawl_config(self) -> CrawlerRunConfig:
+        """Return the shared Crawl4AI run configuration.
+
+        Returns:
+            Crawl settings reused for listing and detail page retrieval.
+        """
         return CrawlerRunConfig(
             cache_mode=CacheMode.BYPASS,
             simulate_user=True,
@@ -195,6 +210,11 @@ class SmartScraperAdapter(ABC):
         )
 
     def get_dispatcher(self) -> SemaphoreDispatcher:
+        """Return the dispatcher used to bound concurrent crawl sessions.
+
+        Returns:
+            A dispatcher with the default rate-limiting policy.
+        """
         return SemaphoreDispatcher(
             max_session_permit=5,
             rate_limiter=RateLimiter(
@@ -206,6 +226,7 @@ class SmartScraperAdapter(ABC):
 
     @property
     def schema_cache_path(self) -> Path:
+        """Return the path used to cache the generated CSS extraction schema."""
         return Path(f"./scrapping_schemas/{self.source_name}_schema.json")
 
     def get_schema_generation_hints(self) -> str:

@@ -26,6 +26,20 @@ class PandocRenderer:
         asset_roots: list[Path] | None = None,
         metadata: dict[str, str] | None = None,
     ) -> Path:
+        """Invoke pandoc to render one markdown source.
+
+        Args:
+            source_path: Markdown source to render.
+            output_path: Destination output file.
+            target_format: Pandoc output format such as ``pdf`` or ``docx``.
+            template_path: Optional pandoc template path.
+            lua_filters: Optional lua filters to apply.
+            asset_roots: Optional resource roots for templates and assets.
+            metadata: Optional pandoc ``-V`` metadata entries.
+
+        Returns:
+            The resolved output path after a successful render.
+        """
         pandoc = shutil.which("pandoc")
         if pandoc is None:
             raise FileNotFoundError("pandoc is required for rendering")

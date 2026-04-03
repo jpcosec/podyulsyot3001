@@ -18,12 +18,16 @@ _FILTERS_ROOT = Path(__file__).parent / "engines" / "pandoc" / "filters"
 
 
 class EngineManifest(BaseModel):
+    """Engine-specific template and filter settings for one style manifest."""
+
     template: str | None = None
     reference_doc: str | None = None
     lua_filters: list[str] = Field(default_factory=list)
 
 
 class StyleManifest(BaseModel):
+    """Source-controlled manifest describing one document style."""
+
     document_type: str
     style: str
     asset_roots: list[str] = Field(default_factory=list)

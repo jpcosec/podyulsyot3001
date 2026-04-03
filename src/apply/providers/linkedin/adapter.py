@@ -2,7 +2,7 @@
 
 Selector discovery: inspect tests/fixtures/apply/linkedin_apply_modal.html
   - Prefer data-test-* attributes over generated class names (more stable)
-  - The selectors below are placeholders and should be updated after DOM inspection
+  - Revalidate selectors against current portal fixtures when LinkedIn changes its UI
 
 C4A-Script docs: https://docs.crawl4ai.com/core/c4a-script/
 """
@@ -20,15 +20,18 @@ class LinkedInApplyAdapter(ApplyAdapter):
 
     @property
     def source_name(self) -> str:
+        """Return the canonical provider key for LinkedIn apply."""
         return "linkedin"
 
     def _get_portal_base_url(self) -> str:
         return "https://www.linkedin.com"
 
     def get_session_profile_dir(self) -> Path:
+        """Return the persistent browser profile directory for LinkedIn."""
         return Path("data/profiles/linkedin_profile")
 
     def get_form_selectors(self) -> FormSelectors:
+        """Return the selectors used for the LinkedIn Easy Apply modal."""
         return FormSelectors(
             apply_button="button.jobs-apply-button",
             cv_upload="input[type='file'][accept*='pdf']",
@@ -43,6 +46,7 @@ class LinkedInApplyAdapter(ApplyAdapter):
         )
 
     def get_open_modal_script(self) -> str:
+        """Return the C4A-Script that opens the LinkedIn apply modal."""
         return """
 IF NOT `[data-test-modal-id="apply-modal"]` THEN
   CLICK `button.jobs-apply-button`
@@ -51,6 +55,15 @@ END
 """
 
     def get_fill_form_script(self, profile: dict) -> str:
+        """Return the C4A-Script that fills LinkedIn contact fields.
+
+        Args:
+            profile: Placeholder mapping used by the shared adapter renderer.
+
+        Returns:
+            A script template containing profile placeholders.
+        """
+        del profile
         return """
 IF `input[name="firstName"]` THEN
   SET `input[name="firstName"]` "{{first_name}}"
@@ -67,10 +80,12 @@ END
 """
 
     def get_submit_script(self) -> str:
+        """Return the C4A-Script that submits the LinkedIn application."""
         return """
 CLICK `button.jp-apply-form-submit`
 WAIT `[data-test-modal-id="post-apply-modal"]` 15
 """
 
     def get_success_text(self) -> str:
+        """Return text expected on the post-submit confirmation surface."""
         return "Application"

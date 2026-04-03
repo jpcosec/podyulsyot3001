@@ -17,7 +17,11 @@ from textual.reactive import reactive
 from textual.widget import Widget
 from textual.widgets import Button, Input, Label, Select, Static
 
-from src.core.ai.match_skill.contracts import ProfileEvidence, ReviewDecision, ReviewSurfaceItem
+from src.core.ai.match_skill.contracts import (
+    ProfileEvidence,
+    ReviewDecision,
+    ReviewSurfaceItem,
+)
 
 # Colours mapped to match statuses and decisions
 _STATUS_COLOUR: dict[str, str] = {
@@ -141,6 +145,7 @@ class MatchRow(Widget):
     # ------------------------------------------------------------------
 
     def compose(self) -> ComposeResult:
+        """Compose the row view for one reviewed requirement match."""
         item = self._item
         score_pct = f"{item.score * 100:.0f}%"
         status_colour = _STATUS_COLOUR.get(item.status, "white")

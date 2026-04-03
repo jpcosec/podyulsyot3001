@@ -1,23 +1,26 @@
 # src/apply — Auto-Application Module
 
-Standalone CLI module for automated job application via XING Easy Apply and StepStone Easy Apply.
+Standalone CLI module for automated job application using Crawl4AI and BrowserOS-backed flows.
 
-Reads from an existing ingested job artifact, fills and submits the application form using a persistent browser session.
+Reads from existing ingested job artifacts and runs portal-specific application flows through a shared apply CLI.
 
-**Spec:** `docs/superpowers/specs/2026-03-30-apply-module-design.md`
+**Current design references:** `plan_docs/applying/applying_feature_design.md`, `plan_docs/applying/browseros_apply_design.md`
 
 ---
 
 ## Usage
 
-### First-time session setup (run once per portal)
+### First-time session setup (run once per portal/backend)
 
 ```bash
 python -m src.apply.main --source xing --setup-session
 python -m src.apply.main --source stepstone --setup-session
+python -m src.apply.main --backend browseros --source linkedin --setup-session
 ```
 
-This opens a visible browser at the portal URL. Log in manually, then press Enter. Session cookies are saved to `data/profiles/<portal>_profile/` and reused headlessly on all subsequent runs.
+For Crawl4AI portals, this opens a visible browser at the portal URL. Log in manually, then press Enter. Session cookies are saved to `data/profiles/<portal>_profile/` and reused headlessly on all subsequent runs.
+
+For BrowserOS, the session setup opens the portal in BrowserOS and waits for manual login confirmation.
 
 ### Apply to a job
 
@@ -29,6 +32,15 @@ python -m src.apply.main \
   --cv path/to/cv.pdf \
   --dry-run
 
+# BrowserOS dry-run for LinkedIn
+python -m src.apply.main \
+  --backend browseros \
+  --source linkedin \
+  --job-id 12345 \
+  --cv path/to/cv.pdf \
+  --profile-json path/to/profile.json \
+  --dry-run
+
 # Auto mode (submits the application)
 python -m src.apply.main \
   --source xing \
@@ -37,7 +49,9 @@ python -m src.apply.main \
   --letter path/to/letter.pdf
 ```
 
-The `--job-id` must match an already-ingested job under `data/jobs/xing/12345/`. The module reads `nodes/ingest/proposed/state.json` to get `application_url`, `job_title`, and `company_name`.
+The `--job-id` must match an already-ingested job under the job runtime folder. The module reads the ingest-stage `state.json` artifact to get `application_url`, `job_title`, and `company_name`.
+
+Backend selection lives in `build_parser()` in `src/apply/main.py`.
 
 ### Check apply status
 
@@ -76,20 +90,20 @@ data/jobs/<source>/<job_id>/nodes/apply/
 
 ## When the portal changes
 
-If XING or StepStone updates their DOM, `_validate_selectors()` raises `PortalStructureChangedError` and writes `apply_meta.json` with `status=portal_changed`.
+If a portal updates its DOM or BrowserOS snapshots stop matching the expected path, the run writes `apply_meta.json` with `status=portal_changed`.
 
 Fix process:
-1. Run the fixture capture script to get fresh HTML
-2. Compare with the old fixture
-3. Update selectors in `src/apply/providers/<portal>/adapter.py`
-4. Re-run integration tests: `python -m pytest tests/test_apply_<portal>_adapter.py -v`
+1. Capture fresh portal evidence or BrowserOS snapshots
+2. Compare against the current adapter selectors or Ariadne-style path
+3. Update the relevant adapter or playbook in `src/apply/`
+4. Re-run the matching apply tests under `tests/test_apply_*`
 
 ---
 
 ## Adding a new portal
 
-1. Create `src/apply/providers/<name>/__init__.py` and `adapter.py`
-2. Extend `ApplyAdapter` and implement the 8 abstract methods
-3. Capture HTML fixture with a one-off script (see `apply_03_xing_adapter.md` Task 1 for pattern)
-4. Write integration tests against the fixture
-5. Register the adapter in `src/apply/main.py:build_providers()`
+1. Decide whether the new source is implemented through Crawl4AI, BrowserOS, or both.
+2. For Crawl4AI, add a provider under `src/apply/providers/<name>/` and extend `ApplyAdapter`.
+3. For BrowserOS, add or package a normalized playbook under `src/apply/playbooks/` and wire it in `src/apply/browseros_backend.py`.
+4. Add tests under `tests/test_apply_*`.
+5. Register the source/backend in `src/apply/main.py`.

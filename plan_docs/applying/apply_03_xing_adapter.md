@@ -247,7 +247,7 @@ Expected: `ImportError: cannot import name 'XingApplyAdapter'`
 ```python
 """XING Easy Apply adapter.
 
-Spec reference: docs/superpowers/specs/2026-03-30-apply-module-design.md Section 9
+Design reference: `src/apply/README.md` and `plan_docs/applying/applying_feature_design.md`
 
 Selector discovery: inspect tests/fixtures/apply/xing_apply_modal.html
   - Prefer data-testid attributes over generated class names (more stable)

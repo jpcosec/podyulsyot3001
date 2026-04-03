@@ -27,6 +27,7 @@ def build_ingestion_user_prompt(
     job_raw_text: str | None = None,
     job_bundle: dict[str, Any] | None = None,
 ) -> str:
+    """Build the user prompt for ingestion from raw text or bundled artifacts."""
     if job_bundle:
         return _build_bundle_prompt(job_bundle)
 

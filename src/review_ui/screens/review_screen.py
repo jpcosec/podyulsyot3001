@@ -126,6 +126,7 @@ class ReviewScreen(Screen):
     # ------------------------------------------------------------------
 
     def compose(self) -> ComposeResult:
+        """Compose the review screen layout and action controls."""
         yield Header()
         yield Label("Loading review surface …", id="header-panel")
         with ScrollableContainer(id="rows-container"):
@@ -142,6 +143,7 @@ class ReviewScreen(Screen):
     # ------------------------------------------------------------------
 
     def on_mount(self) -> None:
+        """Start loading the current review surface when the screen mounts."""
         self._load_surface()
 
     # ------------------------------------------------------------------

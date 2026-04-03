@@ -257,7 +257,7 @@ Expected: `ImportError: cannot import name 'ApplyAdapter' from 'src.apply.smart_
 Adapters provide portal-specific knowledge only (selectors, C4A-Scripts, profile dir).
 All flow control lives here: navigate → validate → fill → upload → submit → persist.
 
-Spec reference: docs/superpowers/specs/2026-03-30-apply-module-design.md Sections 4-8
+Design reference: `src/apply/README.md` and `plan_docs/applying/applying_feature_design.md`
 
 Crawl4AI docs:
   C4A-Script DSL:    https://docs.crawl4ai.com/core/c4a-script/

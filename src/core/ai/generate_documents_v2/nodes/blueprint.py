@@ -38,11 +38,26 @@ def run_blueprint(
     store: PipelineArtifactStore,
     job_kg: JobKG | None = None,
 ) -> dict[str, Any]:
+    """Run macroplanning and persist a serialized global blueprint.
+
+    Args:
+        source: Source name for artifact placement.
+        job_id: Job identifier for artifact placement.
+        application_id: Stable application identifier.
+        strategy_type: Document strategy name.
+        section_mapping: Section mapping configuration.
+        job_delta: Focused job delta from requirement filtering.
+        matches: Match edges produced by alignment.
+        chain: Structured-output chain used for blueprint generation.
+        store: Artifact store for stage persistence.
+        job_kg: Optional job knowledge graph for extra context fields.
+
+    Returns:
+        Serialized blueprint plus artifact refs and stage status.
+    """
     logger.info("%s Blueprint: planning sections for %s/%s", LogTag.LLM, source, job_id)
     job_title = (
-        job_kg.job_title_original or job_kg.job_title_english
-        if job_kg
-        else None
+        job_kg.job_title_original or job_kg.job_title_english if job_kg else None
     )
     user_prompt = build_blueprint_user_prompt(
         application_id=application_id,
@@ -69,6 +84,14 @@ def run_blueprint(
 
 
 def build_blueprint_chain(model: Any | None = None) -> Any:
+    """Build the blueprint generation chain or a deterministic demo fallback.
+
+    Args:
+        model: Optional preconfigured chat model.
+
+    Returns:
+        A chain compatible with ``run_blueprint``.
+    """
     from langchain_core.prompts import ChatPromptTemplate
     from langchain_google_genai import ChatGoogleGenerativeAI
 
@@ -86,6 +109,7 @@ def build_blueprint_chain(model: Any | None = None) -> Any:
 
 class _DemoBlueprintChain:
     def invoke(self, payload: dict[str, str]) -> GlobalBlueprint:
+        """Return a deterministic demo blueprint when no API key exists."""
         del payload
         from src.core.ai.generate_documents_v2.contracts.blueprint import (
             SectionBlueprint,

@@ -77,6 +77,15 @@ class CVDocumentAdapter(DocumentAdapter):
     default_style = "classic"
 
     def resolve_job_source(self, request: RenderRequest, paths: JobRenderPaths) -> Path:
+        """Resolve the best available CV source path for a render request.
+
+        Args:
+            request: Render request describing language and engine.
+            paths: Precomputed render paths for the target job.
+
+        Returns:
+            The markdown CV path if present, otherwise the fallback profile path.
+        """
         candidates = [
             paths.generate_dir / f"cv.{request.language}.md",
             paths.generate_dir / "cv.md",
@@ -89,6 +98,15 @@ class CVDocumentAdapter(DocumentAdapter):
     def build_payload(
         self, source_path: Path, request: RenderRequest
     ) -> DocumentPayload:
+        """Build the render payload for a CV source.
+
+        Args:
+            source_path: Resolved source path for the CV.
+            request: Render request describing engine and language.
+
+        Returns:
+            The normalized document payload consumed by the render coordinator.
+        """
         if source_path.suffix == ".json":
             if request.engine != "tex":
                 raise ValueError(

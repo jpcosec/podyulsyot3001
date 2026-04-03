@@ -7,7 +7,7 @@ Usage:
     # First-time session setup (mutually exclusive with apply mode)
     python -m src.apply.main --source xing --setup-session
 
-Spec reference: docs/superpowers/specs/2026-03-30-apply-module-design.md Section 2
+Design reference: `src/apply/README.md` and `plan_docs/applying/applying_feature_design.md`
 """
 
 from __future__ import annotations
@@ -49,12 +49,27 @@ def build_providers(
     data_manager: DataManager | None = None,
     profile_data: dict | None = None,
 ) -> dict[str, object]:
+    """Build provider instances for the requested execution backend.
+
+    Args:
+        backend: Backend name such as ``crawl4ai`` or ``browseros``.
+        data_manager: Optional shared data manager for artifact IO.
+        profile_data: Optional candidate profile payload for BrowserOS runs.
+
+    Returns:
+        A mapping from source name to instantiated provider.
+    """
     if backend == "browseros":
         return build_browseros_providers(data_manager, profile_data=profile_data)
     return build_crawl4ai_providers(data_manager)
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """Build the command-line parser for apply operations.
+
+    Returns:
+        The configured argument parser for session setup and apply execution.
+    """
     parser = argparse.ArgumentParser(description="Job auto-application CLI")
     parser.add_argument(
         "--backend",
@@ -84,7 +99,7 @@ def build_parser() -> argparse.ArgumentParser:
         dest="dry_run",
         action="store_true",
         default=False,
-        help="Fill form but do not submit (marcha blanca mode).",
+        help="Fill the form and capture artifacts without submitting it.",
     )
     # Session setup mode — mutually exclusive with apply mode
     parser.add_argument(
@@ -98,6 +113,14 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 async def main(argv: list[str] | None = None) -> None:
+    """Run the apply CLI.
+
+    Args:
+        argv: Optional command-line arguments. Defaults to ``sys.argv[1:]``.
+
+    Returns:
+        None. Exits the process for invalid CLI usage.
+    """
     args = build_parser().parse_args(argv or sys.argv[1:])
 
     os.makedirs("logs", exist_ok=True)

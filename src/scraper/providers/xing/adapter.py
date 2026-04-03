@@ -16,10 +16,12 @@ class XingAdapter(SmartScraperAdapter):
 
     @property
     def source_name(self) -> str:
+        """Return the canonical provider key for XING scraping."""
         return "xing"
 
     @property
     def supported_params(self) -> List[str]:
+        """Return the search parameters supported by the XING portal."""
         return ["job_query", "city", "max_days"]
 
     def get_search_url(self, **kwargs) -> str:
@@ -166,6 +168,7 @@ class XingAdapter(SmartScraperAdapter):
         """
 
     def get_schema_generation_hints(self) -> str:
+        """Return provider-specific hints for CSS schema generation."""
         return (
             "On XING, ignore the 'Similar jobs' section entirely. "
             "Do not use selectors from teaser cards with classes containing "
