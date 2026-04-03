@@ -48,7 +48,7 @@ def test_run_assembly_returns_bundle(store):
     )
     assert result["status"] == "assembled"
     assert result["markdown_bundle"]["cv_full_md"] == "CV summary"
-    assert "generate_documents_cv.en.md" in result["artifact_refs"]
+    assert "generate_documents_v2_cv.en.md" in result["artifact_refs"]
 
 
 def test_run_assembly_writes_disk(store, tmp_path):
@@ -75,4 +75,6 @@ def test_run_assembly_writes_disk(store, tmp_path):
         payload["rendering_metadata"]["job_title_english"]
         == "Data Scientist / AI Expert"
     )
-    assert (tmp_path / "demo/job-2/nodes/generate_documents/proposed/cv.en.md").exists()
+    assert (
+        tmp_path / "demo/job-2/nodes/generate_documents_v2/proposed/cv.en.md"
+    ).exists()

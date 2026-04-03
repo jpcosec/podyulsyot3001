@@ -33,11 +33,6 @@ class RenderCoordinator:
         )
         payload = document_adapter.build_payload(source_path, request)
 
-        if payload.source_kind == "legacy_json":
-            raise ValueError(
-                "Legacy JSON rendering is no longer supported in schema-v0"
-            )
-
         manifest = load_style_manifest(request.document_type, style)
         template_path, reference_doc, lua_filters, asset_roots = resolve_manifest_paths(
             manifest,

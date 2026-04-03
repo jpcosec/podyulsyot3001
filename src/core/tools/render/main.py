@@ -14,16 +14,13 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Universal document rendering pipeline"
     )
-    parser.add_argument("document", nargs="?", choices=["cv", "letter"])
-    parser.add_argument("--action", dest="legacy_action", choices=["cv", "letter"])
+    parser.add_argument("document", choices=["cv", "letter"])
     parser.add_argument(
         "--source",
         required=True,
-        help="Path to a source file or legacy job source name",
+        help="Path to a source file or job source name",
     )
-    parser.add_argument(
-        "--job-id", help="Legacy job identifier for job-bound rendering"
-    )
+    parser.add_argument("--job-id", help="Job identifier for job-bound rendering")
     parser.add_argument("--template", help="Template/style name to use")
     parser.add_argument(
         "--engine", "--motor", dest="engine", default="tex", choices=["tex", "docx"]
@@ -47,14 +44,10 @@ def main(argv: list[str] | None = None) -> int:
     """
     parser = _build_parser()
     args = parser.parse_args(argv or sys.argv[1:])
-    document = args.document or args.legacy_action
-    if document is None:
-        parser.error("Document type is required. Use 'cv', 'letter', or --action.")
-
     try:
         extra_vars = parse_extra_vars(args.extra_vars)
         request = RenderRequest(
-            document_type=document,
+            document_type=args.document,
             engine=args.engine,
             style=args.template,
             language=args.language,

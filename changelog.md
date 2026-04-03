@@ -6,6 +6,7 @@
 - Added pre-migration automation reference docs under `plan_docs/automation/` defining the target directory glossary and asset-placement rules before any runtime move.
 - Added `plan_docs/automation/superpowers_audit.md` to classify the remaining `docs/superpowers/` files as implemented, partial, stale, or broken-reference material before deleting that folder.
 - Removed the old `docs/superpowers/` tree after preserving current behavior in `src/core/ai/generate_documents_v2/README.md`, moving deferred work into `future_docs/issues/`, and fixing broken apply-doc references.
+- Removed stale render/test compatibility references by dropping the old `src.graph` test/script artifacts and retiring the `generate_documents` render dual-write fallback.
 
 ## 2026-03-31
 

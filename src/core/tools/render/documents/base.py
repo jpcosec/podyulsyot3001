@@ -1,10 +1,9 @@
-"""Base classes for document adapters."""
+"""Base classes for render document adapters."""
 
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -16,10 +15,9 @@ class DocumentPayload(BaseModel):
     """Normalized document payload returned by adapters."""
 
     document_type: str
-    source_kind: Literal["markdown", "legacy_json"]
+    source_kind: str = Field(default="markdown")
     source_path: Path
     pandoc_metadata: dict[str, str] = Field(default_factory=dict)
-    legacy_context: dict[str, Any] | None = None
 
 
 class DocumentAdapter(ABC):

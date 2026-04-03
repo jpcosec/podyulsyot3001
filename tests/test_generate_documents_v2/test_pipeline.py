@@ -36,4 +36,6 @@ def test_generate_application_documents_runs_end_to_end(store, tmp_path):
     )
     assert result["status"] == "assembled"
     assert "markdown_bundle" in result
-    assert (tmp_path / "demo/job-1/nodes/generate_documents/proposed/cv.en.md").exists()
+    assert (
+        tmp_path / "demo/job-1/nodes/generate_documents_v2/proposed/cv.en.md"
+    ).exists()

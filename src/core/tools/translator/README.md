@@ -49,19 +49,12 @@ The translator interacts with the canonical job storage via the `DataManager`.
 
 1. **Base Framework** (`src/core/tools/translator/base.py`): Handles chunking (max 4500 chars), retries, and high-level `translate_text`/`translate_fields` logic.
 2. **Providers** (`src/core/tools/translator/providers/`): Specific implementations (e.g., `google` via `deep-translator`).
-3. **Pipeline Node** (`src/graph/nodes/translate.py`): LangGraph adapter that uses the `DataManager` to persist results across pipeline stages.
-4. **CLI Wrapper** (`src/core/tools/translator/main.py`): Standalone utility to batch-translate existing ingested jobs.
+3. **CLI Wrapper** (`src/core/tools/translator/main.py`): Standalone utility that translates existing canonical ingest artifacts.
+4. **Operator Integration** (`src/cli/main.py`): Higher-level workflows can invoke translation before later pipeline stages.
 
 ---
 
 ## 🚀 Usage
-
-### As a LangGraph Node
-Ideally used within the `build_pipeline_graph` in `src/graph/__init__.py`:
-```python
-workflow.add_node("translate", make_translate_node(manager))
-workflow.add_edge("ingest", "translate")
-```
 
 ### Via CLI (Batch Processing)
 ```bash
@@ -75,4 +68,3 @@ python -m src.core.tools.translator.main --source stepstone --target_lang en
 - **"ImportError: deep-translator is required"** — Run `pip install deep-translator`.
 - **"Translation failed after N attempts"** — Network timeout or rate limit. The retry mechanism handles transient issues, but check your internet connection.
 - **Fields not translating** — Ensure the field name is included in `P_FIELDS_TO_TRANSLATE` within `src/core/tools/translator/main.py`.
-
