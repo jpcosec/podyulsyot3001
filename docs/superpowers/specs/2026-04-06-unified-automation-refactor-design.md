@@ -5,9 +5,10 @@ Date: 2026-04-06
 ## Goal
 
 Move all runtime automation code under `src/automation/` with clear motor ownership and
-explicit data contracts at each boundary. Portal adapters move as-is into the Crawl4AI motor
-as reference implementations. The top-level `portals/` layer (Ariadne common language) is
-deferred until the common language schema is defined — portal files will be rewritten then.
+explicit data contracts at each boundary. The Ariadne portal schema is defined first as the
+boundary between portal knowledge and motor execution. Portal intent files are written against
+that schema. C4AI portal adapters are rewritten to consume portal intent and add C4AI-specific
+translation on top. Only then does the structural move happen.
 
 ---
 
@@ -30,6 +31,25 @@ motor-specific translation code (CSS selectors, C4A-Script DSL, `crawl_result` A
 src/automation/
   __init__.py
   main.py                          # unified CLI (scrape / apply subcommands)
+  ariadne/
+    __init__.py
+    portal_models.py               # NEW: ScrapePortalDefinition, ApplyPortalDefinition,
+                                   #       ApplyStep, FormField, FieldType
+  portals/                         # NEW: portal intent in Ariadne common language
+    stepstone/
+      __init__.py
+      scrape.py                    # STEPSTONE_SCRAPE: ScrapePortalDefinition
+      apply.py                     # STEPSTONE_APPLY: ApplyPortalDefinition
+    tuberlin/
+      __init__.py
+      scrape.py                    # TUBERLIN_SCRAPE: ScrapePortalDefinition
+    xing/
+      __init__.py
+      scrape.py                    # XING_SCRAPE: ScrapePortalDefinition
+      apply.py                     # XING_APPLY: ApplyPortalDefinition
+    linkedin/
+      __init__.py
+      apply.py                     # LINKEDIN_APPLY: ApplyPortalDefinition
   motors/
     crawl4ai/
       scrape_engine.py             # ← src/scraper/smart_adapter.py
@@ -39,17 +59,17 @@ src/automation/
         stepstone_schema.json
         tuberlin_schema.json
         xing_schema.json
-      portals/                     # C4AI reference adapters (pending Ariadne rewrite)
+      portals/                     # C4AI translators — consume portals/, add CSS/scripts
         stepstone/
-          scrape.py                # ← src/scraper/providers/stepstone/adapter.py (as-is)
-          apply.py                 # ← src/apply/providers/stepstone/adapter.py (as-is)
+          scrape.py                # ← rewritten from src/scraper/providers/stepstone/adapter.py
+          apply.py                 # ← rewritten from src/apply/providers/stepstone/adapter.py
         tuberlin/
-          scrape.py                # ← src/scraper/providers/tuberlin/adapter.py (as-is)
+          scrape.py                # ← rewritten from src/scraper/providers/tuberlin/adapter.py
         xing/
-          scrape.py                # ← src/scraper/providers/xing/adapter.py (as-is)
-          apply.py                 # ← src/apply/providers/xing/adapter.py (as-is)
+          scrape.py                # ← rewritten from src/scraper/providers/xing/adapter.py
+          apply.py                 # ← rewritten from src/apply/providers/xing/adapter.py
         linkedin/
-          apply.py                 # ← src/apply/providers/linkedin/adapter.py (as-is)
+          apply.py                 # ← rewritten from src/apply/providers/linkedin/adapter.py
     browseros/
       cli/
         client.py                  # ← src/apply/browseros_client.py
@@ -58,7 +78,6 @@ src/automation/
         models.py                  # ← src/apply/browseros_models.py
         traces/
           linkedin_easy_apply_v1.json  # ← src/apply/playbooks/linkedin_easy_apply_v1.json
-  portals/                         # DEFERRED — Ariadne common language (not part of this refactor)
 ```
 
 ---
@@ -87,12 +106,12 @@ the Crawl4AI motor.
 Source-controlled JSON schemas passed to the Crawl4AI extraction pipeline. These are C4AI
 motor assets, not Ariadne artifacts.
 
-**Portal reference adapters (`motors/crawl4ai/portals/`):**
+**Portal translators (`motors/crawl4ai/portals/`):**
 
-Current portal adapters moved as-is. Each file contains the full Crawl4AI-specific
-implementation for one portal: CSS selectors, C4A-Script blocks, URL builders, and
-`crawl_result` parsing logic. These are reference implementations — they will be rewritten
-once the Ariadne common language schema is defined and the top-level `portals/` layer exists.
+One file per portal per operation. Each file imports the portal intent from `portals/` and
+adds the C4AI-specific translation: CSS selectors, C4A-Script blocks, URL builders, and
+`crawl_result` parsing logic. The portal intent (what fields exist, what steps the flow has)
+is read from `portals/`; the motor decides how to interact with those fields via the DOM.
 
 ### BrowserOS CLI motor (`motors/browseros/cli/`)
 
@@ -113,21 +132,53 @@ Packaged runtime BrowserOS traces that ship with code. Currently: `linkedin_easy
 
 ---
 
-## Portals (`portals/`) — deferred
+## Ariadne portal schema (`ariadne/portal_models.py`)
 
-The top-level `portals/` layer is not part of this refactor. It will hold portal knowledge
-expressed in Ariadne's motor-agnostic common language once that schema is defined.
+The minimal Ariadne schema for this refactor. Only portal-level models are defined here;
+storage, recording, replay, and promotion are deferred.
 
-When it exists, portal files will describe:
+```python
+class FieldType(str, Enum):
+    TEXT = "text"
+    EMAIL = "email"
+    PHONE = "phone"
+    FILE_PDF = "file_pdf"
 
-- base URLs and URL construction rules
-- search parameter support declarations
-- job ID extraction patterns
-- application entry-point descriptions
-- form field names and flow steps in Ariadne common language
+class FormField(BaseModel):
+    name: str           # semantic name: "first_name", "cv", "letter"
+    label: str          # human-readable label
+    required: bool
+    field_type: FieldType
 
-Until then, all portal-specific code lives in `motors/crawl4ai/portals/` as reference
-implementations. The top-level `portals/` directory is created as an empty placeholder only.
+class ApplyStep(BaseModel):
+    name: str           # "open_modal", "fill_contact", "upload_cv", "submit"
+    description: str
+    fields: list[FormField]
+    dry_run_stop: bool = False
+
+class ApplyPortalDefinition(BaseModel):
+    source_name: str
+    base_url: str
+    entry_description: str
+    steps: list[ApplyStep]
+
+class ScrapePortalDefinition(BaseModel):
+    source_name: str
+    base_url: str
+    supported_params: list[str]   # ["job_query", "city", "max_days"]
+    job_id_pattern: str           # regex applied to a job detail URL
+```
+
+URL construction and link extraction are portal-specific logic that cannot be cleanly
+expressed as pure data — these remain as methods in the C4AI portal translators.
+
+## Portals (`portals/`)
+
+One file per portal per operation. Each file exports a single instance of
+`ScrapePortalDefinition` or `ApplyPortalDefinition`. No motor imports allowed.
+
+Portal files describe **what** — field names, flow steps, entry points — in terms any motor
+can consume. The motors describe **how** to interact with those fields.
 
 ---
 
@@ -135,10 +186,11 @@ implementations. The top-level `portals/` directory is created as an empty place
 
 | Boundary | Input | Output |
 |---|---|---|
-| C4AI scrape engine ← C4AI portal adapter | URL, params, schema | `JobPosting` |
-| C4AI apply engine ← C4AI portal adapter | selectors, scripts | `ApplyMeta`, `ApplicationRecord` |
+| `portals/` → C4AI translator | `ScrapePortalDefinition` / `ApplyPortalDefinition` | CSS selectors, scripts, URL |
+| C4AI scrape engine ← C4AI portal translator | URL, params, schema | `JobPosting` |
+| C4AI apply engine ← C4AI portal translator | selectors, scripts | `ApplyMeta`, `ApplicationRecord` |
 | BrowserOS executor ← trace | `BrowserOSPlaybook` | `ApplyMeta`, `ApplicationRecord` |
-| portals ← Ariadne common language | Ariadne step definitions | portal intent descriptions (deferred) |
+| `portals/` → BrowserOS (future) | `ApplyPortalDefinition` | BrowserOS tool-call sequence |
 
 ---
 
@@ -158,21 +210,30 @@ implementations. The top-level `portals/` directory is created as an empty place
 | `src/apply/playbooks/linkedin_easy_apply_v1.json` | `src/automation/motors/browseros/cli/traces/linkedin_easy_apply_v1.json` |
 | `data/ariadne/assets/crawl4ai_schemas/*.json` | `src/automation/motors/crawl4ai/schemas/*.json` |
 
-### Portal adapters — moved as-is (no split)
+### New files — Ariadne schema and portal intent
 
-Portal adapters are C4AI-specific reference implementations. They move without modification
-into `motors/crawl4ai/portals/`. The split into common-language portal definitions is deferred.
-
-| Current | New |
+| File | Content |
 |---|---|
-| `src/scraper/providers/stepstone/adapter.py` | `src/automation/motors/crawl4ai/portals/stepstone/scrape.py` |
-| `src/scraper/providers/tuberlin/adapter.py` | `src/automation/motors/crawl4ai/portals/tuberlin/scrape.py` |
-| `src/scraper/providers/xing/adapter.py` | `src/automation/motors/crawl4ai/portals/xing/scrape.py` |
-| `src/apply/providers/linkedin/adapter.py` | `src/automation/motors/crawl4ai/portals/linkedin/apply.py` |
-| `src/apply/providers/stepstone/adapter.py` | `src/automation/motors/crawl4ai/portals/stepstone/apply.py` |
-| `src/apply/providers/xing/adapter.py` | `src/automation/motors/crawl4ai/portals/xing/apply.py` |
+| `src/automation/ariadne/portal_models.py` | `FieldType`, `FormField`, `ApplyStep`, `ApplyPortalDefinition`, `ScrapePortalDefinition` |
+| `src/automation/portals/stepstone/scrape.py` | `STEPSTONE_SCRAPE: ScrapePortalDefinition` |
+| `src/automation/portals/stepstone/apply.py` | `STEPSTONE_APPLY: ApplyPortalDefinition` |
+| `src/automation/portals/tuberlin/scrape.py` | `TUBERLIN_SCRAPE: ScrapePortalDefinition` |
+| `src/automation/portals/xing/scrape.py` | `XING_SCRAPE: ScrapePortalDefinition` |
+| `src/automation/portals/xing/apply.py` | `XING_APPLY: ApplyPortalDefinition` |
+| `src/automation/portals/linkedin/apply.py` | `LINKEDIN_APPLY: ApplyPortalDefinition` |
 
-### New files (no current equivalent)
+### Portal adapters — rewritten to consume portal intent
+
+| Current | New | Change |
+|---|---|---|
+| `src/scraper/providers/stepstone/adapter.py` | `src/automation/motors/crawl4ai/portals/stepstone/scrape.py` | imports `STEPSTONE_SCRAPE`; URL builder and link extraction remain as methods |
+| `src/scraper/providers/tuberlin/adapter.py` | `src/automation/motors/crawl4ai/portals/tuberlin/scrape.py` | imports `TUBERLIN_SCRAPE` |
+| `src/scraper/providers/xing/adapter.py` | `src/automation/motors/crawl4ai/portals/xing/scrape.py` | imports `XING_SCRAPE` |
+| `src/apply/providers/linkedin/adapter.py` | `src/automation/motors/crawl4ai/portals/linkedin/apply.py` | imports `LINKEDIN_APPLY`; CSS selectors and scripts remain as C4AI translation |
+| `src/apply/providers/stepstone/adapter.py` | `src/automation/motors/crawl4ai/portals/stepstone/apply.py` | imports `STEPSTONE_APPLY` |
+| `src/apply/providers/xing/adapter.py` | `src/automation/motors/crawl4ai/portals/xing/apply.py` | imports `XING_APPLY` |
+
+### Other new files
 
 | File | Purpose |
 |---|---|
@@ -204,14 +265,18 @@ Tests follow the source split:
 | `tests/unit/apply/providers/linkedin/test_adapter.py` | `tests/unit/automation/motors/crawl4ai/portals/linkedin/test_apply.py` |
 | `tests/unit/apply/providers/stepstone/test_adapter.py` | `tests/unit/automation/motors/crawl4ai/portals/stepstone/test_apply.py` |
 | `tests/unit/apply/providers/xing/test_adapter.py` | `tests/unit/automation/motors/crawl4ai/portals/xing/test_apply.py` |
+| (new) | `tests/unit/automation/ariadne/test_portal_models.py` |
+| (new) | `tests/unit/automation/portals/test_stepstone.py` |
+| (new) | `tests/unit/automation/portals/test_xing.py` |
+| (new) | `tests/unit/automation/portals/test_tuberlin.py` |
+| (new) | `tests/unit/automation/portals/test_linkedin.py` |
 
 ---
 
 ## Known deferred items
 
-- **Ariadne common language schema** — must be defined before the top-level `portals/` layer
-  can be written. Current portal adapters in `motors/crawl4ai/portals/` are reference
-  implementations pending this rewrite.
+- **Ariadne beyond portal models** — storage, recorder, replayer, and promotion are deferred.
+  Only `portal_models.py` is in scope for this refactor.
 - **BrowserOS playbook schema → Ariadne** — `motors/browseros/cli/models.py` is the correct
   short-term home; migration to a backend-neutral Ariadne schema is a future step.
 - **`motors/browseros/agent/`**, **`motors/os_native_tools/`**, **`motors/vision/`** — fully
