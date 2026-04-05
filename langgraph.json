@@ -1,9 +1,0 @@
-{
-  "dependencies": [
-    "."
-  ],
-  "graphs": {
-    "generate_documents_v2": "src.core.ai.generate_documents_v2.graph:create_studio_graph"
-  },
-  "env": ".env"
-}
