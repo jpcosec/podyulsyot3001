@@ -18,16 +18,16 @@ Purpose: identify what remained in the former superpowers docs folder, whether i
 | File | Status | Recommended action |
 |---|---|---|
 | former `2026-03-31-generate-documents-v2-plan1-contracts-job-pipeline.md` | implemented | Move to `plan_docs/` only if still useful as historical migration context; otherwise archive/delete after ensuring `changelog.md` is enough. |
-| former `2026-03-31-generate-documents-spec.md` | partial | Split: preserve stable cross-cutting architecture bits in the `src/core/ai/generate_documents_v2/README.md` and/or `plan_docs/automation/`; move gaps to `future_docs/`. |
-| former `2026-03-31-generate-documents-graph-spec.md` | partial | Extract only what matches the current graph into module README or a focused doc next to `src/core/ai/generate_documents_v2/`; move unimplemented parts to `future_docs/`. |
-| former `2026-03-31-generate-documents-pydantic-contracts.md` | partial | Replace with contract references in module README; move mismatches/unimplemented contract ideas to `future_docs/`. |
-| former `2026-03-31-generate-documents-hitl-spec.md` | partial | Keep only current behavior near the module or TUI docs; move missing review/patch flow items to `future_docs/`. |
+| former `2026-03-31-generate-documents-spec.md` | partial | Historical only in this worktree; preserve any still-useful automation-facing ideas in `plan_docs/automation/`. |
+| former `2026-03-31-generate-documents-graph-spec.md` | partial | Historical only in this worktree; do not keep path references to removed graph modules. |
+| former `2026-03-31-generate-documents-pydantic-contracts.md` | partial | Historical only in this worktree; extract only generic documentation lessons if needed. |
+| former `2026-03-31-generate-documents-hitl-spec.md` | partial | Out of scope for this automation branch; avoid keeping review-ui references alive here. |
 | former `2026-03-31-generate-documents-extension-guide.md` | stale | Delete or rewrite from scratch later when real extension seams exist. |
-| former `2026-03-31-generate-documents-regional-cases.md` | stale | Move the not-yet-built regional behavior into `future_docs/`; delete this file after extracting any truly valuable requirements. |
+| former `2026-03-31-generate-documents-regional-cases.md` | stale | Out of scope for this worktree; keep no active reference. |
 | former `2026-03-31-generate-documents-examples.md` | stale | Delete after extracting any examples that still match current output; otherwise it over-promises product behavior. |
-| former `2026-03-31-generate-documents-delta-design.md` | stale | Treat as exploratory design; move only unresolved ideas to `future_docs/`, then delete. |
-| former `2026-03-30-unmask-errors-move-translator.md` | partial | Extract unresolved items to `future_docs/`; the completed parts are already represented in code and `changelog.md`. |
-| former `2026-03-29-pipeline-graph-unification.md` | stale | Delete after checking whether any still-open idea deserves a `future_docs/` entry. It targets paths that no longer exist. |
+| former `2026-03-31-generate-documents-delta-design.md` | stale | Treat as exploratory design and leave out of this worktree's active references. |
+| former `2026-03-30-unmask-errors-move-translator.md` | partial | Out of scope after worktree reduction; do not preserve translator-specific path references here. |
+| former `2026-03-29-pipeline-graph-unification.md` | stale | Keep deleted; it targets paths that no longer exist in this worktree. |
 
 ## Missing / broken references
 
@@ -70,15 +70,11 @@ Based on `docs/standards/docs/documentation_and_planning_guide.md`:
 
 - current generate-documents-v2 architecture summary -> `src/core/ai/generate_documents_v2/README.md`
 - current contracts overview -> same module README, pointing to contract files
-- current HITL behavior -> same module README and, if needed, `src/review_ui/README.md`
+- current browser-automation behavior -> keep it next to `src/apply/README.md` or inside `plan_docs/automation/`
 
-### Move to `future_docs/`
+### Keep out of scope
 
-- every still-unimplemented generate-documents behavior that is real but deferred:
-  - regional cases
-  - profile updater/learning loop
-  - richer HITL patch editing
-  - extension mechanisms not yet present in code
+- every still-unimplemented generate-documents behavior that is not needed for browser automation
 
 ### Move to `plan_docs/`
 
@@ -97,7 +93,7 @@ Yes: there were still non-implemented things represented in the superpowers docs
 If the goal is to kill the folder cleanly, the safest sequence is:
 
 1. fix the broken references
-2. extract real deferred items into `future_docs/`
+2. extract only automation-relevant follow-up items into `plan_docs/automation/`
 3. move current behavior summaries next to the relevant module README(s)
 4. delete stale exploratory/spec-heavy files that no longer match the code
 5. remove the superpowers docs folder

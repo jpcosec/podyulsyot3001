@@ -14,7 +14,6 @@ This is the single source of truth for how this project is documented, planned, 
 README.md                  ← repository overview and orientation
 docs/standards/docs/       ← documentation conventions (this file and siblings)
 src/<module>/README.md     ← per-module orientation
-future_docs/               ← deferred work and known problems
 plan_docs/                 ← active execution plans (ephemeral)
 changelog.md               ← record of significant changes
 ```
@@ -55,11 +54,11 @@ Describe the structural shape, then **link to the exact file**. The file is auth
 ```markdown
 ## 🏗️ Architecture & Features
 
-The match skill runs as a LangGraph `StateGraph` with a single human breakpoint.
+The apply module coordinates provider-specific automation adapters and BrowserOS-backed execution helpers.
 
-- Graph definition and node wiring: `src/core/ai/match_skill/graph.py`
-- State schema: `MatchSkillState` in `src/core/ai/match_skill/graph.py`
-- Artifact persistence: `MatchArtifactStore` in `src/core/ai/match_skill/storage.py`
+- CLI entrypoint: `src/apply/main.py`
+- Shared models: `src/apply/models.py`
+- Provider adapters: `src/apply/providers/`
 ```
 
 Never describe a function signature or field list in a README — that belongs in docstrings.
@@ -71,12 +70,10 @@ Describe the *intent* of the interface. Do not copy argument tables — they dri
 ```markdown
 ## 🚀 CLI / Usage
 
-Run a match thread from requirement and profile-evidence JSON files.
-Arguments are defined in the `build_parser()` function in `src/core/ai/match_skill/main.py`.
+Run a dry browser-automation flow for one ingested job.
+Arguments are defined in the `build_parser()` function in `src/apply/main.py`.
 
-Resume a paused thread after HITL review:
-
-    python -m src.core.ai.match_skill.main --source <source> --job-id <id> --resume
+    python -m src.apply.main --source xing --job-id <id> --cv path/to/cv.pdf --dry-run
 ```
 
 For Settings-driven configuration, point to the Settings class file instead of `--help`.
@@ -88,10 +85,8 @@ The Pydantic model file **is** the contract. Point to it — do not restate fiel
 ```markdown
 ## 📝 Data Contract
 
-Input and output schemas are defined in `src/core/ai/match_skill/contracts.py`:
-- `RequirementInput` — one requirement from the job posting
-- `MatchEnvelope` — full LLM structured output
-- `ReviewPayload` — what the TUI sends back into the graph
+Input and output schemas are defined in `src/apply/models.py` and `src/scraper/models.py`.
+Point to those files instead of restating fields inline.
 ```
 
 ---
@@ -165,8 +160,7 @@ Active execution plans live in `plan_docs/`. They are **ephemeral** — deleted 
 
 ```
 plan_docs/
-  match_skill_tui_refactor.md
-  render_docx_engine.md
+  automation/<topic>.md
 ```
 
 A plan file contains: goal, constraints, ordered steps, and open questions. It is a working document — edit it freely as understanding improves. It is not documentation; do not write it as if future readers will study it.
@@ -181,24 +175,15 @@ spec / requirement
   deleted               ←  changelog.md updated with what changed and why
 ```
 
-If an execution plan reveals a deferred item (something real but out of scope), move it to `future_docs/` before closing the plan.
+If an execution plan reveals follow-up work that is real but out of scope, record it in the active plan or in the issue tracker referenced by that plan before closing the work.
 
 ---
 
-## 5. How to Mark Future Work
+## 5. How to Mark Follow-up Work
 
-See [`future_docs_guide.md`](future_docs_guide.md) for the full convention.
+Use small inline TODOs only when they are tightly local to the code.
 
-**Short version:**
-
-1. Create `future_docs/<topic>.md` describing the problem, why it's deferred, and a proposed direction.
-2. Leave an inline marker at the relevant code location:
-
-```python
-# TODO(future): <short description> — see future_docs/<topic>.md
-```
-
-3. When the item is prioritized, promote to `plan_docs/`, delete the `future_docs/` entry, and remove the inline marker when done.
+For anything larger, add the follow-up to the relevant file in `plan_docs/automation/` so the scoped worktree keeps one place for active automation design notes.
 
 ---
 

@@ -1,19 +1,17 @@
 # Automation Planning Docs
 
-This folder is the planning-doc home for the unified automation refactor.
+This folder is the planning-doc home for the browser automation worktree.
 
-It exists before any runtime move so the target structure, ownership boundaries,
-and asset-placement rules are explicit before code changes begin.
+It holds the design notes that still matter for scraping, BrowserOS-backed apply flows, and automation-package boundaries. Historical plans from the broader repo may mention removed modules; treat those references as context, not current worktree truth.
 
 ## Documents
 
 - `plan_docs/automation/directory_glossary.md` - target package glossary and ownership boundaries
 - `plan_docs/automation/asset_placement.md` - where traces, playbooks, schemas, and docs belong
-- `docs/repo_maps/current_repo_scrape_apply_browseros_ariadne_map.md` - current repo inventory
-- `docs/repo_maps/worktree_feat_apply_module_map.md` - worktree inventory
-- `plan_docs/automation/2026-04-03-unified-automation-refactor-plan.md` - approved refactor plan
+- `plan_docs/automation/2026-04-03-unified-automation-refactor-plan.md` - refactor plan retained as design context
+- `plan_docs/automation/2026-04-04-ariadne-common-language-issues.md` - open design issues for Ariadne common language (must resolve before Phase 2)
+- `plan_docs/automation/superpowers_audit.md` - audit trail for removed exploratory docs (historical, not actionable in this worktree)
 
 ## Current rule
 
-No runtime move should begin until the glossary and asset-placement documents are
-approved and used as the migration reference.
+Keep planning scoped to browser automation. If a doc starts depending on deleted control-plane, rendering, or review-ui modules, rewrite it to the current worktree scope instead of preserving stale path references.

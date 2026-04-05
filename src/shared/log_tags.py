@@ -28,7 +28,7 @@ class LogTag(StrEnum):
     prevents typos and enforces the shared vocabulary.
 
     Tags are formatted as ``[emoji]`` so they are visually scannable and
-    grep-friendly (``grep '\[🧠\]'`` to find all LLM reasoning log lines).
+    grep-friendly (``grep '\\[🧠\\]'`` to find all LLM reasoning log lines).
     """
 
     SKIP = "[⏭️]"

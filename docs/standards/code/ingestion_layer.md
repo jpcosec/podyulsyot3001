@@ -2,8 +2,8 @@
 
 Standards for modules that sit at the system boundary — receiving uncontrolled external input and producing a validated internal representation. Extends `basic.md`.
 
-Current ingestion components: `src/scraper/` (job portal crawling), `src/review_ui/` (human review input).
-Planned: CV ingestion.
+Current ingestion component: `src/scraper/` (job portal crawling and application-routing inputs).
+Other ingestion surfaces from the fuller repository are out of scope in this worktree.
 
 Scraper produces non-deterministic output (LLM-assisted extraction, portal variability) and is classified under LLM standards for its output contract. This document covers the **boundary concerns** that apply to all ingestion components regardless of whether the extraction step is deterministic or LLM-based.
 
@@ -90,16 +90,9 @@ Ingestion may produce partial results (some records succeed, some fail). Handle 
 
 ---
 
-## 6. Human Review as an Ingestion Component
+## 6. Worktree Scope Note
 
-The review UI (`src/review_ui/`) is an ingestion component. It receives uncontrolled human input (button clicks, text fields, free-form notes) and produces a typed `ReviewPayload`.
-
-Rules that apply:
-- The same validation-at-boundary rule applies: validate `ReviewPayload` shape before passing it to the graph.
-- Hash-check the source artifact the reviewer acted on — if the artifact changed since the UI loaded, reject the payload.
-- A review submission with missing or invalid fields is a `IngestionValidationError`, not a graph error.
-
-The graph should never receive a `ReviewPayload` it has to partially trust. Either it's valid and hash-checked, or it's rejected at the boundary.
+The original repository also treated human review as an ingestion surface, but that review UI is not present in this worktree. For this scoped branch, apply these standards to scraper inputs and any future browser-automation intake surfaces only.
 
 ---
 

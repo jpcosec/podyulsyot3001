@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-04-04
+
+- Added `README.txt` and rewrote `README.md` to document that this worktree is intentionally scoped to the browser automation pipeline.
+- Updated automation planning and documentation standards to stop pointing at removed control-plane, review-ui, translator, render, and future-docs paths.
+- Removed the broken `langgraph.json` config because this scoped worktree no longer ships the graph modules it referenced.
+
 ## 2026-04-03
 
 - Added repo map documents under `docs/repo_maps/` covering the current repo and the `feat-apply-module` worktree, focused on scraping, Crawl4AI, BrowserOS, applying docs, and Ariadne-related files.

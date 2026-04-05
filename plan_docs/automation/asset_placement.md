@@ -32,8 +32,8 @@ Target placement rule:
 Recommended split:
 
 ```text
-plan_docs/automation/ariadne/traces/    # screenshots, exploratory evidence, walkthrough artifacts
-<automation-package>/ariadne/traces/    # normalized packaged replay paths used by runtime code
+data/ariadne/reference_data/applying_traces/   # screenshots, exploratory evidence, walkthrough artifacts
+<automation-package>/ariadne/traces/            # normalized packaged replay paths used by runtime code
 ```
 
 Concrete implication:
@@ -77,42 +77,18 @@ Decision rule:
 - if the schema is part of the repository and used as source-controlled runtime configuration, keep it in code under the Crawl4AI motor
 - if it is generated per environment and should not be source-controlled, move it to a runtime data/cache path
 
-### 4. Existing apply planning docs
+### 4. Planning and design docs
 
-Current examples:
+Active planning docs live in `plan_docs/automation/`, grouped by concern:
 
-- `plan_docs/issues/apply/applying_feature_design.md`
-- `plan_docs/automation/2026-04-03-unified-automation-refactor-plan.md`
-- `docs/reference/external_libs/browseros_interfaces.md`
-- `plan_docs/issues/scraper/scraper_fragility.md`
+- `plan_docs/automation/ariadne/`
+- `plan_docs/automation/browseros/`
+- `plan_docs/automation/crawl4ai/`
+- `plan_docs/automation/migration/`
 
-Target placement:
-
-- `plan_docs/automation/`
-- grouped by concern over time:
-  - `plan_docs/automation/ariadne/`
-  - `plan_docs/automation/browseros/`
-  - `plan_docs/automation/crawl4ai/`
-  - `plan_docs/automation/migration/`
-
-Reason:
-
-- these are documentation and planning references, not runtime code assets
-
-### 5. Existing repo maps
-
-Current files:
-
-- `docs/repo_maps/current_repo_scrape_apply_browseros_ariadne_map.md`
-- `docs/repo_maps/worktree_feat_apply_module_map.md`
-
-Target placement:
-
-- these can stay where they are as inventory docs, or later be linked from `plan_docs/automation/README.md`
-
-Reason:
-
-- they document the current and worktree states; they are migration reference material
+Note: earlier references to `plan_docs/issues/` and `docs/reference/external_libs/` pointed to
+paths that do not exist in this worktree. Those paths belonged to the full repo before worktree
+scoping and should not be treated as current sources.
 
 ### 6. Future Ariadne recordings from BrowserOS agent/CLI
 
@@ -153,10 +129,9 @@ Where:
 | Apply runtime code | `src/apply/smart_adapter.py` | Crawl4AI motor + portals area |
 | BrowserOS runtime code | `src/apply/browseros_client.py` | BrowserOS CLI motor |
 | Ariadne packaged path | `src/apply/playbooks/linkedin_easy_apply_v1.json` | packaged Ariadne trace area |
-| Exploratory screenshot trace | `data/ariadne/reference_data/applying_traces/xing/*.png` | `data/ariadne/reference_data/applying_traces/` |
-| Crawl4AI schema cache | `data/ariadne/assets/crawl4ai_schemas/*` | Ariadne assets for now; later a Crawl4AI motor-local `schemas/` folder or runtime cache |
+| Exploratory screenshot trace | `data/ariadne/reference_data/applying_traces/xing/*.png` | `data/ariadne/reference_data/applying_traces/` (stays in data, not plan_docs) |
+| Crawl4AI schema cache | `data/ariadne/assets/crawl4ai_schemas/*` | temporary home; target is Crawl4AI motor-local `schemas/` or runtime cache (see section 3) |
 | Planning/design doc | `plan_docs/automation/2026-04-03-unified-automation-refactor-plan.md` | `plan_docs/automation/...` |
-| External library reference | `docs/reference/external_libs/browseros_interfaces.md` | `docs/reference/external_libs/` |
 
 ## Migration gate
 

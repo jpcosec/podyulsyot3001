@@ -6,6 +6,8 @@ Date: 2026-04-03
 
 Replace the current split between `src/scraper/` and `src/apply/` with one unified automation package and one common entrypoint, organized around execution interfaces instead of historical module boundaries.
 
+Worktree note: this plan predates the current narrowed branch. References to removed control-plane or non-automation modules should be read as historical context, not active dependencies.
+
 The target concept is:
 
 ```text
@@ -16,7 +18,8 @@ The target concept is:
     browseros/
       cli/                 # BrowserOS MCP/direct-tool execution path
       agent/               # BrowserOS/OpenBrowser agent path
-    os_native_tools/       # physical click/input + ultra-stealth primitives
+    os_native_tools/       # physical click/input + ultra-stealth primitives (acts)
+    vision/                # OpenCV/OCR observation motor (looks, does not act)
   ariadne/                 # path map, recording, storage, replay contracts
   portals/                 # xing/stepstone/linkedin/tuberlin-specific logic
 ```
@@ -29,7 +32,7 @@ This section exists specifically to remove ambiguity before any code move begins
 
 - the unified runtime CLI for low-level automation concerns
 - owns subcommands such as scrape/apply/ariadne
-- does not own LangGraph operator workflow; that can stay in `src/cli/main.py`
+- does not own any broader operator workflow outside browser automation
 
 ### portals
 
@@ -73,13 +76,21 @@ This section exists specifically to remove ambiguity before any code move begins
 
 ### `motors/os_native_tools`
 
-- physical/native interaction primitives and stealth-oriented mechanisms
+- physical/native interaction primitives and stealth-oriented mechanisms — acts on the OS
 - examples:
   - native mouse click
   - native typing
   - coordinate-based interaction
   - ultra-stealth mode primitives
 - this is an escalation motor, not the default path
+
+### `motors/vision`
+
+- observation motor — looks at the screen but does not act
+- uses OpenCV models, image template matching, OCR, and bounding-box detection
+- produces target coordinates, presence confirmations, and visual assertions
+- can work with `os_native_tools` (vision locates, os_native acts) but neither depends on the other
+- also usable standalone for visual verification in any backend's replay loop
 
 ## Where current non-code assets should go
 
@@ -114,17 +125,16 @@ These decisions should be documented before moving anything.
 ### Current planning and future-design docs
 
 - these should remain documentation, not runtime code
-- recommended destination over time:
-  - `plan_docs/automation/` for active migration work
-  - `future_docs/` for deferred design directions that are no longer in active execution
+- recommended destination:
+  - `plan_docs/automation/` for all active and deferred automation design work
 - this documentation move should happen before or alongside the code move so the code migration has a stable written reference
 
-### Current external library references
+### External library references
 
-- examples:
-  - `docs/reference/external_libs/crawl4ai_custom_context.md`
-  - `docs/reference/external_libs/browseros_interfaces.md`
-- these should live in `docs/` because they are durable external-library reference assets, not active plan docs
+- external library reference docs (Crawl4AI usage, BrowserOS interfaces, etc.) should live
+  under `docs/` as durable reference assets, not under active plan docs
+- note: `docs/reference/external_libs/` does not exist in this worktree yet; create it when
+  the relevant reference material is written
 
 The user explicitly chose a **hard move now** strategy, not a compatibility-first shim phase.
 
@@ -140,8 +150,8 @@ The user explicitly chose a **hard move now** strategy, not a compatibility-firs
 - Ariadne exists today only as a partial concept:
   - typed playbook fields such as `ariadne_tag`
   - one packaged LinkedIn playbook
-  - design docs now split between `plan_docs/automation/` and `future_docs/`
-- Operator CLI already exists in `src/cli/main.py`, but scraping and applying also still have their own module CLIs.
+  - design docs now live under `plan_docs/automation/`
+- Scraping and applying currently expose their own module CLIs inside this worktree.
 
 ## Architectural direction
 
@@ -153,10 +163,27 @@ The new package should be organized by execution interface, not by old stage nam
 - `ariadne/` = canonical map of paths, recordings, playbooks, replay metadata, branch history
 - `motors/browseros/cli/` = direct MCP tool-calling path, no LLM
 - `motors/browseros/agent/` = higher-level agent-driven path
-- `motors/os_native_tools/` = lowest-level physical/device-native interaction and stealth tooling
+- `motors/os_native_tools/` = lowest-level physical/device-native interaction and stealth tooling (acts)
+- `motors/vision/` = observation motor using OpenCV/OCR (looks, does not act)
 - `portals/` = source-specific knowledge that each backend consumes
 
 This keeps Ariadne as the source of truth above interfaces rather than burying it inside BrowserOS only.
+
+### 1b. Ariadne defines a common language with deterministic translators
+
+Ariadne steps are written in a backend-neutral vocabulary. Each motor has a deterministic
+translator that compiles common-language steps into backend-specific representations:
+
+```text
+AriadneStep (common language)
+    ↓ deterministic translator (no LLM, no runtime inference)
+Backend representation (C4A-Script / BrowserOS tool call / OpenCV command / native input)
+```
+
+Translation happens at the boundaries: normalize into common language on capture,
+compile out of common language on replay. The Ariadne core stays pure.
+
+See `2026-04-04-ariadne-common-language-issues.md` for open design decisions.
 
 ### 2. Separate portal knowledge from execution backend
 
@@ -193,7 +220,8 @@ Backend roles after refactor:
 - Crawl4AI = execution/extraction backend
 - BrowserOS CLI = execution backend
 - BrowserOS agent = recording/discovery backend and optionally execution backend
-- OS native tools = escalation backend when synthetic/browser-level actions are insufficient
+- OS native tools = escalation backend when synthetic/browser-level actions are insufficient (acts)
+- Vision = observation backend using OpenCV/OCR (looks, does not act; can pair with os_native_tools or work standalone)
 - Ariadne = canonical contract and knowledge store used by all of them
 
 ## Proposed target layout
@@ -251,6 +279,12 @@ Backend roles after refactor:
       stealth.py
       backend.py
       contracts.py
+    vision/
+      detector.py
+      ocr.py
+      templates/
+      backend.py
+      contracts.py
 ```
 
 Note on `registry.py`:
@@ -285,6 +319,7 @@ Backend names should become explicit and stable:
 - `browseros-cli`
 - `browseros-agent`
 - `os-native`
+- `vision`
 
 ## Migration plan
 
@@ -348,13 +383,12 @@ Actions:
 - create the automation main entrypoint
 - move provider/backend lookup logic from `src/scraper/main.py` and `src/apply/main.py` into the common entrypoint layer
 - define one parser/subcommand tree for scrape/apply/ariadne
-- decide whether `src/cli/main.py` delegates into the automation main entrypoint or remains a higher-level operator CLI only
+- decide whether any future higher-level orchestration should delegate into the automation main entrypoint or stay outside this worktree
 
 Recommendation:
 
-- keep `src/cli/main.py` as the operator control-plane CLI
 - make the automation main entrypoint the runtime automation CLI
-- let `src/cli/main.py` call into automation services rather than duplicating scraping/apply argument logic
+- if a broader control plane returns later, let it call into automation services rather than duplicating scraping/apply argument logic
 
 ### Phase 4 - Move shared models and persistence
 

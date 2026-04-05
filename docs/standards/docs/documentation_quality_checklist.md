@@ -1,6 +1,6 @@
 # 📋 Documentation Quality Checklist
 
-Use this checklist to evaluate whether a component's documentation meets the standards defined in [`documentation_and_planning_guide.md`](documentation_and_planning_guide.md) and [`future_docs_guide.md`](future_docs_guide.md).
+Use this checklist to evaluate whether a component's documentation meets the standards defined in [`documentation_and_planning_guide.md`](documentation_and_planning_guide.md).
 
 ---
 
@@ -55,11 +55,10 @@ Use this checklist to evaluate whether a component's documentation meets the sta
 
 ---
 
-## 6. Future Work
+## 6. Follow-up Work
 
-- [ ] All deferred items have a `# TODO(future): ... — see future_docs/<file>.md` inline marker.
-- [ ] Every `future_docs/` entry has a `Last reviewed: YYYY-MM-DD` field.
-- [ ] No `future_docs/` entry has a `Last reviewed` date older than 6 months without explicit re-evaluation.
+- [ ] Deferred work is captured either as a tightly local inline TODO or in the relevant `plan_docs/automation/` document.
+- [ ] Follow-up notes stay scoped to the current worktree instead of referencing removed modules.
 
 ---
 

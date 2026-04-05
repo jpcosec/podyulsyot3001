@@ -10,7 +10,7 @@ This document defines what each target directory means before any runtime move.
 
 - future runtime home for low-level automation concerns currently split across `src/scraper/` and `src/apply/`
 - should unify scrape, apply, Ariadne replay, and backend selection
-- should not absorb the whole operator control plane from `src/cli/main.py`
+- should not assume a repo-wide operator control plane exists in this scoped worktree
 
 ### automation main entrypoint
 
@@ -134,7 +134,9 @@ Example shape:
 
 ### Crawl4AI `schema_cache.py`
 
-- management of Crawl4AI extraction schemas now stored in `data/ariadne/assets/crawl4ai_schemas/`
+- management of Crawl4AI extraction schemas
+- current temporary location: `data/ariadne/assets/crawl4ai_schemas/`
+- target: motor-local `schemas/` folder or runtime cache (see `asset_placement.md` section 3)
 
 ### Crawl4AI `contracts.py`
 
@@ -161,7 +163,7 @@ Example shape:
 
 ### `motors/os_native_tools`
 
-- physical/native interaction motor
+- physical/native interaction motor — acts on the OS (clicks, types, moves)
 - intended for escalation when browser-level actions are insufficient or detectable
 - examples:
   - native click
@@ -169,6 +171,14 @@ Example shape:
   - coordinate-based interactions
   - ultra-stealth primitives
 - should remain explicit and opt-in
+
+### `motors/vision`
+
+- observation motor — looks at the screen but does not act
+- uses OpenCV models, image template matching, OCR, and bounding-box detection
+- produces target coordinates, presence confirmations, and visual assertions
+- can work together with `os_native_tools` (vision locates, os_native acts) but neither depends on the other
+- also usable standalone for visual verification steps in any backend's replay loop
 
 ### motor-local `contracts.py`
 
@@ -196,7 +206,8 @@ Example shape:
 
 ## Non-goals for the target tree
 
-- the future automation package should not swallow unrelated LangGraph pipeline code
-- Ariadne should not be nested under BrowserOS
-- `data/ariadne/assets/crawl4ai_schemas/` is a temporary practical home and should be revisited during the automation refactor
+- the automation package should not swallow unrelated pipeline code outside its scope
+- Ariadne should not be nested under BrowserOS or any single motor
+- `data/ariadne/assets/crawl4ai_schemas/` is a temporary home; target is Crawl4AI motor-local (see `asset_placement.md`)
 - exploratory screenshots and note-heavy traces should not live inside runtime code folders
+- vision motor and os_native_tools are separate concerns (look vs act) and should not be merged
