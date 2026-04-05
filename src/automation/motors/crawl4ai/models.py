@@ -9,7 +9,7 @@ the Crawl4AI motor.
 """
 from __future__ import annotations
 
-from typing import List, Literal, Optional
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -17,33 +17,62 @@ from pydantic import BaseModel, Field
 # ── Scrape side ──────────────────────────────────────────────────────────────
 
 class JobPosting(BaseModel):
-    """Standardized extraction output contract for all scraping sources."""
+    """Standardized extraction output contract for all scraping sources.
+
+    The Field descriptions serve double duty: they document the schema
+    AND guide the LLM extractor when it needs to reason about content.
+    """
 
     # Mandatory
     job_title: str = Field(..., description="The official job title")
     company_name: str = Field(..., description="Name of the company, university, or institution")
     location: str = Field(..., description="City or primary location")
     employment_type: str = Field(..., description="Type of employment (e.g. Full-time, Part-time, Internship)")
-    responsibilities: List[str] = Field(..., min_length=1, description="List of responsibilities or tasks")
-    requirements: List[str] = Field(..., min_length=1, description="List of requirements, profile or skills")
+    responsibilities: list[str] = Field(
+        ..., min_length=1, description="List of responsibilities or tasks ('Deine Aufgaben', 'Your Impact')"
+    )
+    requirements: list[str] = Field(
+        ..., min_length=1, description="List of requirements, profile or skills ('Dein Profil', 'Skills & Experience')"
+    )
 
     # Optional
-    salary: Optional[str] = Field(default=None, description="Estimated salary or salary range")
-    remote_policy: Optional[str] = Field(default=None, description="Remote work policy")
-    benefits: List[str] = Field(default_factory=list, description="Extra benefits offered")
-    company_description: Optional[str] = Field(default=None, description="Short description of the company")
-    company_industry: Optional[str] = Field(default=None, description="Sector or industry")
-    company_size: Optional[str] = Field(default=None, description="Company size")
-    posted_date: Optional[str] = Field(default=None, description="Date of publication")
-    days_ago: Optional[str] = Field(default=None, description="Relative publication age")
-    application_deadline: Optional[str] = Field(default=None, description="Deadline to apply")
-    application_method: Optional[str] = Field(default=None, description="How to apply")
-    application_url: Optional[str] = Field(default=None, description="Direct application URL")
-    application_email: Optional[str] = Field(default=None, description="Application email address")
-    application_instructions: Optional[str] = Field(default=None, description="Short instructions on how to apply")
-    reference_number: Optional[str] = Field(default=None, description="Internal reference code")
-    contact_info: Optional[str] = Field(default=None, description="Email or contact person")
-    original_language: Optional[str] = Field(default=None, description="Detected ISO 639-1 language code")
+    salary: str | None = Field(
+        default=None, description="Estimated salary or salary range (e.g. '€70,000 – €91,500' or 'TV-L 13')"
+    )
+    remote_policy: str | None = Field(
+        default=None, description="Remote work policy (On-site, Hybrid, 100% Remote, Homeoffice möglich)"
+    )
+    benefits: list[str] = Field(default_factory=list, description="Extra benefits offered (vacation, equipment, training, etc.)")
+    company_description: str | None = Field(
+        default=None, description="Short description of the company ('Über uns', 'About the company')"
+    )
+    company_industry: str | None = Field(default=None, description="Sector or industry (e.g. 'IT & Tech', 'Consulting')")
+    company_size: str | None = Field(default=None, description="Company size (e.g. '1001-5000 employees')")
+    posted_date: str | None = Field(
+        default=None, description="Date of publication when available (e.g. '26.03.2026' or an ISO timestamp after postprocessing)"
+    )
+    days_ago: str | None = Field(
+        default=None, description="Relative publication age when available (e.g. '5 days ago', 'vor 1 Woche')"
+    )
+    application_deadline: str | None = Field(default=None, description="Deadline to apply")
+    # TODO(future): validate whether application routing belongs in scrape-time contract or a later interpretation step — see plan_docs/issues/scraper/application_routing_extraction.md
+    application_method: str | None = Field(
+        default=None, description="How to apply when explicitly stated (e.g. 'email', 'external portal', 'company portal', 'XING Easy Apply')"
+    )
+    application_url: str | None = Field(
+        default=None, description="Direct application URL or apply button target when available"
+    )
+    application_email: str | None = Field(
+        default=None, description="Application email address when the posting asks candidates to apply by email"
+    )
+    application_instructions: str | None = Field(
+        default=None, description="Short instructions on how to apply (e.g. 'Send CV by email', 'Apply via company portal')"
+    )
+    reference_number: str | None = Field(default=None, description="Internal reference code for the posting")
+    contact_info: str | None = Field(default=None, description="Email or contact person for application")
+    original_language: str | None = Field(
+        default=None, description="The detected ISO 639-1 language code (e.g. 'de', 'en', 'es')"
+    )
 
 
 # ── Apply side ───────────────────────────────────────────────────────────────
