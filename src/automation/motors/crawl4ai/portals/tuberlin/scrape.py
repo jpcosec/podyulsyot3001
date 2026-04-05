@@ -1,0 +1,61 @@
+"""TU Berlin C4AI scrape translator — consumes TUBERLIN_SCRAPE portal intent."""
+from __future__ import annotations
+
+import re
+from typing import Any
+
+from src.automation.motors.crawl4ai.scrape_engine import SmartScraperAdapter
+from src.automation.portals.tuberlin.scrape import TUBERLIN_SCRAPE
+
+
+class TUBerlinAdapter(SmartScraperAdapter):
+    """C4AI scrape adapter for TU Berlin (Stellenticket)."""
+
+    portal = TUBERLIN_SCRAPE
+
+    @property
+    def source_name(self) -> str:
+        return self.portal.source_name
+
+    @property
+    def supported_params(self) -> list[str]:
+        return self.portal.supported_params
+
+    def extract_job_id(self, url: str) -> str:
+        match = re.search(self.portal.job_id_pattern, url)
+        return match.group(1) if match else "unknown"
+
+    def get_search_url(self, **kwargs) -> str:
+        categories = kwargs.get("categories")
+        job_query = kwargs.get("job_query") or ""
+        base = f"https://www.jobs.tu-berlin.de/en/job-postings?filter%5Bfulltextsearch%5D={job_query}"
+        mapping = {
+            "wiss-mlehr": "Research assistant with teaching obligation",
+            "wiss-olehr": "Research assistant without teaching obligation",
+            "besch-abgwiss": "Beschäftigte*r mit abgeschl. wiss. Hochschulbildung",
+            "techn-besch": "Techn. Beschäftigte*r",
+            "besch-itb": "Beschäftigte*r in der IT-Betreuung",
+            "besch-itsys": "Beschäftigte*r in der IT-Systemtechnik",
+            "besch-prog": "Beschäftigte*r in der Programmierung",
+        }
+        cat_list = [k for k in mapping if not categories or k in categories]
+        filters = [f"filter%5Bworktype_tub%5D%5B%5D={cat}" for cat in cat_list]
+        return f"{base}&{'&'.join(filters)}"
+
+    def extract_links(self, crawl_result: Any) -> list[str]:
+        job_links = []
+        for link in crawl_result.links.get("internal", []):
+            href = link.get("href", "")
+            if "/job-postings/" in href and "apply" not in href and "download" not in href:
+                if href.startswith("/"):
+                    href = f"https://www.jobs.tu-berlin.de{href}"
+                if href.startswith("https://"):
+                    job_links.append(href)
+        return sorted(set(job_links))
+
+    def get_llm_instructions(self) -> str:
+        return (
+            "Extract from jobs.tu-berlin.de (Stellenticket). Pages can be German or English. "
+            "Company is always Technische Universität Berlin or a specific faculty. "
+            "Salary is usually a TV-L grade. Detect the primary language ISO 639-1 code."
+        )
