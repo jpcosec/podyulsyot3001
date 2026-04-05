@@ -1,8 +1,6 @@
 """Tests for Ariadne portal schema models."""
 from __future__ import annotations
 
-import pytest
-
 from src.automation.ariadne.portal_models import (
     ApplyPortalDefinition,
     ApplyStep,

@@ -6,9 +6,10 @@ C4A-Script, BrowserOS tool calls, etc.).
 """
 from __future__ import annotations
 
+import re
 from enum import Enum
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class FieldType(str, Enum):
@@ -54,3 +55,9 @@ class ScrapePortalDefinition(BaseModel):
     base_url: str
     supported_params: list[str]
     job_id_pattern: str
+
+    @field_validator("job_id_pattern")
+    @classmethod
+    def must_be_valid_regex(cls, v: str) -> str:
+        re.compile(v)
+        return v
