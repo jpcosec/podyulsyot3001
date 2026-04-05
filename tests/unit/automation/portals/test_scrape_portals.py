@@ -35,6 +35,8 @@ def test_xing_scrape_portal():
     assert XING_SCRAPE.source_name == "xing"
     assert XING_SCRAPE.base_url == "https://www.xing.com"
     assert "job_query" in XING_SCRAPE.supported_params
+    assert "city" in XING_SCRAPE.supported_params
+    assert "max_days" in XING_SCRAPE.supported_params
     _assert_valid_regex(
         XING_SCRAPE.job_id_pattern,
         "https://www.xing.com/jobs/berlin-data-engineer-9876543",
