@@ -1,0 +1,92 @@
+{
+  "name": "Job Posting Detail",
+  "baseSelector": "body",
+  "fields": [
+    {
+      "name": "job_title",
+      "selector": "div#JobAdContent div.js-listing-header h1",
+      "type": "text"
+    },
+    {
+      "name": "company_name",
+      "selector": "div#JobAdContent li.at-listing__list-icons_company-name span span",
+      "type": "text"
+    },
+    {
+      "name": "location",
+      "selector": "div#JobAdContent li.at-listing__list-icons_location span span",
+      "type": "text"
+    },
+    {
+      "name": "employment_type",
+      "selector": "div#JobAdContent li.at-listing__list-icons_contract-type span span",
+      "type": "text"
+    },
+    {
+      "name": "posted_date",
+      "selector": "div#JobAdContent li.at-listing__list-icons_date span span",
+      "type": "text"
+    },
+    {
+      "name": "responsibilities",
+      "selector": "div#JobAdContent div.at-section-text-description-content ul",
+      "type": "list",
+      "fields": [
+        {
+          "name": "item",
+          "selector": "li",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "name": "requirements",
+      "selector": "div#JobAdContent div.at-section-text-profile-content ul",
+      "type": "list",
+      "fields": [
+        {
+          "name": "item",
+          "selector": "li",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "name": "salary",
+      "selector": "div#JobAdContent span.at-predicted-salary-not-logged-in-text",
+      "type": "text"
+    },
+    {
+      "name": "remote_policy",
+      "selector": "div#JobAdContent li.at-listing__list-icons_work-type span span",
+      "type": "text"
+    },
+    {
+      "name": "benefits",
+      "selector": "div#JobAdContent div.at-section-text-benefits-content ul",
+      "type": "list",
+      "fields": [
+        {
+          "name": "item",
+          "selector": "li",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "name": "company_description",
+      "selector": "div#SeoCompanyPassportData div:has(h3:contains(\"Über uns\")) p",
+      "type": "text"
+    },
+    {
+      "name": "company_industry",
+      "selector": "div#SeoCompanyPassportData div:has(h3:contains(\"Fakten\")) ul li:has(b:contains(\"Branche\"))",
+      "type": "text"
+    },
+    {
+      "name": "company_size",
+      "selector": "div#SeoCompanyPassportData div:has(h3:contains(\"Fakten\")) ul li:has(b:contains(\"Unternehmensgröße\"))",
+      "type": "text"
+    }
+  ]
+}
