@@ -23,18 +23,22 @@ from typing import Any
 
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig
 
-from src.automation.ariadne.models import AriadnePortalMap, AriadnePath, AriadneTask
+from src.automation.ariadne.models import AriadnePortalMap, AriadnePath, AriadneTask, AriadneStep, AriadneIntent
 from src.automation.ariadne.compiler.c4ai.compiler import AriadneC4AICompiler
 from src.automation.ariadne.compiler.c4ai.serializer import C4AIScriptSerializer
-from src.automation.motors.crawl4ai.models import ApplicationRecord, ApplyMeta, FormSelectors
+from src.automation.ariadne.exceptions import (
+    AriadneError,
+    ObservationFailed,
+    TargetNotFound,
+    TaskAborted,
+    TerminalStateReached,
+)
+from src.automation.ariadne.navigator import AriadneNavigator
+from src.automation.motors.crawl4ai.models import ApplicationRecord, ApplyMeta
 from src.core.data_manager import DataManager
 from src.shared.log_tags import LogTag
 
 logger = logging.getLogger(__name__)
-
-
-class PortalStructureChangedError(Exception):
-    """Raised when one or more mandatory selectors are absent from the live DOM."""
 
 
 class ApplyAdapter(ABC):
@@ -47,11 +51,18 @@ class ApplyAdapter(ABC):
         self.data_manager = data_manager or DataManager()
         self.compiler = AriadneC4AICompiler()
         self.serializer = C4AIScriptSerializer()
+        self._navigator: Optional[AriadneNavigator] = None
 
     @property
     @abstractmethod
     def portal_map(self) -> AriadnePortalMap:
         """The unified semantic map for this portal."""
+
+    @property
+    def navigator(self) -> AriadneNavigator:
+        if not self._navigator:
+            self._navigator = AriadneNavigator(self.portal_map)
+        return self._navigator
 
     @property
     def source_name(self) -> str:
@@ -74,7 +85,6 @@ class ApplyAdapter(ABC):
         """Inject context values into {{placeholder}} strings."""
         result = text
         for key, value in context.items():
-            # Support nested profile.key access
             if isinstance(value, dict):
                 for k, v in value.items():
                     placeholder = f"{{{{{key}.{k}}}}}"
@@ -109,28 +119,28 @@ class ApplyAdapter(ABC):
             headless=headless,
         )
 
-    async def _check_state_presence(
-        self, session_id: str, state_id: str
-    ) -> bool:
-        """Verify if we are currently in the specified semantic state."""
-        state = self.portal_map.states.get(state_id)
-        if not state:
-            return False
-            
-        required_css = [t.css for t in state.presence_predicate.required_elements if t.css]
-        if not required_css:
-            return True # No specific CSS guards, assume true if called
+    async def _get_live_state(self, session_id: str) -> Optional[str]:
+        """Identify current semantic state by checking the live DOM."""
+        # Get all relevant selectors from the map
+        all_selectors = set()
+        for state in self.portal_map.states.values():
+            for target in state.presence_predicate.required_elements:
+                if target.css: all_selectors.add(target.css)
+        
+        if not all_selectors:
+            return None
 
         js_checks = ", ".join(
-            f'!!document.querySelector({json.dumps(sel)})'
-            for sel in required_css
+            f'"{sel}": !!document.querySelector({json.dumps(sel)})'
+            for sel in all_selectors
         )
-        js_code = f"return [{js_checks}].every(v => v);"
+        js_code = f"return {{{js_checks}}};"
 
-        presence = False
+        results: dict[str, bool] = {}
 
         async def _check_hook(page: Any, **kwargs: Any) -> Any:
-            presence = await page.evaluate(js_code)
+            nonlocal results
+            results = await page.evaluate(js_code)
             return page
 
         async with AsyncWebCrawler(config=self._browser_config()) as crawler:
@@ -142,16 +152,43 @@ class ApplyAdapter(ABC):
                     hooks={"before_retrieve_html": _check_hook},
                 ),
             )
-        return presence
+        
+        return self.navigator.find_current_state(results)
+
+    def _build_file_upload_hook(self, cv_path: Path, letter_path: Path | None, upload_selectors: list[str]):
+        """Return a hook that performs file uploads via raw Playwright."""
+        async def _hook(page: Any, **kwargs: Any) -> Any:
+            for selector in upload_selectors:
+                await page.set_input_files(selector, str(cv_path))
+            return page
+        return _hook
+
+    async def _capture_error_screenshot(self, session_id: str, job_id: str) -> None:
+        """Best-effort capture of the page state on failure."""
+        try:
+            async with AsyncWebCrawler(config=self._browser_config()) as crawler:
+                err_result = await crawler.arun(
+                    url="about:blank",
+                    config=CrawlerRunConfig(
+                        js_only=True,
+                        screenshot=True,
+                        session_id=session_id,
+                    ),
+                )
+                if err_result.screenshot:
+                    self.data_manager.write_bytes_artifact(
+                        source=self.source_name, job_id=job_id, node_name="apply", stage="proposed",
+                        filename="error_state.png", content=err_result.screenshot
+                    )
+        except Exception as e:
+            logger.warning("%s Failed to capture error screenshot: %s", LogTag.WARN, e)
 
     # ── Execution ──────────────────────────────────────────────────────────
 
     def _build_context(self, ingest_data: dict, cv_path: Path, letter_path: Path | None) -> dict:
-        """Build full context for placeholder resolution."""
-        # This should eventually come from a real ProfileManager
         return {
             "profile": {
-                "first_name": "Juan Pablo", # Placeholder
+                "first_name": "Juan Pablo",
                 "last_name": "Ruiz",
                 "email": "jp@example.com",
                 "phone": "+49123456789",
@@ -190,35 +227,60 @@ class ApplyAdapter(ABC):
         timestamp = datetime.now(timezone.utc).isoformat()
 
         try:
-            # 1. Compile Path to C4A-Script
-            ir = self.compiler.compile(path)
-            raw_script = self.serializer.serialize(ir)
-            
-            # Resolve placeholders in the script
-            final_script = self._render_placeholders(raw_script, context)
-
+            current_step_index = 1
             async with AsyncWebCrawler(config=self._browser_config()) as crawler:
-                logger.info("%s Executing Ariadne Path '%s' for %s/%s", LogTag.FAST, path_id, self.source_name, job_id)
+                logger.info("%s Starting Semantic Replay for %s/%s", LogTag.FAST, self.source_name, job_id)
                 
-                # If we are in dry-run, we might want to split the script before the submit step
-                # For now, we assume the dry_run_stop flag in AriadneStep is handled by the compiler 
-                # or we manually truncate the IR. 
-                # Simplification: if dry_run, we just don't run the script or we run a truncated version.
-                
-                result = await crawler.arun(
-                    url=application_url,
-                    config=CrawlerRunConfig(
+                while current_step_index <= len(path.steps):
+                    step = path.steps[current_step_index - 1]
+                    
+                    if dry_run and step.dry_run_stop:
+                        logger.info("%s Dry-run stop reached at step '%s'", LogTag.OK, step.name)
+                        break
+
+                    # 1. State Identification (Optional check before step)
+                    current_state = await self._get_live_state(session_id)
+                    
+                    # 2. Check Mission Status
+                    finished, status = self.navigator.check_mission_status(path.task_id, current_state or "")
+                    if finished:
+                        logger.info("%s Mission Finished with status: %s", LogTag.OK, status)
+                        if status == "terminal_failure":
+                            raise TerminalStateReached(f"Reached failure state: {current_state}")
+                        break
+
+                    # 3. Execution
+                    upload_selectors = [a.target.css for a in step.actions if a.intent == AriadneIntent.UPLOAD and a.target and a.target.css]
+                    temp_path = AriadnePath(id="temp", task_id=path.task_id, steps=[step])
+                    ir = self.compiler.compile(temp_path)
+                    raw_script = self.serializer.serialize(ir)
+                    final_script = self._render_placeholders(raw_script, context)
+
+                    run_config = CrawlerRunConfig(
                         c4a_script=final_script,
                         session_id=session_id,
                         screenshot=True,
-                    ),
-                )
-
-                if result.screenshot:
-                    self.data_manager.write_bytes_artifact(
-                        source=self.source_name, job_id=job_id, node_name="apply", stage="proposed",
-                        filename="screenshot.png", content=result.screenshot
                     )
+                    if upload_selectors:
+                        run_config.hooks = {"before_retrieve_html": self._build_file_upload_hook(cv_path, letter_path, upload_selectors)}
+
+                    result = await crawler.arun(
+                        url=application_url if current_step_index == 1 else "about:blank",
+                        config=run_config
+                    )
+
+                    if not result.success:
+                        raise ObservationFailed(f"Step {step.name} execution failed: {result.error_message}", step_index=current_step_index)
+
+                    if result.screenshot:
+                        self.data_manager.write_bytes_artifact(
+                            source=self.source_name, job_id=job_id, node_name="apply", stage="proposed",
+                            filename=f"step_{current_step_index}_{step.name}.png", content=result.screenshot
+                        )
+
+                    # 4. Determine next step via Navigator
+                    next_state = await self._get_live_state(session_id)
+                    current_step_index = self.navigator.get_next_step_index(path, current_step_index, next_state)
 
                 status = "submitted" if not dry_run else "dry_run"
                 meta = ApplyMeta(status=status, timestamp=timestamp)
@@ -226,10 +288,19 @@ class ApplyAdapter(ABC):
                     source=self.source_name, job_id=job_id, node_name="apply", stage="meta",
                     filename="apply_meta.json", data=meta.model_dump()
                 )
-                
                 return meta
 
+        except AriadneError as exc:
+            logger.error("%s Ariadne Error: %s", LogTag.FAIL, exc)
+            await self._capture_error_screenshot(session_id, job_id)
+            meta = ApplyMeta(status="failed", timestamp=timestamp, error=str(exc))
+            self.data_manager.write_json_artifact(
+                source=self.source_name, job_id=job_id, node_name="apply", stage="meta",
+                filename="apply_meta.json", data=meta.model_dump()
+            )
+            raise
         except Exception as exc:
-            logger.error("%s Apply failed: %s", LogTag.FAIL, exc)
+            logger.error("%s Unexpected Error: %s", LogTag.FAIL, exc)
+            await self._capture_error_screenshot(session_id, job_id)
             raise
 
