@@ -1,5 +1,5 @@
 """StepStone scrape portal definition in Ariadne common language."""
-from src.automation.ariadne.portal_models import ScrapePortalDefinition
+from src.automation.ariadne.models import ScrapePortalDefinition
 
 STEPSTONE_SCRAPE = ScrapePortalDefinition(
     source_name="stepstone",

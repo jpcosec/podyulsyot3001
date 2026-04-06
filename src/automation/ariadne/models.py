@@ -9,10 +9,28 @@ This module defines the backend-neutral models for automation:
 
 from __future__ import annotations
 
+import re
 from enum import Enum
-from typing import Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+
+# --- Scrape Layer (Legacy/Portal Schema) ---
+
+class ScrapePortalDefinition(BaseModel):
+    """Motor-agnostic description of a portal's scrape interface."""
+
+    source_name: str = Field(description="Unique portal identifier.")
+    base_url: str = Field(description="Root URL for the portal.")
+    supported_params: List[str] = Field(description="Query parameters supported by the scraper.")
+    job_id_pattern: str = Field(description="Regex to extract unique job ID from URLs.")
+
+    @field_validator("job_id_pattern")
+    @classmethod
+    def must_be_valid_regex(cls, v: str) -> str:
+        re.compile(v)
+        return v
 
 
 # --- Target Layer ---

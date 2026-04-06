@@ -7,7 +7,6 @@ import pytest
 from src.automation.motors.crawl4ai.models import (
     ApplicationRecord,
     ApplyMeta,
-    FormSelectors,
     JobPosting,
 )
 
@@ -26,33 +25,6 @@ def test_job_posting_requires_mandatory_fields():
     )
     assert posting.job_title == "Data Engineer"
     assert posting.salary is None
-
-
-def test_form_selectors_mandatory_fields_required():
-    with pytest.raises(Exception):
-        FormSelectors()
-
-    sel = FormSelectors(
-        apply_button="button[data-testid='apply']",
-        cv_upload="input[type='file']",
-        submit_button="button[type='submit']",
-        success_indicator=".application-success",
-    )
-    assert sel.first_name is None
-    assert sel.cv_select_existing is None
-
-
-def test_form_selectors_optional_fields():
-    sel = FormSelectors(
-        apply_button="button",
-        cv_upload="input",
-        submit_button="button",
-        success_indicator=".success",
-        first_name="input[name='firstName']",
-        cv_select_existing="button.select-cv",
-    )
-    assert sel.first_name == "input[name='firstName']"
-    assert sel.last_name is None
 
 
 def test_apply_meta_status_values():

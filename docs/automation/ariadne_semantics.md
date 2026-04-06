@@ -43,7 +43,8 @@ This map contains:
 The BrowserOS motor iterates through the steps of an `AriadnePath` and executes them one-by-one as direct tool calls. It uses the `text` field of the `AriadneTarget` for high resilience to DOM changes.
 
 ### Crawl4AI (The Compiler)
-The Crawl4AI motor uses a **Compiler** to turn the high-level `AriadnePath` into a robust, procedural **C4A-Script**. It uses the `css` field of the `AriadneTarget`.
+The Crawl4AI motor uses a motor-specific **Compiler** (located in `src/automation/motors/crawl4ai/compiler/`) to turn the backend-neutral `AriadnePath` into a robust, procedural **C4A-Script**.
+
 
 The compilation pipeline:
 `Ariadne Path` → `C4AI Intermediate Representation (IR)` → `C4A-Script String`

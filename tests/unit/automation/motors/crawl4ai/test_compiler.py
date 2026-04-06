@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 
 from src.automation.ariadne.models import AriadnePortalMap
-from src.automation.ariadne.compiler.c4ai.compiler import AriadneC4AICompiler
-from src.automation.ariadne.compiler.c4ai.serializer import C4AIScriptSerializer
+from src.automation.motors.crawl4ai.compiler.compiler import AriadneC4AICompiler
+from src.automation.motors.crawl4ai.compiler.serializer import C4AIScriptSerializer
 
 
 def test_compile_linkedin_easy_apply_map():

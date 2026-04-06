@@ -2,23 +2,18 @@
 
 This folder is the planning-doc home for the browser automation worktree.
 
-## Status
+## Status: Phase 2 (Ariadne Semantic Layer)
 
-The Phase 1 migration (2026-04-06) is **complete**. `src/scraper/` and `src/apply/` have been removed and replaced by `src/automation/`. The implemented layout is documented in `src/automation/README.md`.
+Phase 1 established the `src/automation/` package structure and unified entry point. We are currently in **Phase 2**, which implements the backend-neutral semantic layer (Models, Maps, Compilers, and the Navigator).
 
-## Documents
+**Operative Reference**: `src/automation/README.md`
 
-### Active design references (Ariadne Phase 2 and beyond)
+## Active Design References
 
-- `plan_docs/automation/2026-04-04-ariadne-common-language-issues.md` — open design issues for Ariadne common language (must resolve before Phase 2)
+- `plan_docs/automation/2026-04-04-ariadne-common-language-issues.md` — Active issues for semantic refinement.
+- `plan_docs/ariadne/` — Detailed design for translators, contracts, and error taxonomy.
+- `plan_docs/issues/` — Tracked technical debt and implementation gaps.
 
-### Completed migration context (retained for design history)
+## Design History
 
-- `plan_docs/automation/directory_glossary.md` — pre-migration target directory glossary and ownership boundaries
-- `plan_docs/automation/asset_placement.md` — pre-migration asset classification decisions (all resolved)
-- `plan_docs/automation/2026-04-03-unified-automation-refactor-plan.md` — original refactor plan (predates Ariadne portal schema design)
-- `plan_docs/automation/superpowers_audit.md` — audit trail for removed exploratory docs (historical)
-
-## Current rule
-
-Keep planning scoped to browser automation. The Phase 2 scope (Ariadne storage, recorder, replayer, promotion, BrowserOS agent path, routing.py) is tracked in `plan_docs/automation/2026-04-04-ariadne-common-language-issues.md` and the sibling `plan_docs/ariadne/` folder.
+Completed migration plans and exploratory audits have been moved to `plan_docs/archive/automation/`.

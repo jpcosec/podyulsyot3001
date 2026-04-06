@@ -58,8 +58,9 @@ python -m src.automation.main apply --backend browseros --source linkedin --job-
 ## How to Add / Extend
 
 1. Define a new portal flow map under `src/automation/portals/<portal>/maps/<flow>.json`.
-2. Add a motor-specific translator if needed (e.g., in `src/automation/motors/crawl4ai/portals/`).
-3. Update `src/automation/main.py` to register the new portal/adapter.
+2. Ensure the map contains both `css` and `text` targets for cross-motor compatibility.
+3. If a new interaction type is needed, add it to `AriadneIntent` and update the motor compilers (e.g., `src/automation/motors/crawl4ai/compiler/`).
+4. Update `src/automation/main.py` to register the new portal choice.
 
 ---
 

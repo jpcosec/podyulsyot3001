@@ -77,29 +77,6 @@ class JobPosting(BaseModel):
 
 # ── Apply side ───────────────────────────────────────────────────────────────
 
-class FormSelectors(BaseModel):
-    """CSS selectors validated against the live DOM before interaction.
-
-    Mandatory selectors: absence raises PortalStructureChangedError.
-    Optional selectors: absence is logged as a warning and the interaction is skipped.
-    """
-
-    # Mandatory
-    apply_button: str
-    cv_upload: str
-    submit_button: str
-    success_indicator: str
-
-    # Optional
-    first_name: str | None = None
-    last_name: str | None = None
-    email: str | None = None
-    phone: str | None = None
-    letter_upload: str | None = None
-    error_indicator: str | None = None
-    cv_select_existing: str | None = None
-
-
 class ApplicationRecord(BaseModel):
     """Persisted record of one apply attempt for a specific job."""
 

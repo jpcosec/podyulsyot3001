@@ -17,8 +17,8 @@ from typing import Any, Optional
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig
 
 from src.automation.ariadne.models import AriadnePortalMap, AriadnePath, AriadneTask, AriadneStep, AriadneIntent
-from src.automation.ariadne.compiler.c4ai.compiler import AriadneC4AICompiler
-from src.automation.ariadne.compiler.c4ai.serializer import C4AIScriptSerializer
+from src.automation.motors.crawl4ai.compiler.compiler import AriadneC4AICompiler
+from src.automation.motors.crawl4ai.compiler.serializer import C4AIScriptSerializer
 from src.automation.ariadne.exceptions import (
     AriadneError,
     ObservationFailed,

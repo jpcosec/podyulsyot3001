@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import re
 
-from src.automation.ariadne.portal_models import ScrapePortalDefinition
+from src.automation.ariadne.models import ScrapePortalDefinition
 
 
 def _assert_valid_regex(pattern: str, sample_url: str, expected_id: str) -> None:
