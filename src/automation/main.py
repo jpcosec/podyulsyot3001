@@ -96,40 +96,48 @@ async def _run_scrape(args) -> None:
 async def _run_apply(args) -> None:
     """Run an apply cycle for one job. Selects backend (crawl4ai or browseros), validates mutual exclusion of --setup-session and --job-id, and dispatches to the provider."""
     from src.shared.log_tags import LogTag
+    from src.core.data_manager import DataManager
 
     _setup_logging(f"apply_{args.source}")
     logger = logging.getLogger(__name__)
     profile_data = None
     if args.profile_json:
         profile_data = json.loads(Path(args.profile_json).read_text(encoding="utf-8"))
+
+    manager = DataManager()
+    
     if args.backend == "browseros":
         from src.automation.motors.browseros.cli.backend import build_browseros_providers
-        from src.core.data_manager import DataManager
-        providers = build_browseros_providers(DataManager(), profile_data=profile_data)
+        providers = build_browseros_providers(manager, profile_data=profile_data)
     else:
         from src.automation.motors.crawl4ai.portals.linkedin.apply import LinkedInApplyAdapter
         from src.automation.motors.crawl4ai.portals.stepstone.apply import StepStoneApplyAdapter
         from src.automation.motors.crawl4ai.portals.xing.apply import XingApplyAdapter
-        from src.core.data_manager import DataManager
-        manager = DataManager()
         providers = {
             "linkedin": LinkedInApplyAdapter(manager),
             "xing": XingApplyAdapter(manager),
             "stepstone": StepStoneApplyAdapter(manager),
         }
+
     if args.source not in providers:
         logger.error("%s Backend '%s' does not support source '%s'.", LogTag.FAIL, args.backend, args.source)
         sys.exit(1)
+    
+    adapter = providers[args.source]
+
     if args.setup_session and args.job_id:
         logger.error("%s --setup-session and --job-id are mutually exclusive.", LogTag.FAIL)
         sys.exit(1)
+
     if args.setup_session:
-        await providers[args.source].setup_session()
+        await adapter.setup_session()
         return
+
     if not args.job_id or not args.cv_path:
         logger.error("%s --job-id and --cv are required in apply mode.", LogTag.FAIL)
         sys.exit(1)
-    meta = await providers[args.source].run(
+
+    meta = await adapter.run(
         job_id=args.job_id,
         cv_path=Path(args.cv_path),
         letter_path=Path(args.letter_path) if args.letter_path else None,
