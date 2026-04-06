@@ -15,24 +15,44 @@ from pydantic import BaseModel, Field
 
 class RawTraceEvent(BaseModel):
     """An atomic event captured during a live session."""
-    timestamp: datetime = Field(default_factory=datetime.now)
-    event_type: str  # click, change, navigate, keydown, snapshot, screenshot
+    timestamp: datetime = Field(
+        default_factory=datetime.now,
+        description="ISO timestamp when the event was captured."
+    )
+    event_type: str = Field(
+        description="Type of interaction (e.g., 'click', 'change', 'navigate', 'screenshot')."
+    )
     
     # Motor-specific raw data
-    selector: Optional[str] = None
-    selectors: Optional[List[List[str]]] = None  # Compatible with Chrome Recorder
-    value: Optional[str] = None
-    url: Optional[str] = None
+    selector: Optional[str] = Field(
+        default=None, 
+        description="Primary CSS selector for the interacted element."
+    )
+    selectors: Optional[List[List[str]]] = Field(
+        default=None, 
+        description="Nested list of selectors compatible with Chrome DevTools Recorder."
+    )
+    value: Optional[str] = Field(
+        default=None, 
+        description="Input value for 'change' or 'keydown' events."
+    )
+    url: Optional[str] = Field(
+        default=None, 
+        description="Target URL for 'navigate' events."
+    )
     
     # Page Context
-    page_title: Optional[str] = None
-    page_url: Optional[str] = None
+    page_title: Optional[str] = Field(default=None, description="Title of the page at the time of event.")
+    page_url: Optional[str] = Field(default=None, description="Full URL of the page at the time of event.")
     
     # Artifacts
-    screenshot_path: Optional[str] = None
-    dom_snapshot_path: Optional[str] = None
+    screenshot_path: Optional[str] = Field(default=None, description="Relative path to the screenshot PNG.")
+    dom_snapshot_path: Optional[str] = Field(default=None, description="Relative path to the DOM snapshot file.")
     
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict,
+        description="Extensible bag for motor-specific event metadata."
+    )
 
 
 class AriadneSessionTrace(BaseModel):

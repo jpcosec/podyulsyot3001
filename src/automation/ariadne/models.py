@@ -146,17 +146,30 @@ class AriadnePath(BaseModel):
 # --- The Unified Map ---
 
 class AriadnePortalMap(BaseModel):
-    """The 'One Map' per portal flow, containing all semantics and paths."""
+    """The 'One Map' per portal flow, containing all semantics and paths.
+    
+    This is the top-level container for all knowledge about a portal's 
+    automation structure.
+    """
 
-    portal_name: str
-    base_url: str
+    portal_name: str = Field(description="Unique identifier for the portal (e.g., 'linkedin').")
+    base_url: str = Field(description="The starting URL for automation on this portal.")
     
     # Semantic Registry
-    states: Dict[str, AriadneState]
-    tasks: Dict[str, AriadneTask]
+    states: Dict[str, AriadneState] = Field(
+        description="Registry of semantic states (rooms) identified by their unique ID."
+    )
+    tasks: Dict[str, AriadneTask] = Field(
+        description="Registry of mission goals and their success/failure boundaries."
+    )
     
     # Path Registry (Deterministic sequences)
-    paths: Dict[str, AriadnePath]
+    paths: Dict[str, AriadnePath] = Field(
+        description="Registry of linear step sequences indexed by path ID."
+    )
     
     # Global/Cross-State components
-    global_components: Dict[str, AriadneTarget] = Field(default_factory=dict)
+    global_components: Dict[str, AriadneTarget] = Field(
+        default_factory=dict,
+        description="Reusable targets that appear across multiple states (e.g., Logout button)."
+    )

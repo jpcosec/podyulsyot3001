@@ -1,15 +1,8 @@
-"""Shared base class for auto-application adapters.
+"""Crawl4AI Apply Engine — State-Aware Replay for Job Applications.
 
-Adapters provide portal-specific knowledge only (selectors, C4A-Scripts, profile dir).
-All flow control lives here: navigate → validate → fill → upload → submit → persist.
-
-Design reference: `src/automation/motors/crawl4ai/`
-
-Crawl4AI docs:
-  C4A-Script DSL:    https://docs.crawl4ai.com/core/c4a-script/
-  CrawlerRunConfig:  https://docs.crawl4ai.com/api/parameters/
-  Hooks:             https://docs.crawl4ai.com/advanced/hooks-auth/
-  Session mgmt:      https://docs.crawl4ai.com/advanced/session-management/
+This module provides the core execution logic for replaying Ariadne Paths 
+using the Crawl4AI motor. It handles state identification, action 
+compilation, and artifact persistence through a standardized adapter pattern.
 """
 
 from __future__ import annotations
@@ -19,7 +12,7 @@ import logging
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig
 
@@ -35,20 +28,36 @@ from src.automation.ariadne.exceptions import (
 )
 from src.automation.ariadne.navigator import AriadneNavigator
 from src.automation.motors.crawl4ai.models import ApplicationRecord, ApplyMeta
-from src.core.data_manager import DataManager
+from src.automation.storage import AutomationStorage
 from src.shared.log_tags import LogTag
 
 logger = logging.getLogger(__name__)
 
 
+class PortalStructureChangedError(Exception):
+    """Raised when one or more mandatory selectors are absent from the live DOM."""
+
+
 class ApplyAdapter(ABC):
     """Abstract base class for deterministic portal-specific apply adapters.
 
-    Now uses AriadnePortalMap as the source of truth for states, tasks, and paths.
+    This class coordinates the semantic replay of an Ariadne Path using the 
+    Crawl4AI execution motor. It handles state identification, action 
+    compilation, and artifact persistence.
+
+    Abstract Methods:
+        portal_map: Returns the AriadnePortalMap for the source.
+        get_session_profile_dir: Returns the path to the browser profile.
+        get_success_text: Returns the text fragment indicating success.
     """
 
-    def __init__(self, data_manager: DataManager | None = None) -> None:
-        self.data_manager = data_manager or DataManager()
+    def __init__(self, storage: AutomationStorage | None = None) -> None:
+        """Initializes the adapter.
+        
+        Args:
+            storage: Optional AutomationStorage instance for artifact handling.
+        """
+        self.storage = storage or AutomationStorage()
         self.compiler = AriadneC4AICompiler()
         self.serializer = C4AIScriptSerializer()
         self._navigator: Optional[AriadneNavigator] = None
@@ -60,15 +69,18 @@ class ApplyAdapter(ABC):
 
     @property
     def navigator(self) -> AriadneNavigator:
+        """The semantic navigator for state-aware replay."""
         if not self._navigator:
             self._navigator = AriadneNavigator(self.portal_map)
         return self._navigator
 
     @property
     def source_name(self) -> str:
+        """The identifier for this portal (e.g., 'linkedin')."""
         return self.portal_map.portal_name
 
     def _get_portal_base_url(self) -> str:
+        """The starting URL for this portal's automation."""
         return self.portal_map.base_url
 
     @abstractmethod
@@ -82,7 +94,15 @@ class ApplyAdapter(ABC):
     # ── Pure helpers ────────────────────────────────────────────────────────
 
     def _render_placeholders(self, text: str, context: dict) -> str:
-        """Inject context values into {{placeholder}} strings."""
+        """Inject context values into {{placeholder}} strings.
+        
+        Args:
+            text: Template string.
+            context: Context dictionary.
+            
+        Returns:
+            Rendered string.
+        """
         result = text
         for key, value in context.items():
             if isinstance(value, dict):
@@ -97,22 +117,28 @@ class ApplyAdapter(ABC):
         return result
 
     def _check_idempotency(self, job_id: str) -> None:
-        try:
-            meta = self.data_manager.read_json_artifact(
-                source=self.source_name,
-                job_id=job_id,
-                node_name="apply",
-                stage="meta",
-                filename="apply_meta.json",
-            )
-        except (FileNotFoundError, KeyError):
-            return
-        if meta.get("status") == "submitted":
+        """Ensures the job hasn't been submitted already.
+        
+        Args:
+            job_id: Unique job identifier.
+            
+        Raises:
+            RuntimeError: If job status is 'submitted'.
+        """
+        if self.storage.check_already_submitted(self.source_name, job_id):
             raise RuntimeError(f"Job {job_id} ({self.source_name}) was already submitted.")
 
     # ── crawl4ai helpers ─────────────────────────────────────────────────────
 
     def _browser_config(self, headless: bool = True) -> BrowserConfig:
+        """Generates the Crawl4AI browser configuration.
+        
+        Args:
+            headless: Whether to run without a visible window.
+            
+        Returns:
+            BrowserConfig instance.
+        """
         return BrowserConfig(
             user_data_dir=str(self.get_session_profile_dir()),
             use_persistent_context=True,
@@ -120,8 +146,14 @@ class ApplyAdapter(ABC):
         )
 
     async def _get_live_state(self, session_id: str) -> Optional[str]:
-        """Identify current semantic state by checking the live DOM."""
-        # Get all relevant selectors from the map
+        """Identify current semantic state by checking the live DOM.
+        
+        Args:
+            session_id: Unique ID for the browser session.
+            
+        Returns:
+            State ID if matched, else None.
+        """
         all_selectors = set()
         for state in self.portal_map.states.values():
             for target in state.presence_predicate.required_elements:
@@ -156,7 +188,16 @@ class ApplyAdapter(ABC):
         return self.navigator.find_current_state(results)
 
     def _build_file_upload_hook(self, cv_path: Path, letter_path: Path | None, upload_selectors: list[str]):
-        """Return a hook that performs file uploads via raw Playwright."""
+        """Return a hook that performs file uploads via raw Playwright.
+        
+        Args:
+            cv_path: Path to CV file.
+            letter_path: Path to cover letter file.
+            upload_selectors: List of CSS selectors for file inputs.
+            
+        Returns:
+            Crawl4AI hook function.
+        """
         async def _hook(page: Any, **kwargs: Any) -> Any:
             for selector in upload_selectors:
                 await page.set_input_files(selector, str(cv_path))
@@ -164,7 +205,12 @@ class ApplyAdapter(ABC):
         return _hook
 
     async def _capture_error_screenshot(self, session_id: str, job_id: str) -> None:
-        """Best-effort capture of the page state on failure."""
+        """Best-effort capture of the page state on failure.
+        
+        Args:
+            session_id: Session ID to capture.
+            job_id: Job identifier for storage.
+        """
         try:
             async with AsyncWebCrawler(config=self._browser_config()) as crawler:
                 err_result = await crawler.arun(
@@ -176,8 +222,8 @@ class ApplyAdapter(ABC):
                     ),
                 )
                 if err_result.screenshot:
-                    self.data_manager.write_bytes_artifact(
-                        source=self.source_name, job_id=job_id, node_name="apply", stage="proposed",
+                    self.storage.write_artifact(
+                        source=self.source_name, job_id=job_id,
                         filename="error_state.png", content=err_result.screenshot
                     )
         except Exception as e:
@@ -186,6 +232,16 @@ class ApplyAdapter(ABC):
     # ── Execution ──────────────────────────────────────────────────────────
 
     def _build_context(self, ingest_data: dict, cv_path: Path, letter_path: Path | None) -> dict:
+        """Builds the full context for template resolution.
+        
+        Args:
+            ingest_data: Job ingestion payload.
+            cv_path: Path to CV.
+            letter_path: Path to letter.
+            
+        Returns:
+            Dictionary of template variables.
+        """
         return {
             "profile": {
                 "first_name": "Juan Pablo",
@@ -210,12 +266,25 @@ class ApplyAdapter(ABC):
         dry_run: bool,
         path_id: str = "standard_easy_apply",
     ) -> ApplyMeta:
-        """Execute the full apply flow using the Ariadne Map."""
+        """Execute the full apply flow using the Ariadne Map.
+        
+        Args:
+            job_id: Unique job identifier.
+            cv_path: Path to CV.
+            letter_path: Path to letter.
+            dry_run: Whether to stop before submission.
+            path_id: The ID of the path to replay from the Map.
+            
+        Returns:
+            ApplyMeta summary of the run.
+            
+        Raises:
+            AriadneError: If a semantic failure occurs.
+            ValueError: If the path_id is not found.
+        """
         self._check_idempotency(job_id)
 
-        ingest_data = self.data_manager.read_json_artifact(
-            source=self.source_name, job_id=job_id, node_name="ingest", stage="proposed", filename="state.json"
-        )
+        ingest_data = self.storage.get_job_state(self.source_name, job_id)
         application_url = ingest_data.get("application_url") or ingest_data.get("url")
         
         path = self.portal_map.paths.get(path_id)
@@ -238,10 +307,7 @@ class ApplyAdapter(ABC):
                         logger.info("%s Dry-run stop reached at step '%s'", LogTag.OK, step.name)
                         break
 
-                    # 1. State Identification (Optional check before step)
                     current_state = await self._get_live_state(session_id)
-                    
-                    # 2. Check Mission Status
                     finished, status = self.navigator.check_mission_status(path.task_id, current_state or "")
                     if finished:
                         logger.info("%s Mission Finished with status: %s", LogTag.OK, status)
@@ -249,7 +315,6 @@ class ApplyAdapter(ABC):
                             raise TerminalStateReached(f"Reached failure state: {current_state}")
                         break
 
-                    # 3. Execution
                     upload_selectors = [a.target.css for a in step.actions if a.intent == AriadneIntent.UPLOAD and a.target and a.target.css]
                     temp_path = AriadnePath(id="temp", task_id=path.task_id, steps=[step])
                     ir = self.compiler.compile(temp_path)
@@ -273,34 +338,26 @@ class ApplyAdapter(ABC):
                         raise ObservationFailed(f"Step {step.name} execution failed: {result.error_message}", step_index=current_step_index)
 
                     if result.screenshot:
-                        self.data_manager.write_bytes_artifact(
-                            source=self.source_name, job_id=job_id, node_name="apply", stage="proposed",
+                        self.storage.write_artifact(
+                            source=self.source_name, job_id=job_id,
                             filename=f"step_{current_step_index}_{step.name}.png", content=result.screenshot
                         )
 
-                    # 4. Determine next step via Navigator
                     next_state = await self._get_live_state(session_id)
                     current_step_index = self.navigator.get_next_step_index(path, current_step_index, next_state)
 
                 status = "submitted" if not dry_run else "dry_run"
                 meta = ApplyMeta(status=status, timestamp=timestamp)
-                self.data_manager.write_json_artifact(
-                    source=self.source_name, job_id=job_id, node_name="apply", stage="meta",
-                    filename="apply_meta.json", data=meta.model_dump()
-                )
+                self.storage.write_apply_meta(self.source_name, job_id, meta.model_dump())
                 return meta
 
         except AriadneError as exc:
             logger.error("%s Ariadne Error: %s", LogTag.FAIL, exc)
             await self._capture_error_screenshot(session_id, job_id)
             meta = ApplyMeta(status="failed", timestamp=timestamp, error=str(exc))
-            self.data_manager.write_json_artifact(
-                source=self.source_name, job_id=job_id, node_name="apply", stage="meta",
-                filename="apply_meta.json", data=meta.model_dump()
-            )
+            self.storage.write_apply_meta(self.source_name, job_id, meta.model_dump())
             raise
         except Exception as exc:
             logger.error("%s Unexpected Error: %s", LogTag.FAIL, exc)
             await self._capture_error_screenshot(session_id, job_id)
             raise
-

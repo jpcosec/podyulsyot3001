@@ -2,191 +2,58 @@
 
 ## 🏗️ Architecture & Features
 
-All runtime automation code lives here: job discovery (scraping) and job application, organized around two concerns that are kept strictly separate.
+This package provides a unified, semantic-driven browser automation system. It decouples **Path Knowledge** from **Execution Engines**, allowing for high resilience and cross-motor replay.
 
-**Portal intent** (`portals/`) describes *what* a portal offers — field names, flow steps, supported search parameters — in motor-agnostic terms defined by the Ariadne schema. No CSS selectors or script DSLs here.
-
-**Motor translators** (`motors/`) describe *how* to interact with a portal. Each motor owns its own execution mechanics, models, and portal-specific translation layers.
-
-```text
-src/automation/
-  main.py                            # unified CLI: scrape / apply subcommands
-  ariadne/
-    portal_models.py                 # ScrapePortalDefinition, ApplyPortalDefinition, ApplyStep, FormField, FieldType
-  portals/
-    stepstone/{scrape,apply}.py      # STEPSTONE_SCRAPE, STEPSTONE_APPLY
-    xing/{scrape,apply}.py           # XING_SCRAPE, XING_APPLY
-    tuberlin/scrape.py               # TUBERLIN_SCRAPE
-    linkedin/apply.py                # LINKEDIN_APPLY
-  motors/
-    crawl4ai/
-      models.py                      # JobPosting, FormSelectors, ApplicationRecord, ApplyMeta
-      scrape_engine.py               # SmartScraperAdapter — base class for all C4AI scrape adapters
-      apply_engine.py                # ApplyAdapter — base class for all C4AI apply adapters
-      schemas/                       # source-controlled Crawl4AI extraction schemas (JSON)
-      portals/
-        stepstone/{scrape,apply}.py  # StepStoneAdapter, StepStoneApplyAdapter
-        xing/{scrape,apply}.py       # XingAdapter, XingApplyAdapter
-        tuberlin/scrape.py           # TUBerlinAdapter
-        linkedin/apply.py            # LinkedInApplyAdapter
-    browseros/
-      cli/
-        client.py                    # BrowserOSClient — MCP tool-call client
-        executor.py                  # BrowserOSPlaybookExecutor — deterministic playbook runner
-        backend.py                   # build_browseros_providers() — apply backend factory
-        models.py                    # BrowserOSPlaybook and related MCP schema models
-        traces/
-          linkedin_easy_apply_v1.json  # packaged BrowserOS runtime trace
-```
-
-### Boundary rules
-
-| Layer | Owns | Must not import |
-|---|---|---|
-| `portals/` | Portal intent — what fields, steps, params exist | Anything from `motors/` |
-| `motors/crawl4ai/portals/` | C4AI mechanics — CSS selectors, C4A-Script, URL builders | `src.scraper`, `src.apply` |
-| `motors/browseros/cli/` | BrowserOS MCP execution | `src.apply` |
-| `motors/crawl4ai/models.py` | Shared apply/scrape output contracts | `motors/browseros/` |
-
-### Data flow — scrape
-
-```
-scrape --source stepstone
-  → StepStoneAdapter.run()           # scrape_engine.SmartScraperAdapter
-      → get_search_url()             # builds listing URL
-      → AsyncWebCrawler: listing     # Crawl4AI
-      → extract_links()              # returns [{url, listing_data, ...}]
-      → AsyncWebCrawler: each detail # Crawl4AI
-      → LLM extraction + JobPosting.model_validate()
-      → DataManager.write()
-          data/jobs/stepstone/<id>/nodes/ingest/proposed/
-```
-
-### Data flow — apply (C4AI)
-
-```
-apply --source xing --job-id 12345
-  → XingApplyAdapter.run()           # apply_engine.ApplyAdapter
-      → _check_idempotency()         # blocks if already submitted
-      → AsyncWebCrawler: navigate
-      → _check_selector_results()    # validates mandatory CSS selectors in live DOM
-      → C4A-Script: open modal
-      → C4A-Script: fill form        # {{placeholders}} resolved from profile
-      → C4A-Script: upload CV
-      → [stop here if --dry-run]
-      → C4A-Script: submit
-      → DataManager.write()
-          data/jobs/xing/12345/nodes/apply/apply_meta.json
-          data/jobs/xing/12345/nodes/apply/application_record.json
-```
-
-### Data flow — apply (BrowserOS)
-
-```
-apply --backend browseros --source linkedin
-  → build_browseros_providers()      # motors/browseros/cli/backend.py
-      → BrowserOSPlaybookExecutor
-          traces/linkedin_easy_apply_v1.json
-          → BrowserOSClient: MCP tool calls (navigate, click, fill, upload_file)
-          → DataManager.write() apply_meta.json, application_record.json
-```
-
----
+- **Semantic Layer (`src/automation/ariadne/`)**: Backend-neutral models for States, Tasks, and Paths.
+- **Unified Maps (`src/automation/portals/`)**: Single source of truth for portal logic in JSON.
+- **Execution Motors (`src/automation/motors/`)**: Replayers for Crawl4AI and BrowserOS.
+- **Persistence (`src/automation/storage.py`)**: Centralized artifact and metadata management.
 
 ## ⚙️ Configuration
 
+Requires a `.env` file in the root directory with the following variables:
+
 ```env
-PLAYWRIGHT_BROWSERS_PATH=0   # for Crawl4AI browser automation
+GOOGLE_API_KEY=...       # Gemini API access
+GEMINI_API_KEY=...       # Same as above
+PLAYWRIGHT_BROWSERS_PATH=0
 ```
-
-BrowserOS requires a running BrowserOS MCP server. See `motors/browseros/cli/client.py` for the connection setup.
-
----
 
 ## 🚀 CLI / Usage
 
-Unified entry point for all automation:
+The unified CLI entry point handles both discovery and application.
 
 ```bash
-# Scrape job postings
-python -m src.automation.main scrape --source stepstone --job-query "data engineer" --city berlin
+# Scrape jobs
+python -m src.automation.main scrape --source <portal> --limit 5
 
-# Apply to a job (C4AI backend)
-python -m src.automation.main apply --source xing --job-id 12345 --cv path/to/cv.pdf --dry-run
-
-# Apply via BrowserOS
-python -m src.automation.main apply --backend browseros --source linkedin --job-id 99 --cv path/to/cv.pdf --profile-json path/to/profile.json
+# Apply to jobs
+python -m src.automation.main apply --source <portal> --job-id <id> --cv <path> --dry-run
 ```
 
-CLI arguments are defined in `build_parser()` in `src/automation/main.py`.
-
----
+Arguments are defined in the `build_parser()` function in `src/automation/main.py`.
 
 ## 📝 Data Contract
 
-### Ariadne portal schema
+All automation models are strictly typed via Pydantic:
+- **`AriadnePortalMap`**: Defines the portal's semantic landscape. See `src/automation/ariadne/models.py`.
+- **`ApplyMeta`**: Records the result of an application attempt. See `src/automation/motors/crawl4ai/models.py`.
 
-Motor-agnostic portal intent: `src/automation/ariadne/portal_models.py`
+## 🛠️ How to Add / Extend
 
-- `ScrapePortalDefinition` — source name, base URL, supported search params, job-ID regex
-- `ApplyPortalDefinition` — source name, base URL, entry description, apply steps with fields
-- `ApplyStep`, `FormField`, `FieldType` — step and field definitions
-
-### C4AI motor contracts
-
-Scrape and apply data models: `src/automation/motors/crawl4ai/models.py`
-
-- `JobPosting` — structured extraction output from a scrape run
-- `FormSelectors` — CSS selectors validated against the live DOM before interaction
-- `ApplicationRecord` — persisted record of one apply attempt
-- `ApplyMeta` — status artifact from one apply run (`submitted` / `dry_run` / `failed` / `portal_changed`)
-
-### BrowserOS motor contracts
-
-MCP tool-call schema: `src/automation/motors/browseros/cli/models.py`
-
-- `BrowserOSPlaybook`, `PlaybookStep`, `PlaybookAction` — deterministic BrowserOS replay schema
-
----
-
-## 🛠️ How to Add a New Portal
-
-### Scrape portal
-
-1. Add `src/automation/portals/<portal>/scrape.py` exporting a `ScrapePortalDefinition` instance.
-2. Add `src/automation/motors/crawl4ai/portals/<portal>/scrape.py` extending `SmartScraperAdapter`. Import the definition from step 1. Implement `get_search_url`, `extract_links`, `get_llm_instructions`.
-3. Register the adapter in `_run_scrape()` in `src/automation/main.py`.
-4. Add `src/automation/motors/crawl4ai/schemas/<portal>_schema.json` if the portal uses deterministic extraction.
-5. Add tests: `tests/unit/automation/portals/` and `tests/unit/automation/motors/crawl4ai/portals/<portal>/`.
-
-### Apply portal (C4AI)
-
-1. Add `src/automation/portals/<portal>/apply.py` exporting an `ApplyPortalDefinition` instance.
-2. Add `src/automation/motors/crawl4ai/portals/<portal>/apply.py` extending `ApplyAdapter`. Import the definition from step 1. Implement `get_form_selectors`, `get_open_modal_script`, `get_fill_form_script`, `get_submit_script`, `get_success_text`, `get_session_profile_dir`.
-3. Register the adapter in `_run_apply()` in `src/automation/main.py`.
-4. Add tests mirroring `tests/unit/automation/motors/crawl4ai/portals/linkedin/`.
-
----
+1. **Map the Portal**: Create a JSON map in `src/automation/portals/<portal>/maps/easy_apply.json` using the `AriadnePortalMap` schema.
+2. **Implement Adapter**: (Optional) If custom logic is needed, add an adapter in `src/automation/motors/crawl4ai/portals/`.
+3. **Register Source**: Add the portal name to the choices in `src/automation/main.py`.
 
 ## 💻 How to Use
 
-```python
-from src.automation.motors.crawl4ai.portals.stepstone.scrape import StepStoneAdapter
-from src.core.data_manager import DataManager
-
-adapter = StepStoneAdapter(DataManager())
-# adapter.run() is async — use asyncio.run() or await inside an async context
+```bash
+# Verify a portal map by running a dry-run application
+python -m src.automation.main apply --source linkedin --job-id 123 --cv my_cv.pdf --dry-run
 ```
-
----
 
 ## 🚑 Troubleshooting
 
-**All XING scrape runs produce zero ingested jobs**
-→ `extract_links` must return dicts with a `"url"` key. The scrape engine normalizer silently skips entries without it.
-
-**`PortalStructureChangedError` raised during apply**
-→ A mandatory CSS selector was not found in the live DOM. The portal changed its UI. Update `get_form_selectors()` in the relevant apply translator.
-
-**`RuntimeError: already submitted` on retry**
-→ `ApplyMeta.status == "submitted"` blocks re-execution. Use `--dry-run` to test without writing a submitted record, or manually clear the `apply_meta.json` artifact.
+- **`State Mismatch`**: The navigator found a different state than expected. Check if the portal DOM changed and update the Map's `presence_predicate`.
+- **`TargetNotFound`**: A CSS or Text selector in the Map no longer matches. Inspect the `error_state.png` in the job's artifact folder.
+- **`Compilation Error`**: The compiler failed to turn the Map into a script. Validate the Map JSON against `src/automation/ariadne/models.py`.

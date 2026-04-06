@@ -69,16 +69,16 @@ async def _run_scrape(args) -> None:
     from src.automation.motors.crawl4ai.portals.stepstone.scrape import StepStoneAdapter
     from src.automation.motors.crawl4ai.portals.tuberlin.scrape import TUBerlinAdapter
     from src.automation.motors.crawl4ai.portals.xing.scrape import XingAdapter
-    from src.core.data_manager import DataManager
+    from src.automation.storage import AutomationStorage
     from src.shared.log_tags import LogTag
 
     _setup_logging(f"scrape_{args.source}")
     logger = logging.getLogger(__name__)
-    data_manager = DataManager()
+    storage = AutomationStorage()
     providers = {
-        "tuberlin": TUBerlinAdapter(data_manager),
-        "stepstone": StepStoneAdapter(data_manager),
-        "xing": XingAdapter(data_manager),
+        "tuberlin": TUBerlinAdapter(storage.data_manager),
+        "stepstone": StepStoneAdapter(storage.data_manager),
+        "xing": XingAdapter(storage.data_manager),
     }
     adapter = providers[args.source]
     for param, value in {"categories": args.categories, "city": args.city, "job_query": args.job_query, "max_days": args.max_days}.items():
@@ -86,9 +86,9 @@ async def _run_scrape(args) -> None:
             logger.warning("%s Provider '%s' does not support '%s'; ignoring.", LogTag.WARN, args.source, param)
     already_scraped: list[str] = []
     if not args.overwrite:
-        source_root = data_manager.source_root(args.source)
+        source_root = storage.data_manager.source_root(args.source)
         if source_root.exists():
-            already_scraped = sorted(p.name for p in source_root.iterdir() if p.is_dir() and data_manager.has_ingested_job(args.source, p.name))
+            already_scraped = sorted(p.name for p in source_root.iterdir() if p.is_dir() and storage.data_manager.has_ingested_job(args.source, p.name))
     ingested = await adapter.run(already_scraped=already_scraped, **vars(args))
     logger.info("%s Ingested %s jobs for source '%s'", LogTag.OK, len(ingested), args.source)
 
@@ -96,7 +96,7 @@ async def _run_scrape(args) -> None:
 async def _run_apply(args) -> None:
     """Run an apply cycle for one job. Selects backend (crawl4ai or browseros), validates mutual exclusion of --setup-session and --job-id, and dispatches to the provider."""
     from src.shared.log_tags import LogTag
-    from src.core.data_manager import DataManager
+    from src.automation.storage import AutomationStorage
 
     _setup_logging(f"apply_{args.source}")
     logger = logging.getLogger(__name__)
@@ -104,19 +104,19 @@ async def _run_apply(args) -> None:
     if args.profile_json:
         profile_data = json.loads(Path(args.profile_json).read_text(encoding="utf-8"))
 
-    manager = DataManager()
+    storage = AutomationStorage()
     
     if args.backend == "browseros":
         from src.automation.motors.browseros.cli.backend import build_browseros_providers
-        providers = build_browseros_providers(manager, profile_data=profile_data)
+        providers = build_browseros_providers(storage.data_manager, profile_data=profile_data)
     else:
         from src.automation.motors.crawl4ai.portals.linkedin.apply import LinkedInApplyAdapter
         from src.automation.motors.crawl4ai.portals.stepstone.apply import StepStoneApplyAdapter
         from src.automation.motors.crawl4ai.portals.xing.apply import XingApplyAdapter
         providers = {
-            "linkedin": LinkedInApplyAdapter(manager),
-            "xing": XingApplyAdapter(manager),
-            "stepstone": StepStoneApplyAdapter(manager),
+            "linkedin": LinkedInApplyAdapter(storage),
+            "xing": XingApplyAdapter(storage),
+            "stepstone": StepStoneApplyAdapter(storage),
         }
 
     if args.source not in providers:

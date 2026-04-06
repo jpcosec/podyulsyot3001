@@ -1,3 +1,15 @@
+"""Ariadne — The Semantic Path Knowledge Subsystem."""
+
+from .exceptions import (
+    AriadneError,
+    InteractionFailed,
+    ObservationFailed,
+    PortalDriftError,
+    TargetNotFound,
+    TaskAborted,
+    TerminalStateReached,
+    TranslationError,
+)
 from .models import (
     AriadneAction,
     AriadneIntent,
@@ -9,8 +21,12 @@ from .models import (
     AriadneTarget,
     AriadneTask,
 )
+from .navigator import AriadneNavigator
+from .recorder import AriadneRecorder
+from .trace_models import AriadneSessionTrace, RawTraceEvent
 
 __all__ = [
+    # Models
     "AriadneTarget",
     "AriadneIntent",
     "AriadneAction",
@@ -20,4 +36,19 @@ __all__ = [
     "AriadneStep",
     "AriadnePath",
     "AriadnePortalMap",
+    # Logic
+    "AriadneNavigator",
+    "AriadneRecorder",
+    # Traces
+    "AriadneSessionTrace",
+    "RawTraceEvent",
+    # Exceptions
+    "AriadneError",
+    "ObservationFailed",
+    "TargetNotFound",
+    "InteractionFailed",
+    "TerminalStateReached",
+    "TaskAborted",
+    "TranslationError",
+    "PortalDriftError",
 ]
