@@ -51,6 +51,10 @@ class AriadneAction(BaseModel):
     value: Optional[str] = Field(default=None, description="Value with {{placeholders}}")
     fallback: Optional[AriadneAction] = None
     optional: bool = False
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, 
+        description="Motor-specific hyperparameters (e.g., fuzzy_threshold, js_code)"
+    )
 
 
 # --- Observation Layer ---
@@ -124,6 +128,10 @@ class AriadneStep(BaseModel):
     next_step_index: Optional[int] = None
     human_required: bool = False
     dry_run_stop: bool = False
+    metadata: Dict[str, Any] = Field(
+        default_factory=dict, 
+        description="Step-level motor hyperparameters (e.g., wait_for_network, enhanced_snapshot)"
+    )
 
 
 class AriadnePath(BaseModel):
