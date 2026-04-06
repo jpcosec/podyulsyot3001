@@ -1,18 +1,19 @@
-"""BrowserOS-backed apply providers wired into the common apply CLI."""
+"""BrowserOS-backed apply providers using Ariadne Semantic Maps."""
 
 from __future__ import annotations
 
+import json
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from src.automation.ariadne.models import AriadnePortalMap
 from src.automation.motors.browseros.cli.client import BrowserOSClient
 from src.automation.motors.browseros.cli.executor import (
     BrowserOSObserveError,
     BrowserOSPlaybookExecutor,
 )
-from src.automation.motors.browseros.cli.models import BrowserOSPlaybook
 from src.automation.motors.crawl4ai.models import ApplicationRecord, ApplyMeta
 from src.core.data_manager import DataManager
 from src.shared.log_tags import LogTag
@@ -21,32 +22,26 @@ logger = logging.getLogger(__name__)
 
 
 class BrowserOSApplyProvider:
-    """Source-specific provider backed only by BrowserOS MCP."""
+    """Source-specific provider backed only by BrowserOS MCP, consuming Ariadne Maps."""
 
     def __init__(
         self,
         *,
-        source_name: str,
-        portal_base_url: str,
-        playbook_path: Path,
+        portal_map: AriadnePortalMap,
         candidate_profile: dict[str, Any] | None = None,
         data_manager: DataManager | None = None,
         client: BrowserOSClient | None = None,
     ) -> None:
-        self.source_name = source_name
-        self.portal_base_url = portal_base_url
-        self.playbook_path = playbook_path
+        self.portal_map = portal_map
+        self.source_name = portal_map.portal_name
+        self.portal_base_url = portal_map.base_url
         self.candidate_profile = candidate_profile or {}
         self.data_manager = data_manager or DataManager()
         self.client = client or BrowserOSClient()
         self.executor = BrowserOSPlaybookExecutor(self.client)
 
     async def setup_session(self) -> None:
-        """Open a visible BrowserOS page and wait for manual login.
-
-        Returns:
-            None.
-        """
+        """Open a visible BrowserOS page and wait for manual login."""
         page_id = self.client.new_page()
         self.client.navigate(self.portal_base_url, page_id)
         self.client.show_page(page_id)
@@ -60,18 +55,9 @@ class BrowserOSApplyProvider:
         cv_path: Path,
         letter_path: Path | None,
         dry_run: bool,
+        path_id: str = "standard_easy_apply",
     ) -> ApplyMeta:
-        """Run a BrowserOS-backed application flow for one job.
-
-        Args:
-            job_id: Job identifier under canonical storage.
-            cv_path: Local CV path for upload or selection context.
-            letter_path: Unused placeholder for API compatibility.
-            dry_run: Whether to stop before the final submit step.
-
-        Returns:
-            Apply status metadata written for the run.
-        """
+        """Run a BrowserOS-backed application flow using an Ariadne path."""
         del letter_path
         self._check_idempotency(job_id)
         ingest_data = self._read_ingest_artifact(job_id)
@@ -79,9 +65,10 @@ class BrowserOSApplyProvider:
         if not application_url:
             raise ValueError(f"No application_url in ingest artifact for {job_id}")
 
-        playbook = BrowserOSPlaybook.model_validate_json(
-            self.playbook_path.read_text(encoding="utf-8")
-        )
+        path = self.portal_map.paths.get(path_id)
+        if not path:
+            raise ValueError(f"Path '{path_id}' not found in map for {self.source_name}")
+
         timestamp = datetime.now(timezone.utc).isoformat()
         page_id = self.client.new_hidden_page()
 
@@ -89,7 +76,7 @@ class BrowserOSApplyProvider:
             self.client.navigate(application_url, page_id)
             result = self.executor.run(
                 page_id=page_id,
-                playbook=playbook,
+                path=path,
                 context=self._build_context(ingest_data, cv_path),
                 cv_path=cv_path,
                 dry_run=dry_run,
@@ -144,10 +131,10 @@ class BrowserOSApplyProvider:
     ) -> dict[str, Any]:
         return {
             "profile": {
-                "first_name": self.candidate_profile.get("first_name"),
-                "last_name": self.candidate_profile.get("last_name"),
-                "phone": self.candidate_profile.get("phone"),
-                "phone_country_code": self.candidate_profile.get("phone_country_code"),
+                "first_name": self.candidate_profile.get("first_name", "Juan Pablo"),
+                "last_name": self.candidate_profile.get("last_name", "Ruiz"),
+                "phone": self.candidate_profile.get("phone", "+49123456789"),
+                "email": self.candidate_profile.get("email", "jp@example.com"),
             },
             "job": {
                 "job_title": ingest_data.get("job_title", ""),
@@ -247,23 +234,21 @@ def build_browseros_providers(
     *,
     profile_data: dict[str, Any] | None = None,
 ) -> dict[str, BrowserOSApplyProvider]:
-    """Build BrowserOS-backed apply providers.
-
-    Args:
-        data_manager: Optional data manager used for artifact IO.
-        profile_data: Optional candidate profile payload injected into playbooks.
-
-    Returns:
-        A mapping from source name to BrowserOS provider.
-    """
+    """Build BrowserOS-backed apply providers from Ariadne Maps."""
     manager = data_manager or DataManager()
-    playbook_dir = Path(__file__).resolve().parent / "traces"
-    return {
-        "linkedin": BrowserOSApplyProvider(
-            source_name="linkedin",
-            portal_base_url="https://www.linkedin.com",
-            playbook_path=playbook_dir / "linkedin_easy_apply_v1.json",
-            candidate_profile=profile_data,
-            data_manager=manager,
-        )
-    }
+    
+    portals_root = Path(__file__).parent.parent.parent.parent.parent / "portals"
+    providers = {}
+    
+    for portal in ["linkedin", "xing", "stepstone"]:
+        map_path = portals_root / portal / "maps" / "easy_apply.json"
+        if map_path.exists():
+            with open(map_path, "r") as f:
+                portal_map = AriadnePortalMap.model_validate(json.load(f))
+                providers[portal] = BrowserOSApplyProvider(
+                    portal_map=portal_map,
+                    candidate_profile=profile_data,
+                    data_manager=manager,
+                )
+    
+    return providers
