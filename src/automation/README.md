@@ -41,9 +41,55 @@ src/automation/
 
 ### Boundary rules
 
-- `portals/` files import only from `src.automation.ariadne.portal_models`. No motor imports.
-- `motors/crawl4ai/portals/` files import their portal definition from `src.automation.portals.*` and add C4AI mechanics (CSS selectors, C4A-Script, crawl_result parsing).
-- `motors/browseros/` files import `ApplicationRecord` and `ApplyMeta` from `src.automation.motors.crawl4ai.models` (shared apply contracts).
+| Layer | Owns | Must not import |
+|---|---|---|
+| `portals/` | Portal intent — what fields, steps, params exist | Anything from `motors/` |
+| `motors/crawl4ai/portals/` | C4AI mechanics — CSS selectors, C4A-Script, URL builders | `src.scraper`, `src.apply` |
+| `motors/browseros/cli/` | BrowserOS MCP execution | `src.apply` |
+| `motors/crawl4ai/models.py` | Shared apply/scrape output contracts | `motors/browseros/` |
+
+### Data flow — scrape
+
+```
+scrape --source stepstone
+  → StepStoneAdapter.run()           # scrape_engine.SmartScraperAdapter
+      → get_search_url()             # builds listing URL
+      → AsyncWebCrawler: listing     # Crawl4AI
+      → extract_links()              # returns [{url, listing_data, ...}]
+      → AsyncWebCrawler: each detail # Crawl4AI
+      → LLM extraction + JobPosting.model_validate()
+      → DataManager.write()
+          data/jobs/stepstone/<id>/nodes/ingest/proposed/
+```
+
+### Data flow — apply (C4AI)
+
+```
+apply --source xing --job-id 12345
+  → XingApplyAdapter.run()           # apply_engine.ApplyAdapter
+      → _check_idempotency()         # blocks if already submitted
+      → AsyncWebCrawler: navigate
+      → _check_selector_results()    # validates mandatory CSS selectors in live DOM
+      → C4A-Script: open modal
+      → C4A-Script: fill form        # {{placeholders}} resolved from profile
+      → C4A-Script: upload CV
+      → [stop here if --dry-run]
+      → C4A-Script: submit
+      → DataManager.write()
+          data/jobs/xing/12345/nodes/apply/apply_meta.json
+          data/jobs/xing/12345/nodes/apply/application_record.json
+```
+
+### Data flow — apply (BrowserOS)
+
+```
+apply --backend browseros --source linkedin
+  → build_browseros_providers()      # motors/browseros/cli/backend.py
+      → BrowserOSPlaybookExecutor
+          traces/linkedin_easy_apply_v1.json
+          → BrowserOSClient: MCP tool calls (navigate, click, fill, upload_file)
+          → DataManager.write() apply_meta.json, application_record.json
+```
 
 ---
 
