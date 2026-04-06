@@ -1,5 +1,10 @@
 # Documentation
 
+## Automation system
+
+- `automation/README.md` — index: implementation references and applicable standards
+- `automation/architecture.md` — design rationale, Ariadne boundary, motor separation, scrape and apply data flows
+
 ## Standards
 
 ### docs/
