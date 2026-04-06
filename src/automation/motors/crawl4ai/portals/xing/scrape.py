@@ -17,17 +17,21 @@ class XingAdapter(SmartScraperAdapter):
 
     @property
     def source_name(self) -> str:
+        """Portal identifier for XING."""
         return self.portal.source_name
 
     @property
     def supported_params(self) -> list[str]:
+        """Search parameters supported by the XING search URL builder."""
         return self.portal.supported_params
 
     def extract_job_id(self, url: str) -> str:
+        """Extract the numeric job ID from a XING detail URL using the portal pattern."""
         match = re.search(self.portal.job_id_pattern, url)
         return match.group(1) if match else "unknown"
 
     def get_search_url(self, **kwargs) -> str:
+        """Build a XING job search URL. Accepts job_query, city, max_days. Maps max_days to XING's numeric date filter (1/7/14/30 days)."""
         query = (kwargs.get("job_query") or "data-scientist").replace(" ", "%20")
         city = (kwargs.get("city") or "berlin").replace(" ", "%20")
         max_days = kwargs.get("max_days")
@@ -47,6 +51,7 @@ class XingAdapter(SmartScraperAdapter):
         return url
 
     def extract_links(self, crawl_result: Any) -> list[dict[str, Any]]:
+        """Return deduplicated XING job links parsed from cleaned HTML via BeautifulSoup. Returns dicts with 'url' and 'listing_snippet' keys."""
         html = crawl_result.cleaned_html or getattr(crawl_result, "html", "")
         if not html:
             return []
@@ -65,6 +70,7 @@ class XingAdapter(SmartScraperAdapter):
         return unique
 
     def get_llm_instructions(self) -> str:
+        """LLM extraction hints for XING job detail pages."""
         return (
             "Extract from xing.com. Job title is in the <h1>. "
             "Salary and remote policy may appear in a facts sidebar. "

@@ -15,17 +15,21 @@ class TUBerlinAdapter(SmartScraperAdapter):
 
     @property
     def source_name(self) -> str:
+        """Portal identifier for TU Berlin (Stellenticket)."""
         return self.portal.source_name
 
     @property
     def supported_params(self) -> list[str]:
+        """Search parameters supported by the TU Berlin search URL builder."""
         return self.portal.supported_params
 
     def extract_job_id(self, url: str) -> str:
+        """Extract the numeric job ID from a TU Berlin job posting URL using the portal pattern."""
         match = re.search(self.portal.job_id_pattern, url)
         return match.group(1) if match else "unknown"
 
     def get_search_url(self, **kwargs) -> str:
+        """Build a TU Berlin Stellenticket search URL with fulltext and category filters. Category keys map to TU Berlin Stellenticket work-type filter values."""
         categories = kwargs.get("categories")
         job_query = kwargs.get("job_query") or ""
         base = f"https://www.jobs.tu-berlin.de/en/job-postings?filter%5Bfulltextsearch%5D={job_query}"
@@ -43,6 +47,7 @@ class TUBerlinAdapter(SmartScraperAdapter):
         return f"{base}&{'&'.join(filters)}"
 
     def extract_links(self, crawl_result: Any) -> list[str]:
+        """Return sorted unique TU Berlin job posting URLs from internal crawl links, excluding apply and download sub-paths."""
         job_links = []
         for link in crawl_result.links.get("internal", []):
             href = link.get("href", "")
@@ -54,6 +59,7 @@ class TUBerlinAdapter(SmartScraperAdapter):
         return sorted(set(job_links))
 
     def get_llm_instructions(self) -> str:
+        """LLM extraction hints for TU Berlin Stellenticket job pages. Pages may be German or English; salary is typically a TV-L grade."""
         return (
             "Extract from jobs.tu-berlin.de (Stellenticket). Pages can be German or English. "
             "Company is always Technische Universität Berlin or a specific faculty. "

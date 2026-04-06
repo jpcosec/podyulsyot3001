@@ -56,6 +56,7 @@ def _add_apply_subcommand(sub: argparse._SubParsersAction) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """Build and return the root ArgumentParser with scrape and apply subcommands registered."""
     parser = argparse.ArgumentParser(description="Automation CLI")
     sub = parser.add_subparsers(dest="command", required=True)
     _add_scrape_subcommand(sub)
@@ -64,6 +65,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 async def _run_scrape(args) -> None:
+    """Run a full scrape cycle: resolve already-ingested jobs, instantiate the portal adapter, and call adapter.run(). Imports adapters lazily to avoid loading Crawl4AI at import time."""
     from src.automation.motors.crawl4ai.portals.stepstone.scrape import StepStoneAdapter
     from src.automation.motors.crawl4ai.portals.tuberlin.scrape import TUBerlinAdapter
     from src.automation.motors.crawl4ai.portals.xing.scrape import XingAdapter
@@ -92,6 +94,7 @@ async def _run_scrape(args) -> None:
 
 
 async def _run_apply(args) -> None:
+    """Run an apply cycle for one job. Selects backend (crawl4ai or browseros), validates mutual exclusion of --setup-session and --job-id, and dispatches to the provider."""
     from src.shared.log_tags import LogTag
 
     _setup_logging(f"apply_{args.source}")
@@ -136,6 +139,7 @@ async def _run_apply(args) -> None:
 
 
 async def main(argv: list[str] | None = None) -> None:
+    """Parse argv and dispatch to _run_scrape or _run_apply."""
     args = build_parser().parse_args(argv or sys.argv[1:])
     if args.command == "scrape":
         await _run_scrape(args)

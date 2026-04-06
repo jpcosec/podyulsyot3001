@@ -15,15 +15,18 @@ class StepStoneApplyAdapter(ApplyAdapter):
 
     @property
     def source_name(self) -> str:
+        """Portal identifier for StepStone.de."""
         return self.portal.source_name
 
     def _get_portal_base_url(self) -> str:
         return self.portal.base_url
 
     def get_session_profile_dir(self) -> Path:
+        """Return the browser session profile directory for StepStone authentication persistence."""
         return Path("data/profiles/stepstone_profile")
 
     def get_form_selectors(self) -> FormSelectors:
+        """Return CSS selectors for the StepStone Easy Apply form elements."""
         return FormSelectors(
             apply_button="[data-at='apply-button']",
             cv_upload="input[type='file']",
@@ -38,6 +41,7 @@ class StepStoneApplyAdapter(ApplyAdapter):
         )
 
     def get_open_modal_script(self) -> str:
+        """Return a C4A-Script snippet that opens the StepStone apply modal if not already open."""
         return """
 IF NOT `[data-at="apply-modal"]` THEN
   CLICK `[data-at="apply-button"]`
@@ -46,6 +50,7 @@ END
 """
 
     def get_fill_form_script(self, profile: dict) -> str:
+        """Return a C4A-Script snippet that fills contact fields using {{template}} placeholders resolved at runtime."""
         del profile
         return """
 SET `input[name="firstName"]` "{{first_name}}"
@@ -57,10 +62,12 @@ END
 """
 
     def get_submit_script(self) -> str:
+        """Return a C4A-Script snippet that clicks submit and waits for the success indicator."""
         return """
 CLICK `[data-at="submit-button"]`
 WAIT `[data-at="application-success"]` 15
 """
 
     def get_success_text(self) -> str:
+        """Return the German keyword that confirms a successful StepStone application."""
         return "Bewerbung"
