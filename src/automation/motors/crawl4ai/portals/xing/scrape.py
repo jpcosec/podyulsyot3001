@@ -55,12 +55,12 @@ class XingAdapter(SmartScraperAdapter):
         for a in soup.find_all("a", href=True):
             href = a["href"]
             if re.search(r"-(\d+)$", href) and "xing.com/jobs/" in href:
-                job_links.append({"href": href, "text": a.get_text(strip=True)})
+                job_links.append({"url": href, "listing_snippet": a.get_text(strip=True)})
         seen = set()
         unique = []
         for item in job_links:
-            if item["href"] not in seen:
-                seen.add(item["href"])
+            if item["url"] not in seen:
+                seen.add(item["url"])
                 unique.append(item)
         return unique
 
