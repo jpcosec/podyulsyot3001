@@ -1,72 +1,29 @@
-"""StepStone C4AI apply translator — consumes STEPSTONE_APPLY portal intent."""
+"""StepStone C4AI apply translator — consumes the Ariadne Unified Map."""
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
+from src.automation.ariadne.models import AriadnePortalMap
 from src.automation.motors.crawl4ai.apply_engine import ApplyAdapter
-from src.automation.motors.crawl4ai.models import FormSelectors
-from src.automation.portals.stepstone.apply import STEPSTONE_APPLY
 
 
 class StepStoneApplyAdapter(ApplyAdapter):
-    """C4AI apply adapter for StepStone Easy Apply."""
+    """C4AI apply adapter for StepStone Easy Apply using the Ariadne Semantic Layer."""
 
-    portal = STEPSTONE_APPLY
+    def __init__(self, data_manager=None):
+        super().__init__(data_manager)
+        map_path = Path(__file__).parent.parent.parent.parent.parent / "portals" / "stepstone" / "maps" / "easy_apply.json"
+        with open(map_path, "r") as f:
+            self._map = AriadnePortalMap.model_validate(json.load(f))
 
     @property
-    def source_name(self) -> str:
-        """Portal identifier for StepStone.de."""
-        return self.portal.source_name
-
-    def _get_portal_base_url(self) -> str:
-        return self.portal.base_url
+    def portal_map(self) -> AriadnePortalMap:
+        return self._map
 
     def get_session_profile_dir(self) -> Path:
         """Return the browser session profile directory for StepStone authentication persistence."""
         return Path("data/profiles/stepstone_profile")
-
-    def get_form_selectors(self) -> FormSelectors:
-        """Return CSS selectors for the StepStone Easy Apply form elements."""
-        return FormSelectors(
-            apply_button="[data-at='apply-button']",
-            cv_upload="input[type='file']",
-            submit_button="[data-at='submit-button']",
-            success_indicator="[data-at='application-success']",
-            first_name="input[name='firstName']",
-            last_name="input[name='lastName']",
-            email="input[type='email']",
-            phone="input[name='phone']",
-            letter_upload=None,
-            cv_select_existing=None,
-        )
-
-    def get_open_modal_script(self) -> str:
-        """Return a C4A-Script snippet that opens the StepStone apply modal if not already open."""
-        return """
-IF NOT `[data-at="apply-modal"]` THEN
-  CLICK `[data-at="apply-button"]`
-  WAIT `[data-at="apply-modal"]` 10
-END
-"""
-
-    def get_fill_form_script(self, profile: dict) -> str:
-        """Return a C4A-Script snippet that fills contact fields using {{template}} placeholders resolved at runtime."""
-        del profile
-        return """
-SET `input[name="firstName"]` "{{first_name}}"
-SET `input[name="lastName"]` "{{last_name}}"
-SET `input[type="email"]` "{{email}}"
-IF `input[name="phone"]` THEN
-  SET `input[name="phone"]` "{{phone}}"
-END
-"""
-
-    def get_submit_script(self) -> str:
-        """Return a C4A-Script snippet that clicks submit and waits for the success indicator."""
-        return """
-CLICK `[data-at="submit-button"]`
-WAIT `[data-at="application-success"]` 15
-"""
 
     def get_success_text(self) -> str:
         """Return the German keyword that confirms a successful StepStone application."""

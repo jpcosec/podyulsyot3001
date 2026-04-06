@@ -1,0 +1,105 @@
+{
+  "portal_name": "xing",
+  "base_url": "https://www.xing.com",
+  "states": {
+    "job_details": {
+      "id": "job_details",
+      "description": "XING job listing page",
+      "presence_predicate": {
+        "required_elements": [
+          { "css": "[data-testid='apply-button']" }
+        ]
+      },
+      "components": {
+        "apply_button": { "css": "[data-testid='apply-button']" }
+      }
+    },
+    "easy_apply_modal": {
+      "id": "easy_apply_modal",
+      "description": "XING Easy Apply modal",
+      "presence_predicate": {
+        "required_elements": [
+          { "css": "[data-testid='apply-modal']" }
+        ]
+      },
+      "components": {
+        "first_name": { "css": "input[name='firstName']" },
+        "last_name": { "css": "input[name='lastName']" },
+        "email": { "css": "input[type='email']" },
+        "phone": { "css": "input[name='phone']" },
+        "cv_upload": { "css": "input[type='file']" },
+        "submit_button": { "css": "[data-testid='submit-button']" }
+      }
+    },
+    "apply_success": {
+      "id": "apply_success",
+      "description": "XING success page",
+      "presence_predicate": {
+        "required_elements": [
+          { "css": "[data-testid='application-success']" }
+        ]
+      }
+    }
+  },
+  "tasks": {
+    "submit_easy_apply": {
+      "id": "submit_easy_apply",
+      "goal": "submit_job_application",
+      "entry_state": "job_details",
+      "success_states": ["apply_success"],
+      "failure_states": []
+    }
+  },
+  "paths": {
+    "standard_easy_apply": {
+      "id": "standard_easy_apply",
+      "task_id": "submit_easy_apply",
+      "steps": [
+        {
+          "step_index": 1,
+          "name": "open_modal",
+          "description": "Open apply modal",
+          "state_id": "job_details",
+          "observe": { "required_elements": [{ "css": "[data-testid='apply-button']" }] },
+          "actions": [
+            { "intent": "click", "target": { "css": "[data-testid='apply-button']" } }
+          ]
+        },
+        {
+          "step_index": 2,
+          "name": "fill_contact",
+          "description": "Fill contact info",
+          "state_id": "easy_apply_modal",
+          "observe": { "required_elements": [{ "css": "input[name='firstName']" }] },
+          "actions": [
+            { "intent": "fill", "target": { "css": "input[name='firstName']" }, "value": "{{profile.first_name}}" },
+            { "intent": "fill", "target": { "css": "input[name='lastName']" }, "value": "{{profile.last_name}}" },
+            { "intent": "fill", "target": { "css": "input[type='email']" }, "value": "{{profile.email}}" },
+            { "intent": "fill", "target": { "css": "input[name='phone']" }, "value": "{{profile.phone}}", "optional": true }
+          ]
+        },
+        {
+          "step_index": 3,
+          "name": "upload_cv",
+          "description": "Upload CV",
+          "state_id": "easy_apply_modal",
+          "observe": { "required_elements": [{ "css": "input[type='file']" }] },
+          "actions": [
+            { "intent": "upload", "target": { "css": "input[type='file']" }, "value": "{{cv_path}}" }
+          ]
+        },
+        {
+          "step_index": 4,
+          "name": "submit",
+          "description": "Submit application",
+          "state_id": "easy_apply_modal",
+          "observe": { "required_elements": [{ "css": "[data-testid='submit-button']" }] },
+          "actions": [
+            { "intent": "click", "target": { "css": "[data-testid='submit-button']" } }
+          ],
+          "dry_run_stop": true
+        }
+      ]
+    }
+  }
+}
