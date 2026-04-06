@@ -1,8 +1,8 @@
 # Automation Directory Glossary
 
-Status: pre-migration reference for the unified automation refactor.
+Status: **completed** — migration executed 2026-04-06. This document served as the pre-migration design reference. The implemented layout is in `src/automation/README.md`.
 
-This document defines what each target directory means before any runtime move.
+This document defined what each target directory means before any runtime move. Retained as design context.
 
 ## Root
 

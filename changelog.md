@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-04-06
+
+- Completed Phase 1 of the unified automation refactor: removed `src/scraper/` and `src/apply/` and replaced them with `src/automation/`.
+- Added `src/automation/ariadne/portal_models.py` — minimal Ariadne portal schema (`ScrapePortalDefinition`, `ApplyPortalDefinition`, `ApplyStep`, `FormField`, `FieldType`) as the motor-agnostic boundary between portal knowledge and execution mechanics.
+- Added portal intent files under `src/automation/portals/` for all four portals (stepstone scrape+apply, xing scrape+apply, tuberlin scrape, linkedin apply). Portal files import only from Ariadne; no motor imports allowed.
+- Merged `src/scraper/models.py` (`JobPosting`) and `src/apply/models.py` (`FormSelectors`, `ApplicationRecord`, `ApplyMeta`) into `src/automation/motors/crawl4ai/models.py`. Restored full LLM-guidance field descriptions and modernized type annotations throughout.
+- Moved Crawl4AI extraction schemas from `data/ariadne/assets/crawl4ai_schemas/` to `src/automation/motors/crawl4ai/schemas/` (motor-local source-controlled assets).
+- Moved scrape engine (`SmartScraperAdapter`) to `src/automation/motors/crawl4ai/scrape_engine.py` and apply engine (`ApplyAdapter`) to `src/automation/motors/crawl4ai/apply_engine.py`, updating their internal imports to the new model location.
+- Rewrote the three C4AI scrape portal adapters (stepstone, xing, tuberlin) as translators under `src/automation/motors/crawl4ai/portals/`. Each derives `source_name`, `supported_params`, and `extract_job_id` from its `ScrapePortalDefinition`; URL building and link extraction remain as C4AI-specific methods.
+- Rewrote the three C4AI apply portal adapters (linkedin, stepstone, xing) as translators under `src/automation/motors/crawl4ai/portals/`. Each derives `source_name` and `_get_portal_base_url` from its `ApplyPortalDefinition`; CSS selectors and C4A-Script blocks remain as motor-specific methods.
+- Moved the BrowserOS CLI motor to `src/automation/motors/browseros/cli/` (client, executor, backend, models) and the packaged LinkedIn Easy Apply trace to `traces/` (renamed from `playbooks/`). Updated `backend.py` to import `ApplicationRecord` and `ApplyMeta` from `src.automation.motors.crawl4ai.models`.
+- Added `src/automation/main.py` — unified CLI with `scrape` and `apply` subcommands, replacing `src/scraper/main.py` and `src/apply/main.py`.
+- Fixed `XingAdapter.extract_links` to return dicts with key `"url"` (not `"href"`) so the scrape engine normalizer can process them; silent data loss previously occurred on all XING scrape runs.
+- Added `src/automation/README.md` following documentation standards.
+- Marked `plan_docs/automation/directory_glossary.md` and `plan_docs/automation/asset_placement.md` as completed.
+- 85 tests pass, 6 skipped (live-DOM selector fixture tests — expected).
+
 ## 2026-04-04
 
 - Added `README.txt` and rewrote `README.md` to document that this worktree is intentionally scoped to the browser automation pipeline.

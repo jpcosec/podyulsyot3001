@@ -1,8 +1,8 @@
 # Automation Asset Placement
 
-Status: pre-migration reference for deciding where existing assets go before code moves.
+Status: **completed** — migration executed 2026-04-06. All decisions below were resolved. Retained as design context.
 
-This document answers a simple question: for each current asset type, where should it live in the target automation architecture?
+This document answered: for each asset type, where should it live in the target automation architecture?
 
 ## Decision rules
 
