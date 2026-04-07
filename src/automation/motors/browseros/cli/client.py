@@ -159,6 +159,27 @@ class BrowserOSClient:
             )
         return elements
 
+    def search_dom(self, page_id: int, selector: str) -> list[int]:
+        """Search the DOM for elements matching a CSS selector.
+
+        Args:
+            page_id: Page identifier to search.
+            selector: CSS selector.
+
+        Returns:
+            List of matching element ids.
+        """
+        result = self.call_tool("search_dom", {"page": page_id, "selector": selector})
+        # Extract element IDs from the result
+        ids = []
+        if isinstance(result, list):
+            ids = [int(i) for i in result if str(i).isdigit()]
+        elif isinstance(result, dict):
+            val = result.get("elements") or result.get("ids") or []
+            if isinstance(val, list):
+                ids = [int(i) for i in val if str(i).isdigit()]
+        return ids
+
     def click(self, page_id: int, element_id: int) -> None:
         """Click an element identified from a BrowserOS snapshot.
 
