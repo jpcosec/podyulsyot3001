@@ -5,6 +5,7 @@
 This package provides a unified, semantic-driven browser automation system. It decouples **Path Knowledge** from **Execution Engines**, allowing for high resilience and cross-motor replay.
 
 - **Semantic Layer (`src/automation/ariadne/`)**: Backend-neutral models for States, Tasks, and Paths.
+- **AriadneSession (`src/automation/ariadne/session.py`)**: Orchestrates the apply loop, loads maps, dispatches to motors, and persists results.
 - **Unified Maps (`src/automation/portals/`)**: Single source of truth for portal logic in JSON.
 - **Execution Motors (`src/automation/motors/`)**: Replayers for Crawl4AI and BrowserOS.
 - **Persistence (`src/automation/storage.py`)**: Centralized artifact and metadata management.
@@ -42,8 +43,9 @@ All automation models are strictly typed via Pydantic:
 ## 🛠️ How to Add / Extend
 
 1. **Map the Portal**: Create a JSON map in `src/automation/portals/<portal>/maps/easy_apply.json` using the `AriadnePortalMap` schema.
-2. **Implement Adapter**: (Optional) If custom logic is needed, add an adapter in `src/automation/motors/crawl4ai/portals/`.
-3. **Register Source**: Add the portal name to the choices in `src/automation/main.py`.
+2. **Instantiate AriadneSession**: In the CLI or integration point, create `AriadneSession(portal_name)`.
+3. **Pick a Motor**: Pass `C4AIMotorProvider` or `BrowserOSMotorProvider` to `session.run(...)`.
+4. **Register Source**: Add the portal name to the CLI choices in `src/automation/main.py` if the portal is user-selectable there.
 
 ## 💻 How to Use
 
@@ -56,4 +58,4 @@ python -m src.automation.main apply --source linkedin --job-id 123 --cv my_cv.pd
 
 - **`State Mismatch`**: The navigator found a different state than expected. Check if the portal DOM changed and update the Map's `presence_predicate`.
 - **`TargetNotFound`**: A CSS or Text selector in the Map no longer matches. Inspect the `error_state.png` in the job's artifact folder.
-- **`Compilation Error`**: The compiler failed to turn the Map into a script. Validate the Map JSON against `src/automation/ariadne/models.py`.
+- **`Motor Session Error`**: The selected motor could not observe or execute a step. Check the backend-specific implementation under `src/automation/motors/`.

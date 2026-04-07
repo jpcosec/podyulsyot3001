@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-07] - AriadneSession Orchestrator
+
+### Added
+- Added `AriadneSession` as the apply orchestrator in `src/automation/ariadne/session.py`.
+- Added `MotorProvider` and `MotorSession` protocols in `src/automation/ariadne/motor_protocol.py`.
+- Added AST-based boundary guardrails in `tests/unit/automation/test_boundary_guardrails.py`.
+
+### Changed
+- Refactored the Crawl4AI apply backend to `C4AIMotorProvider` and `C4AIMotorSession` in `src/automation/motors/crawl4ai/apply_engine.py`.
+- Refactored the BrowserOS apply backend to `BrowserOSMotorProvider` and `BrowserOSMotorSession` in `src/automation/motors/browseros/cli/backend.py`.
+- Inlined backend selection into `src/automation/main.py` and removed the old registry-based flow.
+- Moved portal map coverage under `tests/unit/automation/portals/`.
+
+### Fixed
+- Fixed the pre-existing `navigate()` argument order bug in `BrowserOSReplayer`.
+
 ## [2026-04-06] - Unified Automation Phase 2
 
 ### Added

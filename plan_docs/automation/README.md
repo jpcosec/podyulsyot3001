@@ -12,7 +12,8 @@ Phase 1 established the `src/automation/` package structure and unified entry po
 
 - `plan_docs/automation/2026-04-04-ariadne-common-language-issues.md` — Active issues for semantic refinement.
 - `plan_docs/ariadne/` — Detailed design for translators, contracts, and error taxonomy.
-- `plan_docs/issues/` — Tracked technical debt and implementation gaps.
+- `plan_docs/issues/gaps/` — Hardening work for existing behavior.
+- `plan_docs/issues/unimplemented/` — Missing capabilities that are designed but not built yet.
 
 ## Design History
 

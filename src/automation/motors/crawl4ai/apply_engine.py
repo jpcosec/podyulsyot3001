@@ -3,6 +3,7 @@
 Implements MotorProvider / MotorSession for the Crawl4AI backend.
 Orchestration (map loading, navigation, run loop) is owned by AriadneSession.
 """
+
 from __future__ import annotations
 
 import json
@@ -31,7 +32,17 @@ class C4AIMotorSession:
         self._replayer = replayer
 
     async def observe(self, selectors: set[str]) -> dict[str, bool]:
-        """Check which CSS selectors are present in the live page."""
+        """Check which CSS selectors are present in the live page.
+
+        Args:
+            selectors: CSS selectors to probe in the active browser session.
+
+        Returns:
+            Mapping of selector to a boolean indicating whether it is present.
+
+        Raises:
+            ObservationFailed: If the observation hook does not produce any result.
+        """
         if not selectors:
             return {}
 
@@ -56,7 +67,9 @@ class C4AIMotorSession:
             ),
         )
         if not results:
-            raise ObservationFailed("observe() returned empty results — hook may not have fired")
+            raise ObservationFailed(
+                "observe() returned empty results — hook may not have fired"
+            )
         return results
 
     async def execute_step(
@@ -68,7 +81,16 @@ class C4AIMotorSession:
         is_first: bool,
         url: str | None,
     ) -> None:
-        """Execute a single AriadneStep via C4AIReplayer."""
+        """Execute a single AriadneStep via C4AIReplayer.
+
+        Args:
+            step: The semantic step to replay.
+            context: Template context used to render action values.
+            cv_path: Local CV path for upload actions.
+            letter_path: Optional local cover letter path.
+            is_first: Whether this is the first step in the replay loop.
+            url: Application URL used for first-step navigation when needed.
+        """
         await self._replayer.execute_step(
             step=step,
             crawler=self._crawler,
@@ -105,5 +127,8 @@ class C4AIMotorProvider:
             yield C4AIMotorSession(crawler, session_id, C4AIReplayer())
 
     def _browser_config(self, headless: bool = True) -> BrowserConfig:
-        from src.automation.motors.crawl4ai.browser_config import get_browseros_injected_config
+        from src.automation.motors.crawl4ai.browser_config import (
+            get_browseros_injected_config,
+        )
+
         return get_browseros_injected_config(headless=headless)

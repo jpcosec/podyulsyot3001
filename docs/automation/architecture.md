@@ -1,39 +1,59 @@
 # Automation Architecture
 
-Navigation guide to the automation system's design concepts and their implementation homes.
+Navigation guide to the automation system's current boundaries and implementation homes.
 
 ## Core design principle
 
-Portal knowledge (what fields exist, what steps a flow has) is separated from execution mechanics (how to interact with those fields in a browser). The boundary between them is the **Ariadne common language** defined in `src/automation/ariadne/models.py`.
+Portal knowledge and browser execution are separate concerns.
 
-This separation means adding a second execution backend for an existing portal requires no changes to the portal knowledge maps — only a new motor replayer.
+- `src/automation/portals/*/maps/` stores portal-specific flow knowledge as JSON.
+- `src/automation/ariadne/models.py` defines the shared semantic language consumed by every motor.
+- `src/automation/ariadne/session.py` orchestrates one apply run without owning motor-specific behavior.
 
-## Component Map
+That separation means an existing portal map can be replayed through a different motor without changing the map itself.
+
+## Runtime flow
+
+The apply stack now follows this path:
+
+1. CLI parses the request in `src/automation/main.py`.
+2. `AriadneSession` loads the portal map, ingest state, and replay context.
+3. A `MotorProvider` opens a backend-specific `MotorSession`.
+4. `AriadneNavigator` evaluates the observed state and decides the next step.
+5. The motor session observes the live page and executes the requested step.
+6. `AutomationStorage` persists `ApplyMeta` and related artifacts.
+
+## Component map
 
 | Component | Responsibility | Authoritative File |
 | :--- | :--- | :--- |
-| **Ariadne Map** | Portal knowledge, semantic states, and paths (JSON) | `src/automation/portals/*/maps/` |
-| **Common Language** | The backend-neutral models (Pydantic) | `src/automation/ariadne/models.py` |
-| **Navigator** | State-aware replay and recovery logic | `src/automation/ariadne/navigator.py` |
-| **Recorder** | Session capture and raw trace persistence | `src/automation/ariadne/recorder.py` |
-| **Motors** | Replayers for specific backends (C4A, BrowserOS) | `src/automation/motors/` |
-| **Persistence** | Centralized artifact and metadata management | `src/automation/storage.py` |
+| **Ariadne Map** | Portal knowledge, semantic states, and replay paths | `src/automation/portals/*/maps/` |
+| **Common Language** | Backend-neutral Pydantic models for states, paths, steps, and artifacts | `src/automation/ariadne/models.py` |
+| **AriadneSession** | Apply orchestrator: map loading, context building, run loop, and persistence wiring | `src/automation/ariadne/session.py` |
+| **Motor Protocol** | Contracts between Ariadne and each backend (`MotorProvider`, `MotorSession`) | `src/automation/ariadne/motor_protocol.py` |
+| **Navigator** | State-aware replay and mission status transitions | `src/automation/ariadne/navigator.py` |
+| **Recorder** | Session capture and raw trace persistence for promotion workflows | `src/automation/ariadne/recorder.py` |
+| **Normalizer** | Draft trace normalization into canonical Ariadne maps | `src/automation/ariadne/normalizer.py` |
+| **Motors** | Backend adapters for Crawl4AI and BrowserOS | `src/automation/motors/` |
+| **Persistence** | Artifact and metadata management across scrape/apply flows | `src/automation/storage.py` |
 
 ## Where to read more
 
 | Topic | Where |
 |---|---|
-| Package layout, boundary rules, data flows, how to extend | `src/automation/README.md` |
+| Package layout, extension rules, and CLI entry points | `src/automation/README.md` |
+| Ariadne domain layer and orchestration details | `src/automation/ariadne/README.md` |
+| Motor adapter layer and backend contracts | `src/automation/motors/README.md` |
 | Semantic layer concepts and goals | `docs/automation/ariadne_semantics.md` |
 | Motor capability and intent registry | `docs/automation/ariadne_capabilities.md` |
 | Crawl4AI usage rules | `docs/standards/code/crawl4ai_usage.md` |
 | Ingestion boundary rules | `docs/standards/code/ingestion_layer.md` |
 
-## Future Work (Phase 3+)
+## Future work
 
-The system has graduated to a full semantic model (Phase 2). Future work includes:
+The main architectural direction is in place. Remaining work is concentrated in:
 
-- **Promotion Workflow**: Tools to move draft recorded paths to canonical maps.
-- **Advanced Recovery**: LLM-assisted state identification when deterministic predicates fail.
-- **Multi-Motor Routing**: Automatically switching motors based on task complexity.
-- **Vision Motor**: OpenCV-based resolution for non-DOM elements.
+- richer trace normalization and promotion quality in `src/automation/ariadne/normalizer.py`
+- profile and candidate data plumbing in `src/automation/ariadne/session.py`
+- routing and enrichment layers for reliable application targets
+- additional motors such as vision-assisted and OS-native execution

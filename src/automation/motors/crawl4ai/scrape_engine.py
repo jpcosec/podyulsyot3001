@@ -110,7 +110,7 @@ def normalize_relative_date(
     return text, None
 
 
-# TODO(future): detect_language is a naive heuristic, fails on short/mixed-language postings — see plan_docs/issues/scraper/scraper_fragility.md
+# TODO(future): detect_language is a naive heuristic, fails on short/mixed-language postings — see plan_docs/issues/gaps/language-detection-hardening.md
 def detect_language(markdown_text: str) -> str:
     """Naive fallback to detect if a text is German or English."""
     german_markers = [
@@ -190,7 +190,10 @@ class SmartScraperAdapter(ABC):
         Returns:
             Browser settings injected with BrowserOS Chromium.
         """
-        from src.automation.motors.crawl4ai.browser_config import get_browseros_injected_config
+        from src.automation.motors.crawl4ai.browser_config import (
+            get_browseros_injected_config,
+        )
+
         return get_browseros_injected_config(headless=True, text_mode=True)
 
     def get_base_crawl_config(self) -> CrawlerRunConfig:

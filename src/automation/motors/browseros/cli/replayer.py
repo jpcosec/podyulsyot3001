@@ -72,8 +72,10 @@ class BrowserOSReplayer:
         fields_filled: list[str] = []
 
         for step in path.steps:
-            logger.info("%s Executing Step %s: %s", LogTag.FAST, step.step_index, step.name)
-            
+            logger.info(
+                "%s Executing Step %s: %s", LogTag.FAST, step.step_index, step.name
+            )
+
             # 1. Observation Guards
             snapshot = self.client.take_snapshot(page_id)
             self._assert_observation(snapshot, step.observe, step.name, page_id)
@@ -122,6 +124,10 @@ class BrowserOSReplayer:
             cv_path: Local CV path for upload actions.
             letter_path: Optional cover letter path for upload actions.
             fields_filled: Optional accumulator list for tracking touched fields.
+
+        Returns:
+            None. The method performs in-place browser actions and may append to
+            `fields_filled` as a side effect.
         """
         if fields_filled is None:
             fields_filled = []
@@ -131,6 +137,7 @@ class BrowserOSReplayer:
         if step.human_required:
             self._request_human_confirmation(step.description)
         # TODO: letter_path is not yet consumed by _execute_action.
+        # Track in plan_docs/issues/gaps/browseros-letter-upload-routing.md.
         # Wire it through when UPLOAD_LETTER intent is defined.
         for action in step.actions:
             self._execute_action(
@@ -183,12 +190,11 @@ class BrowserOSReplayer:
         if target.text:
             normalized_target = self._normalize_text(target.text)
             matches = [
-                e for e in snapshot 
-                if normalized_target in self._normalize_text(e.text)
+                e for e in snapshot if normalized_target in self._normalize_text(e.text)
             ]
             if matches:
                 return matches[0].element_id
-                
+
         # 2. Try CSS Selection (Requires page_id for live search)
         if target.css and page_id is not None:
             matches = self.client.search_dom(page_id, target.css)
@@ -218,26 +224,37 @@ class BrowserOSReplayer:
             return
 
         if not action.target:
-            logger.warning("%s Action '%s' has no target; skipping.", LogTag.WARN, action.intent)
+            logger.warning(
+                "%s Action '%s' has no target; skipping.", LogTag.WARN, action.intent
+            )
             return
 
         # Resolve Target ID
         try:
-            target_id = self._resolve_element_id(self.client.take_snapshot(page_id), action.target, page_id=page_id)
+            target_id = self._resolve_element_id(
+                self.client.take_snapshot(page_id), action.target, page_id=page_id
+            )
         except BrowserOSObserveError:
             if action.fallback:
-                logger.warning("%s Falling back for intent %s", LogTag.WARN, action.intent)
+                logger.warning(
+                    "%s Falling back for intent %s", LogTag.WARN, action.intent
+                )
                 return self._execute_action(
-                    page_id=page_id, action=action.fallback, context=context, 
-                    cv_path=cv_path, fields_filled=fields_filled
+                    page_id=page_id,
+                    action=action.fallback,
+                    context=context,
+                    cv_path=cv_path,
+                    fields_filled=fields_filled,
                 )
             if action.optional:
                 return
             raise
 
         # Map Intents to Tools
-        rendered_value = self.render_template(action.value or "", context) if action.value else None
-        
+        rendered_value = (
+            self.render_template(action.value or "", context) if action.value else None
+        )
+
         if action.intent == AriadneIntent.CLICK:
             self.client.click(page_id, target_id)
         elif action.intent == AriadneIntent.FILL:
@@ -252,7 +269,7 @@ class BrowserOSReplayer:
             # Use value as path if provided, else use cv_path
             upload_path = Path(rendered_value) if rendered_value else cv_path
             self.client.upload_file(page_id, target_id, upload_path)
-        
+
         if action.target.text:
             fields_filled.append(action.target.text)
 

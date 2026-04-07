@@ -3,6 +3,7 @@
 Implements MotorProvider / MotorSession for the BrowserOS backend.
 Orchestration (map loading, navigation, run loop) is owned by AriadneSession.
 """
+
 from __future__ import annotations
 
 import logging
@@ -32,7 +33,14 @@ class BrowserOSMotorSession:
         self._replayer = replayer
 
     async def observe(self, selectors: set[str]) -> dict[str, bool]:
-        """Check which CSS selectors are present via BrowserOS DOM search."""
+        """Check which CSS selectors are present via BrowserOS DOM search.
+
+        Args:
+            selectors: CSS selectors to search for on the current page.
+
+        Returns:
+            Mapping of selector to presence boolean.
+        """
         if not selectors:
             return {}
         results: dict[str, bool] = {}
@@ -50,7 +58,16 @@ class BrowserOSMotorSession:
         is_first: bool,
         url: str | None,
     ) -> None:
-        """Navigate on first step, then execute the AriadneStep."""
+        """Navigate on first step, then execute the AriadneStep.
+
+        Args:
+            step: The semantic step to execute.
+            context: Template context used by the replayer.
+            cv_path: Local CV path for upload actions.
+            letter_path: Optional local cover letter path.
+            is_first: Whether this is the first step in the run.
+            url: Application URL used for first-step navigation.
+        """
         if is_first and url:
             self._client.navigate(url, self._page_id)
         self._replayer.execute_single_step(
@@ -76,7 +93,9 @@ class BrowserOSMotorProvider:
         self._client = client or BrowserOSClient()
 
     @asynccontextmanager
-    async def open_session(self, session_id: str) -> AsyncIterator[BrowserOSMotorSession]:
+    async def open_session(
+        self, session_id: str
+    ) -> AsyncIterator[BrowserOSMotorSession]:
         """Open a hidden BrowserOS page for the duration of one apply run.
 
         Args:

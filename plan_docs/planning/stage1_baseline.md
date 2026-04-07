@@ -169,7 +169,7 @@ Module-level side effect — prevents testing the module without a `data/` direc
 
 **Location**: `src/scraper/smart_adapter.py:113`
 
-Heuristic fails on short or mixed-language postings. Documented in `plan_docs/issues/scraper/scraper_fragility.md`.
+Heuristic fails on short or mixed-language postings. Documented in `plan_docs/issues/gaps/language-detection-hardening.md`.
 
 **Resolution**: Deferred — acceptable for current scope.
 
@@ -179,7 +179,7 @@ Heuristic fails on short or mixed-language postings. Documented in `plan_docs/is
 
 **Location**: `src/scraper/providers/xing/adapter.py:108`
 
-Portal rebuilds silently break selectors. Documented in `plan_docs/issues/scraper/scraper_fragility.md`.
+Portal rebuilds silently break selectors. Documented in `plan_docs/issues/gaps/xing-listing-metadata-composition.md`.
 
 **Resolution**: Deferred — portal-level fragility, tracked issue.
 
@@ -191,7 +191,7 @@ Portal rebuilds silently break selectors. Documented in `plan_docs/issues/scrape
 
 `extract_links` returns plain URL strings, dropping listing-side metadata.
 
-**Resolution**: Deferred — tracked in `plan_docs/issues/scraper/scraper_fragility.md`.
+**Resolution**: Deferred — tracked in `plan_docs/issues/gaps/discovery-entry-contract.md`.
 
 ---
 

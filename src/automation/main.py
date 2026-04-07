@@ -5,6 +5,7 @@ Subcommands:
   apply    — job auto-application
   promote  — draft trace to canonical map
 """
+
 from __future__ import annotations
 
 import argparse
@@ -30,7 +31,7 @@ def _setup_logging(name: str) -> None:
     root = logging.getLogger()
     root.setLevel(logging.INFO)
     root.addHandler(handler)
-    
+
     # Also log to console
     console = logging.StreamHandler(sys.stdout)
     console.setFormatter(logging.Formatter("%(message)s"))
@@ -40,7 +41,9 @@ def _setup_logging(name: str) -> None:
 def _add_scrape_subcommand(sub: argparse._SubParsersAction) -> None:
     p = sub.add_parser("scrape", help="Job discovery and ingestion")
     p.add_argument("--source", required=True, choices=["tuberlin", "stepstone", "xing"])
-    p.add_argument("--drop-repeated", dest="drop_repeated", action="store_true", default=True)
+    p.add_argument(
+        "--drop-repeated", dest="drop_repeated", action="store_true", default=True
+    )
     p.add_argument("--overwrite", action="store_true")
     p.add_argument("--categories", nargs="+")
     p.add_argument("--city")
@@ -59,14 +62,22 @@ def _add_apply_subcommand(sub: argparse._SubParsersAction) -> None:
     p.add_argument("--letter", dest="letter_path")
     p.add_argument("--profile-json", dest="profile_json")
     p.add_argument("--dry-run", dest="dry_run", action="store_true", default=False)
-    p.add_argument("--setup-session", dest="setup_session", action="store_true", default=False)
+    p.add_argument(
+        "--setup-session", dest="setup_session", action="store_true", default=False
+    )
 
 
 def _add_promote_subcommand(sub: argparse._SubParsersAction) -> None:
-    p = sub.add_parser("promote", help="Promote a draft trace to a canonical portal map")
-    p.add_argument("--trace-id", required=True, help="ID of the session recording to promote")
+    p = sub.add_parser(
+        "promote", help="Promote a draft trace to a canonical portal map"
+    )
+    p.add_argument(
+        "--trace-id", required=True, help="ID of the session recording to promote"
+    )
     p.add_argument("--portal", required=True, help="Portal name")
-    p.add_argument("--flow", default="easy_apply", help="Flow name (default: easy_apply)")
+    p.add_argument(
+        "--flow", default="easy_apply", help="Flow name (default: easy_apply)"
+    )
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -88,13 +99,20 @@ async def _run_scrape(args) -> None:
     storage = AutomationStorage()
 
     if args.source == "stepstone":
-        from src.automation.motors.crawl4ai.portals.stepstone.scrape import StepStoneAdapter
+        from src.automation.motors.crawl4ai.portals.stepstone.scrape import (
+            StepStoneAdapter,
+        )
+
         adapter = StepStoneAdapter(storage.data_manager)
     elif args.source == "xing":
         from src.automation.motors.crawl4ai.portals.xing.scrape import XingAdapter
+
         adapter = XingAdapter(storage.data_manager)
     elif args.source == "tuberlin":
-        from src.automation.motors.crawl4ai.portals.tuberlin.scrape import TUBerlinAdapter
+        from src.automation.motors.crawl4ai.portals.tuberlin.scrape import (
+            TUBerlinAdapter,
+        )
+
         adapter = TUBerlinAdapter(storage.data_manager)
     else:
         logger.error("%s Unsupported scrape source: %s", LogTag.FAIL, args.source)
@@ -109,7 +127,9 @@ async def _run_scrape(args) -> None:
         if value is not None and param not in adapter.supported_params:
             logger.warning(
                 "%s Provider '%s' does not support '%s'; ignoring.",
-                LogTag.WARN, args.source, param,
+                LogTag.WARN,
+                args.source,
+                param,
             )
 
     already_scraped: list[str] = []
@@ -117,12 +137,16 @@ async def _run_scrape(args) -> None:
         source_root = storage.data_manager.source_root(args.source)
         if source_root.exists():
             already_scraped = sorted(
-                p.name for p in source_root.iterdir()
-                if p.is_dir() and storage.data_manager.has_ingested_job(args.source, p.name)
+                p.name
+                for p in source_root.iterdir()
+                if p.is_dir()
+                and storage.data_manager.has_ingested_job(args.source, p.name)
             )
 
     ingested = await adapter.run(already_scraped=already_scraped, **vars(args))
-    logger.info("%s Ingested %s jobs for source '%s'", LogTag.OK, len(ingested), args.source)
+    logger.info(
+        "%s Ingested %s jobs for source '%s'", LogTag.OK, len(ingested), args.source
+    )
 
 
 async def _run_apply(args) -> None:
@@ -138,6 +162,7 @@ async def _run_apply(args) -> None:
     else:
         profile_data = None
     # TODO: profile_data is parsed but not yet wired to AriadneSession._build_context.
+    # Track in plan_docs/issues/gaps/profile-context-and-candidate-store.md.
     # When AriadneSession.run() accepts a profile dict, pass it here.
     _ = profile_data  # suppress unused-variable lint
 
@@ -146,21 +171,26 @@ async def _run_apply(args) -> None:
 
     if args.backend == "browseros":
         from src.automation.motors.browseros.cli.backend import BrowserOSMotorProvider
+
         motor = BrowserOSMotorProvider()
     elif args.backend == "crawl4ai":
         from src.automation.motors.crawl4ai.apply_engine import C4AIMotorProvider
+
         motor = C4AIMotorProvider()
     else:
         logger.error("%s Unsupported backend: %s", LogTag.FAIL, args.backend)
         sys.exit(1)
 
     if args.setup_session and args.job_id:
-        logger.error("%s --setup-session and --job-id are mutually exclusive.", LogTag.FAIL)
+        logger.error(
+            "%s --setup-session and --job-id are mutually exclusive.", LogTag.FAIL
+        )
         sys.exit(1)
 
     if args.setup_session:
         # BrowserOS only: open visible page for manual login
         from src.automation.motors.browseros.cli.client import BrowserOSClient
+
         client = BrowserOSClient()
         base_url = session.portal_map.base_url
         page_id = client.new_page()
@@ -192,26 +222,31 @@ async def _run_promote(args) -> None:
 
     _setup_logging(f"promote_{args.portal}")
     logger = logging.getLogger(__name__)
-    
+
     trace_path = Path(f"data/ariadne/recordings/{args.trace_id}/trace_manifest.json")
     if not trace_path.exists():
         logger.error("%s Trace manifest not found at %s", LogTag.FAIL, trace_path)
         sys.exit(1)
-        
+
     with open(trace_path, "r") as f:
         trace = AriadneSessionTrace.model_validate(json.load(f))
-        
+
     normalizer = AriadneNormalizer()
     portal_map = normalizer.normalize(trace)
-    
+
     # Target path
     dest_path = Path(f"src/automation/portals/{args.portal}/maps/{args.flow}.json")
     dest_path.parent.mkdir(parents=True, exist_ok=True)
-    
+
     with open(dest_path, "w") as f:
         f.write(portal_map.model_dump_json(indent=2))
-        
-    logger.info("%s Promoted trace '%s' to canonical map: %s", LogTag.OK, args.trace_id, dest_path)
+
+    logger.info(
+        "%s Promoted trace '%s' to canonical map: %s",
+        LogTag.OK,
+        args.trace_id,
+        dest_path,
+    )
 
 
 async def main(argv: list[str] | None = None) -> None:

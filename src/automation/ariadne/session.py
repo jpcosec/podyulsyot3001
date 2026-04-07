@@ -1,4 +1,5 @@
 """Ariadne Session — Orchestrator for portal apply flows."""
+
 from __future__ import annotations
 
 import json
@@ -39,7 +40,10 @@ class AriadneSession:
         if not self._map:
             map_path = (
                 Path(__file__).parent.parent
-                / "portals" / self.portal_name / "maps" / "easy_apply.json"
+                / "portals"
+                / self.portal_name
+                / "maps"
+                / "easy_apply.json"
             )
             if not map_path.exists():
                 raise FileNotFoundError(
@@ -93,7 +97,9 @@ class AriadneSession:
         application_url = ingest_data.get("application_url") or ingest_data.get("url")
         if not application_url:
             raise ValueError(f"No application_url in ingest artifact for job {job_id}")
-        context = self._build_context(ingest_data, cv_path, letter_path, application_url)
+        context = self._build_context(
+            ingest_data, cv_path, letter_path, application_url
+        )
         all_selectors = self._collect_selectors(portal_map)
         navigator = AriadneNavigator(portal_map)
         session_id = f"apply_{self.portal_name}_{job_id}"
@@ -106,7 +112,9 @@ class AriadneSession:
                     step = path.steps[step_index - 1]
 
                     if dry_run and step.dry_run_stop:
-                        logger.info("%s Dry-run stop at step '%s'", LogTag.OK, step.name)
+                        logger.info(
+                            "%s Dry-run stop at step '%s'", LogTag.OK, step.name
+                        )
                         break
 
                     obs = await ms.observe(all_selectors)
@@ -140,7 +148,9 @@ class AriadneSession:
 
                     obs_after = await ms.observe(all_selectors)
                     next_state = navigator.find_current_state(obs_after)
-                    step_index = navigator.get_next_step_index(path, step_index, next_state)
+                    step_index = navigator.get_next_step_index(
+                        path, step_index, next_state
+                    )
 
             final_status = "dry_run" if dry_run else "submitted"
             meta = ApplyMeta(status=final_status, timestamp=timestamp)
@@ -151,7 +161,9 @@ class AriadneSession:
         except Exception as exc:
             logger.error("%s Apply failed: %s", LogTag.FAIL, exc)
             error_meta = ApplyMeta(status="failed", timestamp=timestamp, error=str(exc))
-            self.storage.write_apply_meta(self.portal_name, job_id, error_meta.model_dump())
+            self.storage.write_apply_meta(
+                self.portal_name, job_id, error_meta.model_dump()
+            )
             raise
 
     def _collect_selectors(self, portal_map: AriadnePortalMap) -> set[str]:
@@ -171,6 +183,7 @@ class AriadneSession:
         application_url: str | None,
     ) -> dict[str, Any]:
         # TODO: accept profile dict parameter; currently hardcoded as development stub.
+        # Track in plan_docs/issues/gaps/profile-context-and-candidate-store.md.
         return {
             "profile": {
                 "first_name": "Juan Pablo",

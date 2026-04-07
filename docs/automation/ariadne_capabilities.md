@@ -10,7 +10,7 @@ This document maps high-level **Ariadne Intents** to the low-level capabilities 
 | **`FILL`** | `SET <sel> "<val>"` | `fill` | Crawl4AI `SET` is fast; `TYPE` is slower/human-like. |
 | **`FILL_REACT`** | (Custom JS) | `evaluate_script_react` | Special handling for React controlled components. |
 | **`SELECT`** | `SELECT <sel> "<val>"` | `select_option` | Dropdown/Combobox selection. |
-| **`UPLOAD`** | `UPLOAD <sel> "<path>"` | `upload_file` | Implemented via `before_retrieve_html` hook for reliability. |
+| **`UPLOAD`** | Playwright hook (`page.set_input_files`) | `upload_file` | Crawl4AI upload is currently implemented through hooks, not native C4A-Script. |
 | **`PRESS_KEY`** | `PRESS <key>` | `press_key` | Supports Tab, Enter, Escape, etc. |
 | **`SCROLL`** | `SCROLL <dir> <amt>` | `scroll_page` | Crawl4AI supports specific pixel amounts. |
 | **`WAIT`** | `WAIT <sel> <timeout>` | (Implicit/Snapshot) | BrowserOS usually waits for snapshot stability. |
