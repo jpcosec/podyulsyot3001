@@ -61,6 +61,7 @@ def _add_apply_subcommand(sub: argparse._SubParsersAction) -> None:
     p.add_argument("--cv", dest="cv_path")
     p.add_argument("--letter", dest="letter_path")
     p.add_argument("--profile-json", dest="profile_json")
+    p.add_argument("--credential-json", dest="credential_json")
     p.add_argument("--dry-run", dest="dry_run", action="store_true", default=False)
     p.add_argument(
         "--setup-session", dest="setup_session", action="store_true", default=False
@@ -162,6 +163,13 @@ async def _run_apply(args) -> None:
     else:
         profile_data = None
 
+    if args.credential_json:
+        credential_data = json.loads(
+            Path(args.credential_json).read_text(encoding="utf-8")
+        )
+    else:
+        credential_data = None
+
     storage = AutomationStorage()
     session = AriadneSession(portal_name=args.source, storage=storage)
 
@@ -189,9 +197,31 @@ async def _run_apply(args) -> None:
 
         client = BrowserOSClient()
         base_url = session.portal_map.base_url
+        credential_store = storage.load_credential_store(credential_data)
+        resolved_credentials = credential_store.resolve(args.source, base_url)
         page_id = client.new_page()
-        client.navigate(base_url, page_id)
+        client.navigate(
+            resolved_credentials.setup_url(base_url)
+            if resolved_credentials
+            else base_url,
+            page_id,
+        )
         client.show_page(page_id)
+        if resolved_credentials and resolved_credentials.effective_browser_profile_dir:
+            logger.info(
+                "%s Session profile: %s",
+                LogTag.FAST,
+                resolved_credentials.effective_browser_profile_dir,
+            )
+        if resolved_credentials:
+            missing = resolved_credentials.missing_required_secrets()
+            if missing:
+                logger.warning(
+                    "%s Missing credential env vars for %s: %s",
+                    LogTag.WARN,
+                    resolved_credentials.matched_domain,
+                    ", ".join(missing),
+                )
         input(f"\n[{args.source}] Log in in BrowserOS, then press Enter.\n")
         logger.info("%s BrowserOS session ready for %s", LogTag.OK, args.source)
         return
@@ -206,6 +236,7 @@ async def _run_apply(args) -> None:
         cv_path=Path(args.cv_path),
         letter_path=Path(args.letter_path) if args.letter_path else None,
         profile=profile_data,
+        credentials=credential_data,
         dry_run=args.dry_run,
     )
     logger.info("%s Apply completed: status=%s", LogTag.OK, meta.status)

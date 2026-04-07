@@ -7,6 +7,7 @@ This package provides a unified, semantic-driven browser automation system. It d
 - **Semantic Layer (`src/automation/ariadne/`)**: Backend-neutral models for States, Tasks, and Paths.
 - **AriadneSession (`src/automation/ariadne/session.py`)**: Orchestrates the apply loop, resolves portal routing, dispatches to motors, and persists results.
 - **Apply HITL (`src/automation/ariadne/hitl.py`)**: Persists interrupt payloads, BrowserOS screenshots, and terminal resume decisions when a run needs operator help.
+- **Credential Store (`src/automation/credentials.py`)**: Holds domain-bound login metadata, persistent-profile hints, and env-var secret references without persisting passwords.
 - **Unified Maps (`src/automation/portals/`)**: Single source of truth for portal logic in JSON.
 - **Portal Routing (`src/automation/portals/*/routing.py`)**: Portal-specific branching that decides whether a job stays onsite, redirects to an ATS, or hands off to email.
 - **Execution Motors (`src/automation/motors/`)**: Replayers for Crawl4AI and BrowserOS.
@@ -23,6 +24,8 @@ GEMINI_API_KEY=...       # Same as above
 PLAYWRIGHT_BROWSERS_PATH=0
 ```
 
+Login-required apply flows can also load a credential metadata file with `--credential-json`. The file points to env var names and persistent browser profile dirs; it must not contain raw secret values.
+
 ## 🚀 CLI / Usage
 
 The unified CLI entry point handles both discovery and application.
@@ -32,7 +35,7 @@ The unified CLI entry point handles both discovery and application.
 python -m src.automation.main scrape --source <portal> --limit 5
 
 # Apply to jobs
-python -m src.automation.main apply --source <portal> --job-id <id> --cv <path> --dry-run
+python -m src.automation.main apply --source <portal> --job-id <id> --cv <path> --credential-json credentials.json --dry-run
 ```
 
 Arguments are defined in the `build_parser()` function in `src/automation/main.py`.
@@ -43,6 +46,7 @@ All automation models are strictly typed via Pydantic:
 - **`AriadnePortalMap`**: Defines the portal's semantic landscape. See `src/automation/ariadne/models.py`.
 - **`ApplyMeta`**: Records the result of an application attempt. See `src/automation/ariadne/models.py`.
 - **`CandidateProfile`** and **`ExecutionContext`**: Define the runtime apply context shared by the CLI, storage, and motors. See `src/automation/contracts.py`.
+- **`CredentialStore`** and **`ResolvedPortalCredentials`**: Define the metadata-only login contract for domain-bound secrets and persistent sessions. See `src/automation/credentials.py`.
 
 ## 🛠️ How to Add / Extend
 

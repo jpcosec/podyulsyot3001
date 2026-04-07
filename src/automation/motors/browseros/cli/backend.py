@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, AsyncIterator
 
 from src.automation.ariadne.contracts import adapt_replay_step
+from src.automation.credentials import ResolvedPortalCredentials
 from src.automation.motors.browseros.cli.client import BrowserOSClient
 from src.automation.motors.browseros.cli.replayer import BrowserOSReplayer
 from src.shared.log_tags import LogTag
@@ -27,10 +28,12 @@ class BrowserOSMotorSession:
         client: BrowserOSClient,
         page_id: int,
         replayer: BrowserOSReplayer,
+        credentials: ResolvedPortalCredentials | None = None,
     ) -> None:
         self._client = client
         self._page_id = page_id
         self._replayer = replayer
+        self._credentials = credentials
 
     async def observe(self, selectors: set[str]) -> dict[str, bool]:
         """Check which CSS selectors are present via BrowserOS DOM search.
@@ -102,6 +105,14 @@ class BrowserOSMotorSession:
             "step_name": getattr(step, "name", None),
             "screenshot_path": screenshot_path,
             "snapshot_path": snapshot_path,
+            "browser_profile_dir": (
+                self._credentials.effective_browser_profile_dir
+                if self._credentials
+                else None
+            ),
+            "required_secret_keys": (
+                self._credentials.required_secret_keys if self._credentials else []
+            ),
         }
 
 
@@ -120,12 +131,15 @@ class BrowserOSMotorProvider:
 
     @asynccontextmanager
     async def open_session(
-        self, session_id: str
+        self,
+        session_id: str,
+        credentials: ResolvedPortalCredentials | None = None,
     ) -> AsyncIterator[BrowserOSMotorSession]:
         """Open a hidden BrowserOS page for the duration of one apply run.
 
         Args:
             session_id: Unused by BrowserOS (page_id is used instead), kept for protocol compat.
+            credentials: Optional runtime credential metadata for the session.
 
         Yields:
             BrowserOSMotorSession ready to observe and execute steps.
@@ -133,7 +147,10 @@ class BrowserOSMotorProvider:
         page_id = self._client.new_hidden_page()
         try:
             yield BrowserOSMotorSession(
-                self._client, page_id, BrowserOSReplayer(self._client)
+                self._client,
+                page_id,
+                BrowserOSReplayer(self._client),
+                credentials=credentials,
             )
         finally:
             try:

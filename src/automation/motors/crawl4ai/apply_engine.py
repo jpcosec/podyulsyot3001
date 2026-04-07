@@ -15,6 +15,7 @@ from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig
 
 from src.automation.ariadne.exceptions import ObservationFailed
 from src.automation.ariadne.models import AriadneStep
+from src.automation.credentials import ResolvedPortalCredentials
 from src.automation.motors.crawl4ai.replayer import C4AIReplayer
 
 
@@ -26,10 +27,12 @@ class C4AIMotorSession:
         crawler: AsyncWebCrawler,
         session_id: str,
         replayer: C4AIReplayer,
+        credentials: ResolvedPortalCredentials | None = None,
     ) -> None:
         self._crawler = crawler
         self._session_id = session_id
         self._replayer = replayer
+        self._credentials = credentials
 
     async def observe(self, selectors: set[str]) -> dict[str, bool]:
         """Check which CSS selectors are present in the live page.
@@ -114,6 +117,14 @@ class C4AIMotorSession:
             "session_id": self._session_id,
             "reason": reason,
             "step_name": step.name,
+            "browser_profile_dir": (
+                self._credentials.effective_browser_profile_dir
+                if self._credentials
+                else None
+            ),
+            "required_secret_keys": (
+                self._credentials.required_secret_keys if self._credentials else []
+            ),
         }
 
 
@@ -128,17 +139,27 @@ class C4AIMotorProvider:
     """
 
     @asynccontextmanager
-    async def open_session(self, session_id: str) -> AsyncIterator[C4AIMotorSession]:
+    async def open_session(
+        self,
+        session_id: str,
+        credentials: ResolvedPortalCredentials | None = None,
+    ) -> AsyncIterator[C4AIMotorSession]:
         """Open a Crawl4AI browser session.
 
         Args:
             session_id: Unique session name (used for tab/CDP reuse).
+            credentials: Optional runtime credential metadata for the session.
 
         Yields:
             C4AIMotorSession ready to observe and execute steps.
         """
         async with AsyncWebCrawler(config=self._browser_config()) as crawler:
-            yield C4AIMotorSession(crawler, session_id, C4AIReplayer())
+            yield C4AIMotorSession(
+                crawler,
+                session_id,
+                C4AIReplayer(),
+                credentials=credentials,
+            )
 
     def _browser_config(self, headless: bool = True) -> BrowserConfig:
         from src.automation.motors.crawl4ai.browser_config import (

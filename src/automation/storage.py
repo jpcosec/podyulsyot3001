@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from src.automation.contracts import CandidateProfile
+from src.automation.credentials import CredentialStore
 from src.core.data_manager import DataManager
 
 logger = logging.getLogger(__name__)
@@ -65,6 +66,23 @@ class AutomationStorage:
         if profile_data is None:
             return CandidateProfile()
         return CandidateProfile.model_validate(profile_data)
+
+    def load_credential_store(
+        self, store_data: dict[str, Any] | CredentialStore | None = None
+    ) -> CredentialStore:
+        """Validate and normalize credential-store metadata for apply runs.
+
+        Args:
+            store_data: Raw credential metadata from the CLI or an existing model.
+
+        Returns:
+            A validated credential store model.
+        """
+        if isinstance(store_data, CredentialStore):
+            return store_data
+        if store_data is None:
+            return CredentialStore()
+        return CredentialStore.model_validate(store_data)
 
     def write_apply_meta(self, source: str, job_id: str, data: dict[str, Any]) -> None:
         """Writes application attempt metadata.

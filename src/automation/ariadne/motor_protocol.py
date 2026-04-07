@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, AsyncContextManager, Protocol, runtime_checkable
 
+from src.automation.credentials import ResolvedPortalCredentials
 from src.automation.ariadne.models import AriadneStep
 
 
@@ -49,11 +50,16 @@ class MotorSession(Protocol):
 class MotorProvider(Protocol):
     """Factory for opening motor sessions."""
 
-    def open_session(self, session_id: str) -> AsyncContextManager[MotorSession]:
+    def open_session(
+        self,
+        session_id: str,
+        credentials: ResolvedPortalCredentials | None = None,
+    ) -> AsyncContextManager[MotorSession]:
         """Open a browser session scoped to one apply run.
 
         Args:
             session_id: Unique identifier for this session (used for browser tab/session reuse).
+            credentials: Optional runtime credential metadata for the session.
 
         Returns:
             Async context manager yielding a MotorSession.

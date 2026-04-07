@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [2026-04-07] - Apply HITL Channel
 
+## [2026-04-07] - Credential Store Contract
+
+### Added
+- Added `src/automation/credentials.py` with domain-bound credential metadata, env-var secret references, and persistent-profile hints for login-required apply flows.
+- Added regression coverage in `tests/unit/automation/test_credentials.py`, `tests/unit/automation/test_cli.py`, and `tests/unit/automation/ariadne/test_session.py` for credential-store validation, CLI wiring, and motor injection.
+
+### Changed
+- Updated `src/automation/main.py`, `src/automation/storage.py`, and `src/automation/ariadne/session.py` so apply runs and manual session setup can load a metadata-only credential store without persisting secret values.
+- Updated BrowserOS and Crawl4AI motor providers to accept resolved credential metadata and expose only non-secret login context during HITL capture.
+
 ### Added
 - Added persisted apply HITL contracts in `src/automation/ariadne/hitl.py` plus storage helpers for interrupt payloads, operator decisions, and per-step BrowserOS artifacts.
 - Added Ariadne and BrowserOS regression coverage for interrupt persistence, operator resume/abort handling, and BrowserOS observation-to-HITL escalation.

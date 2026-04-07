@@ -10,6 +10,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from src.automation.contracts import CandidateProfile
+from src.automation.credentials import ResolvedPortalCredentials
 from src.automation.ariadne.exceptions import (
     HumanInterventionRequired,
     TaskAborted,
@@ -81,10 +82,16 @@ class _FakeProvider:
     def __init__(self, session: _FakeSession):
         self._session = session
         self.session_ids: list[str] = []
+        self.credentials: list[ResolvedPortalCredentials | None] = []
 
     @asynccontextmanager
-    async def open_session(self, session_id: str) -> AsyncIterator[_FakeSession]:
+    async def open_session(
+        self,
+        session_id: str,
+        credentials: ResolvedPortalCredentials | None = None,
+    ) -> AsyncIterator[_FakeSession]:
         self.session_ids.append(session_id)
+        self.credentials.append(credentials)
         yield self._session
 
 
@@ -188,6 +195,37 @@ async def test_run_passes_profile_context_to_motor():
     assert context["profile"]["first_name"] == "Ada"
     assert context["profile"]["last_name"] == "Lovelace"
     assert context["profile"]["linkedin_url"] == "https://example.com/in/ada"
+
+
+@pytest.mark.asyncio
+async def test_run_resolves_credentials_and_passes_them_to_motor():
+    sess, storage = _make_session(_minimal_map())
+    storage.load_credential_store.side_effect = lambda payload=None: payload
+    fake_session = _FakeSession()
+    motor = _FakeProvider(fake_session)
+    resolved = ResolvedPortalCredentials(
+        portal_name="xing",
+        matched_domain="www.xing.com",
+        auth_strategy="mixed",
+        secret_env_vars={"password": "XING_PASSWORD"},
+        required_secret_keys=["password"],
+        optional_secret_keys=[],
+    )
+
+    class _CredentialStore:
+        def resolve(self, portal_name: str, url: str | None = None):
+            assert portal_name == "xing"
+            assert url == "https://www.xing.com/jobs/apply/123"
+            return resolved
+
+    await sess.run(
+        motor,
+        job_id="job1",
+        cv_path=Path("cv.pdf"),
+        credentials=_CredentialStore(),
+    )
+
+    assert motor.credentials == [resolved]
 
 
 @pytest.mark.asyncio

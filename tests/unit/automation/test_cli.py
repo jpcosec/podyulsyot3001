@@ -85,6 +85,14 @@ def test_apply_parses_setup_session():
     assert args.job_id is None
 
 
+def test_apply_parses_credential_json() -> None:
+    parser = build_parser()
+    args = parser.parse_args(
+        ["apply", "--source", "xing", "--credential-json", "credentials.json"]
+    )
+    assert args.credential_json == "credentials.json"
+
+
 def test_apply_parses_browseros_backend():
     parser = build_parser()
     args = parser.parse_args(
@@ -108,6 +116,23 @@ def test_apply_parses_browseros_backend():
 async def test_run_apply_passes_profile_json_to_session(tmp_path, monkeypatch):
     profile_path = tmp_path / "profile.json"
     profile_path.write_text(json.dumps({"first_name": "Ada"}), encoding="utf-8")
+    credential_path = tmp_path / "credentials.json"
+    credential_path.write_text(
+        json.dumps(
+            {
+                "bindings": [
+                    {
+                        "portal_name": "xing",
+                        "domains": ["xing.com"],
+                        "secrets": {
+                            "password": {"env_var": "XING_PASSWORD", "required": True}
+                        },
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
     captured: dict[str, object] = {}
 
     class FakeSession:
@@ -146,6 +171,8 @@ async def test_run_apply_passes_profile_json_to_session(tmp_path, monkeypatch):
             "/path/cv.pdf",
             "--profile-json",
             str(profile_path),
+            "--credential-json",
+            str(credential_path),
         ]
     )
 
@@ -154,3 +181,4 @@ async def test_run_apply_passes_profile_json_to_session(tmp_path, monkeypatch):
     assert captured["portal_name"] == "xing"
     assert captured["motor"] is fake_motor
     assert captured["kwargs"]["profile"] == {"first_name": "Ada"}
+    assert captured["kwargs"]["credentials"]["bindings"][0]["portal_name"] == "xing"

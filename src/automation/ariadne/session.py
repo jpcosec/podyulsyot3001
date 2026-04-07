@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from src.automation.contracts import ApplyJobContext, CandidateProfile, ExecutionContext
+from src.automation.credentials import CredentialStore
 from src.automation.ariadne.exceptions import (
     HumanInterventionRequired,
     TaskAborted,
@@ -75,6 +76,7 @@ class AriadneSession:
         cv_path: Path,
         letter_path: Path | None = None,
         profile: dict[str, Any] | CandidateProfile | None = None,
+        credentials: dict[str, Any] | CredentialStore | None = None,
         dry_run: bool = False,
         path_id: str | None = None,
     ) -> ApplyMeta:
@@ -86,6 +88,7 @@ class AriadneSession:
             cv_path: Local path to the CV file.
             letter_path: Optional cover letter.
             profile: Candidate profile payload for placeholder resolution.
+            credentials: Optional credential metadata for login-required flows.
             dry_run: If True, stop at the first step marked dry_run_stop.
             path_id: Optional explicit path override when the resolved route stays onsite.
 
@@ -133,6 +136,10 @@ class AriadneSession:
                 )
 
             candidate_profile = self.storage.load_candidate_profile(profile)
+            credential_store = self.storage.load_credential_store(credentials)
+            resolved_credentials = credential_store.resolve(
+                self.portal_name, application_url
+            )
             context = self._build_context(
                 ingest_data=ingest_data,
                 profile=candidate_profile,
@@ -143,7 +150,10 @@ class AriadneSession:
             all_selectors = self._collect_selectors(portal_map)
             navigator = AriadneNavigator(portal_map)
 
-            async with motor.open_session(session_id) as ms:
+            async with motor.open_session(
+                session_id,
+                credentials=resolved_credentials,
+            ) as ms:
                 step_index = 1
                 while step_index <= len(path.steps):
                     step = path.steps[step_index - 1]
