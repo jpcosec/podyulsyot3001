@@ -3,7 +3,7 @@
 This document tracks known technical debt, structural gaps, and missing features across the unified automation system.
 
 ## 1. Structural Debt
-- [ ] **Residual Directories**: `src/scraper/` and `src/apply/` still exist as empty directories with `__pycache__`.
+- [x] **Residual Directories**: `src/scraper/` and `src/apply/` have been fully deleted.
 - [ ] **Scraper Refactor**: Scrape adapters in `src/automation/portals/*/scrape.py` still use Python models instead of JSON Maps.
 - [ ] **Registry Logic**: Backend and portal selection are hardcoded in `src/automation/main.py`. Should move to a dynamic factory.
 
