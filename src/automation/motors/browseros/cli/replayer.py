@@ -106,6 +106,7 @@ class BrowserOSReplayer:
         step: AriadneStep,
         context: dict[str, Any],
         cv_path: Path,
+        letter_path: Path | None = None,
         fields_filled: list[str] | None = None,
     ) -> None:
         """Execute a single AriadneStep on the given page.
@@ -115,11 +116,12 @@ class BrowserOSReplayer:
             step: The step to execute.
             context: Template context for interpolation.
             cv_path: Local CV path for upload actions.
+            letter_path: Optional cover letter path for upload actions.
             fields_filled: Optional accumulator list for tracking touched fields.
         """
         if fields_filled is None:
             fields_filled = []
-        logger.info("%s Executing Step %s: %s", LogTag.OK, step.step_index, step.name)
+        logger.info("%s Executing Step %s: %s", LogTag.FAST, step.step_index, step.name)
         snapshot = self.client.take_snapshot(page_id)
         self._assert_observation(snapshot, step.observe, step.name, page_id)
         if step.human_required:
@@ -206,7 +208,7 @@ class BrowserOSReplayer:
         """Execute a single AriadneAction."""
         if action.intent == AriadneIntent.NAVIGATE:
             url = self.render_template(action.value or "", context)
-            self.client.navigate(page_id, url)
+            self.client.navigate(url, page_id)
             return
 
         if not action.target:

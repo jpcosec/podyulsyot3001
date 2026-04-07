@@ -33,6 +33,8 @@ class BrowserOSMotorSession:
 
     async def observe(self, selectors: set[str]) -> dict[str, bool]:
         """Check which CSS selectors are present via BrowserOS DOM search."""
+        if not selectors:
+            return {}
         results: dict[str, bool] = {}
         for sel in selectors:
             matches = self._client.search_dom(self._page_id, sel)
@@ -56,6 +58,7 @@ class BrowserOSMotorSession:
             step=step,
             context=context,
             cv_path=cv_path,
+            letter_path=letter_path,
         )
 
 
