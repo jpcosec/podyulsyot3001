@@ -10,7 +10,9 @@ All runtime automation code lives under `src/automation/`:
 
 - **`src/automation/ariadne/`**: The semantic layer (Models, Compilers, and Serializers).
 - **`src/automation/portals/`**: Portal-specific intent (Unified Maps in JSON).
-- **`src/automation/motors/`**: Execution engines (Crawl4AI, BrowserOS CLI).
+- **`src/automation/motors/`**: Execution engines.
+    - **Crawl4AI**: Injected into BrowserOS via CDP (Port 9101).
+    - **BrowserOS CLI**: Uses MCP tools (Port 9200) for deterministic replay.
 
 For a detailed architectural overview, see `docs/automation/ariadne_semantics.md`.
 

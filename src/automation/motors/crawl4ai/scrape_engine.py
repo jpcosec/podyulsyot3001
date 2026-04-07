@@ -188,9 +188,10 @@ class SmartScraperAdapter(ABC):
         """Return the default browser configuration for scraping runs.
 
         Returns:
-            Browser settings tuned for text-first ingestion.
+            Browser settings injected with BrowserOS Chromium.
         """
-        return BrowserConfig(headless=True, text_mode=True)
+        from src.automation.motors.browseros.injection import get_browseros_injected_config
+        return get_browseros_injected_config(headless=True, text_mode=True)
 
     def get_base_crawl_config(self) -> CrawlerRunConfig:
         """Return the shared Crawl4AI run configuration.

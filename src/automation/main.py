@@ -45,7 +45,7 @@ def _add_scrape_subcommand(sub: argparse._SubParsersAction) -> None:
 
 def _add_apply_subcommand(sub: argparse._SubParsersAction) -> None:
     p = sub.add_parser("apply", help="Job auto-application")
-    p.add_argument("--backend", choices=["crawl4ai", "browseros"], default="crawl4ai")
+    p.add_argument("--backend", choices=["crawl4ai", "browseros"], default="browseros")
     p.add_argument("--source", required=True, choices=["xing", "stepstone", "linkedin"])
     p.add_argument("--job-id", dest="job_id")
     p.add_argument("--cv", dest="cv_path")

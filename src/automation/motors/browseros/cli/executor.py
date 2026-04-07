@@ -71,7 +71,7 @@ class BrowserOSPlaybookExecutor:
             
             # 1. Observation Guards
             snapshot = self.client.take_snapshot(page_id)
-            self._assert_observation(snapshot, step.observe, step.name)
+            self._assert_observation(snapshot, step.observe, step.name, page_id)
 
             if dry_run and step.dry_run_stop:
                 logger.info("%s Dry-run stop at step '%s'", LogTag.OK, step.name)
@@ -121,18 +121,22 @@ class BrowserOSPlaybookExecutor:
         snapshot: list[SnapshotElement],
         observe: AriadneObserve,
         step_name: str,
+        page_id: int,
     ) -> None:
         """Verify that required elements are present in the snapshot."""
         for target in observe.required_elements:
-            self._resolve_element_id(snapshot, target)
+            self._resolve_element_id(snapshot, target, page_id=page_id)
         logger.info("%s Step '%s' matched expected snapshot", LogTag.OK, step_name)
 
     def _resolve_element_id(
         self,
         snapshot: list[SnapshotElement],
         target: AriadneTarget,
+        *,
+        page_id: int | None = None,
     ) -> int:
         """Resolve an AriadneTarget to a BrowserOS element ID using text or CSS."""
+        # 1. Try Text Matching (Superior fuzzy matching in BrowserOS)
         if target.text:
             normalized_target = self._normalize_text(target.text)
             matches = [
@@ -142,14 +146,14 @@ class BrowserOSPlaybookExecutor:
             if matches:
                 return matches[0].element_id
                 
-        if target.css:
-            # BrowserOS client doesn't support CSS directly via MCP yet? 
-            # (In this codebase it seems to only support text matching in the client's current stub)
-            # We fallback to text if possible.
-            pass
+        # 2. Try CSS Selection (Requires page_id for live search)
+        if target.css and page_id is not None:
+            matches = self.client.search_dom(page_id, target.css)
+            if matches:
+                return matches[0]
 
         raise BrowserOSObserveError(
-            f"Target '{target}' not found in BrowserOS snapshot"
+            f"Target '{target}' not found in BrowserOS (Text search failed, CSS search failed or skipped)"
         )
 
     def _normalize_text(self, value: str) -> str:
@@ -176,7 +180,7 @@ class BrowserOSPlaybookExecutor:
 
         # Resolve Target ID
         try:
-            target_id = self._resolve_element_id(self.client.take_snapshot(page_id), action.target)
+            target_id = self._resolve_element_id(self.client.take_snapshot(page_id), action.target, page_id=page_id)
         except BrowserOSObserveError:
             if action.fallback:
                 logger.warning("%s Falling back for intent %s", LogTag.WARN, action.intent)
