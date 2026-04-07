@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 import sys
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -51,6 +53,17 @@ def _write_ingest_state(jobs_root: Path, source: str, job_id: str) -> DataManage
 
 def _state_observation(**present: bool) -> dict[str, bool]:
     return {selector: present.get(selector, False) for selector in XING_SELECTORS}
+
+
+@dataclass
+class _ApplyRunResult:
+    meta: dict[str, object]
+    session_ids: list[str]
+    executed_steps: list[str]
+    events: list[tuple[str, str]]
+    first_step_flags: list[bool]
+    urls: list[str]
+    step_contexts: list[dict[str, object]]
 
 
 class _RecordingMotorSession:
@@ -105,144 +118,266 @@ def _install_backend(monkeypatch: pytest.MonkeyPatch, backend: str, provider) ->
     )
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("backend", ["browseros", "crawl4ai"])
-async def test_apply_cli_persists_submitted_meta_and_step_order(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, backend: str
-) -> None:
-    jobs_root = tmp_path / "jobs"
-    data_manager = _write_ingest_state(jobs_root, source="xing", job_id="job-123")
+def _normalize_apply_meta(meta: dict[str, object]) -> dict[str, object]:
+    normalized = dict(meta)
+    timestamp = normalized.get("timestamp")
+    assert isinstance(timestamp, str)
+    datetime.fromisoformat(timestamp)
+    normalized["timestamp"] = "<iso-timestamp>"
+    return normalized
+
+
+def _normalize_step_contexts(
+    step_contexts: list[dict[str, object]],
+) -> list[dict[str, object]]:
+    normalized_contexts: list[dict[str, object]] = []
+    for context in step_contexts:
+        normalized = dict(context)
+        if normalized.get("cv_path"):
+            normalized["cv_path"] = "<cv-path>"
+        if normalized.get("letter_path"):
+            normalized["letter_path"] = "<letter-path>"
+        normalized_contexts.append(normalized)
+    return normalized_contexts
+
+
+async def _run_apply_flow(
+    *,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    backend: str,
+    job_id: str,
+    observations: list[dict[str, bool]],
+    profile_payload: dict[str, str] | None = None,
+    dry_run: bool = False,
+) -> _ApplyRunResult:
+    jobs_root = tmp_path / backend / "jobs"
+    data_manager = _write_ingest_state(jobs_root, source="xing", job_id=job_id)
     storage = AutomationStorage(data_manager)
-    profile_path = tmp_path / "profile.json"
-    profile_path.write_text(
-        json.dumps(
-            {
-                "first_name": "Ada",
-                "last_name": "Lovelace",
-                "email": "ada@example.com",
-            }
-        ),
-        encoding="utf-8",
-    )
-    cv_path = tmp_path / "cv.pdf"
+    cv_path = tmp_path / backend / f"{job_id}-cv.pdf"
+    cv_path.parent.mkdir(parents=True, exist_ok=True)
     cv_path.write_bytes(b"cv")
-    session = _RecordingMotorSession(
-        observations=[
-            _state_observation(**{"[data-testid='apply-button']": True}),
-            _state_observation(**{"[data-testid='apply-modal']": True}),
-            _state_observation(**{"[data-testid='apply-modal']": True}),
-            _state_observation(**{"[data-testid='apply-modal']": True}),
-            _state_observation(**{"[data-testid='apply-modal']": True}),
-            _state_observation(**{"[data-testid='apply-modal']": True}),
-            _state_observation(**{"[data-testid='apply-modal']": True}),
-            _state_observation(**{"[data-testid='application-success']": True}),
-        ]
-    )
+    argv = [
+        "apply",
+        "--backend",
+        backend,
+        "--source",
+        "xing",
+        "--job-id",
+        job_id,
+        "--cv",
+        str(cv_path),
+    ]
+    if dry_run:
+        argv.append("--dry-run")
+    if profile_payload is not None:
+        profile_path = tmp_path / backend / f"{job_id}-profile.json"
+        profile_path.write_text(json.dumps(profile_payload), encoding="utf-8")
+        argv.extend(["--profile-json", str(profile_path)])
+
+    session = _RecordingMotorSession(observations=observations)
     provider = _RecordingMotorProvider(session)
 
     monkeypatch.setattr("src.automation.main._setup_logging", lambda name: None)
     monkeypatch.setattr("src.automation.main.AutomationStorage", lambda: storage)
     _install_backend(monkeypatch, backend, provider)
 
-    await main(
-        [
-            "apply",
-            "--backend",
-            backend,
-            "--source",
-            "xing",
-            "--job-id",
-            "job-123",
-            "--cv",
-            str(cv_path),
-            "--profile-json",
-            str(profile_path),
-        ]
-    )
+    await main(argv)
 
     meta = data_manager.read_json_artifact(
         source="xing",
-        job_id="job-123",
+        job_id=job_id,
         node_name="apply",
         stage="meta",
         filename="apply_meta.json",
     )
-
-    assert meta["status"] == "submitted"
-    assert provider.session_ids == ["apply_xing_job-123"]
-    assert session.executed_steps == [
-        "open_modal",
-        "fill_contact",
-        "upload_cv",
-        "submit",
-    ]
-    assert session.events == [
-        ("observe", ",".join(XING_SELECTORS)),
-        ("execute", "open_modal"),
-        ("observe", ",".join(XING_SELECTORS)),
-        ("observe", ",".join(XING_SELECTORS)),
-        ("execute", "fill_contact"),
-        ("observe", ",".join(XING_SELECTORS)),
-        ("observe", ",".join(XING_SELECTORS)),
-        ("execute", "upload_cv"),
-        ("observe", ",".join(XING_SELECTORS)),
-        ("observe", ",".join(XING_SELECTORS)),
-        ("execute", "submit"),
-        ("observe", ",".join(XING_SELECTORS)),
-    ]
-    assert session.first_step_flags == [True, False, False, False]
-    assert session.urls == ["https://example.com/jobs/apply/123"] * 4
-    assert session.step_contexts[0]["profile"]["first_name"] == "Ada"
-    assert session.step_contexts[0]["profile"]["last_name"] == "Lovelace"
-    assert session.step_contexts[0]["job"]["job_title"] == "Automation Engineer"
+    return _ApplyRunResult(
+        meta=meta,
+        session_ids=provider.session_ids,
+        executed_steps=session.executed_steps,
+        events=session.events,
+        first_step_flags=session.first_step_flags,
+        urls=session.urls,
+        step_contexts=session.step_contexts,
+    )
 
 
 @pytest.mark.asyncio
-async def test_apply_cli_dry_run_persists_meta_before_submit_step(
+async def test_apply_cli_keeps_apply_meta_and_side_effects_consistent_across_motors(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    jobs_root = tmp_path / "jobs"
-    data_manager = _write_ingest_state(jobs_root, source="xing", job_id="job-dry-run")
-    storage = AutomationStorage(data_manager)
-    cv_path = tmp_path / "cv.pdf"
-    cv_path.write_bytes(b"cv")
-    session = _RecordingMotorSession(
-        observations=[
-            _state_observation(**{"[data-testid='apply-button']": True}),
-            _state_observation(**{"[data-testid='apply-modal']": True}),
-            _state_observation(**{"[data-testid='apply-modal']": True}),
-            _state_observation(**{"[data-testid='apply-modal']": True}),
-            _state_observation(**{"[data-testid='apply-modal']": True}),
-            _state_observation(**{"[data-testid='apply-modal']": True}),
+    observations = [
+        _state_observation(**{"[data-testid='apply-button']": True}),
+        _state_observation(**{"[data-testid='apply-modal']": True}),
+        _state_observation(**{"[data-testid='apply-modal']": True}),
+        _state_observation(**{"[data-testid='apply-modal']": True}),
+        _state_observation(**{"[data-testid='apply-modal']": True}),
+        _state_observation(**{"[data-testid='apply-modal']": True}),
+        _state_observation(**{"[data-testid='apply-modal']": True}),
+        _state_observation(**{"[data-testid='application-success']": True}),
+    ]
+    browseros_run = await _run_apply_flow(
+        tmp_path=tmp_path,
+        monkeypatch=monkeypatch,
+        backend="browseros",
+        job_id="job-123-browseros",
+        observations=observations,
+        profile_payload={
+            "first_name": "Ada",
+            "last_name": "Lovelace",
+            "email": "ada@example.com",
+        },
+    )
+    crawl4ai_run = await _run_apply_flow(
+        tmp_path=tmp_path,
+        monkeypatch=monkeypatch,
+        backend="crawl4ai",
+        job_id="job-123-crawl4ai",
+        observations=observations,
+        profile_payload={
+            "first_name": "Ada",
+            "last_name": "Lovelace",
+            "email": "ada@example.com",
+        },
+    )
+
+    assert (
+        _normalize_apply_meta(browseros_run.meta)
+        == _normalize_apply_meta(crawl4ai_run.meta)
+        == {
+            "status": "submitted",
+            "timestamp": "<iso-timestamp>",
+            "error": None,
+        }
+    )
+    assert (
+        browseros_run.executed_steps
+        == crawl4ai_run.executed_steps
+        == [
+            "open_modal",
+            "fill_contact",
+            "upload_cv",
+            "submit",
         ]
     )
-    provider = _RecordingMotorProvider(session)
-
-    monkeypatch.setattr("src.automation.main._setup_logging", lambda name: None)
-    monkeypatch.setattr("src.automation.main.AutomationStorage", lambda: storage)
-    _install_backend(monkeypatch, "browseros", provider)
-
-    await main(
-        [
-            "apply",
-            "--source",
-            "xing",
-            "--job-id",
-            "job-dry-run",
-            "--cv",
-            str(cv_path),
-            "--dry-run",
+    assert (
+        browseros_run.events
+        == crawl4ai_run.events
+        == [
+            ("observe", ",".join(XING_SELECTORS)),
+            ("execute", "open_modal"),
+            ("observe", ",".join(XING_SELECTORS)),
+            ("observe", ",".join(XING_SELECTORS)),
+            ("execute", "fill_contact"),
+            ("observe", ",".join(XING_SELECTORS)),
+            ("observe", ",".join(XING_SELECTORS)),
+            ("execute", "upload_cv"),
+            ("observe", ",".join(XING_SELECTORS)),
+            ("observe", ",".join(XING_SELECTORS)),
+            ("execute", "submit"),
+            ("observe", ",".join(XING_SELECTORS)),
         ]
     )
+    assert (
+        browseros_run.first_step_flags
+        == crawl4ai_run.first_step_flags
+        == [
+            True,
+            False,
+            False,
+            False,
+        ]
+    )
+    assert (
+        browseros_run.urls
+        == crawl4ai_run.urls
+        == ["https://example.com/jobs/apply/123"] * 4
+    )
+    assert browseros_run.session_ids == ["apply_xing_job-123-browseros"]
+    assert crawl4ai_run.session_ids == ["apply_xing_job-123-crawl4ai"]
+    assert _normalize_step_contexts(
+        browseros_run.step_contexts
+    ) == _normalize_step_contexts(crawl4ai_run.step_contexts)
+    assert browseros_run.step_contexts[0]["profile"]["first_name"] == "Ada"
+    assert browseros_run.step_contexts[0]["profile"]["last_name"] == "Lovelace"
+    assert browseros_run.step_contexts[0]["job"]["job_title"] == "Automation Engineer"
 
-    meta = data_manager.read_json_artifact(
-        source="xing",
-        job_id="job-dry-run",
-        node_name="apply",
-        stage="meta",
-        filename="apply_meta.json",
+
+@pytest.mark.asyncio
+async def test_apply_cli_dry_run_keeps_apply_meta_and_side_effects_consistent_across_motors(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    observations = [
+        _state_observation(**{"[data-testid='apply-button']": True}),
+        _state_observation(**{"[data-testid='apply-modal']": True}),
+        _state_observation(**{"[data-testid='apply-modal']": True}),
+        _state_observation(**{"[data-testid='apply-modal']": True}),
+        _state_observation(**{"[data-testid='apply-modal']": True}),
+        _state_observation(**{"[data-testid='apply-modal']": True}),
+    ]
+    browseros_run = await _run_apply_flow(
+        tmp_path=tmp_path,
+        monkeypatch=monkeypatch,
+        backend="browseros",
+        job_id="job-dry-run-browseros",
+        observations=observations,
+        dry_run=True,
+    )
+    crawl4ai_run = await _run_apply_flow(
+        tmp_path=tmp_path,
+        monkeypatch=monkeypatch,
+        backend="crawl4ai",
+        job_id="job-dry-run-crawl4ai",
+        observations=observations,
+        dry_run=True,
     )
 
-    assert meta["status"] == "dry_run"
-    assert session.executed_steps == ["open_modal", "fill_contact", "upload_cv"]
-    assert "submit" not in session.executed_steps
+    assert (
+        _normalize_apply_meta(browseros_run.meta)
+        == _normalize_apply_meta(crawl4ai_run.meta)
+        == {
+            "status": "dry_run",
+            "timestamp": "<iso-timestamp>",
+            "error": None,
+        }
+    )
+    assert (
+        browseros_run.executed_steps
+        == crawl4ai_run.executed_steps
+        == [
+            "open_modal",
+            "fill_contact",
+            "upload_cv",
+        ]
+    )
+    assert "submit" not in browseros_run.executed_steps
+    assert "submit" not in crawl4ai_run.executed_steps
+    assert (
+        browseros_run.events
+        == crawl4ai_run.events
+        == [
+            ("observe", ",".join(XING_SELECTORS)),
+            ("execute", "open_modal"),
+            ("observe", ",".join(XING_SELECTORS)),
+            ("observe", ",".join(XING_SELECTORS)),
+            ("execute", "fill_contact"),
+            ("observe", ",".join(XING_SELECTORS)),
+            ("observe", ",".join(XING_SELECTORS)),
+            ("execute", "upload_cv"),
+            ("observe", ",".join(XING_SELECTORS)),
+        ]
+    )
+    assert (
+        browseros_run.first_step_flags
+        == crawl4ai_run.first_step_flags
+        == [
+            True,
+            False,
+            False,
+        ]
+    )
+    assert (
+        browseros_run.urls
+        == crawl4ai_run.urls
+        == ["https://example.com/jobs/apply/123"] * 3
+    )

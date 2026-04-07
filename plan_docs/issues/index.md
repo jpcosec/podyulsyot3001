@@ -19,8 +19,6 @@ Once an issue is solved, the next step is always:
 
 ### Phase 2 — Built on the foundations
 
-6. `plan_docs/issues/gaps/cross-motor-applymeta-consistency.md`
-
 ### Phase 3 — Routing and apply enablement
 
 7. `plan_docs/issues/unimplemented/application-routing-enrichment.md`

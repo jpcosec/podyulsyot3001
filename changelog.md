@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-07] - Cross-Motor ApplyMeta Consistency
+
+### Added
+- Added paired cross-motor apply regression coverage in `tests/unit/automation/test_apply_e2e.py` to run equivalent BrowserOS and Crawl4AI apply flows, normalize persisted `ApplyMeta`, and compare the shared execution side effects for submitted and dry-run runs.
+
 ## [2026-04-07] - Apply End-To-End Coverage
 
 ### Added
