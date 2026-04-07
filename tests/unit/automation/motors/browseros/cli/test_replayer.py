@@ -105,6 +105,7 @@ def test_run_executes_ariadne_path():
         path=path,
         context={},
         cv_path=Path("/tmp/cv.pdf"),
+        letter_path=None,
         dry_run=False,
     )
 
@@ -137,6 +138,7 @@ def test_dry_run_stops_at_guard():
         path=path,
         context={},
         cv_path=Path("/tmp/cv.pdf"),
+        letter_path=None,
         dry_run=True,
     )
 
@@ -164,6 +166,7 @@ def test_execute_action_uses_fallback():
         action=action,
         context={},
         cv_path=Path("/tmp/cv.pdf"),
+        letter_path=None,
         fields_filled=[],
     )
 
@@ -179,7 +182,73 @@ def test_execute_action_navigates_with_rendered_template():
         action=ReplayAction(intent="navigate", value="{{job.url}}"),
         context={"job": {"url": "https://example.test/apply"}},
         cv_path=Path("/tmp/cv.pdf"),
+        letter_path=None,
         fields_filled=[],
     )
 
     assert ("navigate", "https://example.test/apply", 7) in client.calls
+
+
+def test_execute_single_step_routes_upload_letter_to_letter_path():
+    client = _FakeClient(
+        [
+            _snapshot((5, "input", "Upload cover letter")),
+            _snapshot((5, "input", "Upload cover letter")),
+        ]
+    )
+    executor = BrowserOSReplayer(client)
+
+    executor.execute_single_step(
+        page_id=3,
+        step=ReplayStep(
+            step_index=1,
+            name="upload_letter",
+            description="Upload the cover letter",
+            observe=ReplayObserve(
+                required_elements=[ReplayTarget(text="Upload cover letter")]
+            ),
+            actions=[
+                ReplayAction(
+                    intent="upload_letter",
+                    target=ReplayTarget(text="Upload cover letter"),
+                )
+            ],
+        ),
+        context={},
+        cv_path=Path("/tmp/cv.pdf"),
+        letter_path=Path("/tmp/letter.pdf"),
+    )
+
+    assert ("upload_file", 3, 5, "/tmp/letter.pdf") in client.calls
+
+
+def test_execute_single_step_rejects_upload_letter_without_letter_path():
+    client = _FakeClient(
+        [
+            _snapshot((5, "input", "Upload cover letter")),
+            _snapshot((5, "input", "Upload cover letter")),
+        ]
+    )
+    executor = BrowserOSReplayer(client)
+
+    with pytest.raises(ValueError, match="upload_letter action requires letter_path"):
+        executor.execute_single_step(
+            page_id=3,
+            step=ReplayStep(
+                step_index=1,
+                name="upload_letter",
+                description="Upload the cover letter",
+                observe=ReplayObserve(
+                    required_elements=[ReplayTarget(text="Upload cover letter")]
+                ),
+                actions=[
+                    ReplayAction(
+                        intent="upload_letter",
+                        target=ReplayTarget(text="Upload cover letter"),
+                    )
+                ],
+            ),
+            context={},
+            cv_path=Path("/tmp/cv.pdf"),
+            letter_path=None,
+        )

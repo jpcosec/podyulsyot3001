@@ -50,6 +50,7 @@ class BrowserOSReplayer:
         path: ReplayPath,
         context: dict[str, Any],
         cv_path: Path,
+        letter_path: Path | None = None,
         dry_run: bool,
     ) -> BrowserOSExecutionResult:
         """Execute a replay path against an already-open page.
@@ -63,6 +64,7 @@ class BrowserOSReplayer:
             path: ReplayPath definition to replay.
             context: Template context for interpolation.
             cv_path: Local CV path used by upload actions.
+            letter_path: Optional cover letter path used by letter upload actions.
             dry_run: Whether execution should stop at a dry-run guard.
 
         Returns:
@@ -95,6 +97,7 @@ class BrowserOSReplayer:
                     action=action,
                     context=context,
                     cv_path=cv_path,
+                    letter_path=letter_path,
                     fields_filled=fields_filled,
                 )
 
@@ -135,15 +138,13 @@ class BrowserOSReplayer:
         self._assert_observation(snapshot, step.observe, step.name, page_id)
         if step.human_required:
             self._request_human_confirmation(step.description)
-        # TODO: letter_path is not yet consumed by _execute_action.
-        # Track in plan_docs/issues/gaps/browseros-letter-upload-routing.md.
-        # Wire it through when UPLOAD_LETTER intent is defined.
         for action in step.actions:
             self._execute_action(
                 page_id=page_id,
                 action=action,
                 context=context,
                 cv_path=cv_path,
+                letter_path=letter_path,
                 fields_filled=fields_filled,
             )
 
@@ -214,6 +215,7 @@ class BrowserOSReplayer:
         action: ReplayAction,
         context: dict[str, Any],
         cv_path: Path,
+        letter_path: Path | None,
         fields_filled: list[str],
     ) -> None:
         """Execute a single replay-contract action."""
@@ -243,6 +245,7 @@ class BrowserOSReplayer:
                     action=action.fallback,
                     context=context,
                     cv_path=cv_path,
+                    letter_path=letter_path,
                     fields_filled=fields_filled,
                 )
             if action.optional:
@@ -267,6 +270,13 @@ class BrowserOSReplayer:
         elif action.intent == "upload":
             # Use value as path if provided, else use cv_path
             upload_path = Path(rendered_value) if rendered_value else cv_path
+            self.client.upload_file(page_id, target_id, upload_path)
+        elif action.intent == "upload_letter":
+            upload_path = Path(rendered_value) if rendered_value else letter_path
+            if upload_path is None:
+                raise ValueError(
+                    "upload_letter action requires letter_path or an explicit value"
+                )
             self.client.upload_file(page_id, target_id, upload_path)
 
         if action.target.text:

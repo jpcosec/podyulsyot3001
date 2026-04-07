@@ -52,8 +52,8 @@ class AriadneC4AICompiler:
                     ir_steps.append(C4AIWait(selector=target.css))
                 else:
                     logger.warning(
-                        "Step '%s' has required_element with no CSS target; skipping C4AI wait.", 
-                        step.name
+                        "Step '%s' has required_element with no CSS target; skipping C4AI wait.",
+                        step.name,
                     )
 
         # 2. Actions
@@ -67,10 +67,10 @@ class AriadneC4AICompiler:
         if not action.target or not action.target.css:
             if action.intent == AriadneIntent.NAVIGATE and action.value:
                 return [C4AINavigate(url=action.value)]
-            
+
             logger.warning(
-                "Action with intent '%s' has no CSS target; skipping in C4AI compilation.", 
-                action.intent
+                "Action with intent '%s' has no CSS target; skipping in C4AI compilation.",
+                action.intent,
             )
             return []
 
@@ -84,19 +84,20 @@ class AriadneC4AICompiler:
             AriadneIntent.FILL_REACT: "SET",  # C4A-Script handles React internally in some cases
             AriadneIntent.SELECT: "SELECT",
             AriadneIntent.UPLOAD: "UPLOAD",
+            AriadneIntent.UPLOAD_LETTER: "UPLOAD",
         }
 
         if action.intent in mapping:
             return [
                 C4AIInteract(
-                    type=mapping[action.intent], 
-                    selector=selector, 
-                    value=value
+                    type=mapping[action.intent], selector=selector, value=value
                 )
             ]
-        
+
         if action.intent == AriadneIntent.WAIT:
             return [C4AIWait(selector=selector)]
 
-        logger.warning("Unsupported AriadneIntent '%s' in C4AI compiler.", action.intent)
+        logger.warning(
+            "Unsupported AriadneIntent '%s' in C4AI compiler.", action.intent
+        )
         return []

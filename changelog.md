@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-07] - BrowserOS Letter Upload Routing
+
+### Added
+- Added BrowserOS replay regression coverage for dedicated cover-letter upload routing and missing-letter guardrails.
+- Added Crawl4AI compiler coverage to keep the new cover-letter upload intent on the shared Ariadne execution path.
+
+### Changed
+- Added the backend-neutral `upload_letter` Ariadne intent and replay-contract variant.
+- Wired `letter_path` through `src/automation/motors/browseros/cli/replayer.py` so BrowserOS can route cover-letter uploads independently from CV uploads.
+- Mapped `upload_letter` to Crawl4AI upload compilation so the semantic action stays portable across deterministic motors.
+
 ## [2026-04-07] - BrowserOS Replay Contract Boundary
 
 ### Added

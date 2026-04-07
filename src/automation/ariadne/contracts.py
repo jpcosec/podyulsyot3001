@@ -16,6 +16,7 @@ ReplayIntent = Literal[
     "fill_react_controlled",
     "select",
     "upload",
+    "upload_letter",
     "press_key",
     "scroll",
     "wait",

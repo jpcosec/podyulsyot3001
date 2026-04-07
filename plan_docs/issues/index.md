@@ -17,10 +17,6 @@ Once an issue is solved, the next step is always:
 
 ## Priority roadmap
 
-### Phase 1 — Foundations
-
-3. `plan_docs/issues/gaps/browseros-letter-upload-routing.md`
-
 ### Phase 2 — Built on the foundations
 
 6. `plan_docs/issues/gaps/xing-listing-metadata-composition.md`
