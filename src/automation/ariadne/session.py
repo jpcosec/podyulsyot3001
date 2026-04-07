@@ -13,10 +13,15 @@ from src.automation.ariadne.exceptions import TerminalStateReached
 from src.automation.ariadne.models import ApplyMeta, AriadnePortalMap
 from src.automation.ariadne.motor_protocol import MotorProvider
 from src.automation.ariadne.navigator import AriadneNavigator
+from src.automation.portals.routing import resolve_portal_routing
 from src.automation.storage import AutomationStorage
 from src.shared.log_tags import LogTag
 
 logger = logging.getLogger(__name__)
+
+
+class UnsupportedRoutingDecisionError(Exception):
+    """Raised when a portal route cannot be executed by the Ariadne map runtime."""
 
 
 class AriadneSession:
@@ -63,7 +68,7 @@ class AriadneSession:
         letter_path: Path | None = None,
         profile: dict[str, Any] | CandidateProfile | None = None,
         dry_run: bool = False,
-        path_id: str = "standard_easy_apply",
+        path_id: str | None = None,
     ) -> ApplyMeta:
         """Run an apply flow using the supplied motor.
 
@@ -74,14 +79,14 @@ class AriadneSession:
             letter_path: Optional cover letter.
             profile: Candidate profile payload for placeholder resolution.
             dry_run: If True, stop at the first step marked dry_run_stop.
-            path_id: Which path in the portal map to follow.
+            path_id: Optional explicit path override when the resolved route stays onsite.
 
         Returns:
             ApplyMeta with final status.
 
         Raises:
             RuntimeError: If the job was already submitted.
-            ValueError: If the path_id does not exist in the map.
+            ValueError: If the resolved path_id does not exist in the map.
             TerminalStateReached: If the navigator detects a failure state.
         """
         if self.storage.check_already_submitted(self.portal_name, job_id):
@@ -90,30 +95,46 @@ class AriadneSession:
             )
 
         portal_map = self.portal_map
-        path = portal_map.paths.get(path_id)
-        if not path:
-            raise ValueError(
-                f"Path '{path_id}' not found in map for {self.portal_name}"
-            )
-
         ingest_data = self.storage.get_job_state(self.portal_name, job_id)
-        application_url = ingest_data.get("application_url") or ingest_data.get("url")
-        if not application_url:
-            raise ValueError(f"No application_url in ingest artifact for job {job_id}")
-        candidate_profile = self.storage.load_candidate_profile(profile)
-        context = self._build_context(
-            ingest_data=ingest_data,
-            profile=candidate_profile,
-            cv_path=cv_path,
-            letter_path=letter_path,
-            application_url=application_url,
-        )
-        all_selectors = self._collect_selectors(portal_map)
-        navigator = AriadneNavigator(portal_map)
         session_id = f"apply_{self.portal_name}_{job_id}"
         timestamp = datetime.now(timezone.utc).isoformat()
 
         try:
+            route = resolve_portal_routing(self.portal_name, ingest_data)
+            if route.outcome != "onsite":
+                raise UnsupportedRoutingDecisionError(
+                    f"Portal routing resolved to '{route.outcome}' for {self.portal_name}: {route.reason}"
+                )
+
+            selected_path_id = path_id or route.path_id
+            if not selected_path_id:
+                raise ValueError(
+                    f"No Ariadne path resolved for onsite route in {self.portal_name}"
+                )
+
+            path = portal_map.paths.get(selected_path_id)
+            if not path:
+                raise ValueError(
+                    f"Path '{selected_path_id}' not found in map for {self.portal_name}"
+                )
+
+            application_url = route.application_url
+            if not application_url:
+                raise ValueError(
+                    f"No application_url resolved for onsite route in job {job_id}"
+                )
+
+            candidate_profile = self.storage.load_candidate_profile(profile)
+            context = self._build_context(
+                ingest_data=ingest_data,
+                profile=candidate_profile,
+                cv_path=cv_path,
+                letter_path=letter_path,
+                application_url=application_url,
+            )
+            all_selectors = self._collect_selectors(portal_map)
+            navigator = AriadneNavigator(portal_map)
+
             async with motor.open_session(session_id) as ms:
                 step_index = 1
                 while step_index <= len(path.steps):

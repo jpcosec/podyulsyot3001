@@ -5,7 +5,7 @@
 This package is the backend-neutral core of the automation system.
 
 - `models.py` defines the shared semantic contract used by portal maps and motors.
-- `session.py` owns the apply orchestration loop and delegates browser work to a motor.
+- `session.py` owns the apply orchestration loop, resolves portal routing, and delegates browser work to a motor.
 - `motor_protocol.py` defines the `MotorProvider` and `MotorSession` contracts.
 - `navigator.py` decides the next step from observed portal state.
 - `recorder.py`, `trace_models.py`, and `normalizer.py` support recording and promotion workflows.
@@ -39,7 +39,7 @@ python -m src.automation.main promote --trace-id trace_123 --portal xing
 
 1. Add or update portal JSON maps under `src/automation/portals/`.
 2. Extend `models.py` only when the semantic contract itself changes.
-3. Keep orchestration concerns in `session.py` and `navigator.py`, not in motors.
+3. Keep orchestration concerns in `session.py` and `navigator.py`, and keep portal-specific branching in `src/automation/portals/*/routing.py`.
 4. Add or update promotion logic in `normalizer.py` when new recording shapes appear.
 
 ## 💻 How to Use

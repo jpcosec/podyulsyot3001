@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-07] - Portal Routing Layer
+
+### Added
+- Added portal-specific routing modules in `src/automation/portals/*/routing.py` plus shared routing contracts in `src/automation/portals/contracts.py`.
+- Added routing regression coverage in `tests/unit/automation/portals/test_routing.py`, `tests/unit/automation/ariadne/test_session.py`, and `tests/unit/automation/test_apply_e2e.py` for onsite, external ATS, and email handoff decisions.
+
+### Changed
+- Updated `src/automation/ariadne/session.py` so apply runs resolve portal routing before opening a motor session and fail early when the job requires an unsupported external or email handoff.
+- Updated automation architecture docs to document the new portal routing layer.
+
 ## [2026-04-07] - Application Routing Enrichment
 
 ### Added

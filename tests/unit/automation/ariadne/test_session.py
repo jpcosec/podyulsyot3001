@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import AsyncIterator
@@ -20,9 +19,12 @@ from src.automation.ariadne.models import (
     AriadneTask,
     AriadneState,
     AriadneTarget,
-    ApplyMeta,
 )
-from src.automation.ariadne.session import AriadneSession
+from src.automation.ariadne.session import (
+    AriadneSession,
+    UnsupportedRoutingDecisionError,
+)
+from src.automation.portals.contracts import PortalRoutingResult
 
 
 def _minimal_map() -> AriadnePortalMap:
@@ -73,9 +75,11 @@ class _FakeSession:
 class _FakeProvider:
     def __init__(self, session: _FakeSession):
         self._session = session
+        self.session_ids: list[str] = []
 
     @asynccontextmanager
     async def open_session(self, session_id: str) -> AsyncIterator[_FakeSession]:
+        self.session_ids.append(session_id)
         yield self._session
 
 
@@ -85,7 +89,8 @@ def _make_session(map_: AriadnePortalMap) -> tuple[AriadneSession, MagicMock]:
     storage.get_job_state.return_value = {
         "job_title": "Dev",
         "company_name": "Acme",
-        "application_url": "https://example.com/apply",
+        "application_url": "https://www.xing.com/jobs/apply/123",
+        "url": "https://www.xing.com/jobs/123",
     }
     storage.load_candidate_profile.side_effect = (
         lambda profile=None: CandidateProfile.model_validate(profile or {})
@@ -93,7 +98,7 @@ def _make_session(map_: AriadnePortalMap) -> tuple[AriadneSession, MagicMock]:
     storage.write_apply_meta = MagicMock()
 
     sess = AriadneSession.__new__(AriadneSession)
-    sess.portal_name = "test_portal"
+    sess.portal_name = "xing"
     sess.storage = storage
     sess._map = map_
     return sess, storage
@@ -116,6 +121,30 @@ async def test_invalid_path_id_raises():
 
     with pytest.raises(ValueError, match="Path 'missing' not found"):
         await sess.run(motor, job_id="job1", cv_path=Path("cv.pdf"), path_id="missing")
+
+
+@pytest.mark.asyncio
+async def test_external_route_fails_before_opening_motor_session():
+    sess, storage = _make_session(_minimal_map())
+    fake_session = _FakeSession()
+    motor = _FakeProvider(fake_session)
+
+    with patch(
+        "src.automation.ariadne.session.resolve_portal_routing",
+        return_value=PortalRoutingResult(
+            outcome="external_url",
+            application_url="https://ats.example.test/apply/123",
+            reason="Redirects to external ATS.",
+        ),
+    ):
+        with pytest.raises(UnsupportedRoutingDecisionError, match="external_url"):
+            await sess.run(motor, job_id="job1", cv_path=Path("cv.pdf"))
+
+    assert motor.session_ids == []
+    fake_session.execute_step.assert_not_called()
+    written = storage.write_apply_meta.call_args[0]
+    assert written[2]["status"] == "failed"
+    assert "external_url" in written[2]["error"]
 
 
 @pytest.mark.asyncio

@@ -13,6 +13,7 @@ from types import SimpleNamespace
 import pytest
 
 from src.automation.main import main
+from src.automation.ariadne.session import UnsupportedRoutingDecisionError
 from src.automation.storage import AutomationStorage
 from src.core.data_manager import DataManager
 
@@ -34,7 +35,13 @@ BACKEND_IMPORTS = {
 }
 
 
-def _write_ingest_state(jobs_root: Path, source: str, job_id: str) -> DataManager:
+def _write_ingest_state(
+    jobs_root: Path,
+    source: str,
+    job_id: str,
+    *,
+    state: dict[str, object] | None = None,
+) -> DataManager:
     data_manager = DataManager(jobs_root)
     data_manager.write_json_artifact(
         source=source,
@@ -42,10 +49,12 @@ def _write_ingest_state(jobs_root: Path, source: str, job_id: str) -> DataManage
         node_name="ingest",
         stage="proposed",
         filename="state.json",
-        data={
+        data=state
+        or {
             "job_title": "Automation Engineer",
             "company_name": "Acme",
-            "application_url": "https://example.com/jobs/apply/123",
+            "application_url": "https://www.xing.com/jobs/apply/123",
+            "url": "https://www.xing.com/jobs/view/123",
         },
     )
     return data_manager
@@ -146,13 +155,17 @@ async def _run_apply_flow(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     backend: str,
+    source: str = "xing",
     job_id: str,
     observations: list[dict[str, bool]],
     profile_payload: dict[str, str] | None = None,
     dry_run: bool = False,
+    state: dict[str, object] | None = None,
 ) -> _ApplyRunResult:
     jobs_root = tmp_path / backend / "jobs"
-    data_manager = _write_ingest_state(jobs_root, source="xing", job_id=job_id)
+    data_manager = _write_ingest_state(
+        jobs_root, source=source, job_id=job_id, state=state
+    )
     storage = AutomationStorage(data_manager)
     cv_path = tmp_path / backend / f"{job_id}-cv.pdf"
     cv_path.parent.mkdir(parents=True, exist_ok=True)
@@ -162,7 +175,7 @@ async def _run_apply_flow(
         "--backend",
         backend,
         "--source",
-        "xing",
+        source,
         "--job-id",
         job_id,
         "--cv",
@@ -185,7 +198,7 @@ async def _run_apply_flow(
     await main(argv)
 
     meta = data_manager.read_json_artifact(
-        source="xing",
+        source=source,
         job_id=job_id,
         node_name="apply",
         stage="meta",
@@ -291,7 +304,7 @@ async def test_apply_cli_keeps_apply_meta_and_side_effects_consistent_across_mot
     assert (
         browseros_run.urls
         == crawl4ai_run.urls
-        == ["https://example.com/jobs/apply/123"] * 4
+        == ["https://www.xing.com/jobs/apply/123"] * 4
     )
     assert browseros_run.session_ids == ["apply_xing_job-123-browseros"]
     assert crawl4ai_run.session_ids == ["apply_xing_job-123-crawl4ai"]
@@ -379,5 +392,59 @@ async def test_apply_cli_dry_run_keeps_apply_meta_and_side_effects_consistent_ac
     assert (
         browseros_run.urls
         == crawl4ai_run.urls
-        == ["https://example.com/jobs/apply/123"] * 3
+        == ["https://www.xing.com/jobs/apply/123"] * 3
     )
+
+
+@pytest.mark.asyncio
+async def test_apply_cli_persists_failure_when_portal_routing_requires_external_handoff(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    jobs_root = tmp_path / "browseros" / "jobs"
+    data_manager = _write_ingest_state(
+        jobs_root,
+        source="linkedin",
+        job_id="job-external-linkedin",
+        state={
+            "job_title": "Automation Engineer",
+            "company_name": "Acme",
+            "application_method": "direct_url",
+            "application_url": "https://company.example.test/greenhouse/apply/123",
+            "url": "https://www.linkedin.com/jobs/view/123",
+        },
+    )
+    storage = AutomationStorage(data_manager)
+    cv_path = tmp_path / "browseros" / "linkedin-cv.pdf"
+    cv_path.parent.mkdir(parents=True, exist_ok=True)
+    cv_path.write_bytes(b"cv")
+
+    provider = _RecordingMotorProvider(_RecordingMotorSession(observations=[]))
+    monkeypatch.setattr("src.automation.main._setup_logging", lambda name: None)
+    monkeypatch.setattr("src.automation.main.AutomationStorage", lambda: storage)
+    _install_backend(monkeypatch, "browseros", provider)
+
+    with pytest.raises(UnsupportedRoutingDecisionError, match="external_url"):
+        await main(
+            [
+                "apply",
+                "--backend",
+                "browseros",
+                "--source",
+                "linkedin",
+                "--job-id",
+                "job-external-linkedin",
+                "--cv",
+                str(cv_path),
+            ]
+        )
+
+    meta = data_manager.read_json_artifact(
+        source="linkedin",
+        job_id="job-external-linkedin",
+        node_name="apply",
+        stage="meta",
+        filename="apply_meta.json",
+    )
+    assert meta["status"] == "failed"
+    assert "external_url" in meta["error"]
+    assert provider.session_ids == []

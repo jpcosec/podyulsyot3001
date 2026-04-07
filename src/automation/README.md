@@ -5,8 +5,9 @@
 This package provides a unified, semantic-driven browser automation system. It decouples **Path Knowledge** from **Execution Engines**, allowing for high resilience and cross-motor replay.
 
 - **Semantic Layer (`src/automation/ariadne/`)**: Backend-neutral models for States, Tasks, and Paths.
-- **AriadneSession (`src/automation/ariadne/session.py`)**: Orchestrates the apply loop, loads maps, dispatches to motors, and persists results.
+- **AriadneSession (`src/automation/ariadne/session.py`)**: Orchestrates the apply loop, resolves portal routing, dispatches to motors, and persists results.
 - **Unified Maps (`src/automation/portals/`)**: Single source of truth for portal logic in JSON.
+- **Portal Routing (`src/automation/portals/*/routing.py`)**: Portal-specific branching that decides whether a job stays onsite, redirects to an ATS, or hands off to email.
 - **Execution Motors (`src/automation/motors/`)**: Replayers for Crawl4AI and BrowserOS.
 - **Persistence (`src/automation/storage.py`)**: Centralized artifact and metadata management.
 
@@ -44,9 +45,10 @@ All automation models are strictly typed via Pydantic:
 ## 🛠️ How to Add / Extend
 
 1. **Map the Portal**: Create a JSON map in `src/automation/portals/<portal>/maps/easy_apply.json` using the `AriadnePortalMap` schema.
-2. **Instantiate AriadneSession**: In the CLI or integration point, create `AriadneSession(portal_name)`.
-3. **Pick a Motor**: Pass `C4AIMotorProvider` or `BrowserOSMotorProvider` to `session.run(...)`.
-4. **Register Source**: Add the portal name to the CLI choices in `src/automation/main.py` if the portal is user-selectable there.
+2. **Add Portal Routing**: Implement `src/automation/portals/<portal>/routing.py` so enriched ingest state resolves to an onsite Ariadne path or an explicit external/email handoff.
+3. **Instantiate AriadneSession**: In the CLI or integration point, create `AriadneSession(portal_name)`.
+4. **Pick a Motor**: Pass `C4AIMotorProvider` or `BrowserOSMotorProvider` to `session.run(...)`.
+5. **Register Source**: Add the portal name to the CLI choices in `src/automation/main.py` if the portal is user-selectable there.
 
 ## 💻 How to Use
 

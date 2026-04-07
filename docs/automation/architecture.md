@@ -17,8 +17,8 @@ That separation means an existing portal map can be replayed through a different
 The apply stack now follows this path:
 
 1. CLI parses the request in `src/automation/main.py`.
-2. `AriadneSession` loads the portal map, ingest state, and replay context.
-3. A `MotorProvider` opens a backend-specific `MotorSession`.
+2. `AriadneSession` loads the portal map and ingest state, then asks `src/automation/portals/*/routing.py` which apply branch is valid.
+3. If the route stays onsite, a `MotorProvider` opens a backend-specific `MotorSession`.
 4. `AriadneNavigator` evaluates the observed state and decides the next step.
 5. The motor session observes the live page and executes the requested step.
 6. `AutomationStorage` persists `ApplyMeta` and related artifacts.
@@ -30,6 +30,7 @@ The apply stack now follows this path:
 | **Ariadne Map** | Portal knowledge, semantic states, and replay paths | `src/automation/portals/*/maps/` |
 | **Common Language** | Backend-neutral Pydantic models for states, paths, steps, and artifacts | `src/automation/ariadne/models.py` |
 | **AriadneSession** | Apply orchestrator: map loading, context building, run loop, and persistence wiring | `src/automation/ariadne/session.py` |
+| **Portal Routing** | Portal-specific apply branch resolution from enriched ingest state | `src/automation/portals/*/routing.py` |
 | **Motor Protocol** | Contracts between Ariadne and each backend (`MotorProvider`, `MotorSession`) | `src/automation/ariadne/motor_protocol.py` |
 | **Navigator** | State-aware replay and mission status transitions | `src/automation/ariadne/navigator.py` |
 | **Recorder** | Session capture and raw trace persistence for promotion workflows | `src/automation/ariadne/recorder.py` |
