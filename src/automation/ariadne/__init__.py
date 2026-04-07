@@ -10,6 +10,15 @@ from .exceptions import (
     TerminalStateReached,
     TranslationError,
 )
+from .contracts import (
+    ReplayAction,
+    ReplayObserve,
+    ReplayPath,
+    ReplayStep,
+    ReplayTarget,
+    adapt_replay_path,
+    adapt_replay_step,
+)
 from .models import (
     AriadneAction,
     AriadneIntent,
@@ -37,6 +46,14 @@ __all__ = [
     "AriadneStep",
     "AriadnePath",
     "AriadnePortalMap",
+    # Replay contracts
+    "ReplayTarget",
+    "ReplayAction",
+    "ReplayObserve",
+    "ReplayStep",
+    "ReplayPath",
+    "adapt_replay_step",
+    "adapt_replay_path",
     # Logic
     "AriadneNavigator",
     "AriadneRecorder",

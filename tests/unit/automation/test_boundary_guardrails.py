@@ -5,6 +5,7 @@ Enforces the Ariadne dependency rule:
 
 No layer may import from a layer above it in the hierarchy.
 """
+
 from __future__ import annotations
 
 import ast
@@ -52,14 +53,31 @@ def _collect_imports(path: Path) -> list[str]:
 def _find_violations(layer: str, forbidden: list[str]) -> list[str]:
     layer_path = SRC / layer
     if not layer_path.exists():
-        pytest.fail(f"Layer path not found: {layer_path} — is pytest run from repo root?")
+        pytest.fail(
+            f"Layer path not found: {layer_path} — is pytest run from repo root?"
+        )
     violations: list[str] = []
     for py_file in sorted(layer_path.rglob("*.py")):
         for imp in _collect_imports(py_file):
             for prefix in forbidden:
                 if imp == prefix or imp.startswith(prefix + "."):
                     rel = py_file.relative_to(SRC)
-                    violations.append(f"  {rel}: imports '{imp}' (forbidden: '{prefix}')")
+                    violations.append(
+                        f"  {rel}: imports '{imp}' (forbidden: '{prefix}')"
+                    )
+    return violations
+
+
+def _find_direct_model_imports(layer: str) -> list[str]:
+    layer_path = SRC / layer
+    violations: list[str] = []
+    for py_file in sorted(layer_path.rglob("*.py")):
+        for imp in _collect_imports(py_file):
+            if imp == "src.automation.ariadne.models":
+                rel = py_file.relative_to(SRC)
+                violations.append(
+                    f"  {rel}: imports '{imp}' instead of replay contracts"
+                )
     return violations
 
 
@@ -70,3 +88,8 @@ def test_layer_does_not_import_forbidden(layer: str, forbidden: list[str]) -> No
         f"Layer boundary violations in 'src/automation/{layer}':\n"
         + "\n".join(violations)
     )
+
+
+def test_browseros_cli_avoids_direct_ariadne_model_imports() -> None:
+    violations = _find_direct_model_imports("motors/browseros")
+    assert not violations, "\n".join(violations)

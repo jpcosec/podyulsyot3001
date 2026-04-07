@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-07] - BrowserOS Replay Contract Boundary
+
+### Added
+- Added `src/automation/ariadne/contracts.py` with narrow replay DTOs and adaptation helpers for motor-facing step execution.
+- Added BrowserOS regression coverage for replay-contract navigation, Ariadne-to-replay step adaptation, and direct-model import guardrails.
+
+### Changed
+- Refactored `src/automation/motors/browseros/cli/backend.py` and `src/automation/motors/browseros/cli/replayer.py` to consume Ariadne replay contracts instead of importing the full domain model module.
+
 ## [2026-04-07] - Crawl4AI LLM Rescue Strategy
 
 ### Added

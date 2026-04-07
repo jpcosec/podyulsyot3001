@@ -11,7 +11,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, AsyncIterator
 
-from src.automation.ariadne.models import AriadneStep
+from src.automation.ariadne.contracts import adapt_replay_step
 from src.automation.motors.browseros.cli.client import BrowserOSClient
 from src.automation.motors.browseros.cli.replayer import BrowserOSReplayer
 from src.shared.log_tags import LogTag
@@ -51,7 +51,7 @@ class BrowserOSMotorSession:
 
     async def execute_step(
         self,
-        step: AriadneStep,
+        step: Any,
         context: dict[str, Any],
         cv_path: Path,
         letter_path: Path | None,
@@ -70,9 +70,10 @@ class BrowserOSMotorSession:
         """
         if is_first and url:
             self._client.navigate(url, self._page_id)
+        replay_step = adapt_replay_step(step)
         self._replayer.execute_single_step(
             page_id=self._page_id,
-            step=step,
+            step=replay_step,
             context=context,
             cv_path=cv_path,
             letter_path=letter_path,

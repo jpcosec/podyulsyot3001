@@ -1,19 +1,18 @@
-"""Pure tests for BrowserOS replayer using Ariadne models."""
+"""Pure tests for BrowserOS replayer using replay contracts."""
 
 from __future__ import annotations
 
 from pathlib import Path
 import pytest
 
-from src.automation.ariadne.models import (
-    AriadneAction,
-    AriadneIntent,
-    AriadneObserve,
-    AriadnePath,
-    AriadneStep,
-    AriadneTarget,
+from src.automation.ariadne.contracts import (
+    ReplayAction,
+    ReplayObserve,
+    ReplayPath,
+    ReplayStep,
+    ReplayTarget,
 )
-from src.automation.motors.browseros.cli.client import BrowserOSClient, SnapshotElement
+from src.automation.motors.browseros.cli.client import SnapshotElement
 from src.automation.motors.browseros.cli.replayer import (
     BrowserOSObserveError,
     BrowserOSReplayer,
@@ -43,7 +42,7 @@ class _FakeClient:
 
     def search_dom(self, page_id: int, selector: str) -> list[int]:
         self.calls.append(("search_dom", page_id, selector))
-        return [99] # Mock ID
+        return [99]  # Mock ID
 
 
 def _snapshot(*items):
@@ -67,39 +66,38 @@ def test_render_template_resolves_nested_context_values():
 def test_resolve_element_id_supports_partial_matches():
     executor = BrowserOSReplayer(_FakeClient())
     snapshot = _snapshot((1, "button", "Seleccionar resume CV_english.pdf"))
-    target = AriadneTarget(text="CV_english.pdf")
+    target = ReplayTarget(text="CV_english.pdf")
     assert executor._resolve_element_id(snapshot, target) == 1
 
 
 def test_assert_observation_raises_on_missing_snapshot_text():
     executor = BrowserOSReplayer(_FakeClient())
-    observe = AriadneObserve(required_elements=[AriadneTarget(text="Missing")])
+    observe = ReplayObserve(required_elements=[ReplayTarget(text="Missing")])
     with pytest.raises(BrowserOSObserveError):
         executor._assert_observation(
-            _snapshot((1, "button", "Continue")),
-            observe,
-            "missing",
-            page_id=1
+            _snapshot((1, "button", "Continue")), observe, "missing", page_id=1
         )
 
 
 def test_run_executes_ariadne_path():
-    path = AriadnePath(
+    path = ReplayPath(
         id="test_path",
         task_id="test_task",
         steps=[
-            AriadneStep(
+            ReplayStep(
                 step_index=1,
                 name="step1",
                 description="desc1",
-                observe=AriadneObserve(required_elements=[AriadneTarget(text="Submit")]),
+                observe=ReplayObserve(required_elements=[ReplayTarget(text="Submit")]),
                 actions=[
-                    AriadneAction(intent=AriadneIntent.CLICK, target=AriadneTarget(text="Submit"))
-                ]
+                    ReplayAction(intent="click", target=ReplayTarget(text="Submit"))
+                ],
             )
-        ]
+        ],
     )
-    client = _FakeClient([_snapshot((1, "button", "Submit")), _snapshot((1, "button", "Submit"))])
+    client = _FakeClient(
+        [_snapshot((1, "button", "Submit")), _snapshot((1, "button", "Submit"))]
+    )
     executor = BrowserOSReplayer(client)
 
     result = executor.run(
@@ -115,19 +113,21 @@ def test_run_executes_ariadne_path():
 
 
 def test_dry_run_stops_at_guard():
-    path = AriadnePath(
+    path = ReplayPath(
         id="test_path",
         task_id="test_task",
         steps=[
-            AriadneStep(
+            ReplayStep(
                 step_index=1,
                 name="step1",
                 description="desc1",
-                observe=AriadneObserve(),
-                actions=[AriadneAction(intent=AriadneIntent.CLICK, target=AriadneTarget(text="Submit"))],
-                dry_run_stop=True
+                observe=ReplayObserve(),
+                actions=[
+                    ReplayAction(intent="click", target=ReplayTarget(text="Submit"))
+                ],
+                dry_run_stop=True,
             )
-        ]
+        ],
     )
     client = _FakeClient([_snapshot((1, "button", "Submit"))])
     executor = BrowserOSReplayer(client)
@@ -145,19 +145,18 @@ def test_dry_run_stops_at_guard():
 
 
 def test_execute_action_uses_fallback():
-    client = _FakeClient([
-        _snapshot((2, "button", "Secondary")), # for primary check
-        _snapshot((2, "button", "Secondary"))  # for fallback execution
-    ])
+    client = _FakeClient(
+        [
+            _snapshot((2, "button", "Secondary")),  # for primary check
+            _snapshot((2, "button", "Secondary")),  # for fallback execution
+        ]
+    )
     executor = BrowserOSReplayer(client)
-    
-    action = AriadneAction(
-        intent=AriadneIntent.CLICK,
-        target=AriadneTarget(text="Primary"),
-        fallback=AriadneAction(
-            intent=AriadneIntent.CLICK,
-            target=AriadneTarget(text="Secondary")
-        )
+
+    action = ReplayAction(
+        intent="click",
+        target=ReplayTarget(text="Primary"),
+        fallback=ReplayAction(intent="click", target=ReplayTarget(text="Secondary")),
     )
 
     executor._execute_action(
@@ -165,7 +164,22 @@ def test_execute_action_uses_fallback():
         action=action,
         context={},
         cv_path=Path("/tmp/cv.pdf"),
-        fields_filled=[]
+        fields_filled=[],
     )
 
     assert ("click", 1, 2) in client.calls
+
+
+def test_execute_action_navigates_with_rendered_template():
+    client = _FakeClient()
+    executor = BrowserOSReplayer(client)
+
+    executor._execute_action(
+        page_id=7,
+        action=ReplayAction(intent="navigate", value="{{job.url}}"),
+        context={"job": {"url": "https://example.test/apply"}},
+        cv_path=Path("/tmp/cv.pdf"),
+        fields_filled=[],
+    )
+
+    assert ("navigate", "https://example.test/apply", 7) in client.calls

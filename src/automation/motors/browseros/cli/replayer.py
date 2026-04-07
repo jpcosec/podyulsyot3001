@@ -8,13 +8,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from src.automation.ariadne.models import (
-    AriadneAction,
-    AriadneIntent,
-    AriadneObserve,
-    AriadnePath,
-    AriadneStep,
-    AriadneTarget,
+from src.automation.ariadne.contracts import (
+    ReplayAction,
+    ReplayObserve,
+    ReplayPath,
+    ReplayStep,
+    ReplayTarget,
 )
 from src.automation.motors.browseros.cli.client import BrowserOSClient, SnapshotElement
 from src.shared.log_tags import LogTag
@@ -30,7 +29,7 @@ class BrowserOSObserveError(RuntimeError):
 
 @dataclass
 class BrowserOSExecutionResult:
-    """Outcome summary returned after replaying an Ariadne path."""
+    """Outcome summary returned after replaying a BrowserOS-compatible path."""
 
     status: str
     fields_filled: list[str]
@@ -38,7 +37,7 @@ class BrowserOSExecutionResult:
 
 
 class BrowserOSReplayer:
-    """Execute an Ariadne Path against a live BrowserOS page."""
+    """Execute replay-contract steps against a live BrowserOS page."""
 
     def __init__(self, client: BrowserOSClient, *, input_func=input) -> None:
         self.client = client
@@ -48,12 +47,12 @@ class BrowserOSReplayer:
         self,
         *,
         page_id: int,
-        path: AriadnePath,
+        path: ReplayPath,
         context: dict[str, Any],
         cv_path: Path,
         dry_run: bool,
     ) -> BrowserOSExecutionResult:
-        """Execute an Ariadne path against an already-open page.
+        """Execute a replay path against an already-open page.
 
         .. deprecated::
             Production code now calls execute_single_step() step-by-step via
@@ -61,7 +60,7 @@ class BrowserOSReplayer:
 
         Args:
             page_id: BrowserOS page identifier to operate on.
-            path: AriadnePath definition to replay.
+            path: ReplayPath definition to replay.
             context: Template context for interpolation.
             cv_path: Local CV path used by upload actions.
             dry_run: Whether execution should stop at a dry-run guard.
@@ -102,24 +101,24 @@ class BrowserOSReplayer:
         return BrowserOSExecutionResult(
             status="submitted",
             fields_filled=fields_filled,
-            confirmation_text=f"Ariadne Path {path.id} completed",
+            confirmation_text=f"Replay path {path.id} completed",
         )
 
     def execute_single_step(
         self,
         *,
         page_id: int,
-        step: AriadneStep,
+        step: ReplayStep,
         context: dict[str, Any],
         cv_path: Path,
         letter_path: Path | None = None,
         fields_filled: list[str] | None = None,
     ) -> None:
-        """Execute a single AriadneStep on the given page.
+        """Execute a single replay-contract step on the given page.
 
         Args:
             page_id: BrowserOS page to operate on.
-            step: The step to execute.
+            step: The motor-facing step contract to execute.
             context: Template context for interpolation.
             cv_path: Local CV path for upload actions.
             letter_path: Optional cover letter path for upload actions.
@@ -169,7 +168,7 @@ class BrowserOSReplayer:
     def _assert_observation(
         self,
         snapshot: list[SnapshotElement],
-        observe: AriadneObserve,
+        observe: ReplayObserve,
         step_name: str,
         page_id: int,
     ) -> None:
@@ -181,11 +180,11 @@ class BrowserOSReplayer:
     def _resolve_element_id(
         self,
         snapshot: list[SnapshotElement],
-        target: AriadneTarget,
+        target: ReplayTarget,
         *,
         page_id: int | None = None,
     ) -> int:
-        """Resolve an AriadneTarget to a BrowserOS element ID using text or CSS."""
+        """Resolve a replay target to a BrowserOS element ID using text or CSS."""
         # 1. Try Text Matching (Superior fuzzy matching in BrowserOS)
         if target.text:
             normalized_target = self._normalize_text(target.text)
@@ -212,13 +211,13 @@ class BrowserOSReplayer:
         self,
         *,
         page_id: int,
-        action: AriadneAction,
+        action: ReplayAction,
         context: dict[str, Any],
         cv_path: Path,
         fields_filled: list[str],
     ) -> None:
-        """Execute a single AriadneAction."""
-        if action.intent == AriadneIntent.NAVIGATE:
+        """Execute a single replay-contract action."""
+        if action.intent == "navigate":
             url = self.render_template(action.value or "", context)
             self.client.navigate(url, page_id)
             return
@@ -255,17 +254,17 @@ class BrowserOSReplayer:
             self.render_template(action.value or "", context) if action.value else None
         )
 
-        if action.intent == AriadneIntent.CLICK:
+        if action.intent == "click":
             self.client.click(page_id, target_id)
-        elif action.intent == AriadneIntent.FILL:
+        elif action.intent == "fill":
             self.client.fill(page_id, target_id, rendered_value or "")
-        elif action.intent == AriadneIntent.FILL_REACT:
+        elif action.intent == "fill_react_controlled":
             # We need a text selector for evaluate_script_react in current stub
             selector = action.target.text or action.target.css or ""
             self.client.evaluate_script_react(page_id, selector, rendered_value or "")
-        elif action.intent == AriadneIntent.SELECT:
+        elif action.intent == "select":
             self.client.select_option(page_id, target_id, rendered_value or "")
-        elif action.intent == AriadneIntent.UPLOAD:
+        elif action.intent == "upload":
             # Use value as path if provided, else use cv_path
             upload_path = Path(rendered_value) if rendered_value else cv_path
             self.client.upload_file(page_id, target_id, upload_path)
