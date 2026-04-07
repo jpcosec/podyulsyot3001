@@ -21,7 +21,10 @@ from crawl4ai import (
     RateLimiter,
     SemaphoreDispatcher,
 )
-from crawl4ai.extraction_strategy import JsonCssExtractionStrategy
+from crawl4ai.extraction_strategy import (
+    JsonCssExtractionStrategy,
+    LLMExtractionStrategy,
+)
 from dotenv import load_dotenv
 
 try:
@@ -522,6 +525,15 @@ class SmartScraperAdapter(ABC):
         except Exception as exc:
             return None, str(exc)
 
+    def _llm_rescue_instruction(self) -> str:
+        """Return the Crawl4AI-native instruction used for fallback extraction."""
+        instructions = [self.get_llm_instructions().strip()]
+        instructions.append(
+            "Extract the job posting into the provided schema."
+            " Return only values supported by the page content."
+        )
+        return "\n\n".join(part for part in instructions if part)
+
     def _validate_payload(self, payload: dict | None) -> tuple[dict | None, str | None]:
         """Validate a merged payload against the job posting contract."""
         if not payload:
@@ -532,36 +544,30 @@ class SmartScraperAdapter(ABC):
             return None, str(exc)
 
     async def _llm_rescue(
-        self, markdown_content: str
+        self, crawler: AsyncWebCrawler | None, url: str, markdown_content: str
     ) -> tuple[dict | None, str | None]:
-        """Use the LLM to extract structured data from markdown content."""
+        """Use Crawl4AI's LLM extraction strategy as the fallback extractor."""
         if not self._has_llm_key() or not markdown_content:
             return None, "No LLM API key or empty markdown content."
+        if crawler is None:
+            return None, "LLM rescue requires an active crawler session."
 
         logger.info("%s LLM rescue for %s", LogTag.FALLBACK, self.source_name)
         try:
-            import litellm
-
-            prompt = (
-                f"{self.get_llm_instructions()}\n\n"
-                "Extract the following JSON schema from the text below. "
-                "Return ONLY valid JSON, no markdown fences.\n\n"
-                f"Schema:\n{json.dumps(JobPosting.model_json_schema(), indent=2)}\n\n"
-                f"Text:\n{markdown_content[:8000]}"
-            )
             llm_cfg = self.get_llm_config()
-            response = await litellm.acompletion(
-                model=llm_cfg.provider,
-                messages=[{"role": "user", "content": prompt}],
-                api_key=llm_cfg.api_token,
-                temperature=llm_cfg.temperature or 0.1,
+            run_config = self.get_base_crawl_config()
+            run_config.extraction_strategy = LLMExtractionStrategy(
+                llm_config=llm_cfg,
+                instruction=self._llm_rescue_instruction(),
+                schema=JobPosting.model_json_schema(),
+                input_format="markdown",
+                force_json_response=True,
+                extra_args={"temperature": llm_cfg.temperature or 0.1},
             )
-            content = response.choices[0].message.content.strip()
-            if content.startswith("```"):
-                content = content.split("\n", 1)[1] if "\n" in content else content
-                if content.endswith("```"):
-                    content = content[:-3].strip()
-            return self._parse_payload(content)
+            rescue_result = await crawler.arun(url=url, config=run_config)
+            if not rescue_result.success:
+                return None, rescue_result.error_message or "LLM rescue crawl failed."
+            return self._parse_payload(rescue_result.extracted_content)
         except Exception as exc:
             logger.error("%s LLM rescue error: %s", LogTag.FAIL, exc)
             return None, f"LLM exception: {exc}"
@@ -721,6 +727,7 @@ class SmartScraperAdapter(ABC):
         self,
         result: Any,
         *,
+        crawler: AsyncWebCrawler | None = None,
         discovery_entry: ScrapeDiscoveryEntry | None = None,
         scraped_at: datetime,
     ) -> tuple[dict | None, dict | None, str, str | None]:
@@ -747,7 +754,11 @@ class SmartScraperAdapter(ABC):
                 logger.info("%s %s extracted and validated.", LogTag.FAST, result.url)
 
         if not valid_data:
-            llm_payload, llm_error = await self._llm_rescue(self._markdown_text(result))
+            llm_payload, llm_error = await self._llm_rescue(
+                crawler,
+                result.url,
+                self._markdown_text(result),
+            )
             merged_payload = self._merge_listing_into_payload(
                 payload=llm_payload,
                 listing_case=self._listing_case_payload(
@@ -946,6 +957,7 @@ class SmartScraperAdapter(ABC):
         self,
         *,
         results: list[Any],
+        crawler: AsyncWebCrawler | None = None,
         discovery_entries: dict[str, ScrapeDiscoveryEntry] | None = None,
         listing_result: Any | None = None,
         node_name: str = "ingest",
@@ -969,6 +981,7 @@ class SmartScraperAdapter(ABC):
                 extraction_error,
             ) = await self._extract_payload(
                 result,
+                crawler=crawler,
                 discovery_entry=discovery_entry,
                 scraped_at=scraped_at,
             )
@@ -1048,6 +1061,7 @@ class SmartScraperAdapter(ABC):
             )
             return await self._process_results(
                 results=results,
+                crawler=crawler,
                 discovery_entries={entry.url: entry for entry in links_to_crawl},
                 listing_result=listing_result,
             )
@@ -1066,6 +1080,7 @@ class SmartScraperAdapter(ABC):
                 )
             ingested_job_ids = await self._process_results(
                 results=[result],
+                crawler=crawler,
             )
         if not ingested_job_ids:
             raise RuntimeError(f"Job fetch produced no ingested artifact for {url}")

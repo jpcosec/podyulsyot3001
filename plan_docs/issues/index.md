@@ -19,10 +19,9 @@ Once an issue is solved, the next step is always:
 
 ### Phase 1 — Foundations
 
-1. `plan_docs/issues/gaps/crawl4ai-llm-extraction-strategy.md`
-2. `plan_docs/issues/gaps/representative-schema-samples.md`
-3. `plan_docs/issues/gaps/browseros-domain-interface-boundary.md`
-4. `plan_docs/issues/gaps/browseros-letter-upload-routing.md`
+1. `plan_docs/issues/gaps/representative-schema-samples.md`
+2. `plan_docs/issues/gaps/browseros-domain-interface-boundary.md`
+3. `plan_docs/issues/gaps/browseros-letter-upload-routing.md`
 
 ### Phase 2 — Built on the foundations
 
