@@ -91,6 +91,8 @@ class AriadneSession:
 
         ingest_data = self.storage.get_job_state(self.portal_name, job_id)
         application_url = ingest_data.get("application_url") or ingest_data.get("url")
+        if not application_url:
+            raise ValueError(f"No application_url in ingest artifact for job {job_id}")
         context = self._build_context(ingest_data, cv_path, letter_path, application_url)
         all_selectors = self._collect_selectors(portal_map)
         navigator = AriadneNavigator(portal_map)
