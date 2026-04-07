@@ -11,6 +11,7 @@ from collections.abc import Iterable
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup
 from crawl4ai import (
@@ -37,7 +38,10 @@ except ImportError:  # pragma: no cover - exercised in environments without lang
     detect_langs = None
     LangDetectException = None
 
-from src.automation.motors.crawl4ai.contracts import ScrapeDiscoveryEntry
+from src.automation.motors.crawl4ai.contracts import (
+    DiscoverySourceContract,
+    ScrapeDiscoveryEntry,
+)
 from src.core.data_manager import DataManager
 from src.automation.ariadne.models import (
     ApplicationRoutingInterpretation,
@@ -111,6 +115,29 @@ _APPLY_LINK_RE = re.compile(
     r"(?:apply|application|bewerb|bewerben|bewerbung|jetzt bewerben|send your application)"
     r".{0,120}?(https?://[^\s)\]>\"']+)",
     re.IGNORECASE | re.DOTALL,
+)
+_JOB_PATH_HINT_RE = re.compile(
+    r"/(?:jobs?|job-board|jobboard|jobpostings?|careers?|career|positions?|openings?|vacancies?|vacancy|requisitions?)(?:/|$)",
+    re.IGNORECASE,
+)
+_JOB_QUERY_HINT_RE = re.compile(
+    r"(?:^|[?&])(gh_jid|lever-source|lever-via|job|jobid|job_id|jobreq|reqid|posting|posting_id|requisition)="
+)
+_JOB_TEXT_HINT_RE = re.compile(
+    r"job|opening|position|role|career|vacancy|bewerb|karriere|stellen|stelle",
+    re.IGNORECASE,
+)
+_APPLY_ONLY_RE = re.compile(
+    r"/(?:apply|application|submit|candidate|signup|register)(?:/|$)",
+    re.IGNORECASE,
+)
+_ASSET_PATH_RE = re.compile(
+    r"\.(?:css|js|json|xml|png|jpe?g|gif|svg|webp|pdf|zip|ico)(?:$|[?#])",
+    re.IGNORECASE,
+)
+_ATS_HOST_HINT_RE = re.compile(
+    r"greenhouse|lever|workday|smartrecruiters|ashby|personio|join|teamtailor|recruitee|jobylon|workable|icims|successfactors|myworkdayjobs",
+    re.IGNORECASE,
 )
 
 
@@ -330,6 +357,73 @@ def _first_email_match(*values: Any) -> str | None:
     return None
 
 
+def _normalized_hostname(url: str | None) -> str | None:
+    cleaned = _clean_text(url)
+    if not cleaned:
+        return None
+    hostname = urlparse(cleaned).hostname
+    if not hostname:
+        return None
+    return hostname.lower().removeprefix("www.")
+
+
+def _same_domain_scope(candidate_url: str, scope_host: str) -> bool:
+    candidate_host = _normalized_hostname(candidate_url)
+    if not candidate_host:
+        return False
+    return candidate_host == scope_host or candidate_host.endswith(f".{scope_host}")
+
+
+def _company_source_name(company_domain: str) -> str:
+    return f"company-{re.sub(r'[^a-z0-9._-]+', '-', company_domain.lower()).strip('-')}"
+
+
+def _generic_job_id(url: str) -> str:
+    parsed = urlparse(url)
+    segments = [segment for segment in parsed.path.split("/") if segment]
+    query_hint = parsed.query.replace("=", "-").replace("&", "-")
+    raw_value = segments[-1] if segments else query_hint or parsed.netloc or "job"
+    slug = re.sub(r"[^A-Za-z0-9]+", "-", raw_value).strip("-").lower()
+    if not slug:
+        slug = "job"
+    return slug[:80]
+
+
+def _job_url_hints(url: str, *, text: str | None = None) -> bool:
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"}:
+        return False
+    if _ASSET_PATH_RE.search(parsed.path):
+        return False
+    joined_text = " ".join(filter(None, [parsed.path, parsed.query, text or ""]))
+    if _APPLY_ONLY_RE.search(parsed.path) and not _JOB_PATH_HINT_RE.search(parsed.path):
+        return False
+    if _JOB_PATH_HINT_RE.search(parsed.path):
+        return True
+    if _JOB_QUERY_HINT_RE.search(f"?{parsed.query}"):
+        return True
+    if _ATS_HOST_HINT_RE.search(parsed.netloc) and re.search(r"\d", joined_text):
+        return True
+    return bool(_JOB_TEXT_HINT_RE.search(joined_text))
+
+
+def _cross_portal_seed_contract(
+    *,
+    company_domain: str,
+    seed_url: str,
+    upstream_source: str,
+    upstream_job_id: str,
+) -> DiscoverySourceContract:
+    return DiscoverySourceContract(
+        kind="company_domain",
+        source_name=_company_source_name(company_domain),
+        company_domain=company_domain,
+        seed_url=seed_url,
+        upstream_source=upstream_source,
+        upstream_job_id=upstream_job_id,
+    )
+
+
 class SmartScraperAdapter(ABC):
     """Base class for canonical source discovery and single-job ingestion."""
 
@@ -365,6 +459,10 @@ class SmartScraperAdapter(ABC):
     @abstractmethod
     def get_llm_instructions(self) -> str:
         """Return portal-specific extraction hints."""
+
+    def discovery_source_contract(self) -> DiscoverySourceContract:
+        """Return the persistence contract for this adapter's discovery namespace."""
+        return DiscoverySourceContract(kind="portal", source_name=self.source_name)
 
     def get_llm_config(self) -> LLMConfig:
         """Return the default LLM configuration for rescue extraction.
@@ -1041,6 +1139,11 @@ class SmartScraperAdapter(ABC):
             "teaser_salary": listing_data.get("salary"),
             "teaser_employment_type": listing_data.get("employment_type"),
             "teaser_text": discovery_entry.listing_snippet,
+            "source_contract": (
+                discovery_entry.source_contract.model_dump(mode="python")
+                if discovery_entry.source_contract
+                else None
+            ),
             "source_metadata": discovery_entry.source_metadata,
         }
 
@@ -1085,6 +1188,7 @@ class SmartScraperAdapter(ABC):
                         job_id=self.extract_job_id(entry),
                         listing_position=index,
                         search_url=search_url,
+                        source_contract=self.discovery_source_contract(),
                     )
                 )
                 continue
@@ -1098,6 +1202,10 @@ class SmartScraperAdapter(ABC):
                                 else index
                             ),
                             "search_url": entry.search_url or search_url,
+                            "source_contract": (
+                                entry.source_contract
+                                or self.discovery_source_contract()
+                            ),
                         }
                     )
                 )
@@ -1119,6 +1227,10 @@ class SmartScraperAdapter(ABC):
                     listing_data=entry.get("listing_data", {}),
                     listing_link=entry.get("listing_link"),
                     listing_snippet=entry.get("listing_snippet"),
+                    source_contract=(
+                        entry.get("source_contract")
+                        or self.discovery_source_contract().model_dump(mode="python")
+                    ),
                     source_metadata=entry.get("source_metadata", {}),
                 )
             )
@@ -1157,6 +1269,11 @@ class SmartScraperAdapter(ABC):
             "listing_snippet": discovery_entry.listing_snippet
             if discovery_entry
             else None,
+            "source_contract": (
+                discovery_entry.source_contract.model_dump(mode="python")
+                if discovery_entry and discovery_entry.source_contract
+                else self.discovery_source_contract().model_dump(mode="python")
+            ),
             "source_metadata": discovery_entry.source_metadata
             if discovery_entry
             else {},
@@ -1457,6 +1574,79 @@ class SmartScraperAdapter(ABC):
                 ingested_job_ids.append(job_id)
         return ingested_job_ids
 
+    def _cross_portal_seed_contracts(
+        self,
+        ingested_job_ids: Iterable[str],
+    ) -> list[DiscoverySourceContract]:
+        portal = getattr(self, "portal", None)
+        source_host = _normalized_hostname(getattr(portal, "base_url", None))
+        if not source_host:
+            return []
+
+        contracts: list[DiscoverySourceContract] = []
+        seen_source_names: set[str] = set()
+        for job_id in ingested_job_ids:
+            state = self.data_manager.read_json_artifact(
+                source=self.source_name,
+                job_id=job_id,
+                node_name="ingest",
+                stage="proposed",
+                filename="state.json",
+            )
+            application_url = _normalize_application_url(state.get("application_url"))
+            if not application_url:
+                continue
+            company_domain = _normalized_hostname(application_url)
+            if not company_domain or company_domain == source_host:
+                continue
+            if state.get("application_method") not in {"direct_url", "onsite"}:
+                continue
+            contract = _cross_portal_seed_contract(
+                company_domain=company_domain,
+                seed_url=application_url,
+                upstream_source=self.source_name,
+                upstream_job_id=job_id,
+            )
+            if contract.source_name in seen_source_names:
+                continue
+            seen_source_names.add(contract.source_name)
+            contracts.append(contract)
+        return contracts
+
+    async def _run_cross_portal_discovery(
+        self,
+        *,
+        crawler: AsyncWebCrawler,
+        ingested_job_ids: list[str],
+        limit: int | None,
+    ) -> list[str]:
+        discovered_job_ids: list[str] = []
+        for contract in self._cross_portal_seed_contracts(ingested_job_ids):
+            adapter = _CompanyPortalAdapter(
+                data_manager=self.data_manager,
+                source_contract=contract,
+            )
+            already_scraped: list[str] = []
+            source_root = self.data_manager.source_root(adapter.source_name)
+            if source_root.exists():
+                already_scraped = sorted(
+                    path.name
+                    for path in source_root.iterdir()
+                    if path.is_dir()
+                    and self.data_manager.has_ingested_job(
+                        adapter.source_name, path.name
+                    )
+                )
+            discovered_job_ids.extend(
+                await adapter.discover_from_seed_urls(
+                    crawler,
+                    seed_urls=[contract.seed_url] if contract.seed_url else [],
+                    already_scraped=already_scraped,
+                    limit=limit,
+                )
+            )
+        return discovered_job_ids
+
     async def run(
         self,
         already_scraped: list[str],
@@ -1519,12 +1709,20 @@ class SmartScraperAdapter(ABC):
                 config=run_config,
                 dispatcher=self.get_dispatcher(),
             )
-            return await self._process_results(
+            ingested_job_ids = await self._process_results(
                 results=results,
                 crawler=crawler,
                 discovery_entries={entry.url: entry for entry in links_to_crawl},
                 listing_result=listing_result,
             )
+            ingested_job_ids.extend(
+                await self._run_cross_portal_discovery(
+                    crawler=crawler,
+                    ingested_job_ids=ingested_job_ids,
+                    limit=limit,
+                )
+            )
+            return ingested_job_ids
 
     async def fetch_job(self, url: str, *, save_html: bool = False) -> str:
         """Fetch and ingest a single explicit job URL."""
@@ -1545,3 +1743,158 @@ class SmartScraperAdapter(ABC):
         if not ingested_job_ids:
             raise RuntimeError(f"Job fetch produced no ingested artifact for {url}")
         return ingested_job_ids[0]
+
+
+class _CompanyPortalAdapter(SmartScraperAdapter):
+    """Generic cross-portal adapter for ATS and careers domains discovered from apply links."""
+
+    def __init__(
+        self,
+        *,
+        data_manager: DataManager,
+        source_contract: DiscoverySourceContract,
+    ) -> None:
+        super().__init__(data_manager)
+        self._source_contract = source_contract
+        self._company_domain = source_contract.company_domain or ""
+
+    @property
+    def source_name(self) -> str:
+        return self._source_contract.source_name
+
+    @property
+    def supported_params(self) -> list[str]:
+        return []
+
+    def get_search_url(self, **kwargs) -> str:
+        raise NotImplementedError(
+            "Company-domain discovery is seeded from application URLs."
+        )
+
+    def extract_job_id(self, url: str) -> str:
+        return _generic_job_id(url)
+
+    def extract_links(self, crawl_result: Any) -> list[ScrapeDiscoveryEntry]:
+        entries: list[ScrapeDiscoveryEntry] = []
+        seen_urls: set[str] = set()
+        all_links = crawl_result.links.get("internal", []) + crawl_result.links.get(
+            "external", []
+        )
+        for link in all_links:
+            href = _normalize_application_url(link.get("href"))
+            if not href or href in seen_urls:
+                continue
+            if not _same_domain_scope(href, self._company_domain):
+                continue
+            text = _clean_text(
+                link.get("text") or link.get("title") or link.get("aria_label")
+            )
+            if not _job_url_hints(href, text=text):
+                continue
+            seen_urls.add(href)
+            entries.append(
+                ScrapeDiscoveryEntry(
+                    url=href,
+                    job_id=self.extract_job_id(href),
+                    listing_position=len(entries),
+                    listing_snippet=text,
+                    listing_data={"job_title": text} if text else {},
+                    listing_link=link,
+                    source_contract=self.discovery_source_contract(),
+                    source_metadata={
+                        "company_domain": self._company_domain,
+                        "seed_url": self._source_contract.seed_url,
+                        "upstream_source": self._source_contract.upstream_source,
+                        "upstream_job_id": self._source_contract.upstream_job_id,
+                    },
+                )
+            )
+        return entries
+
+    def get_llm_instructions(self) -> str:
+        return (
+            "Extract from a company ATS or careers page. "
+            "Treat the current page as the primary job detail page, ignore related jobs or recommendation widgets, "
+            "and detect the primary language as an ISO 639-1 code."
+        )
+
+    def discovery_source_contract(self) -> DiscoverySourceContract:
+        return self._source_contract
+
+    async def discover_from_seed_urls(
+        self,
+        crawler: AsyncWebCrawler,
+        *,
+        seed_urls: list[str],
+        already_scraped: list[str],
+        limit: int | None,
+    ) -> list[str]:
+        if not seed_urls:
+            return []
+
+        links_to_crawl: list[ScrapeDiscoveryEntry] = []
+        seen_urls: set[str] = set()
+        for seed_url in seed_urls:
+            seed_entry = ScrapeDiscoveryEntry(
+                url=seed_url,
+                job_id=self.extract_job_id(seed_url),
+                search_url=seed_url,
+                source_contract=self.discovery_source_contract(),
+                source_metadata={
+                    "company_domain": self._company_domain,
+                    "seed_url": seed_url,
+                    "upstream_source": self._source_contract.upstream_source,
+                    "upstream_job_id": self._source_contract.upstream_job_id,
+                },
+            )
+            if seed_entry.job_id not in already_scraped:
+                links_to_crawl.append(seed_entry)
+                seen_urls.add(seed_entry.url)
+
+            listing_result = await crawler.arun(
+                url=seed_url,
+                config=self.get_base_crawl_config(),
+            )
+            if not listing_result.success:
+                logger.warning(
+                    "%s Company discovery seed failed for %s: %s",
+                    LogTag.WARN,
+                    seed_url,
+                    listing_result.error_message,
+                )
+                continue
+
+            for entry in self._normalize_discovery_entries(
+                self.extract_links(listing_result),
+                search_url=seed_url,
+            ):
+                if entry.url in seen_urls or entry.job_id in already_scraped:
+                    continue
+                links_to_crawl.append(entry)
+                seen_urls.add(entry.url)
+
+        if not links_to_crawl:
+            return []
+        if limit:
+            links_to_crawl = links_to_crawl[:limit]
+
+        crawl_urls = [entry.url for entry in links_to_crawl]
+        schema = await self.get_fast_schema(
+            crawler,
+            crawl_urls[0],
+            candidate_urls=crawl_urls,
+        )
+        run_config = self.get_base_crawl_config()
+        if schema:
+            run_config.extraction_strategy = JsonCssExtractionStrategy(schema)
+
+        results = await crawler.arun_many(
+            urls=crawl_urls,
+            config=run_config,
+            dispatcher=self.get_dispatcher(),
+        )
+        return await self._process_results(
+            results=results,
+            crawler=crawler,
+            discovery_entries={entry.url: entry for entry in links_to_crawl},
+        )

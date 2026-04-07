@@ -16,6 +16,8 @@ The `src/automation/` package is the runtime home for all browser automation: jo
 - `src/automation/motors/browseros/cli/` — BrowserOS CLI motor (MCP client, executor, backend)
 - `src/automation/main.py` — unified CLI (`scrape` / `apply` subcommands)
 
+Discovery runs may expand beyond the aggregator portal itself: when a posting resolves to an external ATS or careers `application_url`, the Crawl4AI scrape engine can launch a company-domain discovery pass and ingest additional openings under a dedicated `company-<domain>` source namespace.
+
 ## Standards that apply
 
 - `docs/standards/code/basic.md` — error contracts, LogTag, docstrings

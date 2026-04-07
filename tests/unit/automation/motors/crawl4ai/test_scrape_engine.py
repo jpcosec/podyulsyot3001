@@ -13,12 +13,14 @@ from crawl4ai.extraction_strategy import LLMExtractionStrategy
 from src.automation.ariadne.models import (
     ApplicationRoutingInterpretation,
     JobPosting,
+    ScrapePortalDefinition,
 )
 from src.automation.motors.crawl4ai.contracts import ScrapeDiscoveryEntry
 from src.automation.motors.crawl4ai import scrape_engine as scrape_engine_module
 from src.core.data_manager import DataManager
 from src.automation.motors.crawl4ai.scrape_engine import (
     SmartScraperAdapter,
+    _CompanyPortalAdapter,
     detect_language,
 )
 
@@ -58,6 +60,15 @@ class _DummyAdapter(SmartScraperAdapter):
         if self._schema_cache_path is not None:
             return self._schema_cache_path
         return super().schema_cache_path
+
+
+class _PortalDummyAdapter(_DummyAdapter):
+    portal = ScrapePortalDefinition(
+        source_name="dummy",
+        base_url="https://aggregator.example.test",
+        supported_params=[],
+        job_id_pattern=r"-(\d+)$",
+    )
 
 
 def _result(*, url: str, extracted_content: str, markdown: str, html: str):
@@ -467,6 +478,117 @@ def test_get_fast_schema_returns_none_when_all_generated_selectors_are_rejected(
 
     assert schema is None
     assert cache_path.exists() is False
+
+
+def test_company_portal_extract_links_filters_to_same_domain_job_urls(tmp_path) -> None:
+    manager = DataManager(tmp_path / "data" / "jobs")
+    adapter = _CompanyPortalAdapter(
+        data_manager=manager,
+        source_contract=scrape_engine_module.DiscoverySourceContract(
+            kind="company_domain",
+            source_name="company-boards.greenhouse.io",
+            company_domain="boards.greenhouse.io",
+            seed_url="https://boards.greenhouse.io/example/jobs/123",
+            upstream_source="xing",
+            upstream_job_id="123",
+        ),
+    )
+
+    crawl_result = SimpleNamespace(
+        links={
+            "internal": [
+                {
+                    "href": "https://boards.greenhouse.io/example/jobs/321",
+                    "text": "Senior Data Engineer",
+                },
+                {
+                    "href": "https://boards.greenhouse.io/example/apply",
+                    "text": "Apply now",
+                },
+            ],
+            "external": [
+                {
+                    "href": "https://company.example.test/careers/openings/44",
+                    "text": "Backend Engineer",
+                }
+            ],
+        }
+    )
+
+    entries = adapter.extract_links(crawl_result)
+
+    assert [entry.url for entry in entries] == [
+        "https://boards.greenhouse.io/example/jobs/321"
+    ]
+    assert entries[0].source_contract is not None
+    assert entries[0].source_contract.source_name == "company-boards.greenhouse.io"
+    assert entries[0].source_metadata["upstream_source"] == "xing"
+
+
+def test_run_cross_portal_discovery_seeds_company_domain_sources(
+    tmp_path, monkeypatch
+) -> None:
+    manager = DataManager(tmp_path / "data" / "jobs")
+    adapter = _PortalDummyAdapter(manager)
+    manager.ingest_raw_job(
+        source="dummy",
+        job_id="123",
+        payload={
+            "job_title": "Data Engineer",
+            "company_name": "Example Co",
+            "location": "Berlin",
+            "employment_type": "Full-time",
+            "responsibilities": ["Build pipelines"],
+            "requirements": ["Python"],
+            "application_method": "direct_url",
+            "application_url": "https://boards.greenhouse.io/example/jobs/555",
+        },
+    )
+
+    calls: list[tuple[str, list[str], list[str], int | None]] = []
+
+    async def _fake_discover(self, crawler, *, seed_urls, already_scraped, limit):
+        calls.append((self.source_name, seed_urls, already_scraped, limit))
+        return ["job-555"]
+
+    monkeypatch.setattr(
+        _CompanyPortalAdapter,
+        "discover_from_seed_urls",
+        _fake_discover,
+    )
+
+    company_root = manager.source_root("company-boards.greenhouse.io")
+    company_root.mkdir(parents=True, exist_ok=True)
+    manager.ingest_raw_job(
+        source="company-boards.greenhouse.io",
+        job_id="already-there",
+        payload={
+            "job_title": "Existing",
+            "company_name": "Example Co",
+            "location": "Berlin",
+            "employment_type": "Full-time",
+            "responsibilities": ["Build"],
+            "requirements": ["Python"],
+        },
+    )
+
+    discovered = asyncio.run(
+        adapter._run_cross_portal_discovery(
+            crawler=object(),
+            ingested_job_ids=["123"],
+            limit=5,
+        )
+    )
+
+    assert discovered == ["job-555"]
+    assert calls == [
+        (
+            "company-boards.greenhouse.io",
+            ["https://boards.greenhouse.io/example/jobs/555"],
+            ["already-there"],
+            5,
+        )
+    ]
 
 
 def test_detect_language_handles_short_english_titles() -> None:

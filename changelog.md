@@ -12,6 +12,15 @@ All notable changes to this project will be documented in this file.
 - Updated `src/automation/ariadne/session.py` so apply runs resolve portal routing before opening a motor session and fail early when the job requires an unsupported external or email handoff.
 - Updated automation architecture docs to document the new portal routing layer.
 
+## [2026-04-07] - Cross-Portal Discovery
+
+### Added
+- Added company-domain discovery contracts plus scrape-engine regression coverage for ATS-aware link filtering and seeded company-source fan-out.
+
+### Changed
+- Updated `src/automation/motors/crawl4ai/scrape_engine.py` so scrape runs follow external `application_url` targets into same-domain ATS or careers pages, then ingest the discovered roles under dedicated `company-<domain>` source namespaces.
+- Updated automation docs to describe the new cross-portal company-domain discovery pass.
+
 ## [2026-04-07] - Application Routing Enrichment
 
 ### Added

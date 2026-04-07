@@ -10,6 +10,7 @@ This package provides a unified, semantic-driven browser automation system. It d
 - **Portal Routing (`src/automation/portals/*/routing.py`)**: Portal-specific branching that decides whether a job stays onsite, redirects to an ATS, or hands off to email.
 - **Execution Motors (`src/automation/motors/`)**: Replayers for Crawl4AI and BrowserOS.
 - **Persistence (`src/automation/storage.py`)**: Centralized artifact and metadata management.
+- **Cross-Portal Discovery**: Scrape runs can follow external `application_url` targets into ATS or careers domains and persist those openings under `company-<domain>` source folders.
 
 ## ⚙️ Configuration
 

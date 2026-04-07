@@ -54,6 +54,47 @@ class DiscoveryListingData(BaseModel):
     )
 
 
+class DiscoverySourceContract(BaseModel):
+    """Persistence contract describing the discovery source namespace.
+
+    Args:
+        kind: Discovery namespace kind, such as portal or company_domain.
+        source_name: Source folder used when persisting ingested artifacts.
+        company_domain: ATS or careers domain for cross-portal discovery passes.
+        seed_url: Application URL that seeded company-domain discovery.
+        upstream_source: Original aggregator or portal source that exposed the seed.
+        upstream_job_id: Upstream job identifier that exposed the seed.
+
+    Returns:
+        A typed source contract that can be persisted with discovery artifacts.
+    """
+
+    model_config = ConfigDict(extra="allow")
+
+    kind: str = Field(
+        description="Discovery namespace kind such as portal or company_domain."
+    )
+    source_name: str = Field(
+        description="Source folder used to persist discovered jobs for this namespace."
+    )
+    company_domain: str | None = Field(
+        default=None,
+        description="ATS or careers hostname when discovery runs against a company domain.",
+    )
+    seed_url: str | None = Field(
+        default=None,
+        description="Application URL that triggered a company-domain discovery pass.",
+    )
+    upstream_source: str | None = Field(
+        default=None,
+        description="Original source that exposed the cross-portal application URL.",
+    )
+    upstream_job_id: str | None = Field(
+        default=None,
+        description="Original job identifier that exposed the cross-portal application URL.",
+    )
+
+
 class ScrapeDiscoveryEntry(BaseModel):
     """Structured discovery evidence for one job listing.
 
@@ -65,6 +106,7 @@ class ScrapeDiscoveryEntry(BaseModel):
         listing_snippet: Human-readable teaser text preserved for `listing_case.md`.
         listing_data: Structured teaser fields captured from the listing surface.
         listing_link: Raw link object from Crawl4AI when available.
+        source_contract: Persistence contract describing which source namespace owns the entry.
         source_metadata: Additional source-specific context needed for later merges.
 
     Returns:
@@ -96,6 +138,10 @@ class ScrapeDiscoveryEntry(BaseModel):
     listing_link: dict[str, Any] | None = Field(
         default=None,
         description="Raw link payload from Crawl4AI for traceability when available.",
+    )
+    source_contract: DiscoverySourceContract | None = Field(
+        default=None,
+        description="Persistence contract describing which source namespace owns this discovery entry.",
     )
     source_metadata: dict[str, Any] = Field(
         default_factory=dict,

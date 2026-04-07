@@ -21,8 +21,6 @@ Once an issue is solved, the next step is always:
 
 ### Phase 3 — Routing and apply enablement
 
-7. `plan_docs/issues/unimplemented/cross-portal-discovery.md`
-
 ### Phase 4 — Human loop, safety, and fallback execution
 
 9. `plan_docs/issues/unimplemented/apply-hitl-channel.md`
