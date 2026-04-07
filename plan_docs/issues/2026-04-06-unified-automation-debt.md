@@ -5,7 +5,7 @@ This document tracks known technical debt, structural gaps, and missing features
 ## 1. Structural Debt
 - [x] **Residual Directories**: `src/scraper/` and `src/apply/` have been fully deleted.
 - [ ] **Scraper Refactor**: Scrape adapters in `src/automation/portals/*/scrape.py` still use Python models instead of JSON Maps.
-- [ ] **Registry Logic**: Backend and portal selection are hardcoded in `src/automation/main.py`. Should move to a dynamic factory.
+- [x] **Registry Logic**: Backend and portal selection moved to a dynamic factory in `src/automation/registry.py`.
 
 ## 2. Ariadne Lifecycle Gaps
 - [ ] **Promotion Workflow**: No CLI command or logic to promote a `draft` trace to a `canonical` map.
