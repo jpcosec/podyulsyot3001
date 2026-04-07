@@ -7,6 +7,7 @@ import logging
 import os
 import re
 from abc import ABC, abstractmethod
+from collections.abc import Iterable
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -23,6 +24,15 @@ from crawl4ai import (
 from crawl4ai.extraction_strategy import JsonCssExtractionStrategy
 from dotenv import load_dotenv
 
+try:
+    from langdetect import DetectorFactory, detect_langs
+    from langdetect.lang_detect_exception import LangDetectException
+
+    DetectorFactory.seed = 0
+except ImportError:  # pragma: no cover - exercised in environments without langdetect
+    detect_langs = None
+    LangDetectException = None
+
 from src.automation.motors.crawl4ai.contracts import ScrapeDiscoveryEntry
 from src.core.data_manager import DataManager
 from src.automation.ariadne.models import JobPosting
@@ -34,6 +44,111 @@ logger = logging.getLogger(__name__)
 
 
 DiscoveryEntryInput = str | dict[str, Any] | ScrapeDiscoveryEntry
+
+_LANGUAGE_TOKEN_RE = re.compile(r"[a-zA-Zäöüß]+")
+_GERMAN_LANGUAGE_HINTS = {
+    "als",
+    "aufgaben",
+    "ausbildung",
+    "berlin",
+    "bewerbung",
+    "deine",
+    "deutsch",
+    "du",
+    "erfahrung",
+    "fähigkeiten",
+    "für",
+    "gesucht",
+    "heute",
+    "ingenieur",
+    "kenntnisse",
+    "mit",
+    "standort",
+    "stelle",
+    "team",
+    "und",
+    "wir",
+}
+_ENGLISH_LANGUAGE_HINTS = {
+    "and",
+    "build",
+    "data",
+    "engineer",
+    "english",
+    "experience",
+    "for",
+    "hiring",
+    "location",
+    "pipelines",
+    "python",
+    "remote",
+    "requirements",
+    "responsibilities",
+    "role",
+    "sql",
+    "team",
+    "the",
+    "we",
+    "with",
+    "your",
+}
+_GERMAN_LANGUAGE_FRAGMENTS = ("ingenieur", "entwickler", "kenntnis", "bewerb", "aufgab")
+_ENGLISH_LANGUAGE_FRAGMENTS = ("engineer", "developer", "scientist", "manager")
+
+
+def _language_tokens(text: str) -> list[str]:
+    return [token.lower() for token in _LANGUAGE_TOKEN_RE.findall(text)]
+
+
+def _count_hint_matches(
+    tokens: Iterable[str], hints: set[str], fragments: tuple[str, ...]
+) -> int:
+    matches = 0
+    for token in tokens:
+        if token in hints:
+            matches += 1
+            continue
+        if any(fragment in token for fragment in fragments):
+            matches += 1
+    return matches
+
+
+def _heuristic_language_scores(text: str) -> dict[str, float]:
+    tokens = _language_tokens(text)
+    lowered = text.lower()
+    german_matches = _count_hint_matches(
+        tokens,
+        _GERMAN_LANGUAGE_HINTS,
+        _GERMAN_LANGUAGE_FRAGMENTS,
+    )
+    english_matches = _count_hint_matches(
+        tokens,
+        _ENGLISH_LANGUAGE_HINTS,
+        _ENGLISH_LANGUAGE_FRAGMENTS,
+    )
+    return {
+        "de": german_matches * 2.0 + sum(ch in text for ch in "äöüß") * 3.0,
+        "en": english_matches * 2.0 + lowered.count(" the ") + lowered.count(" and "),
+    }
+
+
+def _langdetect_scores(text: str) -> dict[str, float]:
+    if detect_langs is None:
+        return {}
+    try:
+        candidates = detect_langs(text)
+    except LangDetectException:
+        return {}
+    return {
+        candidate.lang: candidate.prob
+        for candidate in candidates
+        if candidate.lang in {"de", "en"}
+    }
+
+
+def _language_sample(markdown_text: str) -> str:
+    sample = re.sub(r"\s+", " ", markdown_text).strip()
+    return sample[:1000]
 
 
 def _now_utc() -> datetime:
@@ -111,27 +226,27 @@ def normalize_relative_date(
     return text, None
 
 
-# TODO(future): detect_language is a naive heuristic, fails on short/mixed-language postings — see plan_docs/issues/gaps/language-detection-hardening.md
 def detect_language(markdown_text: str) -> str:
-    """Naive fallback to detect if a text is German or English."""
-    german_markers = [
-        " und ",
-        " wie ",
-        " wir ",
-        " für ",
-        " sind ",
-        " werden ",
-        "aufgabengebiet",
-        "tätigkeit",
-        "erfahrung",
-        "deutsch",
-    ]
-    lowered = markdown_text.lower()
-    marker_hits = sum(lowered.count(marker) for marker in german_markers)
-    has_umlaut = any(ch in markdown_text for ch in "äöüß")
-    if marker_hits >= 2 or has_umlaut:
-        return "de"
-    return "en"
+    """Detect the primary posting language, preferring langdetect with lexical fallback."""
+    sample = _language_sample(markdown_text)
+    if not sample:
+        return "en"
+
+    tokens = _language_tokens(sample)
+    heuristic_scores = _heuristic_language_scores(sample)
+    detector_scores = _langdetect_scores(sample)
+    detector_weight = 3.0 if len(tokens) >= 6 and len(sample) >= 48 else 0.75
+    combined_scores = {
+        "de": heuristic_scores["de"] + detector_scores.get("de", 0.0) * detector_weight,
+        "en": heuristic_scores["en"] + detector_scores.get("en", 0.0) * detector_weight,
+    }
+    if combined_scores["de"] == combined_scores["en"]:
+        return (
+            "de"
+            if detector_scores.get("de", 0.0) > detector_scores.get("en", 0.0)
+            else "en"
+        )
+    return "de" if combined_scores["de"] > combined_scores["en"] else "en"
 
 
 class SmartScraperAdapter(ABC):

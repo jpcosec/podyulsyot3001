@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-07] - Language Detection Hardening
+
+### Added
+- Added Crawl4AI scrape-engine coverage for short English titles, mixed-language postings, and persisted fallback `original_language` values in `tests/unit/automation/motors/crawl4ai/test_scrape_engine.py`.
+
+### Changed
+- Replaced the scrape-engine's naive German-marker fallback in `src/automation/motors/crawl4ai/scrape_engine.py` with deterministic `langdetect` scoring blended with job-posting lexical heuristics.
+- Declared `langdetect` in `pyproject.toml` so editable installs keep the hardened language detector available.
+
 ## [2026-04-07] - Trace Normalization Quality
 
 ### Added

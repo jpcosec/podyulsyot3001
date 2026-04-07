@@ -8,7 +8,10 @@ from types import SimpleNamespace
 
 from src.automation.motors.crawl4ai.contracts import ScrapeDiscoveryEntry
 from src.core.data_manager import DataManager
-from src.automation.motors.crawl4ai.scrape_engine import SmartScraperAdapter
+from src.automation.motors.crawl4ai.scrape_engine import (
+    SmartScraperAdapter,
+    detect_language,
+)
 
 
 class _DummyAdapter(SmartScraperAdapter):
@@ -139,3 +142,41 @@ def test_process_results_fails_closed_but_persists_failed_artifacts(tmp_path) ->
     assert (failed_dir / "state.json").exists()
     assert (failed_dir / "raw_page.html").exists()
     assert manager.has_ingested_job("dummy", "999") is False
+
+
+def test_detect_language_handles_short_english_titles() -> None:
+    assert detect_language("Data Engineer Berlin") == "en"
+
+
+def test_detect_language_handles_mixed_language_postings() -> None:
+    text = (
+        "Data Engineer gesucht. Build pipelines with Python and SQL. Standort Berlin."
+    )
+
+    assert detect_language(text) == "en"
+
+
+def test_process_results_adds_detected_original_language(tmp_path) -> None:
+    manager = DataManager(tmp_path / "data" / "jobs")
+    adapter = _DummyAdapter(manager)
+    payload = {
+        "job_title": "Data Engineer",
+        "company_name": "Example Co",
+        "location": "Berlin",
+        "employment_type": "Full-time",
+        "responsibilities": ["Build pipelines"],
+        "requirements": ["Python"],
+    }
+    detail_result = _result(
+        url="https://example.test/jobs/data-engineer-124",
+        extracted_content=json.dumps(payload),
+        markdown="Data Engineer gesucht. Build pipelines with Python and SQL.",
+        html="<html><body>detail</body></html>",
+    )
+
+    asyncio.run(adapter._process_results(results=[detail_result]))
+
+    state_payload = manager.read_json_path(
+        manager.node_stage_dir("dummy", "124", "ingest", "proposed") / "state.json"
+    )
+    assert state_payload["original_language"] == "en"
