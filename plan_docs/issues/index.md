@@ -19,7 +19,6 @@ Once an issue is solved, the next step is always:
 
 ### Phase 1 — Foundations
 
-1. `plan_docs/issues/gaps/representative-schema-samples.md`
 2. `plan_docs/issues/gaps/browseros-domain-interface-boundary.md`
 3. `plan_docs/issues/gaps/browseros-letter-upload-routing.md`
 

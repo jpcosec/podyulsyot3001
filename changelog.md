@@ -10,6 +10,14 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - Replaced the scrape-engine's direct LiteLLM fallback in `src/automation/motors/crawl4ai/scrape_engine.py` with a second Crawl4AI pass that uses `LLMExtractionStrategy` and preserves the existing `JobPosting` validation contract.
 
+## [2026-04-07] - Representative Crawl4AI Schema Samples
+
+### Added
+- Added representative-schema regression coverage in `tests/unit/automation/motors/crawl4ai/test_scrape_engine.py` to verify multi-sample schema selection and blocked teaser-selector rejection.
+
+### Changed
+- Reworked `src/automation/motors/crawl4ai/scrape_engine.py` so schema generation learns from multiple representative detail pages, validates each generated schema across the sample set, and rejects selectors that target teaser or related-job modules before caching.
+
 ## [2026-04-07] - Language Detection Hardening
 
 ### Added

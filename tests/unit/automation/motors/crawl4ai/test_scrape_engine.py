@@ -5,12 +5,14 @@ from __future__ import annotations
 import asyncio
 import json
 from datetime import datetime, timezone
+from pathlib import Path
 from types import SimpleNamespace
 
 from crawl4ai.extraction_strategy import LLMExtractionStrategy
 
 from src.automation.ariadne.models import JobPosting
 from src.automation.motors.crawl4ai.contracts import ScrapeDiscoveryEntry
+from src.automation.motors.crawl4ai import scrape_engine as scrape_engine_module
 from src.core.data_manager import DataManager
 from src.automation.motors.crawl4ai.scrape_engine import (
     SmartScraperAdapter,
@@ -19,6 +21,15 @@ from src.automation.motors.crawl4ai.scrape_engine import (
 
 
 class _DummyAdapter(SmartScraperAdapter):
+    def __init__(
+        self,
+        data_manager: DataManager | None = None,
+        *,
+        schema_cache_path: Path | None = None,
+    ) -> None:
+        super().__init__(data_manager)
+        self._schema_cache_path = schema_cache_path
+
     @property
     def source_name(self) -> str:
         return "dummy"
@@ -38,6 +49,12 @@ class _DummyAdapter(SmartScraperAdapter):
 
     def get_llm_instructions(self) -> str:
         return ""
+
+    @property
+    def schema_cache_path(self) -> Path:
+        if self._schema_cache_path is not None:
+            return self._schema_cache_path
+        return super().schema_cache_path
 
 
 def _result(*, url: str, extracted_content: str, markdown: str, html: str):
@@ -210,6 +227,133 @@ def test_extract_payload_uses_crawl4ai_llm_strategy_for_fallback(
     assert isinstance(rescue_config.extraction_strategy, LLMExtractionStrategy)
     assert rescue_config.extraction_strategy.schema == JobPosting.model_json_schema()
     assert rescue_config.extraction_strategy.input_format == "markdown"
+
+
+def test_get_fast_schema_uses_representative_samples_and_filters_teaser_selectors(
+    tmp_path, monkeypatch
+) -> None:
+    manager = DataManager(tmp_path / "data" / "jobs")
+    cache_path = tmp_path / "schemas" / "dummy_schema.json"
+    adapter = _DummyAdapter(manager, schema_cache_path=cache_path)
+    monkeypatch.setenv("GOOGLE_API_KEY", "test-key")
+
+    sample_payloads = {
+        "https://example.test/jobs/data-engineer-1": "<body><main class='job'><h1>Job 1</h1><ul class='responsibilities'><li>Build</li></ul></main><section class='related-jobs'><h2>Related</h2></section></body>",
+        "https://example.test/jobs/data-engineer-2": "<body><main class='job'><h1>Job 2</h1><ul class='responsibilities'><li>Scale</li></ul></main><section class='related-jobs'><h2>Related</h2></section></body>",
+        "https://example.test/jobs/data-engineer-3": "<body><main class='job'><h1>Job 3</h1><ul class='responsibilities'><li>Ship</li></ul></main><section class='related-jobs'><h2>Related</h2></section></body>",
+    }
+    bad_schema = {
+        "name": "Job Posting Detail",
+        "baseSelector": "body",
+        "fields": [
+            {
+                "name": "job_title",
+                "selector": ".related-jobs h2",
+                "type": "text",
+            }
+        ],
+    }
+    good_schema = {
+        "name": "Job Posting Detail",
+        "baseSelector": "main.job",
+        "fields": [
+            {"name": "job_title", "selector": "h1", "type": "text"},
+            {
+                "name": "responsibilities",
+                "selector": ".responsibilities li",
+                "type": "list",
+                "fields": [{"name": "item", "selector": ".", "type": "text"}],
+            },
+        ],
+    }
+
+    class _FakeCrawler:
+        def __init__(self) -> None:
+            self.calls: list[str] = []
+
+        async def arun(self, *, url: str, config):
+            self.calls.append(url)
+            return SimpleNamespace(
+                url=url,
+                success=True,
+                cleaned_html=sample_payloads[url],
+                error_message=None,
+            )
+
+    generated_htmls: list[str] = []
+
+    def _fake_generate_schema(*, html: str, **kwargs):
+        generated_htmls.append(html)
+        if "Job 1" in html:
+            return bad_schema
+        return good_schema
+
+    monkeypatch.setattr(
+        scrape_engine_module.JsonCssExtractionStrategy,
+        "generate_schema",
+        staticmethod(_fake_generate_schema),
+    )
+
+    crawler = _FakeCrawler()
+    schema = asyncio.run(
+        adapter.get_fast_schema(
+            crawler,
+            "https://example.test/jobs/data-engineer-1",
+            candidate_urls=list(sample_payloads),
+        )
+    )
+
+    assert schema == good_schema
+    assert crawler.calls == list(sample_payloads)
+    assert len(generated_htmls) == 3
+    assert json.loads(cache_path.read_text(encoding="utf-8")) == good_schema
+
+
+def test_get_fast_schema_returns_none_when_all_generated_selectors_are_rejected(
+    tmp_path, monkeypatch
+) -> None:
+    manager = DataManager(tmp_path / "data" / "jobs")
+    cache_path = tmp_path / "schemas" / "dummy_schema.json"
+    adapter = _DummyAdapter(manager, schema_cache_path=cache_path)
+    monkeypatch.setenv("GOOGLE_API_KEY", "test-key")
+
+    class _FakeCrawler:
+        async def arun(self, *, url: str, config):
+            return SimpleNamespace(
+                url=url,
+                success=True,
+                cleaned_html="<body><main><h1>Job</h1></main><section class='related-jobs'><h2>Related</h2></section></body>",
+                error_message=None,
+            )
+
+    monkeypatch.setattr(
+        scrape_engine_module.JsonCssExtractionStrategy,
+        "generate_schema",
+        staticmethod(
+            lambda **kwargs: {
+                "name": "Job Posting Detail",
+                "baseSelector": "body",
+                "fields": [
+                    {
+                        "name": "job_title",
+                        "selector": ".related-jobs h2",
+                        "type": "text",
+                    }
+                ],
+            }
+        ),
+    )
+
+    schema = asyncio.run(
+        adapter.get_fast_schema(
+            _FakeCrawler(),
+            "https://example.test/jobs/data-engineer-1",
+            candidate_urls=["https://example.test/jobs/data-engineer-1"],
+        )
+    )
+
+    assert schema is None
+    assert cache_path.exists() is False
 
 
 def test_detect_language_handles_short_english_titles() -> None:

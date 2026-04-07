@@ -12,6 +12,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
+from bs4 import BeautifulSoup
 from crawl4ai import (
     AsyncWebCrawler,
     BrowserConfig,
@@ -97,6 +98,10 @@ _ENGLISH_LANGUAGE_HINTS = {
 }
 _GERMAN_LANGUAGE_FRAGMENTS = ("ingenieur", "entwickler", "kenntnis", "bewerb", "aufgab")
 _ENGLISH_LANGUAGE_FRAGMENTS = ("engineer", "developer", "scientist", "manager")
+_SCHEMA_SELECTOR_BLOCKLIST = re.compile(
+    r"related|similar|recommend|teaser|carousel|footer|sticky|other-jobs|jobs-nearby",
+    re.IGNORECASE,
+)
 
 
 def _language_tokens(text: str) -> list[str]:
@@ -358,6 +363,11 @@ class SmartScraperAdapter(ABC):
         """Provider-specific hints for CSS schema generation."""
         return ""
 
+    @property
+    def schema_generation_sample_size(self) -> int:
+        """Return how many representative detail pages to use for schema learning."""
+        return 3
+
     def _schema_generation_query(self) -> str:
         base_rules = [
             f"Generate CSS selectors for the main {self.source_name} job detail page only.",
@@ -371,6 +381,7 @@ class SmartScraperAdapter(ABC):
             "Do not source missing fields from nearby teaser cards or listing modules.",
             "For list fields, extract only the actual bullet items for the main posting.",
             "If a field cannot be found on the main detail page, leave it unmapped rather than using unrelated content.",
+            "The schema will be validated against multiple representative detail pages and rejected if it targets teaser or related-job modules.",
         ]
         provider_hints = self.get_schema_generation_hints().strip()
         if provider_hints:
@@ -470,8 +481,122 @@ class SmartScraperAdapter(ABC):
             ],
         }
 
+    def _schema_sample_urls(
+        self,
+        *,
+        sample_url: str,
+        candidate_urls: Iterable[str] | None = None,
+    ) -> list[str]:
+        ordered_urls: list[str] = []
+        for url in [sample_url, *(candidate_urls or [])]:
+            if not url or url in ordered_urls:
+                continue
+            ordered_urls.append(url)
+            if len(ordered_urls) >= self.schema_generation_sample_size:
+                break
+        return ordered_urls
+
+    async def _load_schema_samples(
+        self,
+        crawler: AsyncWebCrawler,
+        sample_urls: list[str],
+    ) -> list[tuple[str, str]]:
+        samples: list[tuple[str, str]] = []
+        for url in sample_urls:
+            result = await crawler.arun(url=url, config=self.get_base_crawl_config())
+            if not result.success or not result.cleaned_html:
+                logger.warning(
+                    "%s Skipping schema sample %s: %s",
+                    LogTag.WARN,
+                    url,
+                    result.error_message or "missing cleaned HTML",
+                )
+                continue
+            samples.append((url, result.cleaned_html[:50000]))
+        return samples
+
+    def _iter_schema_selectors(self, schema: dict[str, Any]) -> Iterable[str]:
+        base_selector = schema.get("baseSelector")
+        if isinstance(base_selector, str) and base_selector.strip():
+            yield base_selector
+
+        stack = list(schema.get("fields") or [])
+        while stack:
+            field = stack.pop()
+            selector = field.get("selector")
+            if isinstance(selector, str) and selector.strip():
+                yield selector
+            stack.extend(field.get("fields") or [])
+
+    def _schema_selector_violations(self, schema: dict[str, Any]) -> list[str]:
+        violations: list[str] = []
+        for selector in self._iter_schema_selectors(schema):
+            if _SCHEMA_SELECTOR_BLOCKLIST.search(selector):
+                violations.append(selector)
+        return violations
+
+    def _select_nodes(self, roots: list[Any], selector: str | None) -> list[Any]:
+        if not selector or selector in {".", ":scope"}:
+            return roots
+        matches: list[Any] = []
+        for root in roots:
+            try:
+                matches.extend(root.select(selector))
+            except Exception:
+                return []
+        return matches
+
+    def _field_matches_sample(self, field: dict[str, Any], roots: list[Any]) -> bool:
+        matches = self._select_nodes(roots, field.get("selector"))
+        if not matches:
+            return False
+        nested_fields = field.get("fields") or []
+        if not nested_fields:
+            return True
+        return any(
+            self._field_matches_sample(nested, matches) for nested in nested_fields
+        )
+
+    def _schema_sample_coverage(self, schema: dict[str, Any], html: str) -> float:
+        fields = schema.get("fields") or []
+        if not fields:
+            return 0.0
+        soup = BeautifulSoup(html, "html.parser")
+        roots = self._select_nodes([soup], schema.get("baseSelector") or "body")
+        if not roots:
+            return 0.0
+        matched_fields = sum(
+            1 for field in fields if self._field_matches_sample(field, roots)
+        )
+        return matched_fields / len(fields)
+
+    def _score_generated_schema(
+        self,
+        schema: dict[str, Any],
+        sample_htmls: list[str],
+    ) -> float | None:
+        violations = self._schema_selector_violations(schema)
+        if violations:
+            logger.warning(
+                "%s Rejecting schema with blocked selectors: %s",
+                LogTag.WARN,
+                ", ".join(violations),
+            )
+            return None
+
+        coverages = [
+            self._schema_sample_coverage(schema, html) for html in sample_htmls
+        ]
+        if not coverages or any(coverage <= 0.0 for coverage in coverages):
+            return None
+        return sum(coverages) / len(coverages)
+
     async def get_fast_schema(
-        self, crawler: AsyncWebCrawler, sample_url: str
+        self,
+        crawler: AsyncWebCrawler,
+        sample_url: str,
+        *,
+        candidate_urls: Iterable[str] | None = None,
     ) -> dict | None:
         """Return cached CSS schema or generate it using the LLM."""
         if self.schema_cache_path.exists():
@@ -485,32 +610,56 @@ class SmartScraperAdapter(ABC):
             return None
 
         logger.info("%s Learning page structure for %s", LogTag.LLM, self.source_name)
-        sample_result = await crawler.arun(
-            url=sample_url, config=self.get_base_crawl_config()
+        sample_urls = self._schema_sample_urls(
+            sample_url=sample_url,
+            candidate_urls=candidate_urls,
         )
-        if not sample_result.success:
+        samples = await self._load_schema_samples(crawler, sample_urls)
+        if not samples:
             logger.error("%s Could not download sample page.", LogTag.FAIL)
             return None
 
+        sample_htmls = [html for _, html in samples]
+        best_schema: dict[str, Any] | None = None
+        best_score = -1.0
         try:
-            schema = JsonCssExtractionStrategy.generate_schema(
-                html=sample_result.cleaned_html[:50000],
-                schema_type="CSS",
-                target_json_example=json.dumps(
-                    self._css_schema_target_example(), indent=2
-                ),
-                query=self._schema_generation_query(),
-                llm_config=self.get_llm_config(),
-            )
-            self.schema_cache_path.parent.mkdir(parents=True, exist_ok=True)
-            self.schema_cache_path.write_text(
-                json.dumps(schema, indent=2, ensure_ascii=False), encoding="utf-8"
-            )
-            logger.info("%s CSS schema generated and cached.", LogTag.OK)
-            return schema
+            for _, html in samples:
+                schema = JsonCssExtractionStrategy.generate_schema(
+                    html=html,
+                    schema_type="CSS",
+                    target_json_example=json.dumps(
+                        self._css_schema_target_example(), indent=2
+                    ),
+                    query=self._schema_generation_query(),
+                    llm_config=self.get_llm_config(),
+                )
+                score = self._score_generated_schema(schema, sample_htmls)
+                if score is None or score <= best_score:
+                    continue
+                best_schema = schema
+                best_score = score
         except Exception as exc:
             logger.error("%s Error generating schema: %s", LogTag.FAIL, exc)
             return None
+
+        if best_schema is None:
+            logger.error(
+                "%s No representative schema passed validation for %s.",
+                LogTag.FAIL,
+                self.source_name,
+            )
+            return None
+
+        self.schema_cache_path.parent.mkdir(parents=True, exist_ok=True)
+        self.schema_cache_path.write_text(
+            json.dumps(best_schema, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+        logger.info(
+            "%s CSS schema generated from %s representative samples and cached.",
+            LogTag.OK,
+            len(samples),
+        )
+        return best_schema
 
     def _parse_payload(self, raw_content: str) -> tuple[dict | None, str | None]:
         """Parse extractor output into a dictionary payload when possible."""
@@ -1043,7 +1192,11 @@ class SmartScraperAdapter(ABC):
                 links_to_crawl = links_to_crawl[:limit]
 
             crawl_urls = [entry.url for entry in links_to_crawl]
-            schema = await self.get_fast_schema(crawler, crawl_urls[0])
+            schema = await self.get_fast_schema(
+                crawler,
+                crawl_urls[0],
+                candidate_urls=crawl_urls,
+            )
             run_config = self.get_base_crawl_config()
             if schema:
                 run_config.extraction_strategy = JsonCssExtractionStrategy(schema)
