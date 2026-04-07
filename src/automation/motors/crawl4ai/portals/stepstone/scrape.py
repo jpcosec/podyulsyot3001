@@ -1,10 +1,12 @@
 """StepStone C4AI scrape translator — consumes STEPSTONE_SCRAPE portal intent."""
+
 from __future__ import annotations
 
 import re
 from typing import Any
 
 from src.automation.ariadne.models import ScrapePortalDefinition
+from src.automation.motors.crawl4ai.contracts import ScrapeDiscoveryEntry
 from src.automation.motors.crawl4ai.scrape_engine import SmartScraperAdapter
 
 STEPSTONE_SCRAPE = ScrapePortalDefinition(
@@ -55,15 +57,36 @@ class StepStoneAdapter(SmartScraperAdapter):
             url += f"?ag={age_str}"
         return url
 
-    def extract_links(self, crawl_result: Any) -> list[str]:
-        """Return deduplicated StepStone job detail URLs from the crawl result link list (matched by '-inline.html' suffix)."""
-        job_links = []
-        all_links = crawl_result.links.get("internal", []) + crawl_result.links.get("external", [])
+    def extract_links(self, crawl_result: Any) -> list[ScrapeDiscoveryEntry]:
+        """Return structured StepStone discovery entries from listing links."""
+        job_links: list[ScrapeDiscoveryEntry] = []
+        seen_urls: set[str] = set()
+        all_links = crawl_result.links.get("internal", []) + crawl_result.links.get(
+            "external", []
+        )
         for link in all_links:
             href = link.get("href", "")
-            if "-inline.html" in href and "stepstone.de" in href:
-                job_links.append(href)
-        return list(dict.fromkeys(job_links))
+            if "-inline.html" not in href or "stepstone.de" not in href:
+                continue
+            if href in seen_urls:
+                continue
+            seen_urls.add(href)
+            teaser_text = (link.get("text") or link.get("title") or "").strip() or None
+            job_links.append(
+                ScrapeDiscoveryEntry(
+                    url=href,
+                    job_id=self.extract_job_id(href),
+                    listing_position=len(job_links),
+                    listing_snippet=teaser_text,
+                    listing_data={"job_title": teaser_text} if teaser_text else {},
+                    listing_link=link,
+                    source_metadata={
+                        "link_text": link.get("text"),
+                        "link_title": link.get("title"),
+                    },
+                )
+            )
+        return job_links
 
     def get_llm_instructions(self) -> str:
         """LLM extraction hints for StepStone job detail pages."""

@@ -23,6 +23,7 @@ from crawl4ai import (
 from crawl4ai.extraction_strategy import JsonCssExtractionStrategy
 from dotenv import load_dotenv
 
+from src.automation.motors.crawl4ai.contracts import ScrapeDiscoveryEntry
 from src.core.data_manager import DataManager
 from src.automation.ariadne.models import JobPosting
 from src.shared.log_tags import LogTag
@@ -32,7 +33,7 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 
-DiscoveryEntry = dict[str, Any]
+DiscoveryEntryInput = str | dict[str, Any] | ScrapeDiscoveryEntry
 
 
 def _now_utc() -> datetime:
@@ -158,11 +159,11 @@ class SmartScraperAdapter(ABC):
         """Extract a stable job identifier from a posting URL."""
 
     @abstractmethod
-    def extract_links(self, crawl_result: Any) -> list[str]:
+    def extract_links(self, crawl_result: Any) -> list[DiscoveryEntryInput]:
         """Return discovery entries from a listing result.
 
-        Implementations may return plain URL strings or dictionaries containing
-        at least ``url`` plus any listing-side metadata worth preserving.
+        Implementations should return typed discovery entries that preserve the
+        listing-side metadata needed to build job-scoped artifacts.
         """
 
     @abstractmethod
@@ -453,21 +454,21 @@ class SmartScraperAdapter(ABC):
     def _listing_case_payload(
         self,
         *,
-        discovery_entry: DiscoveryEntry | None,
+        discovery_entry: ScrapeDiscoveryEntry | None,
         scraped_at: datetime,
     ) -> dict[str, Any] | None:
         if not discovery_entry:
             return None
-        listing_data = dict(discovery_entry.get("listing_data", {}))
+        listing_data = discovery_entry.listing_data.model_dump(mode="python")
         listed_at_relative, listed_at_iso = normalize_relative_date(
             listing_data.get("posted_date"),
             scraped_at=scraped_at,
         )
         return {
-            "job_id": self.extract_job_id(discovery_entry["url"]),
-            "url": discovery_entry["url"],
-            "search_url": discovery_entry.get("search_url"),
-            "listing_position": discovery_entry.get("listing_position"),
+            "job_id": discovery_entry.job_id,
+            "url": discovery_entry.url,
+            "search_url": discovery_entry.search_url,
+            "listing_position": discovery_entry.listing_position,
             "scraped_at": scraped_at.isoformat(),
             "listed_at_relative": listed_at_relative,
             "listed_at_iso": listed_at_iso,
@@ -476,7 +477,8 @@ class SmartScraperAdapter(ABC):
             "teaser_location": listing_data.get("location"),
             "teaser_salary": listing_data.get("salary"),
             "teaser_employment_type": listing_data.get("employment_type"),
-            "teaser_text": discovery_entry.get("listing_snippet"),
+            "teaser_text": discovery_entry.listing_snippet,
+            "source_metadata": discovery_entry.source_metadata,
         }
 
     def _merge_listing_into_payload(
@@ -507,20 +509,34 @@ class SmartScraperAdapter(ABC):
 
     def _normalize_discovery_entries(
         self,
-        entries: list[str | DiscoveryEntry],
+        entries: list[DiscoveryEntryInput],
         *,
         search_url: str,
-    ) -> list[DiscoveryEntry]:
-        normalized: list[DiscoveryEntry] = []
+    ) -> list[ScrapeDiscoveryEntry]:
+        normalized: list[ScrapeDiscoveryEntry] = []
         for index, entry in enumerate(entries):
             if isinstance(entry, str):
                 normalized.append(
-                    {
-                        "url": entry,
-                        "listing_position": index,
-                        "search_url": search_url,
-                        "listing_data": {},
-                    }
+                    ScrapeDiscoveryEntry(
+                        url=entry,
+                        job_id=self.extract_job_id(entry),
+                        listing_position=index,
+                        search_url=search_url,
+                    )
+                )
+                continue
+            if isinstance(entry, ScrapeDiscoveryEntry):
+                normalized.append(
+                    entry.model_copy(
+                        update={
+                            "listing_position": (
+                                entry.listing_position
+                                if entry.listing_position is not None
+                                else index
+                            ),
+                            "search_url": entry.search_url or search_url,
+                        }
+                    )
                 )
                 continue
             url = entry.get("url")
@@ -532,14 +548,16 @@ class SmartScraperAdapter(ABC):
                 )
                 continue
             normalized.append(
-                {
-                    "url": url,
-                    "listing_position": entry.get("listing_position", index),
-                    "search_url": entry.get("search_url", search_url),
-                    "listing_data": entry.get("listing_data", {}),
-                    "listing_link": entry.get("listing_link"),
-                    "listing_snippet": entry.get("listing_snippet"),
-                }
+                ScrapeDiscoveryEntry(
+                    url=url,
+                    job_id=entry.get("job_id") or self.extract_job_id(url),
+                    listing_position=entry.get("listing_position", index),
+                    search_url=entry.get("search_url", search_url),
+                    listing_data=entry.get("listing_data", {}),
+                    listing_link=entry.get("listing_link"),
+                    listing_snippet=entry.get("listing_snippet"),
+                    source_metadata=entry.get("source_metadata", {}),
+                )
             )
         return normalized
 
@@ -556,27 +574,29 @@ class SmartScraperAdapter(ABC):
     def _listing_artifacts(
         self,
         *,
-        discovery_entry: DiscoveryEntry | None,
+        discovery_entry: ScrapeDiscoveryEntry | None,
         listing_result: Any | None,
     ) -> dict[str, Any] | None:
         if not discovery_entry and not listing_result:
             return None
         payload: dict[str, Any] = {
-            "search_url": discovery_entry.get("search_url")
+            "job_id": discovery_entry.job_id if discovery_entry else None,
+            "search_url": discovery_entry.search_url if discovery_entry else None,
+            "listing_position": discovery_entry.listing_position
             if discovery_entry
             else None,
-            "listing_position": (
-                discovery_entry.get("listing_position") if discovery_entry else None
+            "listing_data": (
+                discovery_entry.listing_data.model_dump(mode="python")
+                if discovery_entry
+                else {}
             ),
-            "listing_data": discovery_entry.get("listing_data", {})
+            "listing_link": discovery_entry.listing_link if discovery_entry else None,
+            "listing_snippet": discovery_entry.listing_snippet
+            if discovery_entry
+            else None,
+            "source_metadata": discovery_entry.source_metadata
             if discovery_entry
             else {},
-            "listing_link": discovery_entry.get("listing_link")
-            if discovery_entry
-            else None,
-            "listing_snippet": (
-                discovery_entry.get("listing_snippet") if discovery_entry else None
-            ),
         }
         if listing_result is not None:
             payload["listing_page_url"] = listing_result.url
@@ -586,7 +606,7 @@ class SmartScraperAdapter(ABC):
         self,
         result: Any,
         *,
-        discovery_entry: DiscoveryEntry | None = None,
+        discovery_entry: ScrapeDiscoveryEntry | None = None,
         scraped_at: datetime,
     ) -> tuple[dict | None, dict | None, str, str | None]:
         valid_data = None
@@ -669,7 +689,7 @@ class SmartScraperAdapter(ABC):
         extraction_method: str,
         extraction_error: str | None,
         scraped_at: datetime,
-        discovery_entry: DiscoveryEntry | None = None,
+        discovery_entry: ScrapeDiscoveryEntry | None = None,
         listing_result: Any | None = None,
         node_name: str = "ingest",
     ) -> str:
@@ -735,7 +755,7 @@ class SmartScraperAdapter(ABC):
                 data=listing_case,
             )
             listing_case_markdown = (
-                discovery_entry.get("listing_snippet") if discovery_entry else None
+                discovery_entry.listing_snippet if discovery_entry else None
             )
             if listing_case_markdown:
                 refs["listing_case_content"] = self.data_manager.write_text_artifact(
@@ -747,7 +767,9 @@ class SmartScraperAdapter(ABC):
                     content=listing_case_markdown,
                 )
             listing_case_html = (
-                discovery_entry.get("listing_case_html") if discovery_entry else None
+                discovery_entry.model_extra.get("listing_case_html")
+                if discovery_entry and discovery_entry.model_extra
+                else None
             )
             if listing_case_html:
                 refs["listing_case_html"] = self.data_manager.write_text_artifact(
@@ -759,8 +781,8 @@ class SmartScraperAdapter(ABC):
                     content=listing_case_html,
                 )
             listing_case_cleaned_html = (
-                discovery_entry.get("listing_case_cleaned_html")
-                if discovery_entry
+                discovery_entry.model_extra.get("listing_case_cleaned_html")
+                if discovery_entry and discovery_entry.model_extra
                 else None
             )
             if listing_case_cleaned_html:
@@ -809,13 +831,18 @@ class SmartScraperAdapter(ABC):
         self,
         *,
         results: list[Any],
-        discovery_entries: dict[str, DiscoveryEntry] | None = None,
+        discovery_entries: dict[str, ScrapeDiscoveryEntry] | None = None,
         listing_result: Any | None = None,
         node_name: str = "ingest",
     ) -> list[str]:
         ingested_job_ids: list[str] = []
         for result in results:
-            job_id = self.extract_job_id(result.url)
+            discovery_entry = (discovery_entries or {}).get(result.url)
+            job_id = (
+                discovery_entry.job_id
+                if discovery_entry
+                else self.extract_job_id(result.url)
+            )
             if not result.success:
                 logger.error("%s %s: %s", LogTag.FAIL, job_id, result.error_message)
                 continue
@@ -827,7 +854,7 @@ class SmartScraperAdapter(ABC):
                 extraction_error,
             ) = await self._extract_payload(
                 result,
-                discovery_entry=(discovery_entries or {}).get(result.url),
+                discovery_entry=discovery_entry,
                 scraped_at=scraped_at,
             )
             self._persist_result(
@@ -838,7 +865,7 @@ class SmartScraperAdapter(ABC):
                 extraction_method=extraction_method,
                 extraction_error=extraction_error,
                 scraped_at=scraped_at,
-                discovery_entry=(discovery_entries or {}).get(result.url),
+                discovery_entry=discovery_entry,
                 listing_result=listing_result,
                 node_name=node_name,
             )
@@ -871,10 +898,10 @@ class SmartScraperAdapter(ABC):
                 self.extract_links(listing_result),
                 search_url=search_url,
             )
-            links_to_crawl: list[DiscoveryEntry] = []
+            links_to_crawl: list[ScrapeDiscoveryEntry] = []
             for entry in discovery_entries:
-                url = entry["url"]
-                job_id = self.extract_job_id(url)
+                url = entry.url
+                job_id = entry.job_id
                 if drop_repeated and job_id in already_scraped:
                     continue
                 links_to_crawl.append(entry)
@@ -887,7 +914,7 @@ class SmartScraperAdapter(ABC):
             if limit:
                 links_to_crawl = links_to_crawl[:limit]
 
-            crawl_urls = [entry["url"] for entry in links_to_crawl]
+            crawl_urls = [entry.url for entry in links_to_crawl]
             schema = await self.get_fast_schema(crawler, crawl_urls[0])
             run_config = self.get_base_crawl_config()
             if schema:
@@ -906,7 +933,7 @@ class SmartScraperAdapter(ABC):
             )
             return await self._process_results(
                 results=results,
-                discovery_entries={entry["url"]: entry for entry in links_to_crawl},
+                discovery_entries={entry.url: entry for entry in links_to_crawl},
                 listing_result=listing_result,
             )
 

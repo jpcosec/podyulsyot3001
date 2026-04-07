@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-07] - Discovery Entry Contract
+
+### Added
+- Added `src/automation/motors/crawl4ai/contracts.py` with typed discovery-entry models for listing-side scrape evidence.
+- Added portal scrape coverage for StepStone, XING, and TU Berlin structured discovery entries.
+
+### Changed
+- Normalized `SmartScraperAdapter` discovery handling around validated `ScrapeDiscoveryEntry` payloads.
+- Persisted job-scoped discovery metadata, including `job_id` and source metadata, into `listing.json` and `listing_case.json` artifacts.
+- Updated Crawl4AI portal adapters to return structured discovery entries instead of plain URLs.
+
 ## [2026-04-07] - Profile Context And Candidate Store
 
 ### Added

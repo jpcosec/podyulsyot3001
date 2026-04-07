@@ -1,10 +1,12 @@
 """TU Berlin C4AI scrape translator — consumes TUBERLIN_SCRAPE portal intent."""
+
 from __future__ import annotations
 
 import re
 from typing import Any
 
 from src.automation.ariadne.models import ScrapePortalDefinition
+from src.automation.motors.crawl4ai.contracts import ScrapeDiscoveryEntry
 from src.automation.motors.crawl4ai.scrape_engine import SmartScraperAdapter
 
 TUBERLIN_SCRAPE = ScrapePortalDefinition(
@@ -53,17 +55,40 @@ class TUBerlinAdapter(SmartScraperAdapter):
         filters = [f"filter%5Bworktype_tub%5D%5B%5D={cat}" for cat in cat_list]
         return f"{base}&{'&'.join(filters)}"
 
-    def extract_links(self, crawl_result: Any) -> list[str]:
-        """Return sorted unique TU Berlin job posting URLs from internal crawl links, excluding apply and download sub-paths."""
-        job_links = []
+    def extract_links(self, crawl_result: Any) -> list[ScrapeDiscoveryEntry]:
+        """Return structured TU Berlin discovery entries from listing links."""
+        job_links: list[ScrapeDiscoveryEntry] = []
+        seen_urls: set[str] = set()
         for link in crawl_result.links.get("internal", []):
             href = link.get("href", "")
-            if "/job-postings/" in href and "apply" not in href and "download" not in href:
+            if (
+                "/job-postings/" in href
+                and "apply" not in href
+                and "download" not in href
+            ):
                 if href.startswith("/"):
                     href = f"https://www.jobs.tu-berlin.de{href}"
-                if href.startswith("https://"):
-                    job_links.append(href)
-        return sorted(set(job_links))
+                if not href.startswith("https://") or href in seen_urls:
+                    continue
+                seen_urls.add(href)
+                teaser_text = (
+                    link.get("text") or link.get("title") or ""
+                ).strip() or None
+                job_links.append(
+                    ScrapeDiscoveryEntry(
+                        url=href,
+                        job_id=self.extract_job_id(href),
+                        listing_position=len(job_links),
+                        listing_snippet=teaser_text,
+                        listing_data={"job_title": teaser_text} if teaser_text else {},
+                        listing_link=link,
+                        source_metadata={
+                            "link_text": link.get("text"),
+                            "link_title": link.get("title"),
+                        },
+                    )
+                )
+        return job_links
 
     def get_llm_instructions(self) -> str:
         """LLM extraction hints for TU Berlin Stellenticket job pages. Pages may be German or English; salary is typically a TV-L grade."""

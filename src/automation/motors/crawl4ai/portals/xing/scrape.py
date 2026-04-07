@@ -1,4 +1,5 @@
 """XING C4AI scrape translator — consumes XING_SCRAPE portal intent."""
+
 from __future__ import annotations
 
 import re
@@ -7,6 +8,7 @@ from typing import Any
 from bs4 import BeautifulSoup
 
 from src.automation.ariadne.models import ScrapePortalDefinition
+from src.automation.motors.crawl4ai.contracts import ScrapeDiscoveryEntry
 from src.automation.motors.crawl4ai.scrape_engine import SmartScraperAdapter
 
 XING_SCRAPE = ScrapePortalDefinition(
@@ -57,24 +59,40 @@ class XingAdapter(SmartScraperAdapter):
             url += f"&date={age_str}"
         return url
 
-    def extract_links(self, crawl_result: Any) -> list[dict[str, Any]]:
-        """Return deduplicated XING job links parsed from cleaned HTML via BeautifulSoup. Returns dicts with 'url' and 'listing_snippet' keys."""
+    def extract_links(self, crawl_result: Any) -> list[ScrapeDiscoveryEntry]:
+        """Return structured XING discovery entries parsed from listing HTML."""
         html = crawl_result.cleaned_html or getattr(crawl_result, "html", "")
         if not html:
             return []
         soup = BeautifulSoup(html, "html.parser")
-        job_links = []
+        job_links: list[ScrapeDiscoveryEntry] = []
+        seen: set[str] = set()
         for a in soup.find_all("a", href=True):
             href = a["href"]
             if re.search(r"-(\d+)$", href) and "xing.com/jobs/" in href:
-                job_links.append({"url": href, "listing_snippet": a.get_text(strip=True)})
-        seen = set()
-        unique = []
-        for item in job_links:
-            if item["url"] not in seen:
-                seen.add(item["url"])
-                unique.append(item)
-        return unique
+                if href in seen:
+                    continue
+                seen.add(href)
+                teaser_text = a.get_text(" ", strip=True) or None
+                job_links.append(
+                    ScrapeDiscoveryEntry(
+                        url=href,
+                        job_id=self.extract_job_id(href),
+                        listing_position=len(job_links),
+                        listing_snippet=teaser_text,
+                        listing_data={"job_title": teaser_text} if teaser_text else {},
+                        listing_link={
+                            "href": href,
+                            "title": a.get("title"),
+                            "aria_label": a.get("aria-label"),
+                        },
+                        source_metadata={
+                            "anchor_title": a.get("title"),
+                            "anchor_aria_label": a.get("aria-label"),
+                        },
+                    )
+                )
+        return job_links
 
     def get_llm_instructions(self) -> str:
         """LLM extraction hints for XING job detail pages."""

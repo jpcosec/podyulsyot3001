@@ -6,6 +6,7 @@ import asyncio
 import json
 from types import SimpleNamespace
 
+from src.automation.motors.crawl4ai.contracts import ScrapeDiscoveryEntry
 from src.core.data_manager import DataManager
 from src.automation.motors.crawl4ai.scrape_engine import SmartScraperAdapter
 
@@ -75,13 +76,16 @@ def test_process_results_persists_listing_and_raw_artifacts(tmp_path) -> None:
         adapter._process_results(
             results=[detail_result],
             discovery_entries={
-                detail_result.url: {
-                    "url": detail_result.url,
-                    "search_url": listing_result.url,
-                    "listing_position": 0,
-                    "listing_data": {"posted_date": "vor 2 Tagen"},
-                    "listing_link": {"href": detail_result.url},
-                }
+                detail_result.url: ScrapeDiscoveryEntry(
+                    url=detail_result.url,
+                    job_id="123",
+                    search_url=listing_result.url,
+                    listing_position=0,
+                    listing_snippet="Data Engineer teaser",
+                    listing_data={"posted_date": "vor 2 Tagen"},
+                    listing_link={"href": detail_result.url},
+                    source_metadata={"card_variant": "default"},
+                )
             },
             listing_result=listing_result,
         )
@@ -100,12 +104,17 @@ def test_process_results_persists_listing_and_raw_artifacts(tmp_path) -> None:
     assert (ingest_dir / "listing_page.cleaned.html").exists()
 
     listing_payload = manager.read_json_path(ingest_dir / "listing.json")
+    assert listing_payload["job_id"] == "123"
     assert listing_payload["listing_data"]["posted_date"] == "vor 2 Tagen"
+    assert listing_payload["source_metadata"]["card_variant"] == "default"
     state_payload = manager.read_json_path(ingest_dir / "state.json")
     assert state_payload["listing_case"]["listed_at_relative"] == "vor 2 Tagen"
     assert (
         state_payload["posted_date"] == state_payload["listing_case"]["listed_at_iso"]
     )
+    listing_case_payload = manager.read_json_path(ingest_dir / "listing_case.json")
+    assert listing_case_payload["job_id"] == "123"
+    assert listing_case_payload["source_metadata"]["card_variant"] == "default"
 
 
 def test_process_results_fails_closed_but_persists_failed_artifacts(tmp_path) -> None:
