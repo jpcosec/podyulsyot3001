@@ -132,11 +132,16 @@ async def test_already_submitted_raises():
 
 
 @pytest.mark.asyncio
-async def test_invalid_path_id_raises():
+@patch("src.automation.ariadne.session.OpenBrowserClient")
+async def test_invalid_path_id_raises(mock_client_class):
+    mock_client = MagicMock()
+    mock_client.run_agent.return_value = MagicMock(status="error", error="not found")
+    mock_client_class.return_value = mock_client
+
     sess, _ = _make_session(_minimal_map())
     motor = _FakeProvider(_FakeSession())
 
-    with pytest.raises(ValueError, match="Path 'missing' not found"):
+    with pytest.raises(ValueError, match="Level 2 OpenBrowser agent failed"):
         await sess.run(motor, job_id="job1", cv_path=Path("cv.pdf"), path_id="missing")
 
 

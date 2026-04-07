@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-07] - OpenBrowser Level 2 Agent Integration
+
+### Added
+- Added Level 2 agent fallback integration using `OpenBrowserClient` in `src/automation/motors/browseros/agent/openbrowser.py` to wrap the OpenBrowser `/chat` API.
+- Added OpenBrowser fallback logic in `src/automation/ariadne/session.py` to dynamically generate and store a deterministic `AriadnePath` when a portal flow is missing or broken.
+- Updated documentation in `docs/automation/ariadne_semantics.md` to clarify the OpenBrowser Level 2 agent's role as the author of semantic paths.
+
 ## [2026-04-07] - Apply Danger Detection
 
 ### Added

@@ -24,6 +24,7 @@ from src.automation.ariadne.hitl import ApplyHitlController
 from src.automation.ariadne.models import ApplyMeta, AriadnePortalMap
 from src.automation.ariadne.motor_protocol import MotorProvider
 from src.automation.ariadne.navigator import AriadneNavigator
+from src.automation.motors.browseros.agent.openbrowser import OpenBrowserClient
 from src.automation.portals.routing import resolve_portal_routing
 from src.automation.storage import AutomationStorage
 from src.shared.log_tags import LogTag
@@ -144,8 +145,39 @@ class AriadneSession:
 
             path = portal_map.paths.get(selected_path_id)
             if not path:
-                raise ValueError(
-                    f"Path '{selected_path_id}' not found in map for {self.portal_name}"
+                logger.info(
+                    "%s Path '%s' not found. Falling back to Level 2 OpenBrowser agent.",
+                    LogTag.FAST,
+                    selected_path_id,
+                )
+                agent_client = OpenBrowserClient()
+                agent_context = self._build_context(
+                    ingest_data=ingest_data,
+                    profile=self.storage.load_candidate_profile(profile),
+                    cv_path=cv_path,
+                    letter_path=letter_path,
+                    application_url=route.application_url,
+                )
+                agent_result = agent_client.run_agent(
+                    portal=self.portal_name,
+                    url=route.application_url or "",
+                    context=agent_context,
+                )
+                if agent_result.status != "success" or not agent_result.playbook:
+                    raise ValueError(
+                        f"Level 2 OpenBrowser agent failed to produce a valid path for '{selected_path_id}': {agent_result.error}"
+                    )
+                
+                # Hand successful playbook into the promotion/storage flow
+                path = agent_result.playbook
+                path.id = selected_path_id
+                
+                # For now, write it as a trace/artifact for promotion
+                self.storage.write_artifact(
+                    self.portal_name,
+                    job_id,
+                    f"agent_discovered_path_{selected_path_id}.json",
+                    path.model_dump_json(indent=2).encode("utf-8"),
                 )
 
             application_url = route.application_url

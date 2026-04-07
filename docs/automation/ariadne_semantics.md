@@ -39,7 +39,12 @@ This map contains:
 
 ## Motor Implementation
 
-### BrowserOS (The Mapper)
+### OpenBrowser (The Explorer / Level 2 Agent)
+OpenBrowser is the LLM agent framework built on top of BrowserOS. It acts as the **author** of the semantic `AriadnePath`. 
+When the system encounters a new or broken flow, it runs an OpenBrowser agent to intelligently explore the page. As the agent clicks and types its way through the portal, the system acts as a recording proxy, intercepting its actions and normalizing them into the **Ariadne Common Language**. 
+This *produces* a new, deterministic `AriadnePath` (the "semantic path" layer) that the deterministic motors (like Crawl4AI or BrowserOS CLI) can consume for all future runs.
+
+### BrowserOS CLI (The Mapper)
 The BrowserOS motor iterates through the steps of an `AriadnePath` and executes them one-by-one as direct tool calls. It uses the `text` field of the `AriadneTarget` for high resilience to DOM changes.
 
 ### Crawl4AI (The Compiler)

@@ -23,8 +23,6 @@ Once an issue is solved, the next step is always:
 
 ### Phase 4 — Human loop, safety, and fallback execution
 
-10. `plan_docs/issues/unimplemented/openbrowser-level2-integration.md`
-
 ### Phase 5 — Higher-level capability
 
 13. `plan_docs/issues/unimplemented/ats-form-analyzer.md`
