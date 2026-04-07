@@ -52,9 +52,9 @@ Keyboard bindings (Review):
 
 ## 📝 Data Contract
 
-The review UI depends on typed contracts from the match skill module and API metadata from the control plane:
+The review UI depends on typed review models from the active review backend and API metadata from the control plane:
 
-- `ReviewSurface` and `ReviewPayload` live in `src/core/ai/match_skill/contracts.py`
+- `ReviewSurface` and `ReviewPayload` are consumed through the review bus/backend integration layer
 - thread/job metadata comes from `LangGraphAPIClient.list_jobs()` in `src/core/api_client.py`
 - persisted review artifacts live under `data/jobs/<source>/<job_id>/nodes/match_skill/review/`
 

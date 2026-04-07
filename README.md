@@ -10,9 +10,9 @@ The system is split into four primary "Skills" and a central core, each residing
 
 1.  **🕵️‍♂️ Scraper (`src/scraper`):** Canonical job ingestion via source discovery and single-target fetches.
 2.  **🌐 Translator (`src/core/tools/translator`):** Modular field and document translation pipeline.
-3.  **⚖️ Match Skill (`src/core/ai/match_skill`):** LangGraph-native human-in-the-loop matching engine.
-4.  **📄 Document Generation (`src/core/ai/generate_documents`):** LangGraph-native CV, letter, and email generation from approved matches.
-5.  **📄 Render Pipeline (`src/core/tools/render`):** Typed, engine-agnostic document rendering (PDF/DOCX) via Pandoc and Jinja2.
+3.  **📄 Document Generation (`src/core/ai/generate_documents_v2`):** LangGraph-native CV, letter, and email generation from canonical job and profile artifacts.
+4.  **📄 Render Pipeline (`src/core/tools/render`):** Typed, engine-agnostic document rendering (PDF/DOCX) via Pandoc and Jinja2.
+5.  **🖥️ Review UI (`src/review_ui`):** Textual review surfaces and operator workflow tooling.
 
 ---
 
@@ -93,7 +93,8 @@ Module-specific documentation:
 
 - [Scraper Documentation](src/scraper/README.md)
 - [Translator Documentation](src/core/tools/translator/README.md)
-- [Match Skill Documentation](src/core/ai/match_skill/README.md)
+- [Document Generation Documentation](src/core/ai/generate_documents_v2/README.md)
+- [Review UI Documentation](src/review_ui/README.md)
 - [Render Pipeline Documentation](src/core/tools/render/README.md)
 
 ---

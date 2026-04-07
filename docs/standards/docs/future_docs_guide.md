@@ -22,7 +22,7 @@ One file per topic, named descriptively in snake_case:
 
 ```
 future_docs/
-  match_skill_hardening_roadmap.md
+  scraper_rate_limit_backoff.md
   render_docx_engine.md
   scraper_rate_limit_backoff.md
 ```
@@ -48,7 +48,7 @@ What is wrong or missing, and why it matters. Be specific.
 What the solution looks like at a high level. Not a full spec — enough to resume context later.
 
 ## Linked TODOs
-- `src/core/ai/match_skill/graph.py` — `# TODO(future): thin state, move payloads to disk refs`
+- `src/core/ai/generate_documents_v2/profile_loader.py` — `# TODO(future): avoid module-level singleton path lock`
 - `src/core/tools/render/coordinator.py` — `# TODO(future): add DOCX engine adapter`
 ```
 
@@ -68,7 +68,7 @@ The `(future)` tag distinguishes deferred items from short-term TODOs. The file 
 
 **Example:**
 ```python
-# TODO(future): thin MatchSkillState — move payload fields to disk refs — see future_docs/match_skill_hardening_roadmap.md
+# TODO(future): avoid module-level singleton path lock — see future_docs/issues/core/ai/generate_documents_v2/profile_loader_singleton.md
 ```
 
 ---
@@ -96,7 +96,7 @@ idea / known problem
 GitHub Issues can track the same items with assignees, labels, and discussion threads. If you use them, add the issue number to the inline TODO:
 
 ```python
-# TODO(future): thin MatchSkillState — see future_docs/match_skill_hardening_roadmap.md (#42)
+# TODO(future): avoid module-level singleton path lock — see future_docs/issues/core/ai/generate_documents_v2/profile_loader_singleton.md (#42)
 ```
 
 Issues are useful for visibility and prioritization across collaborators. The `future_docs/` file remains the source of technical context; the issue is the coordination handle.

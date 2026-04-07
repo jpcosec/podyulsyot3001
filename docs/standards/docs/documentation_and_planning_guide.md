@@ -55,11 +55,11 @@ Describe the structural shape, then **link to the exact file**. The file is auth
 ```markdown
 ## 🏗️ Architecture & Features
 
-The match skill runs as a LangGraph `StateGraph` with a single human breakpoint.
+The document-generation pipeline runs as a staged LangGraph workflow with persisted artifacts.
 
-- Graph definition and node wiring: `src/core/ai/match_skill/graph.py`
-- State schema: `MatchSkillState` in `src/core/ai/match_skill/graph.py`
-- Artifact persistence: `MatchArtifactStore` in `src/core/ai/match_skill/storage.py`
+- Graph definition and node wiring: `src/core/ai/generate_documents_v2/graph.py`
+- State schema: `GenerateDocumentsState` in `src/core/ai/generate_documents_v2/state.py`
+- Artifact persistence: `PipelineArtifactStore` in `src/core/ai/generate_documents_v2/storage.py`
 ```
 
 Never describe a function signature or field list in a README — that belongs in docstrings.
@@ -71,12 +71,12 @@ Describe the *intent* of the interface. Do not copy argument tables — they dri
 ```markdown
 ## 🚀 CLI / Usage
 
-Run a match thread from requirement and profile-evidence JSON files.
-Arguments are defined in the `build_parser()` function in `src/core/ai/match_skill/main.py`.
+Run document generation through the operator CLI.
+Arguments are defined in the parser builders in `src/cli/main.py`.
 
-Resume a paused thread after HITL review:
+Example:
 
-    python -m src.core.ai.match_skill.main --source <source> --job-id <id> --resume
+    python -m src.cli.main generate --source <source> --job-id <id> --language en --render
 ```
 
 For Settings-driven configuration, point to the Settings class file instead of `--help`.
@@ -88,10 +88,10 @@ The Pydantic model file **is** the contract. Point to it — do not restate fiel
 ```markdown
 ## 📝 Data Contract
 
-Input and output schemas are defined in `src/core/ai/match_skill/contracts.py`:
-- `RequirementInput` — one requirement from the job posting
-- `MatchEnvelope` — full LLM structured output
-- `ReviewPayload` — what the TUI sends back into the graph
+Input and output schemas are defined in `src/core/ai/generate_documents_v2/contracts/`:
+- `JobKG` / `JobDelta` — structured job understanding and filtered emphasis
+- `GlobalBlueprint` — macroplanning output
+- `DraftedDocument` / `FinalMarkdownBundle` — drafting and assembly outputs
 ```
 
 ---
@@ -160,6 +160,8 @@ Note: the enum enforces the tag vocabulary, not semantic correctness. Using `Log
 ---
 
 ## 4. How to Plan
+
+Complex features and refactors must follow the [🏗️ Feature Creation & Refactor Methodology](../feature_creation_methodology.md) (Baseline → Orthogonalize → Architecture → Specs → Plan).
 
 Active execution plans live in `plan_docs/`. They are **ephemeral** — deleted when the work is done.
 

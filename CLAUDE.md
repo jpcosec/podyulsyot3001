@@ -12,8 +12,8 @@ Postulator 3000 is a modular job application pipeline that produces tailored CV 
 # Run all tests
 python -m pytest tests/ -q
 
-# Run a single test file
-python -m pytest tests/test_match_skill.py -q
+# Run a focused test subtree
+python -m pytest tests/unit/core/ai/generate_documents_v2 -q
 
 # Scrape job postings
 python -m src.scraper.main --source stepstone --limit 5
@@ -21,12 +21,8 @@ python -m src.scraper.main --source stepstone --limit 5
 # Translate scraped postings
 python -m src.core.tools.translator.main --source stepstone
 
-# Run match skill (start a new thread)
-python -m src.core.ai.match_skill.main \
-  --source stepstone \
-  --job-id <ID> \
-  --requirements <path/to/requirements.json> \
-  --profile-evidence <path/to/evidence.json>
+# Run document generation pipeline helpers
+python -m src.cli.main generate --source stepstone --job-id <ID> --language en --render
 
 # Launch HITL review TUI (after graph pauses at breakpoint)
 python -m src.cli.main review --source stepstone --job-id <ID>
@@ -47,8 +43,7 @@ python -m src.core.tools.render.main letter --source <path/to/data.json> --langu
 
 Each skill is a self-contained package under `src/`:
 
-- `src/core/ai/match_skill/` — LangGraph-native matching loop: `graph.py` (StateGraph), `contracts.py` (Pydantic I/O), `storage.py` (artifact persistence), `prompt.py`, `main.py`.
-- `src/core/ai/generate_documents/` — LangGraph document generation nodes: same structure as match_skill.
+- `src/core/ai/generate_documents_v2/` — LangGraph-native staged document generation: `graph.py`, `contracts/`, `storage.py`, `nodes/`, `subgraphs/`, `pipeline.py`.
 - `src/core/tools/render/` — typed, engine-agnostic PDF/DOCX rendering via Pandoc + Jinja2. Entry point is `RenderCoordinator` in `coordinator.py`; `RenderRequest` in `request.py` is the unified request model.
 - `src/scraper/` — anti-bot job crawling with LLM fallbacks. Outputs `JobPosting` Pydantic models.
 - `src/core/tools/translator/` — field and document translation pipeline.
@@ -56,15 +51,15 @@ Each skill is a self-contained package under `src/`:
 
 ### Control plane vs. data plane
 
-**Control plane** (`MatchSkillState` TypedDict in `src/core/ai/match_skill/graph.py`): carries routing signals and refs — `source`, `job_id`, requirements, profile evidence, review payload, match result. State is intentionally thin; heavy payloads stay on disk.
+**Control plane** lives in the operator CLI and API-backed review flow; it carries routing signals, job identifiers, and lightweight review metadata.
 
-**Data plane** (disk under `data/jobs/<source>/<job_id>/nodes/match_skill/`): `MatchArtifactStore` in `storage.py` manages immutable round snapshots (JSON), current review surface, and approved payloads.
+**Data plane** lives under `data/jobs/<source>/<job_id>/nodes/`, where module artifacts are persisted by `DataManager` and module-local storage helpers.
 
-### Match skill graph flow
+### Document generation graph flow
 
-`match_node → [interrupt_before review] → review_node`
+`ingestion → requirement_filter → alignment → blueprint → drafting → assembly`
 
-Review node routes via `Command`: `approve` (continue), `request_regeneration` (loop back to `match_node`), `reject` (end). Checkpointed with `SqliteSaver` (prod) or `InMemorySaver` (tests). `thread_id` is the LangGraph handle for resume.
+The graph persists stage artifacts per step and can expose review-oriented artifacts without duplicating the heavy payload in control-plane state.
 
 ### Render pipeline
 
@@ -72,28 +67,24 @@ Review node routes via `Command`: `approve` (continue), `request_regeneration` (
 
 ### HITL review loop
 
-1. `run_match_skill` starts a thread; graph pauses at the review breakpoint.
-2. Operator launches the `review` CLI command with the thread ID context.
-3. `MatchBus` loads the review surface from `MatchArtifactStore` and holds the paused graph handle.
-4. Reviewer approves/rejects/requests regeneration in the TUI; `MatchBus` resumes the thread via `Command`.
-5. Immutable round snapshots are written to disk after each decision.
+1. Operator launches runs through `src/cli/main.py`.
+2. Review surfaces are loaded in `src/review_ui/` from canonical artifacts and API metadata.
+3. Reviewer acts through the TUI and the control plane resumes or updates the relevant workflow.
 
 ### Shared data contracts
 
 - `JobPosting` — standardized job schema across scrapers and translators.
-- `MatchEnvelope` / `RequirementMatch` — LLM structured output for match decisions.
-- `ReviewSurface` / `ReviewPayload` — the JSON artifact exchanged between graph, TUI, and storage.
+- `JobKG` / `JobDelta` — staged job-understanding contracts for document generation.
 - `RenderRequest` — unified input model for the render coordinator.
 
 ### Failure model
 
-Nodes must fail closed — no silent fallback-to-success. LLM calls use structured output (LangChain `with_structured_output`). Missing credentials fall back to a demo chain in dev only (explicit `os.environ.get` guard in `src/core/ai/generate_documents/graph.py`).
+Nodes must fail closed — no silent fallback-to-success. LLM calls use structured output (LangChain `with_structured_output`). Missing credentials fall back to a demo chain in dev only where explicitly implemented, for example in `src/core/ai/generate_documents_v2/graph.py`.
 
 ## Key documentation
 
 - LangGraph component standards: `docs/standards/code/llm_langgraph_components.md`
 - LangGraph methodology: `docs/standards/code/llm_langgraph_methodology.md`
-- Match skill hardening roadmap: `future_docs/issues/match_skill_hardening_roadmap.md`
 - Documentation & planning guide: `docs/standards/docs/documentation_and_planning_guide.md`
 
 ## Environment

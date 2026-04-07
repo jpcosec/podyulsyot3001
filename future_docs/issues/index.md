@@ -17,12 +17,25 @@ Once an issue is solved, the next step is always:
 
 ┄┄ Priority roadmap
 
-All issues have been resolved. No open issues remain.
+┄┄┄ Phase 1 — [Phase name]
+
+ 1. `future_docs/issues/[path]/issue-name.md`
+ 2. `future_docs/issues/[path]/issue-name.md`
+
+    • [Parallelization note if applicable]
+
+┄┄┄ Phase 2 — [Phase name]
+
+ 3. `future_docs/issues/[path]/issue-name.md`
+    • depends on `future_docs/issues/[path]/issue-name.md`
+
+    • [Parallelization note if applicable]
 
 ┄┄ Dependency summary
 
-(none)
+• `future_docs/issues/.../downstream.md`  ->  `future_docs/issues/.../upstream.md`
 
 ┄┄ Parallelization map
 
-(none)
+Phase 1  [1][2]          ← [note]
+Phase 2     [3]          ← [note]

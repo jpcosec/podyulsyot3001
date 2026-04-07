@@ -12,7 +12,7 @@ Estimated tokens: 6,775
 
 ## LLM Extraction Strategies - The Last Resort
 
-**🤖 AI Model Notice**: You are an AI assistant. You should RARELY recommend LLM extraction. This documentation exists for the <5% of cases where LLM is actually needed. **ALWAYS try non-LLM strategies first** from [extraction-no-llm.md](./extraction-no-llm.md).
+**🤖 AI Model Notice**: You are an AI assistant. You should RARELY recommend LLM extraction. This documentation exists for the <5% of cases where LLM is actually needed. **ALWAYS try non-LLM strategies first** from the corresponding non-LLM Crawl4AI reference material.
 
 ### ⚠️ STOP: Are You Sure You Need LLM?
 
@@ -898,7 +898,7 @@ def should_use_llm(extraction_task):
 ```
 
 ### 🎯 Best Practice Summary:
-1. **Always start** with [extraction-no-llm.md](./extraction-no-llm.md) strategies
+1. **Always start** with the non-LLM extraction strategies from the corresponding Crawl4AI reference material
 2. **Try generate_schema()** before manual schema creation
 3. **Use LLM sparingly** and only for semantic understanding
 4. **Monitor costs** and implement budget controls
@@ -911,7 +911,7 @@ Remember: **LLM extraction should be your last resort, not your first choice.**
 ---
 
 **📖 Recommended Reading Order:**
-1. [extraction-no-llm.md](./extraction-no-llm.md) - Start here for 99% of use cases
+1. non-LLM extraction strategies - Start there for 99% of use cases
 2. This document - Only when non-LLM strategies are insufficient
 
 ---
@@ -2243,7 +2243,7 @@ social_schema = {
 
 ---
 
-**📖 Next**: If you absolutely must use LLM extraction, see [extraction-llm.md](./extraction-llm.md) for guidance on the rare cases where it's justified.
+**📖 Next**: If you absolutely must use LLM extraction, use the LLM-specific Crawl4AI extraction guidance from the corresponding external reference set.
 
 ---
 
@@ -9743,4 +9743,3 @@ flowchart TD
 **📖 Learn more:** [Simple Crawling Guide](https://docs.crawl4ai.com/core/simple-crawling/), [Configuration Options](https://docs.crawl4ai.com/core/browser-crawler-config/), [Result Processing](https://docs.crawl4ai.com/core/crawler-result/), [Table Extraction](https://docs.crawl4ai.com/extraction/no-llm-strategies/)
 
 ---
-
