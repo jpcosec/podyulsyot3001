@@ -1,4 +1,4 @@
-"""Pure tests for BrowserOS playbook execution helpers using Ariadne models."""
+"""Pure tests for BrowserOS replayer using Ariadne models."""
 
 from __future__ import annotations
 
@@ -14,9 +14,9 @@ from src.automation.ariadne.models import (
     AriadneTarget,
 )
 from src.automation.motors.browseros.cli.client import BrowserOSClient, SnapshotElement
-from src.automation.motors.browseros.cli.executor import (
+from src.automation.motors.browseros.cli.replayer import (
     BrowserOSObserveError,
-    BrowserOSPlaybookExecutor,
+    BrowserOSReplayer,
 )
 
 
@@ -41,6 +41,10 @@ class _FakeClient:
     def upload_file(self, page_id: int, element_id: int, file_path: Path):
         self.calls.append(("upload_file", page_id, element_id, str(file_path)))
 
+    def search_dom(self, page_id: int, selector: str) -> list[int]:
+        self.calls.append(("search_dom", page_id, selector))
+        return [99] # Mock ID
+
 
 def _snapshot(*items):
     return [
@@ -52,29 +56,30 @@ def _snapshot(*items):
 
 
 def test_render_template_resolves_nested_context_values():
-    executor = BrowserOSPlaybookExecutor(_FakeClient())
+    executor = BrowserOSReplayer(_FakeClient())
     rendered = executor.render_template(
         "Hello {{profile.first_name}} {{profile.last_name}}",
         {"profile": {"first_name": "Ada", "last_name": "Lovelace"}},
     )
-    assert rendered == "Ada Lovelace" if "Hello" not in rendered else rendered == "Hello Ada Lovelace"
+    assert "Ada Lovelace" in rendered
 
 
 def test_resolve_element_id_supports_partial_matches():
-    executor = BrowserOSPlaybookExecutor(_FakeClient())
+    executor = BrowserOSReplayer(_FakeClient())
     snapshot = _snapshot((1, "button", "Seleccionar resume CV_english.pdf"))
     target = AriadneTarget(text="CV_english.pdf")
     assert executor._resolve_element_id(snapshot, target) == 1
 
 
 def test_assert_observation_raises_on_missing_snapshot_text():
-    executor = BrowserOSPlaybookExecutor(_FakeClient())
+    executor = BrowserOSReplayer(_FakeClient())
     observe = AriadneObserve(required_elements=[AriadneTarget(text="Missing")])
     with pytest.raises(BrowserOSObserveError):
         executor._assert_observation(
             _snapshot((1, "button", "Continue")),
             observe,
             "missing",
+            page_id=1
         )
 
 
@@ -95,7 +100,7 @@ def test_run_executes_ariadne_path():
         ]
     )
     client = _FakeClient([_snapshot((1, "button", "Submit")), _snapshot((1, "button", "Submit"))])
-    executor = BrowserOSPlaybookExecutor(client)
+    executor = BrowserOSReplayer(client)
 
     result = executor.run(
         page_id=1,
@@ -125,7 +130,7 @@ def test_dry_run_stops_at_guard():
         ]
     )
     client = _FakeClient([_snapshot((1, "button", "Submit"))])
-    executor = BrowserOSPlaybookExecutor(client)
+    executor = BrowserOSReplayer(client)
 
     result = executor.run(
         page_id=1,
@@ -144,7 +149,7 @@ def test_execute_action_uses_fallback():
         _snapshot((2, "button", "Secondary")), # for primary check
         _snapshot((2, "button", "Secondary"))  # for fallback execution
     ])
-    executor = BrowserOSPlaybookExecutor(client)
+    executor = BrowserOSReplayer(client)
     
     action = AriadneAction(
         intent=AriadneIntent.CLICK,

@@ -71,6 +71,7 @@
       "entry_state": "job_details",
       "success_states": ["apply_success"],
       "failure_states": [],
+      "success_criteria": { "text_match": "application" },
       "blocker_recovery": [
         {
           "trigger_predicate": { "required_elements": [{ "css": ".artdeco-toast-item--error" }] },

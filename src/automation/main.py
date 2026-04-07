@@ -1,8 +1,9 @@
 """Unified automation CLI.
 
 Subcommands:
-  scrape  — job discovery and ingestion
-  apply   — job auto-application
+  scrape   — job discovery and ingestion
+  apply    — job auto-application
+  promote  — draft trace to canonical map
 """
 from __future__ import annotations
 
@@ -15,19 +16,26 @@ import os
 import sys
 from pathlib import Path
 
+from src.automation.storage import AutomationStorage
 
-def _setup_logging(label: str) -> None:
-    os.makedirs("logs", exist_ok=True)
+
+def _setup_logging(name: str) -> None:
+    """Initialize structured logging for the automation module."""
+    log_dir = Path("logs/automation")
+    log_dir.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-        handlers=[
-            logging.FileHandler(f"logs/{label}_{timestamp}.log", encoding="utf-8"),
-            logging.StreamHandler(),
-        ],
-        force=True,
+    handler = logging.FileHandler(log_dir / f"{name}_{timestamp}.log")
+    handler.setFormatter(
+        logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
     )
+    root = logging.getLogger()
+    root.setLevel(logging.INFO)
+    root.addHandler(handler)
+    
+    # Also log to console
+    console = logging.StreamHandler(sys.stdout)
+    console.setFormatter(logging.Formatter("%(message)s"))
+    root.addHandler(console)
 
 
 def _add_scrape_subcommand(sub: argparse._SubParsersAction) -> None:
@@ -45,7 +53,7 @@ def _add_scrape_subcommand(sub: argparse._SubParsersAction) -> None:
 
 def _add_apply_subcommand(sub: argparse._SubParsersAction) -> None:
     p = sub.add_parser("apply", help="Job auto-application")
-    p.add_argument("--backend", choices=["crawl4ai", "browseros"], default="crawl4ai")
+    p.add_argument("--backend", choices=["crawl4ai", "browseros"], default="browseros")
     p.add_argument("--source", required=True, choices=["xing", "stepstone", "linkedin"])
     p.add_argument("--job-id", dest="job_id")
     p.add_argument("--cv", dest="cv_path")
@@ -55,19 +63,26 @@ def _add_apply_subcommand(sub: argparse._SubParsersAction) -> None:
     p.add_argument("--setup-session", dest="setup_session", action="store_true", default=False)
 
 
+def _add_promote_subcommand(sub: argparse._SubParsersAction) -> None:
+    p = sub.add_parser("promote", help="Promote a draft trace to a canonical portal map")
+    p.add_argument("--trace-id", required=True, help="ID of the session recording to promote")
+    p.add_argument("--portal", required=True, help="Portal name")
+    p.add_argument("--flow", default="easy_apply", help="Flow name (default: easy_apply)")
+
+
 def build_parser() -> argparse.ArgumentParser:
-    """Build and return the root ArgumentParser with scrape and apply subcommands registered."""
+    """Build and return the root ArgumentParser with scrape, apply, and promote registered."""
     parser = argparse.ArgumentParser(description="Automation CLI")
     sub = parser.add_subparsers(dest="command", required=True)
     _add_scrape_subcommand(sub)
     _add_apply_subcommand(sub)
+    _add_promote_subcommand(sub)
     return parser
 
 
 async def _run_scrape(args) -> None:
     """Run a full scrape cycle using the AutomationRegistry."""
     from src.automation.registry import AutomationRegistry
-    from src.automation.storage import AutomationStorage
     from src.shared.log_tags import LogTag
 
     _setup_logging(f"scrape_{args.source}")
@@ -98,7 +113,6 @@ async def _run_apply(args) -> None:
     """Run an apply cycle using the AutomationRegistry."""
     from src.shared.log_tags import LogTag
     from src.automation.registry import AutomationRegistry
-    from src.automation.storage import AutomationStorage
 
     _setup_logging(f"apply_{args.source}")
     logger = logging.getLogger(__name__)
@@ -140,13 +154,45 @@ async def _run_apply(args) -> None:
     logger.info("%s Apply completed: status=%s", LogTag.OK, meta.status)
 
 
+async def _run_promote(args) -> None:
+    """Run the promotion workflow: normalize trace -> write to canonical map."""
+    from src.automation.ariadne.normalizer import AriadneNormalizer
+    from src.automation.ariadne.trace_models import AriadneSessionTrace
+    from src.shared.log_tags import LogTag
+
+    _setup_logging(f"promote_{args.portal}")
+    logger = logging.getLogger(__name__)
+    
+    trace_path = Path(f"data/ariadne/recordings/{args.trace_id}/trace_manifest.json")
+    if not trace_path.exists():
+        logger.error("%s Trace manifest not found at %s", LogTag.FAIL, trace_path)
+        sys.exit(1)
+        
+    with open(trace_path, "r") as f:
+        trace = AriadneSessionTrace.model_validate(json.load(f))
+        
+    normalizer = AriadneNormalizer()
+    portal_map = normalizer.normalize(trace)
+    
+    # Target path
+    dest_path = Path(f"src/automation/portals/{args.portal}/maps/{args.flow}.json")
+    dest_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    with open(dest_path, "w") as f:
+        f.write(portal_map.model_dump_json(indent=2))
+        
+    logger.info("%s Promoted trace '%s' to canonical map: %s", LogTag.OK, args.trace_id, dest_path)
+
+
 async def main(argv: list[str] | None = None) -> None:
-    """Parse argv and dispatch to _run_scrape or _run_apply."""
+    """Parse argv and dispatch to subcommands."""
     args = build_parser().parse_args(argv or sys.argv[1:])
     if args.command == "scrape":
         await _run_scrape(args)
     elif args.command == "apply":
         await _run_apply(args)
+    elif args.command == "promote":
+        await _run_promote(args)
 
 
 if __name__ == "__main__":

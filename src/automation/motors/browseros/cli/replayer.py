@@ -36,7 +36,7 @@ class BrowserOSExecutionResult:
     confirmation_text: str | None = None
 
 
-class BrowserOSPlaybookExecutor:
+class BrowserOSReplayer:
     """Execute an Ariadne Path against a live BrowserOS page."""
 
     def __init__(self, client: BrowserOSClient, *, input_func=input) -> None:

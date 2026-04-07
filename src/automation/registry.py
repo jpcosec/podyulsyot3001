@@ -33,15 +33,7 @@ class AutomationRegistry:
 
     @staticmethod
     def get_scrape_provider(source: str, storage: AutomationStorage) -> ScrapeProvider:
-        """Instantiates a scraping provider for the given source.
-        
-        Args:
-            source: The portal identifier.
-            storage: Automation storage instance.
-            
-        Returns:
-            An instance of a SmartScraperAdapter.
-        """
+        """Instantiates a scraping provider for the given source."""
         if source == "stepstone":
             from src.automation.motors.crawl4ai.portals.stepstone.scrape import StepStoneAdapter
             return StepStoneAdapter(storage.data_manager)
@@ -61,17 +53,7 @@ class AutomationRegistry:
         storage: AutomationStorage,
         profile_data: Optional[Dict[str, Any]] = None
     ) -> ApplyProvider:
-        """Instantiates an apply provider for the given source and backend.
-        
-        Args:
-            source: The portal identifier.
-            backend: The execution backend ('crawl4ai' or 'browseros').
-            storage: Automation storage instance.
-            profile_data: Optional candidate profile data.
-            
-        Returns:
-            An instance of an ApplyProvider (ApplyAdapter or BrowserOSApplyProvider).
-        """
+        """Instantiates an apply provider for the given source and backend."""
         if backend == "browseros":
             from src.automation.motors.browseros.cli.backend import BrowserOSApplyProvider
             return BrowserOSApplyProvider(
@@ -81,14 +63,7 @@ class AutomationRegistry:
             )
             
         elif backend == "crawl4ai":
-            if source == "linkedin":
-                from src.automation.motors.crawl4ai.portals.linkedin.apply import LinkedInApplyAdapter
-                return LinkedInApplyAdapter(storage)
-            elif source == "stepstone":
-                from src.automation.motors.crawl4ai.portals.stepstone.apply import StepStoneApplyAdapter
-                return StepStoneApplyAdapter(storage)
-            elif source == "xing":
-                from src.automation.motors.crawl4ai.portals.xing.apply import XingApplyAdapter
-                return XingApplyAdapter(storage)
+            from src.automation.motors.crawl4ai.apply_engine import Crawl4AIApplyProvider
+            return Crawl4AIApplyProvider(source_name=source, storage=storage)
                 
         raise ValueError(f"Unsupported apply source/backend combo: {source}/{backend}")

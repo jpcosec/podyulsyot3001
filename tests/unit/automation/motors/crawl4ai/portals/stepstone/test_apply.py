@@ -1,34 +1,26 @@
-"""Integration tests for StepStoneApplyAdapter."""
+"""Integration tests for StepStone apply flow."""
 
 from __future__ import annotations
 
 from pathlib import Path
-
 import pytest
 
 @pytest.fixture
-def adapter():
-    from src.automation.motors.crawl4ai.portals.stepstone.apply import StepStoneApplyAdapter
-    return StepStoneApplyAdapter()
+def provider():
+    from src.automation.motors.crawl4ai.apply_engine import Crawl4AIApplyProvider
+    return Crawl4AIApplyProvider("stepstone")
 
 
-def test_source_name(adapter):
-    assert adapter.source_name == "stepstone"
+def test_source_name(provider):
+    assert provider.source_name == "stepstone"
 
 
-def test_session_profile_dir(adapter):
-    assert "stepstone" in str(adapter.get_session_profile_dir()).lower()
+def test_portal_map_loading(provider):
+    assert provider.portal_map.portal_name == "stepstone"
+    assert "job_details" in provider.portal_map.states
+    assert "standard_easy_apply" in provider.portal_map.paths
 
 
-def test_portal_map_loading(adapter):
-    assert adapter.portal_map.portal_name == "stepstone"
-    assert "job_details" in adapter.portal_map.states
-    assert "standard_easy_apply" in adapter.portal_map.paths
-
-
-def test_get_portal_base_url(adapter):
-    assert "stepstone.de" in adapter._get_portal_base_url().lower()
-
-
-def test_get_success_text_not_empty(adapter):
-    assert adapter.get_success_text().strip()
+def test_success_criteria(provider):
+    task = provider.portal_map.tasks["submit_easy_apply"]
+    assert task.success_criteria.get("text_match") == "Bewerbung"

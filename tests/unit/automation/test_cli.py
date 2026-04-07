@@ -56,8 +56,7 @@ def test_apply_parses_apply_mode():
     assert args.job_id == "12345"
     assert args.cv_path == "/path/cv.pdf"
     assert args.dry_run is True
-    assert args.backend == "crawl4ai"
-
+    assert args.backend == "browseros"
 
 def test_apply_parses_setup_session():
     parser = build_parser()

@@ -157,6 +157,11 @@ class AriadneTask(BaseModel):
     success_states: List[str] = Field(description="State IDs that signal mission success")
     failure_states: List[str] = Field(description="State IDs that signal terminal failure")
     
+    success_criteria: Dict[str, Any] = Field(
+        default_factory=dict, 
+        description="Verification rules (e.g., {'text_match': 'Application sent'})"
+    )
+    
     # Recovery for blockers like captchas or popups
     blocker_recovery: List[AriadneRecoveryPlan] = Field(default_factory=list)
 

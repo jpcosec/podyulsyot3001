@@ -6,13 +6,13 @@ import json
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 from src.automation.ariadne.models import ApplicationRecord, ApplyMeta, AriadnePortalMap
 from src.automation.motors.browseros.cli.client import BrowserOSClient
-from src.automation.motors.browseros.cli.executor import (
+from src.automation.motors.browseros.cli.replayer import (
     BrowserOSObserveError,
-    BrowserOSPlaybookExecutor,
+    BrowserOSReplayer,
 )
 from src.core.data_manager import DataManager
 from src.shared.log_tags import LogTag
@@ -36,13 +36,13 @@ class BrowserOSApplyProvider:
         self._portal_map: Optional[AriadnePortalMap] = None
         self.candidate_profile = candidate_profile or {}
         self.client = client or BrowserOSClient()
-        self.executor = BrowserOSPlaybookExecutor(self.client)
+        self.replayer = BrowserOSReplayer(self.client)
 
     @property
     def portal_map(self) -> AriadnePortalMap:
         """Loads and returns the unified semantic map for this portal."""
         if not self._portal_map:
-            map_path = Path(__file__).parent.parent.parent.parent.parent / "portals" / self.source_name / "maps" / "easy_apply.json"
+            map_path = Path(__file__).parent.parent.parent.parent / "portals" / self.source_name / "maps" / "easy_apply.json"
             if not map_path.exists():
                 raise FileNotFoundError(f"Ariadne Map not found for {self.source_name} at {map_path}")
             with open(map_path, "r") as f:
@@ -87,7 +87,7 @@ class BrowserOSApplyProvider:
 
         try:
             self.client.navigate(application_url, page_id)
-            result = self.executor.run(
+            result = self.replayer.run(
                 page_id=page_id,
                 path=path,
                 context=self._build_context(ingest_data, cv_path),

@@ -47,7 +47,8 @@
       "goal": "submit_job_application",
       "entry_state": "job_details",
       "success_states": ["apply_success"],
-      "failure_states": []
+      "failure_states": [],
+      "success_criteria": { "text_match": "Bewerbung" }
     }
   },
   "paths": {
