@@ -55,7 +55,7 @@ class C4AIMotorSession:
                 hooks={"before_retrieve_html": _check_hook},
             ),
         )
-        if selectors and not results:
+        if not results:
             raise ObservationFailed("observe() returned empty results — hook may not have fired")
         return results
 
