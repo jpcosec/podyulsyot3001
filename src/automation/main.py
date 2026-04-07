@@ -65,37 +65,39 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 async def _run_scrape(args) -> None:
-    """Run a full scrape cycle: resolve already-ingested jobs, instantiate the portal adapter, and call adapter.run(). Imports adapters lazily to avoid loading Crawl4AI at import time."""
-    from src.automation.motors.crawl4ai.portals.stepstone.scrape import StepStoneAdapter
-    from src.automation.motors.crawl4ai.portals.tuberlin.scrape import TUBerlinAdapter
-    from src.automation.motors.crawl4ai.portals.xing.scrape import XingAdapter
+    """Run a full scrape cycle using the AutomationRegistry."""
+    from src.automation.registry import AutomationRegistry
     from src.automation.storage import AutomationStorage
     from src.shared.log_tags import LogTag
 
     _setup_logging(f"scrape_{args.source}")
     logger = logging.getLogger(__name__)
     storage = AutomationStorage()
-    providers = {
-        "tuberlin": TUBerlinAdapter(storage.data_manager),
-        "stepstone": StepStoneAdapter(storage.data_manager),
-        "xing": XingAdapter(storage.data_manager),
-    }
-    adapter = providers[args.source]
+    
+    try:
+        adapter = AutomationRegistry.get_scrape_provider(args.source, storage)
+    except ValueError as e:
+        logger.error("%s %s", LogTag.FAIL, e)
+        sys.exit(1)
+
     for param, value in {"categories": args.categories, "city": args.city, "job_query": args.job_query, "max_days": args.max_days}.items():
         if value is not None and param not in adapter.supported_params:
             logger.warning("%s Provider '%s' does not support '%s'; ignoring.", LogTag.WARN, args.source, param)
+    
     already_scraped: list[str] = []
     if not args.overwrite:
         source_root = storage.data_manager.source_root(args.source)
         if source_root.exists():
             already_scraped = sorted(p.name for p in source_root.iterdir() if p.is_dir() and storage.data_manager.has_ingested_job(args.source, p.name))
+    
     ingested = await adapter.run(already_scraped=already_scraped, **vars(args))
     logger.info("%s Ingested %s jobs for source '%s'", LogTag.OK, len(ingested), args.source)
 
 
 async def _run_apply(args) -> None:
-    """Run an apply cycle for one job. Selects backend (crawl4ai or browseros), validates mutual exclusion of --setup-session and --job-id, and dispatches to the provider."""
+    """Run an apply cycle using the AutomationRegistry."""
     from src.shared.log_tags import LogTag
+    from src.automation.registry import AutomationRegistry
     from src.automation.storage import AutomationStorage
 
     _setup_logging(f"apply_{args.source}")
@@ -106,24 +108,16 @@ async def _run_apply(args) -> None:
 
     storage = AutomationStorage()
     
-    if args.backend == "browseros":
-        from src.automation.motors.browseros.cli.backend import build_browseros_providers
-        providers = build_browseros_providers(storage.data_manager, profile_data=profile_data)
-    else:
-        from src.automation.motors.crawl4ai.portals.linkedin.apply import LinkedInApplyAdapter
-        from src.automation.motors.crawl4ai.portals.stepstone.apply import StepStoneApplyAdapter
-        from src.automation.motors.crawl4ai.portals.xing.apply import XingApplyAdapter
-        providers = {
-            "linkedin": LinkedInApplyAdapter(storage),
-            "xing": XingApplyAdapter(storage),
-            "stepstone": StepStoneApplyAdapter(storage),
-        }
-
-    if args.source not in providers:
-        logger.error("%s Backend '%s' does not support source '%s'.", LogTag.FAIL, args.backend, args.source)
+    try:
+        adapter = AutomationRegistry.get_apply_provider(
+            source=args.source, 
+            backend=args.backend, 
+            storage=storage, 
+            profile_data=profile_data
+        )
+    except ValueError as e:
+        logger.error("%s %s", LogTag.FAIL, e)
         sys.exit(1)
-    
-    adapter = providers[args.source]
 
     if args.setup_session and args.job_id:
         logger.error("%s --setup-session and --job-id are mutually exclusive.", LogTag.FAIL)
