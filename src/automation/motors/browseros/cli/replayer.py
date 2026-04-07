@@ -126,6 +126,8 @@ class BrowserOSReplayer:
         self._assert_observation(snapshot, step.observe, step.name, page_id)
         if step.human_required:
             self._request_human_confirmation(step.description)
+        # TODO: letter_path is not yet consumed by _execute_action.
+        # Wire it through when UPLOAD_LETTER intent is defined.
         for action in step.actions:
             self._execute_action(
                 page_id=page_id,

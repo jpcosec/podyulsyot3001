@@ -35,8 +35,8 @@ class _FakeClient:
     def fill(self, page_id: int, element_id: int, value: str):
         self.calls.append(("fill", page_id, element_id, value))
 
-    def navigate(self, page_id: int, url: str):
-        self.calls.append(("navigate", page_id, url))
+    def navigate(self, url: str, page_id: int):
+        self.calls.append(("navigate", url, page_id))
 
     def upload_file(self, page_id: int, element_id: int, file_path: Path):
         self.calls.append(("upload_file", page_id, element_id, str(file_path)))
