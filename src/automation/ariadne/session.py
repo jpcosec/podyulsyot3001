@@ -9,7 +9,12 @@ from pathlib import Path
 from typing import Any
 
 from src.automation.contracts import ApplyJobContext, CandidateProfile, ExecutionContext
-from src.automation.ariadne.exceptions import TerminalStateReached
+from src.automation.ariadne.exceptions import (
+    HumanInterventionRequired,
+    TaskAborted,
+    TerminalStateReached,
+)
+from src.automation.ariadne.hitl import ApplyHitlController
 from src.automation.ariadne.models import ApplyMeta, AriadnePortalMap
 from src.automation.ariadne.motor_protocol import MotorProvider
 from src.automation.ariadne.navigator import AriadneNavigator
@@ -35,10 +40,13 @@ class AriadneSession:
         self,
         portal_name: str,
         storage: AutomationStorage | None = None,
+        *,
+        input_func=input,
     ) -> None:
         self.portal_name = portal_name
         self.storage = storage or AutomationStorage()
         self._map: AriadnePortalMap | None = None
+        self._hitl = ApplyHitlController(self.storage, input_func=input_func)
 
     @property
     def portal_map(self) -> AriadnePortalMap:
@@ -166,14 +174,60 @@ class AriadneSession:
                         len(path.steps),
                         step.name,
                     )
-                    await ms.execute_step(
-                        step=step,
-                        context=context,
-                        cv_path=cv_path,
-                        letter_path=letter_path,
-                        is_first=(step_index == 1),
-                        url=application_url,
-                    )
+                    try:
+                        await ms.execute_step(
+                            step=step,
+                            context=context,
+                            cv_path=cv_path,
+                            letter_path=letter_path,
+                            is_first=(step_index == 1),
+                            url=application_url,
+                        )
+                    except HumanInterventionRequired as exc:
+                        self.storage.write_apply_meta(
+                            self.portal_name,
+                            job_id,
+                            ApplyMeta(
+                                status="interrupted",
+                                timestamp=datetime.now(timezone.utc).isoformat(),
+                                error=str(exc),
+                            ).model_dump(),
+                        )
+                        decision = await self._hitl.pause(
+                            motor_session=ms,
+                            session_id=session_id,
+                            portal_name=self.portal_name,
+                            job_id=job_id,
+                            step=step,
+                            reason=exc.reason,
+                            message=str(exc),
+                            application_url=application_url,
+                        )
+                        if decision.action == "abort":
+                            raise TaskAborted(
+                                f"Operator aborted apply run at step {step.step_index}: {step.name}",
+                                step_index=step.step_index,
+                            ) from exc
+                        (
+                            resumed_index,
+                            finished,
+                            mission_status,
+                        ) = await self._resume_after_hitl(
+                            ms=ms,
+                            navigator=navigator,
+                            path=path,
+                            task_id=path.task_id,
+                            current_step_index=step_index,
+                            all_selectors=all_selectors,
+                        )
+                        if finished:
+                            if mission_status == "terminal_failure":
+                                raise TerminalStateReached(
+                                    "Reached failure state during manual intervention"
+                                ) from exc
+                            break
+                        step_index = resumed_index
+                        continue
 
                     obs_after = await ms.observe(all_selectors)
                     next_state = navigator.find_current_state(obs_after)
@@ -222,3 +276,30 @@ class AriadneSession:
             cv_path=str(cv_path),
             letter_path=str(letter_path) if letter_path else None,
         ).to_runtime_dict()
+
+    async def _resume_after_hitl(
+        self,
+        *,
+        ms: Any,
+        navigator: AriadneNavigator,
+        path: Any,
+        task_id: str,
+        current_step_index: int,
+        all_selectors: set[str],
+    ) -> tuple[int, bool, str | None]:
+        """Re-observe the page after manual intervention and decide where to resume."""
+        obs = await ms.observe(all_selectors)
+        current_state = navigator.find_current_state(obs)
+        finished, mission_status = navigator.check_mission_status(
+            task_id, current_state or ""
+        )
+        if finished:
+            return current_step_index, True, mission_status
+        for index, step in enumerate(path.steps, start=1):
+            if (
+                step.state_id
+                and step.state_id == current_state
+                and index > current_step_index
+            ):
+                return index, False, None
+        return current_step_index, False, None

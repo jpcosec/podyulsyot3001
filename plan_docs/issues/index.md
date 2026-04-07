@@ -23,13 +23,10 @@ Once an issue is solved, the next step is always:
 
 ### Phase 4 — Human loop, safety, and fallback execution
 
-9. `plan_docs/issues/unimplemented/apply-hitl-channel.md`
-10. `plan_docs/issues/unimplemented/credential-store.md`
-11. `plan_docs/issues/unimplemented/anti-bot-danger-detection.md`
-       - depends on `plan_docs/issues/unimplemented/apply-hitl-channel.md`
-12. `plan_docs/issues/unimplemented/openbrowser-level2-integration.md`
-       - depends on `plan_docs/issues/unimplemented/credential-store.md`
-       - depends on `plan_docs/issues/unimplemented/apply-hitl-channel.md`
+9. `plan_docs/issues/unimplemented/credential-store.md`
+10. `plan_docs/issues/unimplemented/anti-bot-danger-detection.md`
+11. `plan_docs/issues/unimplemented/openbrowser-level2-integration.md`
+        - depends on `plan_docs/issues/unimplemented/credential-store.md`
 
 ### Phase 5 — Higher-level capability
 
@@ -40,5 +37,3 @@ Once an issue is solved, the next step is always:
 ## Dependency summary
 
 - `plan_docs/issues/unimplemented/openbrowser-level2-integration.md` -> `plan_docs/issues/unimplemented/credential-store.md`
-- `plan_docs/issues/unimplemented/openbrowser-level2-integration.md` -> `plan_docs/issues/unimplemented/apply-hitl-channel.md`
-- `plan_docs/issues/unimplemented/anti-bot-danger-detection.md` -> `plan_docs/issues/unimplemented/apply-hitl-channel.md`

@@ -1,4 +1,5 @@
 """Motor Protocol — Contracts between Ariadne and execution motors."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -32,6 +33,15 @@ class MotorSession(Protocol):
         url: str | None,
     ) -> None:
         """Execute a single AriadneStep on the live page."""
+        ...
+
+    async def begin_human_intervention(
+        self,
+        artifact_dir: Path,
+        step: AriadneStep,
+        reason: str,
+    ) -> dict[str, Any]:
+        """Expose the live session to an operator and capture resumable context."""
         ...
 
 

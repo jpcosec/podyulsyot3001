@@ -6,6 +6,7 @@ This package provides a unified, semantic-driven browser automation system. It d
 
 - **Semantic Layer (`src/automation/ariadne/`)**: Backend-neutral models for States, Tasks, and Paths.
 - **AriadneSession (`src/automation/ariadne/session.py`)**: Orchestrates the apply loop, resolves portal routing, dispatches to motors, and persists results.
+- **Apply HITL (`src/automation/ariadne/hitl.py`)**: Persists interrupt payloads, BrowserOS screenshots, and terminal resume decisions when a run needs operator help.
 - **Unified Maps (`src/automation/portals/`)**: Single source of truth for portal logic in JSON.
 - **Portal Routing (`src/automation/portals/*/routing.py`)**: Portal-specific branching that decides whether a job stays onsite, redirects to an ATS, or hands off to email.
 - **Execution Motors (`src/automation/motors/`)**: Replayers for Crawl4AI and BrowserOS.
@@ -63,3 +64,4 @@ python -m src.automation.main apply --source linkedin --job-id 123 --cv my_cv.pd
 - **`State Mismatch`**: The navigator found a different state than expected. Check if the portal DOM changed and update the Map's `presence_predicate`.
 - **`TargetNotFound`**: A CSS or Text selector in the Map no longer matches. Inspect the `error_state.png` in the job's artifact folder.
 - **`Motor Session Error`**: The selected motor could not observe or execute a step. Check the backend-specific implementation under `src/automation/motors/`.
+- **`interrupted` ApplyMeta**: The run paused for operator input. Inspect `apply/meta/hitl_interrupt.json` and the matching artifacts under `apply/proposed/hitl/` for resume context.

@@ -10,7 +10,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from src.automation.contracts import CandidateProfile
-from src.automation.ariadne.exceptions import TerminalStateReached
+from src.automation.ariadne.exceptions import (
+    HumanInterventionRequired,
+    TaskAborted,
+    TerminalStateReached,
+)
 from src.automation.ariadne.models import (
     AriadneObserve,
     AriadnePath,
@@ -70,6 +74,7 @@ class _FakeSession:
     def __init__(self):
         self.observe = AsyncMock(return_value={})
         self.execute_step = AsyncMock()
+        self.begin_human_intervention = AsyncMock(return_value={})
 
 
 class _FakeProvider:
@@ -101,6 +106,7 @@ def _make_session(map_: AriadnePortalMap) -> tuple[AriadneSession, MagicMock]:
     sess.portal_name = "xing"
     sess.storage = storage
     sess._map = map_
+    sess._hitl = MagicMock()
     return sess, storage
 
 
@@ -314,3 +320,54 @@ async def test_run_raises_on_terminal_failure_state():
     # Meta should be written with status="failed"
     written = storage.write_apply_meta.call_args[0]
     assert written[2]["status"] == "failed"
+
+
+@pytest.mark.asyncio
+async def test_run_persists_interrupt_and_resumes_same_step():
+    sess, storage = _make_session(_minimal_map())
+    fake_session = _FakeSession()
+    fake_session.execute_step.side_effect = [
+        HumanInterventionRequired(
+            "Solve login wall",
+            reason="human_required",
+            step_index=1,
+        ),
+        None,
+    ]
+    sess._hitl.pause = AsyncMock(
+        return_value=MagicMock(action="resume", decided_at="2026-04-07T00:00:00Z")
+    )
+    motor = _FakeProvider(fake_session)
+
+    meta = await sess.run(motor, job_id="job1", cv_path=Path("cv.pdf"))
+
+    assert meta.status == "submitted"
+    assert fake_session.execute_step.await_count == 2
+    statuses = [
+        call.args[2]["status"] for call in storage.write_apply_meta.call_args_list
+    ]
+    assert statuses == ["interrupted", "submitted"]
+    sess._hitl.pause.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_run_aborts_when_operator_declines_resume():
+    sess, storage = _make_session(_minimal_map())
+    fake_session = _FakeSession()
+    fake_session.execute_step.side_effect = HumanInterventionRequired(
+        "Review risky submission",
+        reason="human_required",
+        step_index=1,
+    )
+    sess._hitl.pause = AsyncMock(
+        return_value=MagicMock(action="abort", decided_at="2026-04-07T00:00:00Z")
+    )
+    motor = _FakeProvider(fake_session)
+
+    with pytest.raises(TaskAborted, match="Operator aborted apply run"):
+        await sess.run(motor, job_id="job1", cv_path=Path("cv.pdf"))
+
+    statuses = [
+        call.args[2]["status"] for call in storage.write_apply_meta.call_args_list
+    ]
+    assert statuses == ["interrupted", "failed"]

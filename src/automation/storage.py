@@ -8,12 +8,16 @@ DataManager to provide automation-specific storage semantics.
 from __future__ import annotations
 
 import logging
+import re
+from pathlib import Path
 from typing import Any, Optional
 
 from src.automation.contracts import CandidateProfile
 from src.core.data_manager import DataManager
 
 logger = logging.getLogger(__name__)
+
+_SAFE_NAME_RE = re.compile(r"[^a-z0-9]+")
 
 
 class AutomationStorage:
@@ -77,6 +81,60 @@ class AutomationStorage:
             stage="meta",
             filename="apply_meta.json",
             data=data,
+        )
+
+    def write_apply_interrupt(
+        self, source: str, job_id: str, data: dict[str, Any]
+    ) -> None:
+        """Write the latest HITL interrupt payload for an apply run."""
+        self.data_manager.write_json_artifact(
+            source=source,
+            job_id=job_id,
+            node_name="apply",
+            stage="meta",
+            filename="hitl_interrupt.json",
+            data=data,
+        )
+
+    def append_apply_hitl_decision(
+        self, source: str, job_id: str, decision: dict[str, Any]
+    ) -> None:
+        """Append one persisted operator decision to the apply HITL log."""
+        decisions = self.read_apply_hitl_decisions(source, job_id)
+        decisions.append(decision)
+        self.data_manager.write_json_artifact(
+            source=source,
+            job_id=job_id,
+            node_name="apply",
+            stage="meta",
+            filename="hitl_decisions.json",
+            data={"decisions": decisions},
+        )
+
+    def read_apply_hitl_decisions(
+        self, source: str, job_id: str
+    ) -> list[dict[str, Any]]:
+        """Read the persisted operator decision log for an apply run."""
+        try:
+            payload = self.data_manager.read_json_artifact(
+                source=source,
+                job_id=job_id,
+                node_name="apply",
+                stage="meta",
+                filename="hitl_decisions.json",
+            )
+        except FileNotFoundError:
+            return []
+        decisions = payload.get("decisions", [])
+        return decisions if isinstance(decisions, list) else []
+
+    def get_apply_hitl_dir(self, source: str, job_id: str, step_index: int) -> Path:
+        """Return the directory where HITL artifacts for one step should live."""
+        safe_step = _SAFE_NAME_RE.sub("-", f"step-{step_index:03d}").strip("-")
+        return self.data_manager.ensure_dir(
+            self.data_manager.node_stage_dir(source, job_id, "apply", "proposed")
+            / "hitl"
+            / safe_step
         )
 
     def write_artifact(

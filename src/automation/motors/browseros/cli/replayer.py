@@ -15,6 +15,7 @@ from src.automation.ariadne.contracts import (
     ReplayStep,
     ReplayTarget,
 )
+from src.automation.ariadne.exceptions import HumanInterventionRequired
 from src.automation.motors.browseros.cli.client import BrowserOSClient, SnapshotElement
 from src.shared.log_tags import LogTag
 
@@ -79,7 +80,14 @@ class BrowserOSReplayer:
 
             # 1. Observation Guards
             snapshot = self.client.take_snapshot(page_id)
-            self._assert_observation(snapshot, step.observe, step.name, page_id)
+            try:
+                self._assert_observation(snapshot, step.observe, step.name, page_id)
+            except BrowserOSObserveError as exc:
+                raise self._build_hitl_request(
+                    step,
+                    reason="observation_failed",
+                    message=str(exc),
+                ) from exc
 
             if dry_run and step.dry_run_stop:
                 logger.info("%s Dry-run stop at step '%s'", LogTag.OK, step.name)
@@ -88,18 +96,29 @@ class BrowserOSReplayer:
                 )
 
             if step.human_required:
-                self._request_human_confirmation(step.description)
+                raise self._build_hitl_request(
+                    step,
+                    reason="human_required",
+                    message=step.description,
+                )
 
             # 2. Actions
             for action in step.actions:
-                self._execute_action(
-                    page_id=page_id,
-                    action=action,
-                    context=context,
-                    cv_path=cv_path,
-                    letter_path=letter_path,
-                    fields_filled=fields_filled,
-                )
+                try:
+                    self._execute_action(
+                        page_id=page_id,
+                        action=action,
+                        context=context,
+                        cv_path=cv_path,
+                        letter_path=letter_path,
+                        fields_filled=fields_filled,
+                    )
+                except BrowserOSObserveError as exc:
+                    raise self._build_hitl_request(
+                        step,
+                        reason="target_not_found",
+                        message=str(exc),
+                    ) from exc
 
         return BrowserOSExecutionResult(
             status="submitted",
@@ -135,18 +154,36 @@ class BrowserOSReplayer:
             fields_filled = []
         logger.info("%s Executing Step %s: %s", LogTag.FAST, step.step_index, step.name)
         snapshot = self.client.take_snapshot(page_id)
-        self._assert_observation(snapshot, step.observe, step.name, page_id)
+        try:
+            self._assert_observation(snapshot, step.observe, step.name, page_id)
+        except BrowserOSObserveError as exc:
+            raise self._build_hitl_request(
+                step,
+                reason="observation_failed",
+                message=str(exc),
+            ) from exc
         if step.human_required:
-            self._request_human_confirmation(step.description)
-        for action in step.actions:
-            self._execute_action(
-                page_id=page_id,
-                action=action,
-                context=context,
-                cv_path=cv_path,
-                letter_path=letter_path,
-                fields_filled=fields_filled,
+            raise self._build_hitl_request(
+                step,
+                reason="human_required",
+                message=step.description,
             )
+        for action in step.actions:
+            try:
+                self._execute_action(
+                    page_id=page_id,
+                    action=action,
+                    context=context,
+                    cv_path=cv_path,
+                    letter_path=letter_path,
+                    fields_filled=fields_filled,
+                )
+            except BrowserOSObserveError as exc:
+                raise self._build_hitl_request(
+                    step,
+                    reason="target_not_found",
+                    message=str(exc),
+                ) from exc
 
     def render_template(self, template: str, context: dict[str, Any]) -> str:
         """Render {{key}} placeholders from a nested context mapping."""
@@ -282,7 +319,16 @@ class BrowserOSReplayer:
         if action.target.text:
             fields_filled.append(action.target.text)
 
-    def _request_human_confirmation(self, message: str) -> None:
-        answer = self.input_func(f"[apply/browseros] {message} [y/N]: ").strip().lower()
-        if answer not in {"y", "yes"}:
-            raise RuntimeError("Application aborted by operator")
+    def _build_hitl_request(
+        self,
+        step: ReplayStep,
+        *,
+        reason: str,
+        message: str,
+    ) -> HumanInterventionRequired:
+        return HumanInterventionRequired(
+            message,
+            reason=reason,
+            step_index=step.step_index,
+            details={"step_name": step.name},
+        )

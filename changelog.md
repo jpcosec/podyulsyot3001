@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-07] - Apply HITL Channel
+
+### Added
+- Added persisted apply HITL contracts in `src/automation/ariadne/hitl.py` plus storage helpers for interrupt payloads, operator decisions, and per-step BrowserOS artifacts.
+- Added Ariadne and BrowserOS regression coverage for interrupt persistence, operator resume/abort handling, and BrowserOS observation-to-HITL escalation.
+
+### Changed
+- Updated `src/automation/ariadne/session.py` so apply runs pause into an `interrupted` state, capture HITL context, and resume the active session after a terminal operator decision.
+- Updated BrowserOS and Crawl4AI motor sessions to expose the new human-intervention hook, including BrowserOS screenshot and snapshot capture in `src/automation/motors/browseros/cli/backend.py`.
+- Updated `src/automation/motors/browseros/cli/replayer.py` so human-required steps and live observation blockers raise the shared HITL interrupt contract instead of hard-aborting inline.
+
 ## [2026-04-07] - Portal Routing Layer
 
 ### Added

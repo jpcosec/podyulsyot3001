@@ -79,6 +79,31 @@ class BrowserOSMotorSession:
             letter_path=letter_path,
         )
 
+    async def begin_human_intervention(
+        self,
+        artifact_dir: Path,
+        step: Any,
+        reason: str,
+    ) -> dict[str, Any]:
+        """Reveal the page and capture BrowserOS artifacts for an operator."""
+        self._client.show_page(self._page_id)
+        screenshot_path = artifact_dir / "browseros_hitl.png"
+        snapshot_path = artifact_dir / "browseros_snapshot.txt"
+        self._client.save_screenshot(self._page_id, screenshot_path)
+        snapshot = self._client.take_snapshot(self._page_id)
+        snapshot_text = "\n".join(
+            element.raw_line or element.text for element in snapshot
+        )
+        snapshot_path.write_text(snapshot_text, encoding="utf-8")
+        return {
+            "artifact_dir": artifact_dir,
+            "page_id": self._page_id,
+            "reason": reason,
+            "step_name": getattr(step, "name", None),
+            "screenshot_path": screenshot_path,
+            "snapshot_path": snapshot_path,
+        }
+
 
 class BrowserOSMotorProvider:
     """Opens BrowserOS browser sessions for AriadneSession.

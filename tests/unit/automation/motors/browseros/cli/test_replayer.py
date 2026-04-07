@@ -12,6 +12,7 @@ from src.automation.ariadne.contracts import (
     ReplayStep,
     ReplayTarget,
 )
+from src.automation.ariadne.exceptions import HumanInterventionRequired
 from src.automation.motors.browseros.cli.client import SnapshotElement
 from src.automation.motors.browseros.cli.replayer import (
     BrowserOSObserveError,
@@ -252,3 +253,46 @@ def test_execute_single_step_rejects_upload_letter_without_letter_path():
             cv_path=Path("/tmp/cv.pdf"),
             letter_path=None,
         )
+
+
+def test_execute_single_step_raises_hitl_request_for_human_required_steps():
+    client = _FakeClient([_snapshot((1, "button", "Continue"))])
+    executor = BrowserOSReplayer(client)
+
+    with pytest.raises(HumanInterventionRequired, match="Need approval") as exc:
+        executor.execute_single_step(
+            page_id=1,
+            step=ReplayStep(
+                step_index=2,
+                name="review",
+                description="Need approval",
+                observe=ReplayObserve(),
+                actions=[],
+                human_required=True,
+            ),
+            context={},
+            cv_path=Path("/tmp/cv.pdf"),
+        )
+
+    assert exc.value.reason == "human_required"
+
+
+def test_execute_single_step_converts_observation_failure_to_hitl_request():
+    client = _FakeClient([_snapshot((1, "button", "Continue"))])
+    executor = BrowserOSReplayer(client)
+
+    with pytest.raises(HumanInterventionRequired) as exc:
+        executor.execute_single_step(
+            page_id=1,
+            step=ReplayStep(
+                step_index=1,
+                name="login_wall",
+                description="Login required",
+                observe=ReplayObserve(required_elements=[ReplayTarget(text="Sign in")]),
+                actions=[],
+            ),
+            context={},
+            cv_path=Path("/tmp/cv.pdf"),
+        )
+
+    assert exc.value.reason == "observation_failed"

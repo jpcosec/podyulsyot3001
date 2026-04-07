@@ -21,7 +21,8 @@ The apply stack now follows this path:
 3. If the route stays onsite, a `MotorProvider` opens a backend-specific `MotorSession`.
 4. `AriadneNavigator` evaluates the observed state and decides the next step.
 5. The motor session observes the live page and executes the requested step.
-6. `AutomationStorage` persists `ApplyMeta` and related artifacts.
+6. If execution hits a human gate or blocker, `src/automation/ariadne/hitl.py` persists interrupt artifacts and terminal resume decisions before the session continues.
+7. `AutomationStorage` persists `ApplyMeta` and related artifacts.
 
 ## Component map
 
@@ -30,6 +31,7 @@ The apply stack now follows this path:
 | **Ariadne Map** | Portal knowledge, semantic states, and replay paths | `src/automation/portals/*/maps/` |
 | **Common Language** | Backend-neutral Pydantic models for states, paths, steps, and artifacts | `src/automation/ariadne/models.py` |
 | **AriadneSession** | Apply orchestrator: map loading, context building, run loop, and persistence wiring | `src/automation/ariadne/session.py` |
+| **Apply HITL** | Persisted interrupt payloads and terminal resume controls for active apply sessions | `src/automation/ariadne/hitl.py` |
 | **Portal Routing** | Portal-specific apply branch resolution from enriched ingest state | `src/automation/portals/*/routing.py` |
 | **Motor Protocol** | Contracts between Ariadne and each backend (`MotorProvider`, `MotorSession`) | `src/automation/ariadne/motor_protocol.py` |
 | **Navigator** | State-aware replay and mission status transitions | `src/automation/ariadne/navigator.py` |

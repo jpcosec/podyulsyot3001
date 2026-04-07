@@ -6,6 +6,7 @@ This package is the backend-neutral core of the automation system.
 
 - `models.py` defines the shared semantic contract used by portal maps and motors.
 - `session.py` owns the apply orchestration loop, resolves portal routing, and delegates browser work to a motor.
+- `hitl.py` persists interrupt payloads and terminal resume decisions for active apply sessions.
 - `motor_protocol.py` defines the `MotorProvider` and `MotorSession` contracts.
 - `navigator.py` decides the next step from observed portal state.
 - `recorder.py`, `trace_models.py`, and `normalizer.py` support recording and promotion workflows.

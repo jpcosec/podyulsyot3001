@@ -354,9 +354,9 @@ class ApplicationRecord(BaseModel):
 class ApplyMeta(BaseModel):
     """Small status artifact describing the outcome of an apply run."""
 
-    status: Literal["submitted", "dry_run", "failed", "portal_changed"] = Field(
-        description="Final outcome status."
-    )
+    status: Literal[
+        "submitted", "dry_run", "failed", "portal_changed", "interrupted"
+    ] = Field(description="Final outcome status.")
     timestamp: str = Field(description="ISO timestamp of the attempt.")
     error: Optional[str] = Field(default=None, description="Error message if failed.")
 

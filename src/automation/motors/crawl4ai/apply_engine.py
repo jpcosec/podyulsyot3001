@@ -102,6 +102,20 @@ class C4AIMotorSession:
             application_url=url,
         )
 
+    async def begin_human_intervention(
+        self,
+        artifact_dir: Path,
+        step: AriadneStep,
+        reason: str,
+    ) -> dict[str, Any]:
+        """Return minimal HITL context for Crawl4AI-backed sessions."""
+        return {
+            "artifact_dir": str(artifact_dir),
+            "session_id": self._session_id,
+            "reason": reason,
+            "step_name": step.name,
+        }
+
 
 class C4AIMotorProvider:
     """Opens Crawl4AI browser sessions for AriadneSession.

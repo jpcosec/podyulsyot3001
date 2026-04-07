@@ -20,4 +20,4 @@ Create reusable detectors for DOM text, screenshots, routing signals, and prior 
 
 ## Does it depend on another issue?
 
-Yes — `plan_docs/issues/unimplemented/apply-hitl-channel.md`.
+No.

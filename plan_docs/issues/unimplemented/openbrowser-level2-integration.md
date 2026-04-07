@@ -19,4 +19,4 @@ Wrap the OpenBrowser API behind a local service interface, pass job/profile/docu
 
 ## Does it depend on another issue?
 
-Yes — `plan_docs/issues/unimplemented/credential-store.md` and `plan_docs/issues/unimplemented/apply-hitl-channel.md`.
+Yes — `plan_docs/issues/unimplemented/credential-store.md`.

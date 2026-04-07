@@ -47,7 +47,7 @@ def test_job_posting_accepts_routing_review_fields():
 
 
 def test_apply_meta_status_values():
-    for status in ("submitted", "dry_run", "failed", "portal_changed"):
+    for status in ("submitted", "dry_run", "failed", "portal_changed", "interrupted"):
         m = ApplyMeta(status=status, timestamp="2026-03-30T00:00:00Z")
         assert m.status == status
 
