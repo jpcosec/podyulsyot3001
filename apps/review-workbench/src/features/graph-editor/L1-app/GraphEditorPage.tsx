@@ -8,24 +8,7 @@ import { registry } from '@/schema/registry';
 import type { ASTEdge, ASTNode } from '@/stores/types';
 import { useGraphStore } from '@/stores/graph-store';
 
-/**
- * GraphEditorPage - L1 Application Layer
- * 
- * Orchestrates the entire graph editor experience:
- * - Fetches schema and graph data from the data provider
- * - Registers node types in the registry at runtime
- * - Translates raw data to AST format for the canvas
- * - Handles save operations (AST -> domain -> provider)
- * 
- * This is the top-level page component. It knows about domain concepts
- * (Jobs, CVs, skills) but knows nothing about ReactFlow.
- * 
- * @example
- * ```tsx
- * <GraphEditorPage />
- * ```
- */
-
+/** L1: Page component - fetches data, registers types, orchestrates editor */
 import { GraphEditor } from '../L2-canvas/GraphEditor';
 import { graphDataProvider, type GraphSchema } from '../lib/data-provider';
 import { graphToDomain } from '../lib/graph-to-domain';

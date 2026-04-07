@@ -2,20 +2,7 @@ import { Toaster } from '@/components/ui/sonner';
 
 import type { ASTEdge, ASTNode } from '@/stores/types';
 
-/**
- * GraphEditor - L2 Canvas Layer
- * 
- * The main editor container composing:
- * - GraphCanvas: ReactFlow-based interactive canvas
- * - CanvasSidebar: Actions, filters, creation, view controls
- * - NodeInspector/EdgeInspector: Property editors
- * - DeleteConfirm: Confirmation dialog
- * - CommandMenu: Ctrl+K command palette
- * 
- * Self-contained: owns all editor controls, knows about ReactFlow and edges,
- * but knows nothing about domain concepts.
- */
-
+/** L2: Main editor container - canvas + sidebar + panels */
 import { GraphCanvas } from './GraphCanvas';
 import { useKeyboard } from './hooks/use-keyboard';
 import { DeleteConfirm } from './components/DeleteConfirm';
