@@ -65,6 +65,16 @@ export const GroupShell = memo(function GroupShell({ id, data, selected }: NodeP
   const { collapseGroup, expandGroup } = useEdgeInheritance();
   const collapsed = isCollapsed(data);
 
+  const asJson = data as Record<string, unknown>;
+  const category = asJson.category as string | undefined;
+  const visualToken = asJson.visualToken as string | undefined;
+  
+  const borderColor = visualToken 
+    ? `var(--${visualToken})` 
+    : category === 'section' 
+      ? 'var(--token-section)' 
+      : 'var(--token-category, #888)';
+
   const toggleCollapse = () => {
     if (collapsed) {
       expandGroup(id);
@@ -87,7 +97,7 @@ export const GroupShell = memo(function GroupShell({ id, data, selected }: NodeP
 
       <div
         className="h-full w-full rounded-lg border-2 border-dashed bg-transparent"
-        style={{ borderColor: 'var(--token-section, #666)' }}
+        style={{ borderColor }}
       >
         <NodeResizer
           isVisible={selected && !collapsed}

@@ -141,8 +141,8 @@ export const NodeShell = memo(function NodeShell(props: NodeProps<CanvasNode>) {
   const openDeleteConfirm = useUIStore((state) => state.openDeleteConfirm);
 
   const safeTypeId = typeId ?? '';
-  const definition = registry.get(safeTypeId);
-  const colorToken = definition?.colorToken ?? 'token-error';
+  const definition = registry.get(safeTypeId) ?? registry.get('entity');
+  const colorToken = definition?.colorToken ?? 'token-surface-primary';
   const nodeBody = useMemo(() => renderNodeBody(data, colorToken, zoom), [data, colorToken, zoom]);
 
   const handleEdit = () => {

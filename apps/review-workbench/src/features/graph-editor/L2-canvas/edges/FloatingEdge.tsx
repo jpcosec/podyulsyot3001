@@ -1,6 +1,6 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 
-import { BaseEdge, getBezierPath, useStore, type EdgeProps } from '@xyflow/react';
+import { BaseEdge, EdgeLabelRenderer, getBezierPath, useStore, type EdgeProps } from '@xyflow/react';
 
 import { getEdgeParams } from './edge-helpers';
 
@@ -39,6 +39,7 @@ export const FloatingEdge = memo(function FloatingEdge({
 }: EdgeProps) {
   const sourceNode = useStore((store) => store.nodeLookup.get(source));
   const targetNode = useStore((store) => store.nodeLookup.get(target));
+  const [isHovered, setIsHovered] = useState(false);
 
   if (!sourceNode || !targetNode) {
     return null;
@@ -47,7 +48,7 @@ export const FloatingEdge = memo(function FloatingEdge({
   const relationType = readRelationType(data);
 
   const params = getEdgeParams(sourceNode, targetNode);
-  const [path] = getBezierPath({
+  const [path, labelX, labelY] = getBezierPath({
     sourceX: params.sx,
     sourceY: params.sy,
     sourcePosition: params.sourcePosition,
@@ -59,11 +60,29 @@ export const FloatingEdge = memo(function FloatingEdge({
   const isInherited = relationType === 'inherited';
 
   return (
-    <BaseEdge
-      id={id}
-      path={path}
-      style={getInheritedStyle(style, relationType)}
-      markerEnd={isInherited ? undefined : markerEnd}
-    />
+    <>
+      <BaseEdge
+        id={id}
+        path={path}
+        style={getInheritedStyle(style, relationType)}
+        markerEnd={isInherited ? undefined : markerEnd}
+      />
+      <EdgeLabelRenderer>
+        <div
+          style={{
+            position: 'absolute',
+            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+            pointerEvents: 'all',
+          }}
+          className={`px-1 py-0.5 text-[10px] rounded bg-background/90 border text-muted-foreground transition-opacity ${
+            isHovered || relationType ? 'opacity-100' : 'opacity-0'
+          }`}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          {relationType || 'linked'}
+        </div>
+      </EdgeLabelRenderer>
+    </>
   );
 });
