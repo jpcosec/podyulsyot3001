@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-SRC = Path("src/automation")
+SRC = Path(__file__).parents[3] / "src" / "automation"
 
 # Each entry: layer_path → list of forbidden import prefixes
 RULES: dict[str, list[str]] = {
@@ -25,6 +25,7 @@ RULES: dict[str, list[str]] = {
     ],
     "motors/crawl4ai": [
         "src.automation.portals",
+        "src.automation.motors.browseros",
     ],
     "motors/browseros": [
         "src.automation.portals",
@@ -51,7 +52,7 @@ def _collect_imports(path: Path) -> list[str]:
 def _find_violations(layer: str, forbidden: list[str]) -> list[str]:
     layer_path = SRC / layer
     if not layer_path.exists():
-        return []
+        pytest.fail(f"Layer path not found: {layer_path} — is pytest run from repo root?")
     violations: list[str] = []
     for py_file in sorted(layer_path.rglob("*.py")):
         for imp in _collect_imports(py_file):

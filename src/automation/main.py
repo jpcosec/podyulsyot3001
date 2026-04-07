@@ -137,6 +137,9 @@ async def _run_apply(args) -> None:
         profile_data = json.loads(Path(args.profile_json).read_text(encoding="utf-8"))
     else:
         profile_data = None
+    # TODO: profile_data is parsed but not yet wired to AriadneSession._build_context.
+    # When AriadneSession.run() accepts a profile dict, pass it here.
+    _ = profile_data  # suppress unused-variable lint
 
     storage = AutomationStorage()
     session = AriadneSession(portal_name=args.source, storage=storage)

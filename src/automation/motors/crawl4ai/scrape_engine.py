@@ -190,7 +190,7 @@ class SmartScraperAdapter(ABC):
         Returns:
             Browser settings injected with BrowserOS Chromium.
         """
-        from src.automation.motors.browseros.injection import get_browseros_injected_config
+        from src.automation.motors.crawl4ai.browser_config import get_browseros_injected_config
         return get_browseros_injected_config(headless=True, text_mode=True)
 
     def get_base_crawl_config(self) -> CrawlerRunConfig:

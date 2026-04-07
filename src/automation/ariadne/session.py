@@ -170,6 +170,7 @@ class AriadneSession:
         letter_path: Path | None,
         application_url: str | None,
     ) -> dict[str, Any]:
+        # TODO: accept profile dict parameter; currently hardcoded as development stub.
         return {
             "profile": {
                 "first_name": "Juan Pablo",

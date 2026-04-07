@@ -105,5 +105,5 @@ class C4AIMotorProvider:
             yield C4AIMotorSession(crawler, session_id, C4AIReplayer())
 
     def _browser_config(self, headless: bool = True) -> BrowserConfig:
-        from src.automation.motors.browseros.injection import get_browseros_injected_config
+        from src.automation.motors.crawl4ai.browser_config import get_browseros_injected_config
         return get_browseros_injected_config(headless=headless)

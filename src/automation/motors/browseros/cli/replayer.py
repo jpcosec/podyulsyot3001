@@ -55,6 +55,10 @@ class BrowserOSReplayer:
     ) -> BrowserOSExecutionResult:
         """Execute an Ariadne path against an already-open page.
 
+        .. deprecated::
+            Production code now calls execute_single_step() step-by-step via
+            BrowserOSMotorSession. This method is retained for existing tests only.
+
         Args:
             page_id: BrowserOS page identifier to operate on.
             path: AriadnePath definition to replay.
