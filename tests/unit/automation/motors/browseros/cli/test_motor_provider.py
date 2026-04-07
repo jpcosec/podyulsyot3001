@@ -47,6 +47,7 @@ async def test_open_session_opens_and_closes_page():
     async with provider.open_session("test-session") as session:
         assert hasattr(session, "observe")
         assert hasattr(session, "execute_step")
+        assert hasattr(session, "inspect_danger")
         assert hasattr(session, "begin_human_intervention")
 
     client.new_hidden_page.assert_called_once()

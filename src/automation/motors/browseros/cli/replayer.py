@@ -15,6 +15,11 @@ from src.automation.ariadne.contracts import (
     ReplayStep,
     ReplayTarget,
 )
+from src.automation.ariadne.danger_contracts import (
+    ApplyDangerReport,
+    ApplyDangerSignals,
+)
+from src.automation.ariadne.danger_detection import ApplyDangerDetector
 from src.automation.ariadne.exceptions import HumanInterventionRequired
 from src.automation.motors.browseros.cli.client import BrowserOSClient, SnapshotElement
 from src.shared.log_tags import LogTag
@@ -43,6 +48,7 @@ class BrowserOSReplayer:
     def __init__(self, client: BrowserOSClient, *, input_func=input) -> None:
         self.client = client
         self.input_func = input_func
+        self._danger_detector = ApplyDangerDetector()
 
     def run(
         self,
@@ -195,6 +201,25 @@ class BrowserOSReplayer:
 
         return _PLACEHOLDER_RE.sub(_replace, template)
 
+    def inspect_page_danger(
+        self,
+        *,
+        page_id: int,
+        application_url: str | None,
+    ) -> ApplyDangerReport:
+        """Inspect the current BrowserOS page for risky apply-flow states."""
+        snapshot = self.client.take_snapshot(page_id)
+        snapshot_text = "\n".join(
+            element.raw_line or element.text for element in snapshot
+        )
+        return self._danger_detector.detect(
+            ApplyDangerSignals(
+                dom_text=snapshot_text,
+                current_url=self._read_current_url(page_id),
+                application_url=application_url,
+            )
+        )
+
     def _lookup_context_value(self, context: dict[str, Any], key: str) -> Any:
         current: Any = context
         for part in key.split("."):
@@ -244,6 +269,17 @@ class BrowserOSReplayer:
 
     def _normalize_text(self, value: str) -> str:
         return " ".join(value.lower().split())
+
+    def _read_current_url(self, page_id: int) -> str | None:
+        result = self.client.evaluate_script(page_id, "window.location.href")
+        if isinstance(result, str):
+            return result
+        if isinstance(result, dict):
+            for key in ("result", "value", "text"):
+                value = result.get(key)
+                if isinstance(value, str) and value:
+                    return value
+        return None
 
     def _execute_action(
         self,

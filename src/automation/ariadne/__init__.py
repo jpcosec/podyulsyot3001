@@ -19,6 +19,12 @@ from .contracts import (
     adapt_replay_path,
     adapt_replay_step,
 )
+from .danger_contracts import (
+    ApplyDangerFinding,
+    ApplyDangerReport,
+    ApplyDangerSignals,
+)
+from .danger_detection import ApplyDangerDetector
 from .models import (
     AriadneAction,
     AriadneIntent,
@@ -54,6 +60,11 @@ __all__ = [
     "ReplayPath",
     "adapt_replay_step",
     "adapt_replay_path",
+    # Danger detection
+    "ApplyDangerSignals",
+    "ApplyDangerFinding",
+    "ApplyDangerReport",
+    "ApplyDangerDetector",
     # Logic
     "AriadneNavigator",
     "AriadneRecorder",

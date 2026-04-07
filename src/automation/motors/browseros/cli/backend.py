@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any, AsyncIterator
 
 from src.automation.ariadne.contracts import adapt_replay_step
+from src.automation.ariadne.danger_contracts import ApplyDangerReport
 from src.automation.credentials import ResolvedPortalCredentials
 from src.automation.motors.browseros.cli.client import BrowserOSClient
 from src.automation.motors.browseros.cli.replayer import BrowserOSReplayer
@@ -80,6 +81,13 @@ class BrowserOSMotorSession:
             context=context,
             cv_path=cv_path,
             letter_path=letter_path,
+        )
+
+    async def inspect_danger(self, application_url: str | None) -> ApplyDangerReport:
+        """Inspect the current BrowserOS page for risky apply-flow states."""
+        return self._replayer.inspect_page_danger(
+            page_id=self._page_id,
+            application_url=application_url,
         )
 
     async def begin_human_intervention(

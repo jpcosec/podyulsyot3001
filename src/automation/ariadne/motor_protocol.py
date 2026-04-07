@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, AsyncContextManager, Protocol, runtime_checkable
 
+from src.automation.ariadne.danger_contracts import ApplyDangerReport
 from src.automation.credentials import ResolvedPortalCredentials
 from src.automation.ariadne.models import AriadneStep
 
@@ -34,6 +35,10 @@ class MotorSession(Protocol):
         url: str | None,
     ) -> None:
         """Execute a single AriadneStep on the live page."""
+        ...
+
+    async def inspect_danger(self, application_url: str | None) -> ApplyDangerReport:
+        """Inspect the live session for risky states and return normalized findings."""
         ...
 
     async def begin_human_intervention(

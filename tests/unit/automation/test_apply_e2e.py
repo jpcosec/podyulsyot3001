@@ -13,6 +13,7 @@ from types import SimpleNamespace
 import pytest
 
 from src.automation.main import main
+from src.automation.ariadne.danger_contracts import ApplyDangerReport
 from src.automation.ariadne.session import UnsupportedRoutingDecisionError
 from src.automation.storage import AutomationStorage
 from src.core.data_manager import DataManager
@@ -106,6 +107,13 @@ class _RecordingMotorSession:
         self.urls.append(url)
         self.first_step_flags.append(is_first)
 
+    async def inspect_danger(self, application_url: str | None) -> ApplyDangerReport:
+        self.events.append(("inspect_danger", application_url or ""))
+        return ApplyDangerReport()
+
+    async def begin_human_intervention(self, artifact_dir: Path, step, reason: str):
+        return {}
+
 
 class _RecordingMotorProvider:
     def __init__(self, session: _RecordingMotorSession) -> None:
@@ -113,7 +121,7 @@ class _RecordingMotorProvider:
         self.session_ids: list[str] = []
 
     @asynccontextmanager
-    async def open_session(self, session_id: str):
+    async def open_session(self, session_id: str, credentials=None):
         self.session_ids.append(session_id)
         yield self.session
 
@@ -277,17 +285,25 @@ async def test_apply_cli_keeps_apply_meta_and_side_effects_consistent_across_mot
         browseros_run.events
         == crawl4ai_run.events
         == [
+            ("inspect_danger", "https://www.xing.com/jobs/apply/123"),
             ("observe", ",".join(XING_SELECTORS)),
             ("execute", "open_modal"),
+            ("inspect_danger", "https://www.xing.com/jobs/apply/123"),
             ("observe", ",".join(XING_SELECTORS)),
+            ("inspect_danger", "https://www.xing.com/jobs/apply/123"),
             ("observe", ",".join(XING_SELECTORS)),
             ("execute", "fill_contact"),
+            ("inspect_danger", "https://www.xing.com/jobs/apply/123"),
             ("observe", ",".join(XING_SELECTORS)),
+            ("inspect_danger", "https://www.xing.com/jobs/apply/123"),
             ("observe", ",".join(XING_SELECTORS)),
             ("execute", "upload_cv"),
+            ("inspect_danger", "https://www.xing.com/jobs/apply/123"),
             ("observe", ",".join(XING_SELECTORS)),
+            ("inspect_danger", "https://www.xing.com/jobs/apply/123"),
             ("observe", ",".join(XING_SELECTORS)),
             ("execute", "submit"),
+            ("inspect_danger", "https://www.xing.com/jobs/apply/123"),
             ("observe", ",".join(XING_SELECTORS)),
         ]
     )
@@ -369,14 +385,20 @@ async def test_apply_cli_dry_run_keeps_apply_meta_and_side_effects_consistent_ac
         browseros_run.events
         == crawl4ai_run.events
         == [
+            ("inspect_danger", "https://www.xing.com/jobs/apply/123"),
             ("observe", ",".join(XING_SELECTORS)),
             ("execute", "open_modal"),
+            ("inspect_danger", "https://www.xing.com/jobs/apply/123"),
             ("observe", ",".join(XING_SELECTORS)),
+            ("inspect_danger", "https://www.xing.com/jobs/apply/123"),
             ("observe", ",".join(XING_SELECTORS)),
             ("execute", "fill_contact"),
+            ("inspect_danger", "https://www.xing.com/jobs/apply/123"),
             ("observe", ",".join(XING_SELECTORS)),
+            ("inspect_danger", "https://www.xing.com/jobs/apply/123"),
             ("observe", ",".join(XING_SELECTORS)),
             ("execute", "upload_cv"),
+            ("inspect_danger", "https://www.xing.com/jobs/apply/123"),
             ("observe", ",".join(XING_SELECTORS)),
         ]
     )
@@ -423,7 +445,9 @@ async def test_apply_cli_persists_failure_when_portal_routing_requires_external_
     monkeypatch.setattr("src.automation.main.AutomationStorage", lambda: storage)
     _install_backend(monkeypatch, "browseros", provider)
 
-    with pytest.raises(UnsupportedRoutingDecisionError, match="external_url"):
+    with pytest.raises(
+        UnsupportedRoutingDecisionError, match="external_application_route"
+    ):
         await main(
             [
                 "apply",
@@ -446,5 +470,5 @@ async def test_apply_cli_persists_failure_when_portal_routing_requires_external_
         filename="apply_meta.json",
     )
     assert meta["status"] == "failed"
-    assert "external_url" in meta["error"]
+    assert "external_application_route" in meta["error"]
     assert provider.session_ids == []

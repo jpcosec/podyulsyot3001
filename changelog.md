@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-07] - Apply Danger Detection
+
+### Added
+- Added shared apply danger contracts and detection logic in `src/automation/ariadne/danger_contracts.py` and `src/automation/ariadne/danger_detection.py` for DOM-text, screenshot-text, routing, and prior-submission guards.
+- Added regression coverage in `tests/unit/automation/ariadne/test_danger_detection.py` and expanded Ariadne/apply regression tests for danger-driven pauses and updated motor protocol fixtures.
+
+### Changed
+- Updated `src/automation/ariadne/session.py` to evaluate normalized danger reports before and after step execution, pausing on CAPTCHA/login/anti-bot signals and aborting on duplicate or offsite routing risks.
+- Updated BrowserOS and Crawl4AI motor sessions to expose shared danger inspection hooks, and refreshed apply end-to-end expectations for the new guard checks.
+
 ## [2026-04-07] - Apply HITL Channel
 
 ## [2026-04-07] - Credential Store Contract

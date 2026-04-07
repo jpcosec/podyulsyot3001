@@ -15,6 +15,11 @@ from src.automation.ariadne.exceptions import (
     TaskAborted,
     TerminalStateReached,
 )
+from src.automation.ariadne.danger_contracts import (
+    ApplyDangerFinding,
+    ApplyDangerSignals,
+)
+from src.automation.ariadne.danger_detection import ApplyDangerDetector
 from src.automation.ariadne.hitl import ApplyHitlController
 from src.automation.ariadne.models import ApplyMeta, AriadnePortalMap
 from src.automation.ariadne.motor_protocol import MotorProvider
@@ -48,6 +53,7 @@ class AriadneSession:
         self.storage = storage or AutomationStorage()
         self._map: AriadnePortalMap | None = None
         self._hitl = ApplyHitlController(self.storage, input_func=input_func)
+        self._danger_detector = ApplyDangerDetector()
 
     @property
     def portal_map(self) -> AriadnePortalMap:
@@ -100,10 +106,16 @@ class AriadneSession:
             ValueError: If the resolved path_id does not exist in the map.
             TerminalStateReached: If the navigator detects a failure state.
         """
-        if self.storage.check_already_submitted(self.portal_name, job_id):
-            raise RuntimeError(
-                f"Job {job_id} ({self.portal_name}) was already submitted."
-            )
+        self._raise_for_danger(
+            self._danger_detector.detect(
+                ApplyDangerSignals(
+                    already_submitted=self.storage.check_already_submitted(
+                        self.portal_name, job_id
+                    )
+                )
+            ),
+            step=None,
+        )
 
         portal_map = self.portal_map
         ingest_data = self.storage.get_job_state(self.portal_name, job_id)
@@ -112,10 +124,17 @@ class AriadneSession:
 
         try:
             route = resolve_portal_routing(self.portal_name, ingest_data)
-            if route.outcome != "onsite":
-                raise UnsupportedRoutingDecisionError(
-                    f"Portal routing resolved to '{route.outcome}' for {self.portal_name}: {route.reason}"
-                )
+            self._raise_for_danger(
+                self._danger_detector.detect(
+                    ApplyDangerSignals(
+                        route_outcome=route.outcome,
+                        route_reason=route.reason,
+                        application_url=route.application_url,
+                    )
+                ),
+                step=None,
+                unsupported_error_cls=UnsupportedRoutingDecisionError,
+            )
 
             selected_path_id = path_id or route.path_id
             if not selected_path_id:
@@ -164,27 +183,31 @@ class AriadneSession:
                         )
                         break
 
-                    obs = await ms.observe(all_selectors)
-                    current_state = navigator.find_current_state(obs)
-
-                    finished, mission_status = navigator.check_mission_status(
-                        path.task_id, current_state or ""
-                    )
-                    if finished:
-                        if mission_status == "terminal_failure":
-                            raise TerminalStateReached(
-                                f"Reached failure state: {current_state}"
-                            )
-                        break
-
-                    logger.info(
-                        "%s Step %s/%s: %s",
-                        LogTag.FAST,
-                        step_index,
-                        len(path.steps),
-                        step.name,
-                    )
                     try:
+                        self._raise_for_danger(
+                            await ms.inspect_danger(application_url),
+                            step=step,
+                        )
+                        obs = await ms.observe(all_selectors)
+                        current_state = navigator.find_current_state(obs)
+
+                        finished, mission_status = navigator.check_mission_status(
+                            path.task_id, current_state or ""
+                        )
+                        if finished:
+                            if mission_status == "terminal_failure":
+                                raise TerminalStateReached(
+                                    f"Reached failure state: {current_state}"
+                                )
+                            break
+
+                        logger.info(
+                            "%s Step %s/%s: %s",
+                            LogTag.FAST,
+                            step_index,
+                            len(path.steps),
+                            step.name,
+                        )
                         await ms.execute_step(
                             step=step,
                             context=context,
@@ -193,48 +216,29 @@ class AriadneSession:
                             is_first=(step_index == 1),
                             url=application_url,
                         )
-                    except HumanInterventionRequired as exc:
-                        self.storage.write_apply_meta(
-                            self.portal_name,
-                            job_id,
-                            ApplyMeta(
-                                status="interrupted",
-                                timestamp=datetime.now(timezone.utc).isoformat(),
-                                error=str(exc),
-                            ).model_dump(),
-                        )
-                        decision = await self._hitl.pause(
-                            motor_session=ms,
-                            session_id=session_id,
-                            portal_name=self.portal_name,
-                            job_id=job_id,
+                        self._raise_for_danger(
+                            await ms.inspect_danger(application_url),
                             step=step,
-                            reason=exc.reason,
-                            message=str(exc),
-                            application_url=application_url,
                         )
-                        if decision.action == "abort":
-                            raise TaskAborted(
-                                f"Operator aborted apply run at step {step.step_index}: {step.name}",
-                                step_index=step.step_index,
-                            ) from exc
+                    except HumanInterventionRequired as exc:
                         (
                             resumed_index,
                             finished,
                             mission_status,
-                        ) = await self._resume_after_hitl(
+                        ) = await self._handle_hitl_pause(
                             ms=ms,
                             navigator=navigator,
                             path=path,
                             task_id=path.task_id,
                             current_step_index=step_index,
                             all_selectors=all_selectors,
+                            session_id=session_id,
+                            job_id=job_id,
+                            step=step,
+                            application_url=application_url,
+                            exc=exc,
                         )
                         if finished:
-                            if mission_status == "terminal_failure":
-                                raise TerminalStateReached(
-                                    "Reached failure state during manual intervention"
-                                ) from exc
                             break
                         step_index = resumed_index
                         continue
@@ -286,6 +290,87 @@ class AriadneSession:
             cv_path=str(cv_path),
             letter_path=str(letter_path) if letter_path else None,
         ).to_runtime_dict()
+
+    def _raise_for_danger(
+        self,
+        report: Any,
+        *,
+        step: Any,
+        unsupported_error_cls: type[Exception] | None = None,
+    ) -> None:
+        finding = report.primary if report else None
+        if finding is None:
+            return
+        if finding.recommended_action == "pause":
+            raise HumanInterventionRequired(
+                finding.message,
+                reason=finding.code,
+                step_index=getattr(step, "step_index", None),
+                details={"danger_source": finding.source},
+            )
+        if unsupported_error_cls is not None and finding.source == "routing":
+            raise unsupported_error_cls(
+                f"Portal routing resolved to '{finding.code}' for {self.portal_name}: {finding.message}"
+            )
+        raise RuntimeError(self._danger_message(finding))
+
+    def _danger_message(self, finding: ApplyDangerFinding) -> str:
+        if finding.code == "duplicate_submission":
+            return f"Job was already submitted. {finding.message}"
+        return f"Danger {finding.code}: {finding.message}"
+
+    async def _handle_hitl_pause(
+        self,
+        *,
+        ms: Any,
+        navigator: AriadneNavigator,
+        path: Any,
+        task_id: str,
+        current_step_index: int,
+        all_selectors: set[str],
+        session_id: str,
+        job_id: str,
+        step: Any,
+        application_url: str | None,
+        exc: HumanInterventionRequired,
+    ) -> tuple[int, bool, str | None]:
+        self.storage.write_apply_meta(
+            self.portal_name,
+            job_id,
+            ApplyMeta(
+                status="interrupted",
+                timestamp=datetime.now(timezone.utc).isoformat(),
+                error=str(exc),
+            ).model_dump(),
+        )
+        decision = await self._hitl.pause(
+            motor_session=ms,
+            session_id=session_id,
+            portal_name=self.portal_name,
+            job_id=job_id,
+            step=step,
+            reason=exc.reason,
+            message=str(exc),
+            application_url=application_url,
+        )
+        if decision.action == "abort":
+            raise TaskAborted(
+                f"Operator aborted apply run at step {step.step_index}: {step.name}",
+                step_index=step.step_index,
+            ) from exc
+        resumed_index, finished, mission_status = await self._resume_after_hitl(
+            ms=ms,
+            navigator=navigator,
+            path=path,
+            task_id=task_id,
+            current_step_index=current_step_index,
+            all_selectors=all_selectors,
+        )
+        if finished and mission_status == "terminal_failure":
+            raise TerminalStateReached(
+                "Reached failure state during manual intervention"
+            ) from exc
+        return resumed_index, finished, mission_status
 
     async def _resume_after_hitl(
         self,

@@ -1,4 +1,5 @@
 """Verify that MotorSession and MotorProvider are structural (Protocol) types."""
+
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
@@ -7,6 +8,7 @@ from typing import AsyncIterator
 
 import pytest
 
+from src.automation.ariadne.danger_contracts import ApplyDangerReport
 from src.automation.ariadne.motor_protocol import MotorProvider, MotorSession
 
 
@@ -17,10 +19,18 @@ class _FakeSession:
     async def execute_step(self, step, context, cv_path, letter_path, is_first, url):
         pass
 
+    async def inspect_danger(self, application_url: str | None) -> ApplyDangerReport:
+        return ApplyDangerReport()
+
+    async def begin_human_intervention(self, artifact_dir: Path, step, reason: str):
+        return {}
+
 
 class _FakeProvider:
     @asynccontextmanager
-    async def open_session(self, session_id: str) -> AsyncIterator[_FakeSession]:
+    async def open_session(
+        self, session_id: str, credentials=None
+    ) -> AsyncIterator[_FakeSession]:
         yield _FakeSession()
 
 
@@ -51,5 +61,6 @@ def test_isinstance_checks_are_structural():
 def test_non_conforming_class_fails_isinstance():
     class _Empty:
         pass
+
     assert not isinstance(_Empty(), MotorSession)
     assert not isinstance(_Empty(), MotorProvider)

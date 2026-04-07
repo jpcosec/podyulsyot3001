@@ -16,6 +16,8 @@ from src.automation.ariadne.exceptions import (
     TaskAborted,
     TerminalStateReached,
 )
+from src.automation.ariadne.danger_contracts import ApplyDangerReport
+from src.automation.ariadne.danger_detection import ApplyDangerDetector
 from src.automation.ariadne.models import (
     AriadneObserve,
     AriadnePath,
@@ -75,6 +77,7 @@ class _FakeSession:
     def __init__(self):
         self.observe = AsyncMock(return_value={})
         self.execute_step = AsyncMock()
+        self.inspect_danger = AsyncMock(return_value=ApplyDangerReport())
         self.begin_human_intervention = AsyncMock(return_value={})
 
 
@@ -114,6 +117,7 @@ def _make_session(map_: AriadnePortalMap) -> tuple[AriadneSession, MagicMock]:
     sess.storage = storage
     sess._map = map_
     sess._hitl = MagicMock()
+    sess._danger_detector = ApplyDangerDetector()
     return sess, storage
 
 
@@ -150,14 +154,16 @@ async def test_external_route_fails_before_opening_motor_session():
             reason="Redirects to external ATS.",
         ),
     ):
-        with pytest.raises(UnsupportedRoutingDecisionError, match="external_url"):
+        with pytest.raises(
+            UnsupportedRoutingDecisionError, match="external_application_route"
+        ):
             await sess.run(motor, job_id="job1", cv_path=Path("cv.pdf"))
 
     assert motor.session_ids == []
     fake_session.execute_step.assert_not_called()
     written = storage.write_apply_meta.call_args[0]
     assert written[2]["status"] == "failed"
-    assert "external_url" in written[2]["error"]
+    assert "external_application_route" in written[2]["error"]
 
 
 @pytest.mark.asyncio
@@ -409,3 +415,43 @@ async def test_run_aborts_when_operator_declines_resume():
         call.args[2]["status"] for call in storage.write_apply_meta.call_args_list
     ]
     assert statuses == ["interrupted", "failed"]
+
+
+@pytest.mark.asyncio
+async def test_run_pauses_when_motor_reports_captcha_danger():
+    sess, storage = _make_session(_minimal_map())
+    fake_session = _FakeSession()
+    reports = iter(
+        [
+            ApplyDangerReport.model_validate(
+                {
+                    "findings": [
+                        {
+                            "code": "captcha_challenge",
+                            "source": "dom_text",
+                            "recommended_action": "pause",
+                            "message": "The page is asking for a CAPTCHA or human verification challenge.",
+                        }
+                    ]
+                }
+            )
+        ]
+    )
+
+    async def _inspect(_application_url: str | None):
+        return next(reports, ApplyDangerReport())
+
+    fake_session.inspect_danger.side_effect = _inspect
+    sess._hitl.pause = AsyncMock(
+        return_value=MagicMock(action="resume", decided_at="2026-04-07T00:00:00Z")
+    )
+    motor = _FakeProvider(fake_session)
+
+    meta = await sess.run(motor, job_id="job1", cv_path=Path("cv.pdf"))
+
+    assert meta.status == "submitted"
+    statuses = [
+        call.args[2]["status"] for call in storage.write_apply_meta.call_args_list
+    ]
+    assert statuses == ["interrupted", "submitted"]
+    sess._hitl.pause.assert_awaited_once()

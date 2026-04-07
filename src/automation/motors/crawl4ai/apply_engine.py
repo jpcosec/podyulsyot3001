@@ -13,6 +13,11 @@ from typing import Any, AsyncIterator
 
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig
 
+from src.automation.ariadne.danger_contracts import (
+    ApplyDangerReport,
+    ApplyDangerSignals,
+)
+from src.automation.ariadne.danger_detection import ApplyDangerDetector
 from src.automation.ariadne.exceptions import ObservationFailed
 from src.automation.ariadne.models import AriadneStep
 from src.automation.credentials import ResolvedPortalCredentials
@@ -33,6 +38,7 @@ class C4AIMotorSession:
         self._session_id = session_id
         self._replayer = replayer
         self._credentials = credentials
+        self._danger_detector = ApplyDangerDetector()
 
     async def observe(self, selectors: set[str]) -> dict[str, bool]:
         """Check which CSS selectors are present in the live page.
@@ -104,6 +110,27 @@ class C4AIMotorSession:
             is_first_step=is_first,
             application_url=url,
         )
+
+    async def inspect_danger(self, application_url: str | None) -> ApplyDangerReport:
+        """Inspect the current Crawl4AI page for risky apply-flow states."""
+        signals = ApplyDangerSignals(application_url=application_url)
+
+        async def _inspect_hook(page: Any, **kwargs: Any) -> Any:
+            signals.current_url = await page.evaluate("window.location.href")
+            signals.dom_text = await page.evaluate(
+                "document.body ? document.body.innerText : ''"
+            )
+            return page
+
+        await self._crawler.arun(
+            url="about:blank",
+            config=CrawlerRunConfig(
+                js_only=True,
+                session_id=self._session_id,
+                hooks={"before_retrieve_html": _inspect_hook},
+            ),
+        )
+        return self._danger_detector.detect(signals)
 
     async def begin_human_intervention(
         self,
