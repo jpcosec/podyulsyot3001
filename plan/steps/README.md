@@ -4,7 +4,7 @@ Each file is one discrete, agent-executable task. Execute in order.
 
 ---
 
-## Implementation (run first)
+## Implementation (COMPLETE ✓)
 
 | Order | Step | Task | Status |
 |-------|------|------|--------|
@@ -21,28 +21,28 @@ Each file is one discrete, agent-executable task. Execute in order.
 | 10 | GRP-001-09 | Hooks (useGraphLayout, useEdgeInheritance, useKeyboard) | ✓ |
 | 11 | GRP-001-10 | L1 Page (orchestrator) | ✓ |
 | 12 | GRP-001-11 | xy-theme.css (theming) | ✓ |
-| 13 | UI-001-02 | Sidebar Accordion (depends on GRP-001-07) | ✓ |
-| 14 | UI-001-03 | Node Sheet (depends on GRP-001-08) | ✓ |
-| 15 | UI-001-04 | Edge Sheet (depends on GRP-001-08) | ✓ |
-| 16 | UI-001-05 | Property Inputs (depends on GRP-001-04, GRP-001-08) | ✓ |
-| 17 | UI-001-06 | Delete Dialog (depends on GRP-001-05) | ✓ |
-| 18 | UI-001-07 | Filter UI (depends on GRP-001-07) | ✓ |
-| 19 | UI-001-08 | Creation Popover (depends on GRP-001-07) | ✓ |
-| 20 | UI-001-09 | Context Menu (depends on GRP-001-05) | ✓ |
-| 21 | UI-001-10 | Command Dialog (depends on GRP-001-07) | ✓ |
-| 22 | UI-001-11 | Sonner (depends on GRP-001-10) | ✓ |
+| 13 | UI-001-02 | Sidebar Accordion | ✓ |
+| 14 | UI-001-03 | Node Sheet | ✓ |
+| 15 | UI-001-04 | Edge Sheet | ✓ |
+| 16 | UI-001-05 | Property Inputs | ✓ |
+| 17 | UI-001-06 | Delete Dialog | ✓ |
+| 18 | UI-001-07 | Filter UI | ✓ |
+| 19 | UI-001-08 | Creation Popover | ✓ |
+| 20 | UI-001-09 | Context Menu | ✓ |
+| 21 | UI-001-10 | Command Dialog | ✓ |
+| 22 | UI-001-11 | Sonner | ✓ |
 
 ---
 
-## Documentation (run AFTER implementation)
+## Documentation (COMPLETE ✓)
 
-| Order | Step | Task | File | Description |
-|-------|------|------|------|-------------|
-| 23 | DOC-01 | Commit and tag | `step-01-commit-and-tag.md` | Tag all completed steps |
-| 24 | DOC-02 | Create docs | `step-02-create-docs.md` | Generate final docs |
-| 25 | DOC-03 | Cleanup plan | `step-03-cleanup-plan.md` | Archive or remove temp files safely |
-| 26 | DOC-04 | Create future/ | `step-04-create-future.md` | Deferred specs folder |
-| 27 | DOC-05 | Final validation | `step-05-final-validation.md` | Consolidated E2E and regression checks |
+| Order | Step | Task | File | Status |
+|-------|------|------|------|--------|
+| 23 | DOC-01 | Commit and tag | `step-01-commit-and-tag.md` | ✓ |
+| 24 | DOC-02 | Create docs | `step-02-create-docs.md` | ✓ |
+| 25 | DOC-03 | Cleanup plan | `step-03-cleanup-plan.md` | ✓ |
+| 26 | DOC-04 | Create future/ | `step-04-create-future.md` | ✓ |
+| 27 | DOC-05 | Final validation | `step-05-final-validation.md` | ✓ |
 
 ---
 
