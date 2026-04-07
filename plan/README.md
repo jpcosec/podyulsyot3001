@@ -1,16 +1,26 @@
 # Node Editor Plan
 
-> **STATUS: Implementation Complete** — All steps completed as of 2026-04-08.
+> **STATUS: Implementation Complete** — All 27 steps completed as of 2026-04-08.
+
+---
+
+## What's Here
+
+| Folder | Description |
+|--------|-------------|
+| `IMPLEMENTATION_ORDER.md` | Completed implementation order (for reference) |
+| `steps/` | Empty - all specs implemented and cleaned up |
+| `future/` | Deferred future features (performance, export) |
+| `future_plan/` | Reference docs and legacy analysis |
 
 ---
 
 ## Quick Links
 
-- [Implementation Order](./IMPLEMENTATION_ORDER.md)
-- [Architecture](./ARCHITECTURE.md)
-- [Architecture Pitfalls](./docs/node-editor/architecture_pitfalls.md)
+- [Architecture Reference](./future_plan/ARCHITECTURE.md)
+- [Implementation Guide](./future_plan/GUIDE.md)
 - [Future Specs](./future/)
-- [Legacy Docs](./_legacy/)
+- [Reference Analysis](./future_plan/NODE_IMPLEMENTATION_ANALYSIS.md)
 plan/
 ├── L2_graph_viewer/      # ReactFlow, layout, topología
 ├── L3_internal_nodes/    # Editores, previews, formularios
