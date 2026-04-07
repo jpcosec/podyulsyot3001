@@ -161,10 +161,6 @@ async def _run_apply(args) -> None:
         profile_data = json.loads(Path(args.profile_json).read_text(encoding="utf-8"))
     else:
         profile_data = None
-    # TODO: profile_data is parsed but not yet wired to AriadneSession._build_context.
-    # Track in plan_docs/issues/gaps/profile-context-and-candidate-store.md.
-    # When AriadneSession.run() accepts a profile dict, pass it here.
-    _ = profile_data  # suppress unused-variable lint
 
     storage = AutomationStorage()
     session = AriadneSession(portal_name=args.source, storage=storage)
@@ -209,6 +205,7 @@ async def _run_apply(args) -> None:
         job_id=args.job_id,
         cv_path=Path(args.cv_path),
         letter_path=Path(args.letter_path) if args.letter_path else None,
+        profile=profile_data,
         dry_run=args.dry_run,
     )
     logger.info("%s Apply completed: status=%s", LogTag.OK, meta.status)

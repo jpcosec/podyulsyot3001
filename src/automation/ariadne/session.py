@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from src.automation.contracts import ApplyJobContext, CandidateProfile, ExecutionContext
 from src.automation.ariadne.exceptions import TerminalStateReached
 from src.automation.ariadne.models import ApplyMeta, AriadnePortalMap
 from src.automation.ariadne.motor_protocol import MotorProvider
@@ -60,6 +61,7 @@ class AriadneSession:
         job_id: str,
         cv_path: Path,
         letter_path: Path | None = None,
+        profile: dict[str, Any] | CandidateProfile | None = None,
         dry_run: bool = False,
         path_id: str = "standard_easy_apply",
     ) -> ApplyMeta:
@@ -70,6 +72,7 @@ class AriadneSession:
             job_id: The job to apply to.
             cv_path: Local path to the CV file.
             letter_path: Optional cover letter.
+            profile: Candidate profile payload for placeholder resolution.
             dry_run: If True, stop at the first step marked dry_run_stop.
             path_id: Which path in the portal map to follow.
 
@@ -97,8 +100,13 @@ class AriadneSession:
         application_url = ingest_data.get("application_url") or ingest_data.get("url")
         if not application_url:
             raise ValueError(f"No application_url in ingest artifact for job {job_id}")
+        candidate_profile = self.storage.load_candidate_profile(profile)
         context = self._build_context(
-            ingest_data, cv_path, letter_path, application_url
+            ingest_data=ingest_data,
+            profile=candidate_profile,
+            cv_path=cv_path,
+            letter_path=letter_path,
+            application_url=application_url,
         )
         all_selectors = self._collect_selectors(portal_map)
         navigator = AriadneNavigator(portal_map)
@@ -178,24 +186,18 @@ class AriadneSession:
     def _build_context(
         self,
         ingest_data: dict[str, Any],
+        profile: CandidateProfile,
         cv_path: Path,
         letter_path: Path | None,
         application_url: str | None,
     ) -> dict[str, Any]:
-        # TODO: accept profile dict parameter; currently hardcoded as development stub.
-        # Track in plan_docs/issues/gaps/profile-context-and-candidate-store.md.
-        return {
-            "profile": {
-                "first_name": "Juan Pablo",
-                "last_name": "Ruiz",
-                "email": "jp@example.com",
-                "phone": "+49123456789",
-            },
-            "job": {
-                "job_title": ingest_data.get("job_title", ""),
-                "company_name": ingest_data.get("company_name", ""),
-                "application_url": application_url or "",
-            },
-            "cv_path": str(cv_path),
-            "letter_path": str(letter_path) if letter_path else None,
-        }
+        return ExecutionContext(
+            profile=profile,
+            job=ApplyJobContext(
+                job_title=ingest_data.get("job_title", ""),
+                company_name=ingest_data.get("company_name", ""),
+                application_url=application_url or "",
+            ),
+            cv_path=str(cv_path),
+            letter_path=str(letter_path) if letter_path else None,
+        ).to_runtime_dict()

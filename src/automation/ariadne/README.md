@@ -17,7 +17,7 @@ This layer does not have its own config file.
 
 - Portal maps are loaded from `src/automation/portals/<portal>/maps/easy_apply.json`.
 - Storage is injected through `AutomationStorage` from `src/automation/storage.py`.
-- Runtime profile data is currently built in `session.py` and is planned to accept CLI-provided profile JSON.
+- Runtime profile data is validated through `src/automation/contracts.py` and loaded through `AutomationStorage` before `session.py` builds the execution context.
 
 ## 🚀 CLI / Usage
 

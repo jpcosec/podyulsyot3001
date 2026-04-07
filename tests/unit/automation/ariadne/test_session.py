@@ -1,4 +1,5 @@
 """Unit tests for AriadneSession orchestrator."""
+
 from __future__ import annotations
 
 import json
@@ -9,6 +10,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from src.automation.contracts import CandidateProfile
 from src.automation.ariadne.exceptions import TerminalStateReached
 from src.automation.ariadne.models import (
     AriadneObserve,
@@ -85,6 +87,9 @@ def _make_session(map_: AriadnePortalMap) -> tuple[AriadneSession, MagicMock]:
         "company_name": "Acme",
         "application_url": "https://example.com/apply",
     }
+    storage.load_candidate_profile.side_effect = (
+        lambda profile=None: CandidateProfile.model_validate(profile or {})
+    )
     storage.write_apply_meta = MagicMock()
 
     sess = AriadneSession.__new__(AriadneSession)
@@ -124,6 +129,30 @@ async def test_run_calls_execute_step_once():
     assert meta.status == "submitted"
     fake_session.execute_step.assert_called_once()
     storage.write_apply_meta.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_run_passes_profile_context_to_motor():
+    sess, _ = _make_session(_minimal_map())
+    fake_session = _FakeSession()
+    motor = _FakeProvider(fake_session)
+
+    await sess.run(
+        motor,
+        job_id="job1",
+        cv_path=Path("cv.pdf"),
+        profile={
+            "first_name": "Ada",
+            "last_name": "Lovelace",
+            "email": "ada@example.com",
+            "linkedin_url": "https://example.com/in/ada",
+        },
+    )
+
+    context = fake_session.execute_step.call_args.kwargs["context"]
+    assert context["profile"]["first_name"] == "Ada"
+    assert context["profile"]["last_name"] == "Lovelace"
+    assert context["profile"]["linkedin_url"] == "https://example.com/in/ada"
 
 
 @pytest.mark.asyncio

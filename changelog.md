@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-07] - Profile Context And Candidate Store
+
+### Added
+- Added `src/automation/contracts.py` with typed `CandidateProfile`, `ApplyJobContext`, and `ExecutionContext` models for apply runs.
+- Added storage and CLI coverage in `tests/unit/automation/test_storage.py` and `tests/unit/automation/test_cli.py` for candidate profile loading.
+
+### Changed
+- Wired `--profile-json` through `src/automation/main.py` into `AriadneSession.run()`.
+- Centralized candidate profile validation in `src/automation/storage.py` and replaced the hardcoded apply profile stub in `src/automation/ariadne/session.py`.
+- Updated automation docs to point at the new runtime profile contract.
+
 ## [2026-04-07] - AriadneSession Orchestrator
 
 ### Added

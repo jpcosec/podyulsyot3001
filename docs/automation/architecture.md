@@ -54,6 +54,5 @@ The apply stack now follows this path:
 The main architectural direction is in place. Remaining work is concentrated in:
 
 - richer trace normalization and promotion quality in `src/automation/ariadne/normalizer.py`
-- profile and candidate data plumbing in `src/automation/ariadne/session.py`
 - routing and enrichment layers for reliable application targets
 - additional motors such as vision-assisted and OS-native execution

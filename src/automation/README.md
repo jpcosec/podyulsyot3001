@@ -39,6 +39,7 @@ Arguments are defined in the `build_parser()` function in `src/automation/main.p
 All automation models are strictly typed via Pydantic:
 - **`AriadnePortalMap`**: Defines the portal's semantic landscape. See `src/automation/ariadne/models.py`.
 - **`ApplyMeta`**: Records the result of an application attempt. See `src/automation/ariadne/models.py`.
+- **`CandidateProfile`** and **`ExecutionContext`**: Define the runtime apply context shared by the CLI, storage, and motors. See `src/automation/contracts.py`.
 
 ## 🛠️ How to Add / Extend
 
