@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-07] - Apply End-To-End Coverage
+
+### Added
+- Added end-to-end style apply coverage in `tests/unit/automation/test_apply_e2e.py` to drive the real CLI apply path through `AriadneSession`, motor-provider contracts, and persisted `apply_meta.json` artifacts for submitted and dry-run runs.
+
 ## [2026-04-07] - XING Listing Metadata Composition
 
 ### Added
