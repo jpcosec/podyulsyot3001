@@ -12,6 +12,8 @@ All runtime automation code lives under `src/automation/`:
 - **`src/automation/portals/`**: Portal-specific intent (Unified Maps in JSON).
 - **`src/automation/motors/`**: Execution engines (Crawl4AI, BrowserOS CLI).
 
+Crawl4AI is configured to run inside the **BrowserOS** browser instance via CDP (Port 9101) by default, ensuring all automation benefits from BrowserOS's persistent session and anti-detection capabilities.
+
 For a detailed architectural overview, see `docs/automation/ariadne_semantics.md`.
 
 ---
