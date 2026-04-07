@@ -93,6 +93,7 @@ Nodes must fail closed — no silent fallback-to-success. LLM calls use structur
 GOOGLE_API_KEY=...       # Gemini API access
 GEMINI_API_KEY=...       # same key, both names accepted
 PLAYWRIGHT_BROWSERS_PATH=0  # for scraper browser automation
+LOG_DIR=logs             # directory for run-specific log files (default: logs/)
 ```
 
 Requires: `pandoc` and `texlive-full` (or equivalent) installed for PDF rendering.

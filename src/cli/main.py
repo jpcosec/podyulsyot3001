@@ -13,6 +13,7 @@ from typing import Any, Iterable
 from src.core import DataManager
 from src.core.api_client import LangGraphAPIClient, LangGraphConnectionError
 from src.shared.log_tags import LogTag
+from src.shared.logging_config import configure_logging
 
 logger = logging.getLogger(__name__)
 
@@ -536,10 +537,7 @@ def main(argv: list[str] | None = None) -> int:
         parser.print_help()
         return 1
 
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    )
+    configure_logging()
 
     try:
         if args.command == "api":

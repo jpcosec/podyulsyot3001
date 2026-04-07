@@ -10,6 +10,8 @@ import os
 import json
 import logging
 
+from src.shared.log_tags import LogTag
+
 logger = logging.getLogger(__name__)
 
 
@@ -108,7 +110,7 @@ class BaseTranslatorAdapter(ABC):
                 except Exception as exc:
                     last_error = exc
                     logger.warning(
-                        f"[{self.provider_name}] Chunk translation failed on attempt {attempt}: {exc}"
+                        f"{LogTag.WARN} [{self.provider_name}] Chunk translation failed on attempt {attempt}: {exc}"
                     )
                     if attempt < self.max_attempts and self.retry_delay_seconds > 0:
                         time.sleep(self.retry_delay_seconds)

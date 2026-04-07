@@ -17,13 +17,13 @@ import asyncio
 import datetime
 import json
 import logging
-import os
 import sys
 from pathlib import Path
 
 from src.apply.browseros_backend import build_browseros_providers
 from src.core.data_manager import DataManager
 from src.shared.log_tags import LogTag
+from src.shared.logging_config import configure_logging
 
 logger = logging.getLogger(__name__)
 
@@ -123,18 +123,8 @@ async def main(argv: list[str] | None = None) -> None:
     """
     args = build_parser().parse_args(argv or sys.argv[1:])
 
-    os.makedirs("logs", exist_ok=True)
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_filename = f"logs/apply_{args.source}_{timestamp}.log"
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-        handlers=[
-            logging.FileHandler(log_filename, encoding="utf-8"),
-            logging.StreamHandler(),
-        ],
-        force=True,
-    )
+    configure_logging(log_file=f"apply_{args.source}_{timestamp}.log")
 
     if args.setup_session and args.job_id:
         logger.error(

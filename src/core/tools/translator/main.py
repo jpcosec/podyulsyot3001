@@ -7,13 +7,14 @@ written to ``nodes/translate/proposed/``.
 
 import argparse
 import logging
-import os
 import json
 import sys
 from pathlib import Path
 
 from src.core.data_manager import DataManager
 from src.core.tools.translator.providers.google.adapter import GoogleTranslatorAdapter
+from src.shared.log_tags import LogTag
+from src.shared.logging_config import configure_logging
 
 logger = logging.getLogger(__name__)
 
@@ -190,17 +191,7 @@ def main(argv: list[str] | None = None) -> None:
     import datetime
 
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_filename = f"logs/translator_{args.source}_{timestamp}.log"
-
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] Translator: %(message)s",
-        handlers=[
-            logging.FileHandler(log_filename, encoding="utf-8"),
-            logging.StreamHandler(),
-        ],
-        force=True,
-    )
+    configure_logging(log_file=f"translator_{args.source}_{timestamp}.log")
 
     adapter = PROVIDERS[args.provider]
     data_manager = DataManager(args.data_dir)
@@ -210,7 +201,7 @@ def main(argv: list[str] | None = None) -> None:
         logger.error(f"Source path {source_path} does not exist.")
         return
 
-    logger.info(f"[*] Scanning {source_path} for jobs to translate...")
+    logger.info(f"{LogTag.FAST} Scanning {source_path} for jobs to translate...")
     for job_dir in os.listdir(source_path):
         job_path = source_path / job_dir
         if not job_path.is_dir():

@@ -10,10 +10,10 @@ import argparse
 import asyncio
 import datetime
 import logging
-import os
 import sys
 
 from src.core.data_manager import DataManager
+from src.shared.logging_config import configure_logging
 from src.scraper.providers.stepstone.adapter import StepStoneAdapter
 from src.scraper.providers.tuberlin.adapter import TUBerlinAdapter
 from src.scraper.providers.xing.adapter import XingAdapter
@@ -114,18 +114,8 @@ async def main(argv: list[str] | None = None) -> None:
     """
     args = build_parser().parse_args(argv or sys.argv[1:])
 
-    os.makedirs("logs", exist_ok=True)
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_filename = f"logs/scraper_{args.source}_{timestamp}.log"
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-        handlers=[
-            logging.FileHandler(log_filename, encoding="utf-8"),
-            logging.StreamHandler(),
-        ],
-        force=True,
-    )
+    configure_logging(log_file=f"scraper_{args.source}_{timestamp}.log")
 
     data_manager = DataManager()
     providers = build_providers(data_manager)

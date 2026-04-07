@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "disable_existing_loggers": false,
+  "formatters": {
+    "standard": {
+      "format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+    }
+  },
+  "handlers": {
+    "console": {
+      "class": "logging.StreamHandler",
+      "formatter": "standard",
+      "stream": "ext://sys.stdout"
+    }
+  },
+  "root": {
+    "level": "INFO",
+    "handlers": ["console"]
+  },
+  "loggers": {
+    "langchain": {"level": "WARNING", "propagate": true},
+    "langchain_core": {"level": "WARNING", "propagate": true},
+    "langgraph": {"level": "WARNING", "propagate": true},
+    "httpx": {"level": "WARNING", "propagate": true},
+    "httpcore": {"level": "WARNING", "propagate": true},
+    "urllib3": {"level": "WARNING", "propagate": true},
+    "google": {"level": "WARNING", "propagate": true}
+  }
+}
