@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-07] - Trace Normalization Quality
+
+### Added
+- Added normalization regression coverage in `tests/unit/automation/ariadne/test_normalizer.py` for canonical state inference, observation synthesis, and selector fallback behavior.
+
+### Changed
+- Reworked `src/automation/ariadne/normalizer.py` to infer draft Ariadne states from screenshot and page signatures, group actions on navigation and state changes, and synthesize stable `observe.required_elements` from action and visibility evidence.
+- Added inferred task generation for normalized traces so draft portal maps include a usable task contract instead of path-only output.
+
 ## [2026-04-07] - Discovery Entry Contract
 
 ### Added
