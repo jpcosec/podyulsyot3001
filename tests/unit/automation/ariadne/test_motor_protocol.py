@@ -41,3 +41,15 @@ async def test_provider_yields_session():
     async with provider.open_session("test-id") as session:
         result = await session.observe({"div.foo"})
         assert result == {"div.foo": False}
+
+
+def test_isinstance_checks_are_structural():
+    assert isinstance(_FakeSession(), MotorSession)
+    assert isinstance(_FakeProvider(), MotorProvider)
+
+
+def test_non_conforming_class_fails_isinstance():
+    class _Empty:
+        pass
+    assert not isinstance(_Empty(), MotorSession)
+    assert not isinstance(_Empty(), MotorProvider)

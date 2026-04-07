@@ -21,6 +21,7 @@ from .models import (
     AriadneTarget,
     AriadneTask,
 )
+from .motor_protocol import MotorProvider, MotorSession
 from .navigator import AriadneNavigator
 from .recorder import AriadneRecorder
 from .trace_models import AriadneSessionTrace, RawTraceEvent
@@ -39,6 +40,9 @@ __all__ = [
     # Logic
     "AriadneNavigator",
     "AriadneRecorder",
+    # Motor Protocol
+    "MotorProvider",
+    "MotorSession",
     # Traces
     "AriadneSessionTrace",
     "RawTraceEvent",
