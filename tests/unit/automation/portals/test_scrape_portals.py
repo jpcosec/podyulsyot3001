@@ -13,7 +13,7 @@ def _assert_valid_regex(pattern: str, sample_url: str, expected_id: str) -> None
 
 
 def test_stepstone_scrape_portal():
-    from src.automation.portals.stepstone.scrape import STEPSTONE_SCRAPE
+    from src.automation.motors.crawl4ai.portals.stepstone.scrape import STEPSTONE_SCRAPE
 
     assert isinstance(STEPSTONE_SCRAPE, ScrapePortalDefinition)
     assert STEPSTONE_SCRAPE.source_name == "stepstone"
@@ -29,7 +29,7 @@ def test_stepstone_scrape_portal():
 
 
 def test_xing_scrape_portal():
-    from src.automation.portals.xing.scrape import XING_SCRAPE
+    from src.automation.motors.crawl4ai.portals.xing.scrape import XING_SCRAPE
 
     assert isinstance(XING_SCRAPE, ScrapePortalDefinition)
     assert XING_SCRAPE.source_name == "xing"
@@ -45,7 +45,7 @@ def test_xing_scrape_portal():
 
 
 def test_tuberlin_scrape_portal():
-    from src.automation.portals.tuberlin.scrape import TUBERLIN_SCRAPE
+    from src.automation.motors.crawl4ai.portals.tuberlin.scrape import TUBERLIN_SCRAPE
 
     assert isinstance(TUBERLIN_SCRAPE, ScrapePortalDefinition)
     assert TUBERLIN_SCRAPE.source_name == "tuberlin"

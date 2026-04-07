@@ -4,8 +4,15 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from src.automation.ariadne.models import ScrapePortalDefinition
 from src.automation.motors.crawl4ai.scrape_engine import SmartScraperAdapter
-from src.automation.portals.tuberlin.scrape import TUBERLIN_SCRAPE
+
+TUBERLIN_SCRAPE = ScrapePortalDefinition(
+    source_name="tuberlin",
+    base_url="https://www.jobs.tu-berlin.de",
+    supported_params=["categories", "job_query"],
+    job_id_pattern=r"/job-postings/(\d+)",
+)
 
 
 class TUBerlinAdapter(SmartScraperAdapter):

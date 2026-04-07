@@ -4,8 +4,15 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from src.automation.ariadne.models import ScrapePortalDefinition
 from src.automation.motors.crawl4ai.scrape_engine import SmartScraperAdapter
-from src.automation.portals.stepstone.scrape import STEPSTONE_SCRAPE
+
+STEPSTONE_SCRAPE = ScrapePortalDefinition(
+    source_name="stepstone",
+    base_url="https://www.stepstone.de",
+    supported_params=["job_query", "city", "max_days"],
+    job_id_pattern=r"--(\d+)-inline\.html",
+)
 
 
 class StepStoneAdapter(SmartScraperAdapter):
