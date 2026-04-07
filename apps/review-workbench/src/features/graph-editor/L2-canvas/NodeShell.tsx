@@ -11,6 +11,7 @@ import {
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
 import { registry } from '@/schema/registry';
+import type { NodePayload } from '@/stores/types';
 import { useUIStore } from '@/stores/ui-store';
 import type { ASTNode } from '@/stores/types';
 
@@ -22,21 +23,37 @@ const ZOOM_LABEL = 0.4;
 const zoomSelector = (state: { transform: [number, number, number] }) => state.transform[2];
 
 function asPayloadRecord(value: unknown): Record<string, unknown> {
-  return value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+  if (value && typeof value === 'object') {
+    return value as Record<string, unknown>;
+  }
+  return {};
+}
+
+function asDataRecord(data: ASTNode['data']): Record<string, unknown> {
+  if (data && typeof data === 'object') {
+    return data as Record<string, unknown>;
+  }
+  return {};
 }
 
 export function getNodeTitle(data: ASTNode['data']): string {
-  const payloadRecord = asPayloadRecord(data.payload.value);
+  // Handle direct JSON format: data.label
+  const asJson = asDataRecord(data);
+  if ('label' in asJson && typeof asJson.label === 'string' && asJson.label.trim().length > 0) {
+    return asJson.label;
+  }
+  
+  // Handle direct JSON format: data.name
+  if ('name' in asJson && typeof asJson.name === 'string' && asJson.name.trim().length > 0) {
+    return asJson.name;
+  }
+
+  // AST format: data.payload.value.name or data.payload.value.title
+  const payload = asJson.payload as NodePayload | undefined;
+  const payloadRecord = asPayloadRecord(payload?.value ?? {});
   const title = payloadRecord.name ?? payloadRecord.title;
 
   return typeof title === 'string' && title.trim().length > 0 ? title : 'Untitled';
-}
-
-export function getUnknownMessage(data: ASTNode['data']): string | null {
-  const payloadRecord = asPayloadRecord(data.payload.value);
-  const message = payloadRecord.message;
-
-  return typeof message === 'string' && message.trim().length > 0 ? message : null;
 }
 
 export function getRenderTier(zoom: number): 'detail' | 'label' | 'dot' {
@@ -52,14 +69,25 @@ export function getRenderTier(zoom: number): 'detail' | 'label' | 'dot' {
 }
 
 function renderNodeBody(data: ASTNode['data'], colorToken: string, zoom: number) {
-  const definition = registry.get(data.typeId);
+  const asJson = asDataRecord(data);
+  const typeId = asJson.typeId as string | undefined;
+  
+  if (!typeId) {
+    return null;
+  }
+  
+  const definition = registry.get(typeId);
   if (!definition) {
     return null;
   }
 
-  const payloadRecord = asPayloadRecord(data.payload.value);
+  const payload = asJson.payload as NodePayload | undefined;
+  const payloadRecord = asPayloadRecord(payload?.value ?? {});
   const title = getNodeTitle(data);
   const tier = getRenderTier(zoom);
+
+  // Get properties from direct JSON or AST format
+  const properties = asJson.properties as Record<string, string> | undefined;
 
   if (tier === 'detail') {
     const DetailRenderer = definition.renderers.detail as ComponentType<Record<string, unknown>>;
@@ -67,8 +95,8 @@ function renderNodeBody(data: ASTNode['data'], colorToken: string, zoom: number)
       ...payloadRecord,
       title,
       category: definition.label,
-      properties: data.properties,
-      visualToken: data.visualToken,
+      properties,
+      visualToken: asJson.visualToken as string | undefined,
       colorToken,
     };
 
@@ -84,9 +112,27 @@ function renderNodeBody(data: ASTNode['data'], colorToken: string, zoom: number)
   return <DotRenderer colorToken={colorToken} />;
 }
 
+export function getUnknownMessage(data: ASTNode['data']): string | null {
+  const asJson = asDataRecord(data);
+  if ('message' in asJson && typeof asJson.message === 'string' && asJson.message.trim().length > 0) {
+    return asJson.message;
+  }
+  
+  const payload = asJson.payload as NodePayload | undefined;
+  const payloadRecord = asPayloadRecord(payload?.value ?? {});
+  const message = payloadRecord.message;
+
+  return typeof message === 'string' && message.trim().length > 0 ? message : null;
+}
+
 export const NodeShell = memo(function NodeShell(props: NodeProps<CanvasNode>) {
   const zoom = useStore(zoomSelector);
   const { data, selected, id } = props;
+
+  const asJson = asDataRecord(data);
+  const typeId = asJson.typeId as string | undefined;
+  const label = asJson.label as string | undefined;
+  const name = asJson.name as string | undefined;
 
   const setFocusedNode = useUIStore((state) => state.setFocusedNode);
   const setFocusedEdge = useUIStore((state) => state.setFocusedEdge);
@@ -94,7 +140,8 @@ export const NodeShell = memo(function NodeShell(props: NodeProps<CanvasNode>) {
   const copyNode = useUIStore((state) => state.copyNode);
   const openDeleteConfirm = useUIStore((state) => state.openDeleteConfirm);
 
-  const definition = registry.get(data.typeId);
+  const safeTypeId = typeId ?? '';
+  const definition = registry.get(safeTypeId);
   const colorToken = definition?.colorToken ?? 'token-error';
   const nodeBody = useMemo(() => renderNodeBody(data, colorToken, zoom), [data, colorToken, zoom]);
 
@@ -115,8 +162,7 @@ export const NodeShell = memo(function NodeShell(props: NodeProps<CanvasNode>) {
   };
 
   const handleDelete = () => {
-    const payloadRecord = data.payload.value as Record<string, unknown>;
-    const title = (payloadRecord.name ?? payloadRecord.title ?? 'Untitled') as string;
+    const title = label ?? name ?? getNodeTitle(data) ?? 'Untitled';
     openDeleteConfirm({
       kind: 'node',
       title,
@@ -130,7 +176,7 @@ export const NodeShell = memo(function NodeShell(props: NodeProps<CanvasNode>) {
       <ContextMenu>
         <ContextMenuTrigger disabled={selected}>
           <div className="min-w-[150px] rounded-lg border-2 border-red-500 bg-red-50 p-2">
-            <span className="text-xs text-red-600">Unknown: {data.typeId}</span>
+            <span className="text-xs text-red-600">Unknown: {typeId ?? 'unknown'}</span>
             {message ? <p className="text-[10px] text-red-400">{message}</p> : null}
             <Handle type="target" position={Position.Top} />
             <Handle type="source" position={Position.Bottom} />

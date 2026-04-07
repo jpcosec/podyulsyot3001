@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 import type { ASTEdge, ASTNode, SemanticAction } from './types';
+import type { Connection, EdgeChange, NodeChange } from '@xyflow/react';
 
 type GraphSnapshot = { nodes: ASTNode[]; edges: ASTEdge[] };
 type UpdateOptions = { isVisualOnly?: boolean };
@@ -33,6 +34,10 @@ export interface GraphStore {
   removeElements: (nodeIds: string[], edgeIds: string[]) => void;
   updateNode: (nodeId: string, patch: Partial<ASTNode>, options?: UpdateOptions) => void;
   updateEdge: (edgeId: string, patch: Partial<ASTEdge>, options?: UpdateOptions) => void;
+
+  onNodesChange: (changes: NodeChange[]) => void;
+  onEdgesChange: (changes: EdgeChange[]) => void;
+  onConnect: (connection: Connection) => void;
 
   undo: () => void;
   redo: () => void;
@@ -81,11 +86,11 @@ function mergeNode(node: ASTNode, patch: Partial<ASTNode>): ASTNode {
     data: {
       ...node.data,
       ...(patch.data ?? {}),
-      payload: {
+      payload: node.data.payload ? {
         ...node.data.payload,
         ...(patch.data?.payload ?? {}),
-      },
-      properties: replacesProperties ? (patch.data?.properties ?? {}) : node.data.properties,
+      } : patch.data?.payload,
+      properties: replacesProperties ? (patch.data?.properties ?? {}) : (node.data.properties ?? {}),
     },
   };
 }
@@ -312,6 +317,46 @@ export const useGraphStore = create<GraphStore>((set, get) => ({
       undoStack: [action, ...state.undoStack],
       redoStack: [],
     }));
+  },
+
+  onNodesChange: (changes) => {
+    for (const change of changes) {
+      if (change.type === 'position' && change.position) {
+        get().updateNode(change.id, { position: change.position }, { isVisualOnly: Boolean(change.dragging) });
+        continue;
+      }
+
+      if (change.type === 'select') {
+        get().updateNode(change.id, { selected: change.selected }, { isVisualOnly: true });
+      }
+    }
+  },
+
+  onEdgesChange: (changes) => {
+    for (const change of changes) {
+      if (change.type === 'select') {
+        get().updateEdge(change.id, { selected: change.selected }, { isVisualOnly: true });
+      }
+    }
+  },
+
+  onConnect: (connection) => {
+    if (!connection.source || !connection.target) {
+      return;
+    }
+
+    const newEdge: ASTEdge = {
+      id: `edge-${connection.source}-${connection.target}-${Date.now()}`,
+      source: connection.source,
+      target: connection.target,
+      type: 'floating',
+      data: {
+        relationType: 'linked',
+        properties: {},
+      },
+    };
+
+    get().addElements([], [newEdge]);
   },
 
   undo: () => {

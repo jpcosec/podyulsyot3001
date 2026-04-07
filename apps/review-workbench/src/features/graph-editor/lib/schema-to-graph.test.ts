@@ -94,7 +94,8 @@ describe('schemaToGraph (GRP-001-02)', () => {
     expect(graph.edges).toHaveLength(1);
     expect(personNode?.type).toBe('node');
     expect(personNode?.data.visualToken).toBe('token-person');
-    expect(personNode?.data.payload.value).toMatchObject({ name: 'Ada' });
+    const personPayload = personNode?.data.payload as { value?: Record<string, unknown> } | undefined;
+    expect(personPayload?.value).toMatchObject({ name: 'Ada' });
     expect(skillNode?.parentId).toBe('n-1');
   });
 
@@ -139,7 +140,8 @@ describe('schemaToGraph (GRP-001-02)', () => {
 
     expect(graph.errors).toEqual([]);
     expect(graph.nodes[0].type).toBe('node');
-    expect(graph.nodes[0].data.payload.value).toMatchObject({
+    const nodePayload = graph.nodes[0].data.payload as { value?: Record<string, unknown> } | undefined;
+    expect(nodePayload?.value).toMatchObject({
       name: 'Ada Lovelace',
       role: 'Engineer',
     });
@@ -183,7 +185,8 @@ describe('schemaToGraph (GRP-001-02)', () => {
 
     expect(graph.errors).toEqual([]);
     expect(graph.nodes[0].type).toBe('node');
-    expect(graph.nodes[0].data.payload.value).toMatchObject({
+    const nodePayload = graph.nodes[0].data.payload as { value?: Record<string, unknown> } | undefined;
+    expect(nodePayload?.value).toMatchObject({
       title: 'Architecture Decision Record',
       kind: 'adr',
     });
@@ -254,7 +257,8 @@ describe('schemaToGraph (GRP-001-02)', () => {
 
     expect(graph.errors).toEqual([]);
     expect(graph.nodes[0].type).toBe('node');
-    expect(graph.nodes[0].data.payload.value).toMatchObject({
+    const nodePayload = graph.nodes[0].data.payload as { value?: Record<string, unknown> } | undefined;
+    expect(nodePayload?.value).toMatchObject({
       title: 'Experience',
       order: 2,
     });

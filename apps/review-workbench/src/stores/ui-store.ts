@@ -19,6 +19,8 @@ export interface UIStore {
   editorState: EditorState;
   focusedNodeId: string | null;
   focusedEdgeId: string | null;
+  selectedNode: string | null;
+  selectedEdge: string | null;
   sidebarOpen: boolean;
   filters: FilterState;
   copiedNodeId: string | null;
@@ -53,6 +55,8 @@ export const useUIStore = create<UIStore>((set) => ({
   editorState: 'browse',
   focusedNodeId: null,
   focusedEdgeId: null,
+  selectedNode: null,
+  selectedEdge: null,
   sidebarOpen: true,
   filters: defaultFilters,
   copiedNodeId: null,

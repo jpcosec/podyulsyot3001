@@ -1,32 +1,34 @@
 # Node Editor Plan
 
-> **START HERE:** Lee primero `ARCHITECTURE.md` para entender el modelo de 3 capas.
+> **STATUS: Implementation Complete** — All GRP and UI steps completed as of 2026-04-08.
 
 ---
 
-## Estructura
+## Completed Implementation
 
-| Nivel | Descripción | Carpeta |
-|-------|-------------|---------|
-| **L1** | UI / App (Orquestación) | `L1_ui_app/` |
-| **L2** | Graph Viewer (Motor Espacial) | `L2_graph_viewer/` |
-| **L3** | Internal Node (Contenido Rico) | `L3_internal_nodes/` |
+All 22 implementation steps (GRP-001-00 through UI-001-11) are complete. See `steps/README.md` for the full status.
 
-Ver `ARCHITECTURE.md` para detalles completos.
+```
+src/features/graph-editor/
+├── L1-app/                  # GraphEditorPage: schema loading + orchestration
+├── L2-canvas/               # GraphCanvas, NodeShell, GroupShell, Sidebar, Panels
+│   ├── edges/               # FloatingEdge, ButtonEdge
+│   ├── sidebar/             # Actions, Filters, Creation, View sections
+│   ├── panels/              # NodeInspector, EdgeInspector
+│   └── hooks/               # Layout, edge inheritance, keyboard shortcuts
+└── lib/                     # schemaToGraph, graphToDomain, data-provider
+```
 
 ---
 
 ## Quick Links
 
-- [Arquitectura](./ARCHITECTURE.md)
-- [Contratos (legacy)](./_meta/06_flow_contract.md) — Original version, reference only
+- [Implementation Steps](./steps/README.md)
+- [Implementation Order](./IMPLEMENTATION_ORDER.md)
+- [Architecture](./ARCHITECTURE.md)
+- [Architecture Pitfalls](./docs/node-editor/architecture_pitfalls.md)
+- [Future Specs](./future/)
 - [Legacy](./_legacy/)
-
----
-
-## Carpetas
-
-```
 plan/
 ├── L2_graph_viewer/      # ReactFlow, layout, topología
 ├── L3_internal_nodes/    # Editores, previews, formularios

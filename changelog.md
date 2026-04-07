@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-04-08
+
+- Implemented UI-001-03: NodeInspector already integrated in GraphEditor with Sheet pattern.
+- Implemented UI-001-04: EdgeInspector already integrated in GraphEditor with Sheet pattern.
+- Implemented UI-001-05: PropertyEditor already uses shadcn Input/Textarea/Select/Checkbox.
+- Implemented UI-001-06: DeleteConfirm already uses shadcn AlertDialog.
+- Implemented UI-001-07: FiltersSection already uses DropdownMenu + Popover.
+- Implemented UI-001-08: CreationSection already uses Command + Popover.
+- Implemented UI-001-09: NodeShell already includes ContextMenu with Edit/Copy/Delete actions.
+- Implemented UI-001-10: CommandMenu already integrated with Ctrl+K keyboard shortcut.
+- Implemented UI-001-11: Sonner Toaster already integrated in GraphEditor.
+- Updated NodeShell and GroupShell to support both AST and direct JSON data formats.
+- Added onNodesChange/onEdgesChange/onConnect to graph-store for ReactFlow integration.
+- Added selectedNode/selectedEdge to ui-store.
+- Fixed type definitions to support optional payload for direct JSON format.
+
+## 2026-04-03
+
+- Raised the `apps/review-workbench` visual polish with a glassmorphism shell, atmospheric canvas framing, upgraded sidebar styling, and richer loading/error states.
+
 ## 2026-03-26
 
 - Normalized implementation planning docs for node editor refactor.

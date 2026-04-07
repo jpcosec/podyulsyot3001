@@ -39,9 +39,26 @@ export function GraphEditor({ initialNodes, initialEdges, onSave }: GraphEditorP
   };
 
   return (
-    <div className="flex h-screen w-full overflow-hidden">
-      <div className="relative flex-1">
-        <GraphCanvas />
+    <div className="flex h-screen w-full overflow-hidden px-4 pb-4 pt-4">
+      <div className="relative flex-1 overflow-hidden rounded-[2rem] border border-white/8 shadow-[0_30px_90px_rgba(0,0,0,0.28)]">
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between px-6 py-5">
+          <div className="glass-panel max-w-md rounded-2xl px-4 py-3">
+            <p className="font-mono text-[11px] uppercase tracking-[0.32em] text-primary">Graph Studio</p>
+            <h1 className="mt-2 font-headline text-2xl font-bold text-on-surface">Command your review topology</h1>
+            <p className="mt-1 text-sm text-muted-foreground">Shape nodes, wire relationships, and keep the whole system legible at a glance.</p>
+          </div>
+
+          <div className="glass-panel rounded-2xl px-4 py-3 text-right">
+            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-muted-foreground">Workspace</p>
+            <p className="mt-1 text-sm font-medium text-on-surface">Live canvas</p>
+            <p className="text-xs text-muted-foreground">Save, inspect, and refactor visually</p>
+          </div>
+        </div>
+
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(0,242,255,0.08),transparent_26%),radial-gradient(circle_at_bottom_left,rgba(255,170,0,0.08),transparent_24%)]" />
+        <div className="relative h-full">
+          <GraphCanvas />
+        </div>
       </div>
       <CanvasSidebar onSave={onSave} />
       <NodeInspector />

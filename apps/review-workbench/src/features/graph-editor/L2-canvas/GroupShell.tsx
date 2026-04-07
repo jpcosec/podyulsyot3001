@@ -3,20 +3,33 @@ import { memo } from 'react';
 import { Handle, NodeResizer, NodeToolbar, Position, type Node, type NodeProps } from '@xyflow/react';
 
 import { useEdgeInheritance } from './hooks';
-import type { ASTNode } from '@/stores/types';
+import type { ASTNode, NodePayload } from '@/stores/types';
 
 type CanvasNode = Node<ASTNode['data'], string>;
 
 export const COLLAPSED_KEY = '__collapsed';
 
 function asPayloadRecord(value: unknown): Record<string, unknown> {
-  return value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+  if (value && typeof value === 'object') {
+    return value as Record<string, unknown>;
+  }
+  return {};
 }
 
 function getGroupTitle(nodeData: ASTNode['data']): string {
-  const payload = asPayloadRecord(nodeData.payload.value);
-  const title = payload.name ?? payload.title;
-
+  // Handle both AST format and direct JSON format
+  const asJson = nodeData as Record<string, unknown>;
+  
+  // Direct JSON format: data.label
+  if ('label' in asJson && typeof asJson.label === 'string') {
+    return asJson.label;
+  }
+  
+  // AST format: data.payload.value.name or data.payload.value.title
+  const payload = asJson.payload as NodePayload | undefined;
+  const payloadRecord = asPayloadRecord(payload?.value ?? {});
+  const title = payloadRecord.name ?? payloadRecord.title;
+  
   if (typeof title === 'string' && title.trim().length > 0) {
     return title;
   }
@@ -25,7 +38,17 @@ function getGroupTitle(nodeData: ASTNode['data']): string {
 }
 
 export function isCollapsed(nodeData: ASTNode['data']): boolean {
-  return nodeData.properties[COLLAPSED_KEY] === 'true';
+  // Handle both AST format and direct JSON format
+  const asJson = nodeData as Record<string, unknown>;
+  const props = asJson.properties as Record<string, string> | undefined;
+  if (props && COLLAPSED_KEY in props) {
+    return props[COLLAPSED_KEY] === 'true';
+  }
+  // Check if data has a collapsed property directly (new format)
+  if ('collapsed' in asJson) {
+    return Boolean(asJson.collapsed);
+  }
+  return false;
 }
 
 export function getNextCollapseProperties(

@@ -1,19 +1,26 @@
 export type NodePayload = {
-  typeId: string;
-  value: unknown;
+  typeId?: string;
+  value?: unknown;
+};
+
+export type NodeData = {
+  typeId?: string;
+  payload?: NodePayload;
+  properties?: Record<string, string>;
+  visualToken?: string;
+  label?: string;
+  name?: string;
+  [key: string]: unknown;
 };
 
 export interface ASTNode {
   id: string;
   type: string;
   position: { x: number; y: number };
-  data: {
-    typeId: string;
-    payload: NodePayload;
-    properties: Record<string, string>;
-    visualToken?: string;
-  };
+  data: NodeData;
   parentId?: string;
+  extent?: 'parent' | string;
+  style?: React.CSSProperties;
   selected?: boolean;
   hidden?: boolean;
 }

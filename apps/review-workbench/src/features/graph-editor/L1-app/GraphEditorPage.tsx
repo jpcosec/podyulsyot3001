@@ -5,6 +5,7 @@ import type { ComponentType } from 'react';
 import { z } from 'zod';
 
 import { registry } from '@/schema/registry';
+import type { ASTEdge, ASTNode } from '@/stores/types';
 import { useGraphStore } from '@/stores/graph-store';
 
 import { GraphEditor } from '../L2-canvas/GraphEditor';
@@ -137,11 +138,12 @@ export function GraphEditorPage() {
 
   const graph = useMemo(() => {
     if (!rawData || !isSchemaRegistered) {
-      return { nodes: [], edges: [] };
+      return { nodes: [] as ASTNode[], edges: [] as ASTEdge[] };
     }
 
-    const ast = schemaToGraph(rawData);
-    return { nodes: ast.nodes, edges: ast.edges };
+    // Direct pass-through - no translation layer
+    const data = rawData as { nodes: ASTNode[]; edges: ASTEdge[] };
+    return { nodes: data.nodes, edges: data.edges };
   }, [rawData, isSchemaRegistered]);
 
   useEffect(() => {
@@ -190,11 +192,23 @@ export function GraphEditorPage() {
 
   if (viewState === 'loading') {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="space-y-2">
-          <div className="h-12 w-[300px] animate-pulse rounded bg-muted" />
-          <div className="h-8 w-[200px] animate-pulse rounded bg-muted" />
-          <p className="text-xs text-muted-foreground">Loading schema and graph...</p>
+      <div className="flex h-screen items-center justify-center px-6">
+        <div className="glass-panel w-full max-w-xl rounded-[2rem] p-8">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <p className="font-mono text-[11px] uppercase tracking-[0.32em] text-primary">Review Workbench</p>
+              <h1 className="mt-2 font-headline text-3xl font-bold text-on-surface">Preparing your graph studio</h1>
+            </div>
+            <div className="h-14 w-14 animate-pulse rounded-2xl border border-primary/30 bg-primary/10" />
+          </div>
+          <div className="space-y-3">
+            <div className="h-16 animate-pulse rounded-2xl bg-white/5" />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="h-24 animate-pulse rounded-2xl bg-white/5" />
+              <div className="h-24 animate-pulse rounded-2xl bg-white/5" />
+            </div>
+          </div>
+          <p className="mt-5 text-sm text-muted-foreground">Loading schema, graph state, and editor modules...</p>
         </div>
       </div>
     );
@@ -202,11 +216,12 @@ export function GraphEditorPage() {
 
   if (viewState === 'error') {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-center text-destructive">
-          <p className="font-medium">Failed to load</p>
-          <p className="mt-1 text-sm text-muted-foreground">{String(schemaError || dataError)}</p>
-          <button onClick={() => window.location.reload()} className="mt-4 text-sm underline">
+      <div className="flex h-screen items-center justify-center px-6">
+        <div className="glass-panel w-full max-w-lg rounded-[2rem] p-8 text-center">
+          <p className="font-mono text-[11px] uppercase tracking-[0.32em] text-secondary">Connection lost</p>
+          <h1 className="mt-3 font-headline text-3xl font-bold text-on-surface">The editor could not boot cleanly</h1>
+          <p className="mt-3 text-sm text-muted-foreground">{String(schemaError || dataError)}</p>
+          <button onClick={() => window.location.reload()} className="mt-6 rounded-full border border-secondary/30 bg-secondary/10 px-5 py-2 text-sm font-medium text-secondary transition hover:bg-secondary/20">
             Retry
           </button>
         </div>

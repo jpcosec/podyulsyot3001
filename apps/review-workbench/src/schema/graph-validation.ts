@@ -5,17 +5,11 @@ export const nodePositionSchema = z.object({
   y: z.number(),
 });
 
-export const nodeDataSchema = z.object({
-  name: z.string().optional(),
-  title: z.string().optional(),
-  category: z.string().optional(),
-  properties: z.record(z.string(), z.string()).optional(),
-  visualToken: z.string().optional(),
-});
+export const nodeDataSchema = z.record(z.unknown());
 
 export const astNodeSchema = z.object({
   id: z.string(),
-  type: z.enum(['node', 'group']),
+  type: z.string().optional(),
   position: nodePositionSchema,
   data: nodeDataSchema,
   parentId: z.string().optional(),
@@ -26,11 +20,8 @@ export const astNodeSchema = z.object({
 });
 
 export const astEdgeDataSchema = z.object({
-  relationType: z.string(),
+  relationType: z.string().optional(),
   properties: z.record(z.string(), z.string()).optional(),
-  _originalSource: z.string().optional(),
-  _originalTarget: z.string().optional(),
-  _originalRelationType: z.string().optional(),
 });
 
 export const astEdgeSchema = z.object({

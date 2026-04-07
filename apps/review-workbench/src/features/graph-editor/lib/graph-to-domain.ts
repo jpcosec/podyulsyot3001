@@ -1,31 +1,50 @@
-import type { ASTEdge, ASTNode, DomainData, DomainEdge, DomainNode } from './types';
+import type { ASTEdge, ASTNode, DomainData, DomainEdge, DomainNode, NodePayload } from './types';
+
+function asRecord(value: unknown): Record<string, unknown> {
+  if (value && typeof value === 'object') {
+    return value as Record<string, unknown>;
+  }
+  return {};
+}
 
 function getDomainName(node: ASTNode): string {
-  const payload = node.data.payload.value;
+  const asJson = node.data as Record<string, unknown>;
+  
+  // Direct JSON format: data.label or data.name
+  if ('label' in asJson && typeof asJson.label === 'string' && asJson.label.length > 0) {
+    return asJson.label;
+  }
+  if ('name' in asJson && typeof asJson.name === 'string' && asJson.name.length > 0) {
+    return asJson.name;
+  }
 
-  if (payload && typeof payload === 'object') {
-    const payloadRecord = payload as Record<string, unknown>;
-    const name = payloadRecord.name;
-    const title = payloadRecord.title;
+  // AST format: data.payload.value
+  const payload = asJson.payload as NodePayload | undefined;
+  const payloadRecord = asRecord(payload?.value);
+  const name = payloadRecord.name;
+  const title = payloadRecord.title;
 
-    if (typeof name === 'string' && name.length > 0) {
-      return name;
-    }
+  if (typeof name === 'string' && name.length > 0) {
+    return name;
+  }
 
-    if (typeof title === 'string' && title.length > 0) {
-      return title;
-    }
+  if (typeof title === 'string' && title.length > 0) {
+    return title;
   }
 
   return 'Untitled';
 }
 
 function toDomainNode(node: ASTNode): DomainNode {
+  const asJson = node.data as Record<string, unknown>;
+  const typeId = asJson.typeId as string | undefined;
+  const properties = asJson.properties as Record<string, string> | undefined;
+  
   return {
     id: node.id,
-    type: node.data.typeId,
+    type: typeId ?? 'unknown',
     name: getDomainName(node),
-    properties: node.data.properties,
+    properties: properties ?? {},
     children: [],
   };
 }

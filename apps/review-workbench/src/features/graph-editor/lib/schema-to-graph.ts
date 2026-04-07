@@ -160,7 +160,9 @@ function collectErrors(nodeMap: Map<string, ASTNode>): ValidationError[] {
       return;
     }
 
-    const payloadValue = node.data.payload.value;
+    const asJson = node.data as Record<string, unknown>;
+    const payload = asJson.payload as { value?: unknown } | undefined;
+    const payloadValue = payload?.value;
     const message =
       payloadValue && typeof payloadValue === 'object' && 'message' in payloadValue
         ? String((payloadValue as { message: unknown }).message)

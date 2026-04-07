@@ -11,6 +11,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { pairsFromRecord, recordFromPairs } from '@/lib/utils';
+import type { NodePayload } from '@/stores/types';
 import { useGraphStore } from '@/stores/graph-store';
 import { useUIStore } from '@/stores/ui-store';
 
@@ -20,11 +21,30 @@ interface NodeInspectorDraft {
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
-  return value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+  if (value && typeof value === 'object') {
+    return value as Record<string, unknown>;
+  }
+  return {};
 }
 
-function getNodeTitle(payload: Record<string, unknown>): string {
-  const title = payload.name ?? payload.title;
+function asDataRecord(data: unknown): Record<string, unknown> {
+  if (data && typeof data === 'object') {
+    return data as Record<string, unknown>;
+  }
+  return {};
+}
+
+function getNodeTitle(data: Record<string, unknown>): string {
+  // Direct JSON format: data.label
+  if ('label' in data && typeof data.label === 'string') {
+    return data.label;
+  }
+  // Direct JSON format: data.name
+  if ('name' in data && typeof data.name === 'string') {
+    return data.name;
+  }
+  // AST format: payload.name or payload.title
+  const title = data.name ?? data.title;
   return typeof title === 'string' ? title : '';
 }
 
@@ -57,10 +77,13 @@ export function NodeInspector() {
       return;
     }
 
-    const payload = asRecord(node.data.payload.value);
+    const asJson = asDataRecord(node.data);
+    const title = getNodeTitle(asJson);
+    const properties = asJson.properties as Record<string, string> | undefined;
+
     setDraft({
-      title: getNodeTitle(payload),
-      properties: { ...node.data.properties },
+      title,
+      properties: properties ?? {},
     });
   }, [node]);
 
@@ -74,14 +97,23 @@ export function NodeInspector() {
       return;
     }
 
-    const payload = asRecord(node.data.payload.value);
+    const asJson = asDataRecord(node.data);
+    const existingPayload = asJson.payload as NodePayload | undefined;
+    const existingValue = existingPayload?.value;
+    const payloadRecord = asRecord(existingValue ?? {});
+    
+    const safeTypeId = (existingPayload?.typeId ?? asJson.typeId ?? 'unknown') as string;
+    const newPayload: NodePayload = {
+      typeId: safeTypeId || 'unknown',
+      value: setNodeTitle(payloadRecord, draft.title),
+    };
+
     updateNode(node.id, {
       data: {
         ...node.data,
-        payload: {
-          typeId: node.data.payload.typeId,
-          value: setNodeTitle(payload, draft.title),
-        },
+        ...(asJson.label !== undefined ? { label: draft.title } : {}),
+        ...(asJson.name !== undefined ? { name: draft.title } : {}),
+        payload: newPayload,
         properties: draft.properties,
       },
     });
@@ -94,13 +126,16 @@ export function NodeInspector() {
     return null;
   }
 
+  const asJson = asDataRecord(node.data);
+  const typeId = asJson.typeId as string | undefined;
+
   return (
     <Sheet open={open} onOpenChange={(nextOpen) => !nextOpen && handleClose()}>
       <SheetContent side="right" className="flex w-[400px] flex-col sm:max-w-[400px]">
         <SheetHeader>
           <SheetTitle>Edit Node</SheetTitle>
           <SheetDescription>
-            {node.data.typeId} ({node.id})
+            {typeId ?? 'unknown'} ({node.id})
           </SheetDescription>
         </SheetHeader>
 
