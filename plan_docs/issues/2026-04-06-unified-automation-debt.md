@@ -14,7 +14,7 @@ This document tracks known technical debt, structural gaps, and missing features
 
 ## 3. Motor Gaps
 - [ ] **Conceptual Motors**: Implement stubs for `motors/browseros/agent/`, `motors/os_native_tools/`, and `motors/vision/`.
-- [ ] **BrowserOS CSS Support**: BrowserOS motor currently relies on text matching; needs to support the `css` field in `AriadneTarget`.
+- [x] **BrowserOS CSS Support**: BrowserOS motor now supports the `css` field in `AriadneTarget` using the `search_dom` tool.
 
 ## 4. Feature Debt
 - [ ] **Candidate Field Management**: `ApplyAdapter` uses hardcoded profile fields. Integrate with a real candidate profile store.
