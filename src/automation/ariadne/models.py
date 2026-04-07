@@ -96,6 +96,16 @@ class JobPosting(BaseModel):
     application_instructions: Optional[str] = Field(
         default=None, description="Short instructions on how to apply."
     )
+    application_routing_confidence: Optional[float] = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="Confidence score for the resolved application-routing fields.",
+    )
+    application_routing_diagnostics: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Diagnostics describing how the application-routing fields were resolved.",
+    )
     reference_number: Optional[str] = Field(
         default=None, description="Internal reference code for the posting."
     )
@@ -104,6 +114,27 @@ class JobPosting(BaseModel):
     )
     original_language: Optional[str] = Field(
         default=None, description="The detected ISO 639-1 language code."
+    )
+
+
+class ApplicationRoutingInterpretation(BaseModel):
+    """LLM-sized contract for resolving how a job should be submitted."""
+
+    application_method: Optional[str] = Field(
+        default=None,
+        description="Routing method: email, direct_url, or onsite when the current page owns the apply flow.",
+    )
+    application_url: Optional[str] = Field(
+        default=None,
+        description="Resolved apply target URL, or the current detail URL when the flow starts onsite.",
+    )
+    application_email: Optional[str] = Field(
+        default=None,
+        description="Application email address when the posting requests email submission.",
+    )
+    application_instructions: Optional[str] = Field(
+        default=None,
+        description="Short submission instructions grounded in the posting text.",
     )
 
 

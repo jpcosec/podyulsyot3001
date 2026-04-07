@@ -1,5 +1,6 @@
 # tests/unit/automation/motors/crawl4ai/test_models.py
 """Tests for C4AI motor models."""
+
 from __future__ import annotations
 
 import pytest
@@ -25,6 +26,24 @@ def test_job_posting_requires_mandatory_fields():
     )
     assert posting.job_title == "Data Engineer"
     assert posting.salary is None
+
+
+def test_job_posting_accepts_routing_review_fields():
+    posting = JobPosting(
+        job_title="Data Engineer",
+        company_name="Acme GmbH",
+        location="Berlin",
+        employment_type="Full-time",
+        responsibilities=["Build pipelines"],
+        requirements=["Python"],
+        application_method="onsite",
+        application_url="https://example.test/jobs/data-engineer",
+        application_routing_confidence=0.64,
+        application_routing_diagnostics={"review_required": True},
+    )
+
+    assert posting.application_routing_confidence == 0.64
+    assert posting.application_routing_diagnostics == {"review_required": True}
 
 
 def test_apply_meta_status_values():

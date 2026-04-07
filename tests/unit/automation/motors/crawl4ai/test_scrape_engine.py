@@ -10,7 +10,10 @@ from types import SimpleNamespace
 
 from crawl4ai.extraction_strategy import LLMExtractionStrategy
 
-from src.automation.ariadne.models import JobPosting
+from src.automation.ariadne.models import (
+    ApplicationRoutingInterpretation,
+    JobPosting,
+)
 from src.automation.motors.crawl4ai.contracts import ScrapeDiscoveryEntry
 from src.automation.motors.crawl4ai import scrape_engine as scrape_engine_module
 from src.core.data_manager import DataManager
@@ -136,6 +139,9 @@ def test_process_results_persists_listing_and_raw_artifacts(tmp_path) -> None:
     assert (
         state_payload["posted_date"] == state_payload["listing_case"]["listed_at_iso"]
     )
+    assert state_payload["application_method"] == "onsite"
+    assert state_payload["application_url"] == detail_result.url
+    assert state_payload["application_routing_diagnostics"]["review_required"] is True
     listing_case_payload = manager.read_json_path(ingest_dir / "listing_case.json")
     assert listing_case_payload["job_id"] == "123"
     assert listing_case_payload["source_metadata"]["card_variant"] == "default"
@@ -227,6 +233,113 @@ def test_extract_payload_uses_crawl4ai_llm_strategy_for_fallback(
     assert isinstance(rescue_config.extraction_strategy, LLMExtractionStrategy)
     assert rescue_config.extraction_strategy.schema == JobPosting.model_json_schema()
     assert rescue_config.extraction_strategy.input_format == "markdown"
+
+
+def test_extract_payload_enriches_routing_from_payload_without_llm(tmp_path) -> None:
+    manager = DataManager(tmp_path / "data" / "jobs")
+    adapter = _DummyAdapter(manager)
+
+    detail_result = _result(
+        url="https://example.test/jobs/data-engineer-556",
+        extracted_content=json.dumps(
+            {
+                "job_title": "Data Engineer",
+                "company_name": "Example Co",
+                "location": "Berlin",
+                "employment_type": "Full-time",
+                "responsibilities": ["Build pipelines"],
+                "requirements": ["Python"],
+                "application_method": "Apply by email",
+                "application_email": "mailto:jobs@example.test?subject=Data%20Engineer",
+                "application_instructions": "Please send your CV to jobs@example.test.",
+            }
+        ),
+        markdown="# Data Engineer\nPlease send your CV to jobs@example.test.",
+        html="<html><body>detail</body></html>",
+    )
+
+    valid_data, _, extraction_method, extraction_error = asyncio.run(
+        adapter._extract_payload(
+            detail_result,
+            scraped_at=datetime.now(timezone.utc),
+        )
+    )
+
+    assert extraction_error is None
+    assert extraction_method == "css"
+    assert valid_data is not None
+    assert valid_data["application_method"] == "email"
+    assert valid_data["application_email"] == "jobs@example.test"
+    assert valid_data["application_url"] == detail_result.url
+    assert valid_data["application_routing_diagnostics"]["used_llm"] is False
+
+
+def test_extract_payload_uses_selective_llm_for_low_confidence_routing(
+    tmp_path, monkeypatch
+) -> None:
+    manager = DataManager(tmp_path / "data" / "jobs")
+    adapter = _DummyAdapter(manager)
+    monkeypatch.setenv("GOOGLE_API_KEY", "test-key")
+
+    detail_result = _result(
+        url="https://example.test/jobs/data-engineer-557",
+        extracted_content=json.dumps(
+            {
+                "job_title": "Data Engineer",
+                "company_name": "Example Co",
+                "location": "Berlin",
+                "employment_type": "Full-time",
+                "responsibilities": ["Build pipelines"],
+                "requirements": ["Python"],
+            }
+        ),
+        markdown="# Data Engineer\nApply through our company portal.",
+        html="<html><body>detail</body></html>",
+    )
+
+    class _FakeCrawler:
+        def __init__(self) -> None:
+            self.calls: list[tuple[str, object]] = []
+
+        async def arun(self, *, url: str, config):
+            self.calls.append((url, config))
+            return _result(
+                url=url,
+                extracted_content=json.dumps(
+                    {
+                        "application_method": "direct_url",
+                        "application_url": "https://apply.example.test/jobs/557",
+                        "application_instructions": "Apply in the employer portal.",
+                    }
+                ),
+                markdown="",
+                html="",
+            )
+
+    crawler = _FakeCrawler()
+    valid_data, _, extraction_method, extraction_error = asyncio.run(
+        adapter._extract_payload(
+            detail_result,
+            crawler=crawler,
+            scraped_at=datetime.now(timezone.utc),
+        )
+    )
+
+    assert extraction_error is None
+    assert extraction_method == "css"
+    assert valid_data is not None
+    assert valid_data["application_method"] == "direct_url"
+    assert valid_data["application_url"] == "https://apply.example.test/jobs/557"
+    assert valid_data["application_instructions"] == "Apply in the employer portal."
+    assert valid_data["application_routing_confidence"] == 0.8
+    assert valid_data["application_routing_diagnostics"]["used_llm"] is True
+    assert len(crawler.calls) == 1
+    _, rescue_config = crawler.calls[0]
+    assert isinstance(rescue_config.extraction_strategy, LLMExtractionStrategy)
+    assert (
+        rescue_config.extraction_strategy.schema
+        == ApplicationRoutingInterpretation.model_json_schema()
+    )
 
 
 def test_get_fast_schema_uses_representative_samples_and_filters_teaser_selectors(

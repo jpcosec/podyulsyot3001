@@ -39,7 +39,10 @@ except ImportError:  # pragma: no cover - exercised in environments without lang
 
 from src.automation.motors.crawl4ai.contracts import ScrapeDiscoveryEntry
 from src.core.data_manager import DataManager
-from src.automation.ariadne.models import JobPosting
+from src.automation.ariadne.models import (
+    ApplicationRoutingInterpretation,
+    JobPosting,
+)
 from src.shared.log_tags import LogTag
 
 load_dotenv()
@@ -101,6 +104,13 @@ _ENGLISH_LANGUAGE_FRAGMENTS = ("engineer", "developer", "scientist", "manager")
 _SCHEMA_SELECTOR_BLOCKLIST = re.compile(
     r"related|similar|recommend|teaser|carousel|footer|sticky|other-jobs|jobs-nearby",
     re.IGNORECASE,
+)
+_EMAIL_RE = re.compile(r"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}", re.IGNORECASE)
+_URL_RE = re.compile(r"https?://[^\s)\]>\"']+", re.IGNORECASE)
+_APPLY_LINK_RE = re.compile(
+    r"(?:apply|application|bewerb|bewerben|bewerbung|jetzt bewerben|send your application)"
+    r".{0,120}?(https?://[^\s)\]>\"']+)",
+    re.IGNORECASE | re.DOTALL,
 )
 
 
@@ -255,6 +265,69 @@ def detect_language(markdown_text: str) -> str:
             else "en"
         )
     return "de" if combined_scores["de"] > combined_scores["en"] else "en"
+
+
+def _clean_text(value: Any) -> str | None:
+    if not isinstance(value, str):
+        return None
+    cleaned = " ".join(value.split()).strip()
+    return cleaned or None
+
+
+def _normalize_application_email(value: Any) -> str | None:
+    cleaned = _clean_text(value)
+    if not cleaned:
+        return None
+    if cleaned.lower().startswith("mailto:"):
+        cleaned = cleaned.split(":", 1)[1]
+    cleaned = cleaned.split("?", 1)[0].strip(" <>.,;)")
+    match = _EMAIL_RE.search(cleaned)
+    return match.group(0).lower() if match else None
+
+
+def _normalize_application_url(value: Any) -> str | None:
+    cleaned = _clean_text(value)
+    if not cleaned or cleaned.lower().startswith("mailto:"):
+        return None
+    match = _URL_RE.search(cleaned)
+    if not match:
+        return None
+    return match.group(0).rstrip(".,;")
+
+
+def _normalize_application_method(value: Any) -> str | None:
+    cleaned = _clean_text(value)
+    if not cleaned:
+        return None
+    lowered = cleaned.lower()
+    if any(token in lowered for token in ("email", "e-mail", "mail", "bewerbung an")):
+        return "email"
+    if any(
+        token in lowered
+        for token in (
+            "direct",
+            "external",
+            "portal",
+            "website",
+            "online",
+            "link",
+            "url",
+        )
+    ):
+        return "direct_url"
+    if any(
+        token in lowered for token in ("onsite", "current page", "form", "easy apply")
+    ):
+        return "onsite"
+    return lowered.replace(" ", "_")
+
+
+def _first_email_match(*values: Any) -> str | None:
+    for value in values:
+        email = _normalize_application_email(value)
+        if email:
+            return email
+    return None
 
 
 class SmartScraperAdapter(ABC):
@@ -721,6 +794,226 @@ class SmartScraperAdapter(ABC):
             logger.error("%s LLM rescue error: %s", LogTag.FAIL, exc)
             return None, f"LLM exception: {exc}"
 
+    def _routing_markdown_text(self, result: Any) -> str:
+        return self._markdown_text(result)
+
+    def _routing_heuristics(
+        self,
+        *,
+        payload: dict,
+        detail_url: str,
+        markdown_text: str,
+    ) -> dict[str, Any]:
+        instructions = _clean_text(payload.get("application_instructions"))
+        email = _first_email_match(
+            payload.get("application_email"),
+            payload.get("contact_info"),
+            instructions,
+            markdown_text,
+        )
+        explicit_url = _normalize_application_url(payload.get("application_url"))
+        hinted_url = None
+        apply_link_match = _APPLY_LINK_RE.search(markdown_text)
+        if apply_link_match:
+            hinted_url = _normalize_application_url(apply_link_match.group(1))
+        direct_url = explicit_url or hinted_url
+        method = _normalize_application_method(payload.get("application_method"))
+
+        field_sources = {
+            "application_method": "payload" if method else None,
+            "application_url": None,
+            "application_email": None,
+            "application_instructions": "payload" if instructions else None,
+        }
+        signals: list[str] = []
+
+        if email:
+            field_sources["application_email"] = (
+                "payload"
+                if payload.get("application_email") or payload.get("contact_info")
+                else "markdown"
+            )
+            signals.append("email")
+        if direct_url:
+            field_sources["application_url"] = "payload" if explicit_url else "markdown"
+            signals.append("direct_url")
+
+        if not method:
+            if email:
+                method = "email"
+                field_sources["application_method"] = "derived_from_email"
+            elif direct_url and direct_url != detail_url:
+                method = "direct_url"
+                field_sources["application_method"] = "derived_from_url"
+            else:
+                method = "onsite"
+                field_sources["application_method"] = "detail_page_fallback"
+
+        selected_url = direct_url
+        if not selected_url:
+            selected_url = detail_url
+            field_sources["application_url"] = "detail_page_fallback"
+
+        confidence = 0.25
+        if payload.get("application_method"):
+            confidence += 0.2
+        if explicit_url:
+            confidence += 0.25
+        elif direct_url:
+            confidence += 0.15
+        elif selected_url == detail_url:
+            confidence += 0.05
+        if payload.get("application_email"):
+            confidence += 0.2
+        elif email:
+            confidence += 0.1
+        if instructions:
+            confidence += 0.1
+        if method == "email" and email:
+            confidence += 0.15
+        elif method in {"direct_url", "onsite"} and selected_url:
+            confidence += 0.1
+        confidence = min(confidence, 0.95)
+
+        review_required = (
+            confidence < 0.7
+            or field_sources["application_url"] == "detail_page_fallback"
+        )
+        diagnostics = {
+            "source": self.source_name,
+            "used_llm": False,
+            "review_required": review_required,
+            "field_sources": field_sources,
+            "signals": signals,
+        }
+
+        return {
+            "application_method": method,
+            "application_url": selected_url,
+            "application_email": email,
+            "application_instructions": instructions,
+            "application_routing_confidence": round(confidence, 2),
+            "application_routing_diagnostics": diagnostics,
+        }
+
+    async def _llm_routing_interpretation(
+        self,
+        crawler: AsyncWebCrawler | None,
+        *,
+        url: str,
+        markdown_text: str,
+    ) -> tuple[dict[str, Any] | None, str | None]:
+        if not self._has_llm_key() or not markdown_text:
+            return None, "No LLM API key or empty markdown content."
+        if crawler is None:
+            return None, "Routing enrichment requires an active crawler session."
+
+        logger.info("%s Routing enrichment for %s", LogTag.LLM, self.source_name)
+        try:
+            llm_cfg = self.get_llm_config()
+            run_config = self.get_base_crawl_config()
+            run_config.extraction_strategy = LLMExtractionStrategy(
+                llm_config=llm_cfg,
+                instruction=(
+                    "Resolve how the candidate should apply. "
+                    "Use application_method=email when the posting asks for email submission, "
+                    "direct_url when a separate apply link exists, and onsite when the current page owns the form or apply button. "
+                    f"If no separate apply link exists, keep application_url as {url}."
+                ),
+                schema=ApplicationRoutingInterpretation.model_json_schema(),
+                input_format="markdown",
+                force_json_response=True,
+                extra_args={"temperature": 0.0},
+            )
+            rescue_result = await crawler.arun(url=url, config=run_config)
+            if not rescue_result.success:
+                return (
+                    None,
+                    rescue_result.error_message or "Routing enrichment crawl failed.",
+                )
+            payload, parse_error = self._parse_payload(rescue_result.extracted_content)
+            if not payload:
+                return None, parse_error or "Routing enrichment returned empty payload."
+            routing = ApplicationRoutingInterpretation(**payload)
+            return routing.model_dump(mode="python"), None
+        except Exception as exc:
+            logger.error("%s Routing enrichment error: %s", LogTag.FAIL, exc)
+            return None, f"LLM exception: {exc}"
+
+    async def _enrich_application_routing(
+        self,
+        *,
+        payload: dict | None,
+        result: Any,
+        crawler: AsyncWebCrawler | None,
+    ) -> dict | None:
+        if payload is None:
+            return None
+
+        enriched = dict(payload)
+        heuristic = self._routing_heuristics(
+            payload=enriched,
+            detail_url=result.url,
+            markdown_text=self._routing_markdown_text(result),
+        )
+        enriched.update(heuristic)
+
+        diagnostics = dict(enriched.get("application_routing_diagnostics") or {})
+        diagnostics.setdefault("field_sources", {})
+
+        if heuristic["application_routing_confidence"] >= 0.7:
+            enriched["application_routing_diagnostics"] = diagnostics
+            return enriched
+
+        llm_payload, llm_error = await self._llm_routing_interpretation(
+            crawler,
+            url=result.url,
+            markdown_text=self._routing_markdown_text(result),
+        )
+        diagnostics["llm_error"] = llm_error
+        diagnostics["used_llm"] = llm_payload is not None
+
+        if llm_payload:
+            llm_method = _normalize_application_method(
+                llm_payload.get("application_method")
+            )
+            llm_url = _normalize_application_url(llm_payload.get("application_url"))
+            llm_email = _normalize_application_email(
+                llm_payload.get("application_email")
+            )
+            llm_instructions = _clean_text(llm_payload.get("application_instructions"))
+
+            if llm_method:
+                enriched["application_method"] = llm_method
+                diagnostics["field_sources"]["application_method"] = "llm"
+            if (
+                llm_url
+                and diagnostics["field_sources"].get("application_url")
+                == "detail_page_fallback"
+            ):
+                enriched["application_url"] = llm_url
+                diagnostics["field_sources"]["application_url"] = "llm"
+            if llm_email and not enriched.get("application_email"):
+                enriched["application_email"] = llm_email
+                diagnostics["field_sources"]["application_email"] = "llm"
+            if llm_instructions and not enriched.get("application_instructions"):
+                enriched["application_instructions"] = llm_instructions
+                diagnostics["field_sources"]["application_instructions"] = "llm"
+
+            if llm_method == "email" and llm_email:
+                enriched["application_routing_confidence"] = 0.85
+            elif llm_method in {"direct_url", "onsite"} and enriched.get(
+                "application_url"
+            ):
+                enriched["application_routing_confidence"] = 0.8
+            diagnostics["review_required"] = (
+                enriched["application_routing_confidence"] < 0.8
+            )
+            diagnostics["llm_payload"] = llm_payload
+
+        enriched["application_routing_diagnostics"] = diagnostics
+        return enriched
+
     def _listing_case_payload(
         self,
         *,
@@ -896,6 +1189,13 @@ class SmartScraperAdapter(ABC):
                 ),
             )
             valid_data, css_error = self._validate_payload(merged_payload)
+            if valid_data:
+                merged_payload = await self._enrich_application_routing(
+                    payload=merged_payload,
+                    result=result,
+                    crawler=crawler,
+                )
+                valid_data, css_error = self._validate_payload(merged_payload)
             if parse_error and not css_error:
                 css_error = parse_error
             if valid_data:
@@ -916,6 +1216,13 @@ class SmartScraperAdapter(ABC):
                 ),
             )
             valid_data, validation_error = self._validate_payload(merged_payload)
+            if valid_data:
+                merged_payload = await self._enrich_application_routing(
+                    payload=merged_payload,
+                    result=result,
+                    crawler=None,
+                )
+                valid_data, validation_error = self._validate_payload(merged_payload)
             if valid_data:
                 extraction_method = "llm"
                 logger.info("%s %s rescued by LLM.", LogTag.OK, result.url)

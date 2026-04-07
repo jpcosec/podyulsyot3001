@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-07] - Application Routing Enrichment
+
+### Added
+- Added Crawl4AI routing enrichment coverage in `tests/unit/automation/motors/crawl4ai/test_scrape_engine.py` for heuristic email routing, selective LLM interpretation, and persisted review diagnostics.
+
+### Changed
+- Enriched `src/automation/motors/crawl4ai/scrape_engine.py` with a post-ingest routing pass that normalizes application targets, selectively invokes Crawl4AI's LLM extraction only for low-confidence cases, and persists routing confidence and diagnostics into the validated ingest payload.
+- Extended `src/automation/ariadne/models.py` so `JobPosting` carries routing confidence and diagnostics alongside the resolved application fields.
+
 ## [2026-04-07] - Cross-Motor ApplyMeta Consistency
 
 ### Added
