@@ -15,9 +15,9 @@ This document tracks known technical debt, structural gaps, and missing features
 - [ ] **Recording Persistence**: Normalization currently doesn't persist to the final map location.
 
 ## 3. Motor Implementation Issues
-- [ ] **Crawl4AI Performance**: `_get_live_state` opens a new crawler/session per step. It should reuse the active crawler instance.
-- [ ] **Status Shadowing**: The `run()` method in `apply_engine.py` shadows the `status` variable, leading to potential logic errors.
-- [ ] **BrowserOS CSS Support**: BrowserOS motor now supports the `css` field in `AriadneTarget` using the `search_dom` tool.
+- [x] **Crawl4AI Performance**: `_get_live_state` opens a new crawler/session per step. It should reuse the active crawler instance. _(fixed: see 66e24ba)_
+- [x] **Status Shadowing**: The `run()` method in `apply_engine.py` shadows the `status` variable, leading to potential logic errors. _(fixed: see 66e24ba)_
+- [x] **BrowserOS CSS Support**: BrowserOS motor now supports the `css` field in `AriadneTarget` using the `search_dom` tool. _(fixed: see 6089bc7)_
 - [ ] **Conceptual Motors**: Implement stubs for `motors/browseros/agent/`, `motors/os_native_tools/`, and `motors/vision/`.
 
 ## 4. Feature & Doc Debt
