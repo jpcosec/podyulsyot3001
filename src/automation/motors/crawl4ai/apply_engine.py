@@ -146,8 +146,11 @@ class ApplyAdapter(ABC):
         Returns:
             BrowserConfig instance.
         """
-        from src.automation.motors.browseros.injection import get_browseros_injected_config
-        return get_browseros_injected_config(headless=headless)
+        return BrowserConfig(
+            user_data_dir=str(self.get_session_profile_dir()),
+            use_persistent_context=True,
+            headless=headless,
+        )
 
     async def _get_live_state(self, session_id: str) -> Optional[str]:
         """Identify current semantic state by checking the live DOM.

@@ -26,8 +26,8 @@ This project uses the **Ariadne Semantic Layer** to unify all browser automation
 - **`src/automation/portals/`**: The "Map" of the portal.
     - `maps/`: Contains single JSON maps per portal flow (AriadnePortalMap).
 - **`src/automation/motors/`**: The "Engines" that execute actions.
-    - `crawl4ai/compiler/`: Logic to translate high-level Ariadne Paths into motor scripts. Runs injected into BrowserOS (Port 9101).
-    - `browseros/`: Uses direct tool calls and fuzzy matching via MCP (Port 9200).
+    - `crawl4ai/compiler/`: Logic to translate high-level Ariadne Paths into motor scripts.
+    - `browseros/`: Uses direct tool calls and fuzzy matching.
 
 ## Development Principles
 
