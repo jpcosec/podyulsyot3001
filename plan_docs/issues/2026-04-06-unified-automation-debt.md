@@ -3,7 +3,7 @@
 This document tracks known technical debt, structural gaps, and missing features across the unified automation system.
 
 ## 1. Structural Debt
-- [ ] **Residual Directories**: `src/scraper/` and `src/apply/` still exist as empty directories with `__pycache__`.
+- [x] **Residual Directories**: `src/scraper/` and `src/apply/` have been fully deleted.
 - [ ] **Scraper Refactor**: Scrape adapters in `src/automation/portals/*/scrape.py` still use Python models instead of JSON Maps.
 - [ ] **Registry Logic**: Backend and portal selection are hardcoded in `src/automation/main.py`. Should move to a dynamic factory.
 
@@ -14,7 +14,7 @@ This document tracks known technical debt, structural gaps, and missing features
 
 ## 3. Motor Gaps
 - [ ] **Conceptual Motors**: Implement stubs for `motors/browseros/agent/`, `motors/os_native_tools/`, and `motors/vision/`.
-- [ ] **BrowserOS CSS Support**: BrowserOS motor currently relies on text matching; needs to support the `css` field in `AriadneTarget`.
+- [x] **BrowserOS CSS Support**: BrowserOS motor now supports the `css` field in `AriadneTarget` using the `search_dom` tool.
 
 ## 4. Feature Debt
 - [ ] **Candidate Field Management**: `ApplyAdapter` uses hardcoded profile fields. Integrate with a real candidate profile store.
