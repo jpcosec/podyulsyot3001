@@ -81,56 +81,75 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 async def _run_scrape(args) -> None:
-    """Run a full scrape cycle using the AutomationRegistry."""
-    from src.automation.registry import AutomationRegistry
+    """Run a full scrape cycle."""
     from src.shared.log_tags import LogTag
 
     _setup_logging(f"scrape_{args.source}")
     logger = logging.getLogger(__name__)
     storage = AutomationStorage()
-    
-    try:
-        adapter = AutomationRegistry.get_scrape_provider(args.source, storage)
-    except ValueError as e:
-        logger.error("%s %s", LogTag.FAIL, e)
+
+    if args.source == "stepstone":
+        from src.automation.motors.crawl4ai.portals.stepstone.scrape import StepStoneAdapter
+        adapter = StepStoneAdapter(storage.data_manager)
+    elif args.source == "xing":
+        from src.automation.motors.crawl4ai.portals.xing.scrape import XingAdapter
+        adapter = XingAdapter(storage.data_manager)
+    elif args.source == "tuberlin":
+        from src.automation.motors.crawl4ai.portals.tuberlin.scrape import TUBerlinAdapter
+        adapter = TUBerlinAdapter(storage.data_manager)
+    else:
+        logger.error("%s Unsupported scrape source: %s", LogTag.FAIL, args.source)
         sys.exit(1)
 
-    for param, value in {"categories": args.categories, "city": args.city, "job_query": args.job_query, "max_days": args.max_days}.items():
+    for param, value in {
+        "categories": args.categories,
+        "city": args.city,
+        "job_query": args.job_query,
+        "max_days": args.max_days,
+    }.items():
         if value is not None and param not in adapter.supported_params:
-            logger.warning("%s Provider '%s' does not support '%s'; ignoring.", LogTag.WARN, args.source, param)
-    
+            logger.warning(
+                "%s Provider '%s' does not support '%s'; ignoring.",
+                LogTag.WARN, args.source, param,
+            )
+
     already_scraped: list[str] = []
     if not args.overwrite:
         source_root = storage.data_manager.source_root(args.source)
         if source_root.exists():
-            already_scraped = sorted(p.name for p in source_root.iterdir() if p.is_dir() and storage.data_manager.has_ingested_job(args.source, p.name))
-    
+            already_scraped = sorted(
+                p.name for p in source_root.iterdir()
+                if p.is_dir() and storage.data_manager.has_ingested_job(args.source, p.name)
+            )
+
     ingested = await adapter.run(already_scraped=already_scraped, **vars(args))
     logger.info("%s Ingested %s jobs for source '%s'", LogTag.OK, len(ingested), args.source)
 
 
 async def _run_apply(args) -> None:
-    """Run an apply cycle using the AutomationRegistry."""
+    """Run an apply cycle using AriadneSession + the selected motor."""
     from src.shared.log_tags import LogTag
-    from src.automation.registry import AutomationRegistry
+    from src.automation.ariadne.session import AriadneSession
 
     _setup_logging(f"apply_{args.source}")
     logger = logging.getLogger(__name__)
-    profile_data = None
+
     if args.profile_json:
         profile_data = json.loads(Path(args.profile_json).read_text(encoding="utf-8"))
+    else:
+        profile_data = None
 
     storage = AutomationStorage()
-    
-    try:
-        adapter = AutomationRegistry.get_apply_provider(
-            source=args.source, 
-            backend=args.backend, 
-            storage=storage, 
-            profile_data=profile_data
-        )
-    except ValueError as e:
-        logger.error("%s %s", LogTag.FAIL, e)
+    session = AriadneSession(portal_name=args.source, storage=storage)
+
+    if args.backend == "browseros":
+        from src.automation.motors.browseros.cli.backend import BrowserOSMotorProvider
+        motor = BrowserOSMotorProvider()
+    elif args.backend == "crawl4ai":
+        from src.automation.motors.crawl4ai.apply_engine import C4AIMotorProvider
+        motor = C4AIMotorProvider()
+    else:
+        logger.error("%s Unsupported backend: %s", LogTag.FAIL, args.backend)
         sys.exit(1)
 
     if args.setup_session and args.job_id:
@@ -138,14 +157,23 @@ async def _run_apply(args) -> None:
         sys.exit(1)
 
     if args.setup_session:
-        await adapter.setup_session()
+        # BrowserOS only: open visible page for manual login
+        from src.automation.motors.browseros.cli.client import BrowserOSClient
+        client = BrowserOSClient()
+        base_url = session.portal_map.base_url
+        page_id = client.new_page()
+        client.navigate(base_url, page_id)
+        client.show_page(page_id)
+        input(f"\n[{args.source}] Log in in BrowserOS, then press Enter.\n")
+        logger.info("%s BrowserOS session ready for %s", LogTag.OK, args.source)
         return
 
     if not args.job_id or not args.cv_path:
         logger.error("%s --job-id and --cv are required in apply mode.", LogTag.FAIL)
         sys.exit(1)
 
-    meta = await adapter.run(
+    meta = await session.run(
+        motor,
         job_id=args.job_id,
         cv_path=Path(args.cv_path),
         letter_path=Path(args.letter_path) if args.letter_path else None,
