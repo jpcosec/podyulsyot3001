@@ -3,10 +3,11 @@
 ## 2026-04-08
 
 - **Fixed graph rendering issues:**
-  - GAP-01: Unknown nodes now fallback to "entity" type instead of showing error boxes
-  - GAP-02: Group nodes now show colored borders based on visualToken/category
-  - GAP-03: Edge labels now show relation type on hover (defaults to "linked")
-- **Complete node editor refactor (GRP-001 + UI-001)** - All 22 implementation steps completed
+  - GAP-01: Unknown nodes fallback to "entity" type instead of showing error boxes
+  - GAP-02: Group nodes show colored borders (document=purple, section=blue)
+  - GAP-03: Edge labels show relation type on hover
+  - GAP-04: Group border colors now use category mapping
+  - GAP-05: Node border colors now use category mapping (entry=green, concept=blue)
   - Implemented UI-001-03 through UI-001-11 (Node Sheet, Edge Sheet, Property Inputs, Delete Dialog, Filter UI, Creation Popover, Context Menu, Command Dialog, Sonner)
   - Updated NodeShell and GroupShell to support both AST and direct JSON data formats
   - Added onNodesChange/onEdgesChange/onConnect to graph-store for ReactFlow integration

@@ -143,7 +143,19 @@ export const NodeShell = memo(function NodeShell(props: NodeProps<CanvasNode>) {
   const safeTypeId = typeId ?? '';
   const definition = registry.get(safeTypeId) ?? registry.get('entity');
   const colorToken = definition?.colorToken ?? 'token-surface-primary';
-  const nodeBody = useMemo(() => renderNodeBody(data, colorToken, zoom), [data, colorToken, zoom]);
+  
+  const category = asJson.category as string | undefined;
+  const categoryColors: Record<string, string> = {
+    entry: '#22c55e',
+    concept: '#3b82f6',
+    section: '#8b5cf6',
+    document: '#f59e0b',
+  };
+  const nodeBorderColor = category 
+    ? categoryColors[category] ?? colorToken 
+    : colorToken;
+  
+  const nodeBody = useMemo(() => renderNodeBody(data, nodeBorderColor, zoom), [data, nodeBorderColor, zoom]);
 
   const handleEdit = () => {
     setFocusedEdge(null);
@@ -207,7 +219,7 @@ export const NodeShell = memo(function NodeShell(props: NodeProps<CanvasNode>) {
         <div
           className={`rounded-lg border-2 bg-card ${selected ? 'ring-2 ring-primary/40' : ''}`}
           style={{
-            borderColor: `var(--${definition.colorToken}, #888)`,
+            borderColor: nodeBorderColor,
             minWidth: definition.defaultSize.width,
           }}
         >

@@ -67,13 +67,20 @@ export const GroupShell = memo(function GroupShell({ id, data, selected }: NodeP
 
   const asJson = data as Record<string, unknown>;
   const category = asJson.category as string | undefined;
+  const label = asJson.label as string | undefined;
   const visualToken = asJson.visualToken as string | undefined;
+  
+  const categoryColors: Record<string, string> = {
+    document: '#8b5cf6',
+    section: '#3b82f6',
+    folder: '#f59e0b',
+  };
   
   const borderColor = visualToken 
     ? `var(--${visualToken})` 
-    : category === 'section' 
-      ? 'var(--token-section)' 
-      : 'var(--token-category, #888)';
+    : category 
+      ? categoryColors[category] ?? '#6b7280'
+      : '#6b7280';
 
   const toggleCollapse = () => {
     if (collapsed) {
