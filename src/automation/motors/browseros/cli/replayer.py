@@ -13,6 +13,7 @@ from src.automation.ariadne.models import (
     AriadneIntent,
     AriadneObserve,
     AriadnePath,
+    AriadneStep,
     AriadneTarget,
 )
 from src.automation.motors.browseros.cli.client import BrowserOSClient, SnapshotElement
@@ -97,6 +98,40 @@ class BrowserOSReplayer:
             fields_filled=fields_filled,
             confirmation_text=f"Ariadne Path {path.id} completed",
         )
+
+    def execute_single_step(
+        self,
+        *,
+        page_id: int,
+        step: AriadneStep,
+        context: dict[str, Any],
+        cv_path: Path,
+        fields_filled: list[str] | None = None,
+    ) -> None:
+        """Execute a single AriadneStep on the given page.
+
+        Args:
+            page_id: BrowserOS page to operate on.
+            step: The step to execute.
+            context: Template context for interpolation.
+            cv_path: Local CV path for upload actions.
+            fields_filled: Optional accumulator list for tracking touched fields.
+        """
+        if fields_filled is None:
+            fields_filled = []
+        logger.info("%s Executing Step %s: %s", LogTag.OK, step.step_index, step.name)
+        snapshot = self.client.take_snapshot(page_id)
+        self._assert_observation(snapshot, step.observe, step.name, page_id)
+        if step.human_required:
+            self._request_human_confirmation(step.description)
+        for action in step.actions:
+            self._execute_action(
+                page_id=page_id,
+                action=action,
+                context=context,
+                cv_path=cv_path,
+                fields_filled=fields_filled,
+            )
 
     def render_template(self, template: str, context: dict[str, Any]) -> str:
         """Render {{key}} placeholders from a nested context mapping."""
