@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this project is
 
-Postulator 3000 is a modular job application pipeline that produces tailored CV and motivation letter documents from job postings. It combines a scraper, translator, LangGraph-native matching engine (with HITL review via a Textual TUI), document generation, and a typed render pipeline.
+Postulator 3000 is a modular job application pipeline that produces tailored CV and motivation letter documents from job postings. It combines a translator, LangGraph-native document generation engine (with HITL review via a Textual TUI), and a typed render pipeline.
 
 ## Commands
 
@@ -15,10 +15,7 @@ python -m pytest tests/ -q
 # Run a focused test subtree
 python -m pytest tests/unit/core/ai/generate_documents_v2 -q
 
-# Scrape job postings
-python -m src.scraper.main --source stepstone --limit 5
-
-# Translate scraped postings
+# Translate job postings
 python -m src.core.tools.translator.main --source stepstone
 
 # Run document generation pipeline helpers
@@ -45,7 +42,6 @@ Each skill is a self-contained package under `src/`:
 
 - `src/core/ai/generate_documents_v2/` — LangGraph-native staged document generation: `graph.py`, `contracts/`, `storage.py`, `nodes/`, `subgraphs/`, `pipeline.py`.
 - `src/core/tools/render/` — typed, engine-agnostic PDF/DOCX rendering via Pandoc + Jinja2. Entry point is `RenderCoordinator` in `coordinator.py`; `RenderRequest` in `request.py` is the unified request model.
-- `src/scraper/` — anti-bot job crawling with LLM fallbacks. Outputs `JobPosting` Pydantic models.
 - `src/core/tools/translator/` — field and document translation pipeline.
 - `src/review_ui/` — Textual TUI: `app.py` (`MatchReviewApp`), `bus.py` (`MatchBus` connects UI to LangGraph + disk), `screens/`, `widgets/`.
 
@@ -73,7 +69,6 @@ The graph persists stage artifacts per step and can expose review-oriented artif
 
 ### Shared data contracts
 
-- `JobPosting` — standardized job schema across scrapers and translators.
 - `JobKG` / `JobDelta` — staged job-understanding contracts for document generation.
 - `RenderRequest` — unified input model for the render coordinator.
 
@@ -92,7 +87,6 @@ Nodes must fail closed — no silent fallback-to-success. LLM calls use structur
 ```env
 GOOGLE_API_KEY=...       # Gemini API access
 GEMINI_API_KEY=...       # same key, both names accepted
-PLAYWRIGHT_BROWSERS_PATH=0  # for scraper browser automation
 LOG_DIR=logs             # directory for run-specific log files (default: logs/)
 ```
 

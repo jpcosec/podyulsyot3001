@@ -17,25 +17,6 @@ def test_review_parser_supports_explorer_mode() -> None:
     assert args.job_id is None
 
 
-def test_search_parser_accepts_multiple_sources() -> None:
-    parser = _build_parser()
-
-    args = parser.parse_args(
-        [
-            "search",
-            "--sources",
-            "xing",
-            "stepstone",
-            "--job-query",
-            "data scientist",
-            "--city",
-            "berlin",
-        ]
-    )
-
-    assert args.sources == ["xing", "stepstone"]
-
-
 def test_newest_jobs_for_sources_returns_most_recent_per_source(tmp_path) -> None:
     manager = DataManager(tmp_path / "data" / "jobs")
     manager.ingest_raw_job(source="xing", job_id="1", payload={"job_title": "A"})

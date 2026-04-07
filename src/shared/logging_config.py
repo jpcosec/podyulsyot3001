@@ -11,7 +11,7 @@ Usage (call once at entry-point startup, before any library code runs)::
     from src.shared.logging_config import configure_logging
 
     configure_logging()                              # console only
-    configure_logging(log_file="scraper_run.log")    # console + file
+    configure_logging(log_file="translator_run.log")    # console + file
 """
 
 from __future__ import annotations

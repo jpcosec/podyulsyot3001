@@ -27,8 +27,6 @@ def _build_parser() -> argparse.ArgumentParser:
 
     _add_api_parser(subparsers)
     _add_pipeline_parser(subparsers)
-    _add_scrape_parser(subparsers)
-    _add_search_parser(subparsers)
     _add_run_batch_parser(subparsers)
     _add_translate_parser(subparsers)
     _add_match_parser(subparsers)
@@ -55,29 +53,6 @@ def _add_pipeline_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("--profile-evidence", dest="profile_evidence")
     p.add_argument("--requirements")
     p.add_argument("--auto-approve-review", action="store_true")
-
-
-def _add_scrape_parser(subparsers: argparse._SubParsersAction) -> None:
-    p = subparsers.add_parser("scrape", help="Run discovery ingestion for one source")
-    p.add_argument("--source", required=True, help="Job portal source")
-    p.add_argument("--limit", type=int)
-    p.add_argument("--overwrite", action="store_true")
-    p.add_argument("--job-query", dest="job_query")
-    p.add_argument("--city")
-    p.add_argument("--categories", nargs="+")
-
-
-def _add_search_parser(subparsers: argparse._SubParsersAction) -> None:
-    p = subparsers.add_parser(
-        "search",
-        help="Run discovery ingestion across one or more sources",
-    )
-    p.add_argument("--sources", nargs="+", required=True, help="One or more sources")
-    p.add_argument("--limit", type=int)
-    p.add_argument("--overwrite", action="store_true")
-    p.add_argument("--job-query", dest="job_query", required=True)
-    p.add_argument("--city", required=True)
-    p.add_argument("--categories", nargs="+")
 
 
 def _add_run_batch_parser(subparsers: argparse._SubParsersAction) -> None:
@@ -329,55 +304,6 @@ async def _run_pipeline(args: argparse.Namespace) -> int:
     return 0
 
 
-async def _run_scrape(args: argparse.Namespace) -> int:
-    from src.scraper.main import build_providers
-
-    adapter = build_providers()[args.source]
-    ingested = await adapter.run(
-        already_scraped=[],
-        source=args.source,
-        drop_repeated=not args.overwrite,
-        overwrite=args.overwrite,
-        job_query=args.job_query,
-        city=args.city,
-        categories=args.categories,
-        limit=args.limit,
-    )
-    for job_id in ingested:
-        print(f"{args.source}\t{job_id}")
-    return 0
-
-
-async def _run_search(args: argparse.Namespace) -> int:
-    from src.scraper.main import build_providers, get_ingested_job_ids
-
-    providers = build_providers()
-    data_manager = DataManager()
-    results: list[tuple[str, str]] = []
-    for source in args.sources:
-        adapter = providers[source]
-        already_scraped = (
-            [] if args.overwrite else get_ingested_job_ids(data_manager, source)
-        )
-        ingested = await adapter.run(
-            already_scraped=already_scraped,
-            source=source,
-            drop_repeated=not args.overwrite,
-            overwrite=args.overwrite,
-            job_query=args.job_query,
-            city=args.city,
-            categories=args.categories,
-            limit=args.limit,
-        )
-        logger.info(
-            "%s Search ingested %s jobs for %s", LogTag.OK, len(ingested), source
-        )
-        results.extend((source, job_id) for job_id in ingested)
-    for source, job_id in results:
-        print(f"{source}\t{job_id}")
-    return 0
-
-
 async def _run_batch(args: argparse.Namespace) -> int:
     url = LangGraphAPIClient.ensure_server()
     client = LangGraphAPIClient(url)
@@ -544,10 +470,6 @@ def main(argv: list[str] | None = None) -> int:
             return asyncio.run(_run_api(args))
         if args.command == "pipeline":
             return asyncio.run(_run_pipeline(args))
-        if args.command == "scrape":
-            return asyncio.run(_run_scrape(args))
-        if args.command == "search":
-            return asyncio.run(_run_search(args))
         if args.command == "run-batch":
             return asyncio.run(_run_batch(args))
         if args.command == "translate":

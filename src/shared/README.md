@@ -33,7 +33,7 @@ Not a runnable module. Call `configure_logging` once at entry-point startup, bef
 from src.shared.logging_config import configure_logging
 
 configure_logging()                                    # console only
-configure_logging(log_file="scraper_xing_run.log")    # console + file under LOG_DIR
+configure_logging(log_file="translator_xing_run.log")    # console + file under LOG_DIR
 ```
 
 Import `LogTag` wherever structured log output is needed:
