@@ -149,11 +149,12 @@ class ApplyAdapter(ABC):
         from src.automation.motors.browseros.injection import get_browseros_injected_config
         return get_browseros_injected_config(headless=headless)
 
-    async def _get_live_state(self, session_id: str) -> Optional[str]:
+    async def _get_live_state(self, session_id: str, crawler: AsyncWebCrawler) -> Optional[str]:
         """Identify current semantic state by checking the live DOM.
         
         Args:
             session_id: Unique ID for the browser session.
+            crawler: The active AsyncWebCrawler instance.
             
         Returns:
             State ID if matched, else None.
@@ -179,15 +180,14 @@ class ApplyAdapter(ABC):
             results = await page.evaluate(js_code)
             return page
 
-        async with AsyncWebCrawler(config=self._browser_config()) as crawler:
-            await crawler.arun(
-                url="about:blank",
-                config=CrawlerRunConfig(
-                    js_only=True,
-                    session_id=session_id,
-                    hooks={"before_retrieve_html": _check_hook},
-                ),
-            )
+        await crawler.arun(
+            url="about:blank",
+            config=CrawlerRunConfig(
+                js_only=True,
+                session_id=session_id,
+                hooks={"before_retrieve_html": _check_hook},
+            ),
+        )
         
         return self.navigator.find_current_state(results)
 
@@ -311,11 +311,11 @@ class ApplyAdapter(ABC):
                         logger.info("%s Dry-run stop reached at step '%s'", LogTag.OK, step.name)
                         break
 
-                    current_state = await self._get_live_state(session_id)
-                    finished, status = self.navigator.check_mission_status(path.task_id, current_state or "")
+                    current_state = await self._get_live_state(session_id, crawler)
+                    finished, mission_status = self.navigator.check_mission_status(path.task_id, current_state or "")
                     if finished:
-                        logger.info("%s Mission Finished with status: %s", LogTag.OK, status)
-                        if status == "terminal_failure":
+                        logger.info("%s Mission Finished with status: %s", LogTag.OK, mission_status)
+                        if mission_status == "terminal_failure":
                             raise TerminalStateReached(f"Reached failure state: {current_state}")
                         break
 
@@ -347,11 +347,11 @@ class ApplyAdapter(ABC):
                             filename=f"step_{current_step_index}_{step.name}.png", content=result.screenshot
                         )
 
-                    next_state = await self._get_live_state(session_id)
+                    next_state = await self._get_live_state(session_id, crawler)
                     current_step_index = self.navigator.get_next_step_index(path, current_step_index, next_state)
 
-                status = "submitted" if not dry_run else "dry_run"
-                meta = ApplyMeta(status=status, timestamp=timestamp)
+                final_status = "submitted" if not dry_run else "dry_run"
+                meta = ApplyMeta(status=final_status, timestamp=timestamp)
                 self.storage.write_apply_meta(self.source_name, job_id, meta.model_dump())
                 return meta
 

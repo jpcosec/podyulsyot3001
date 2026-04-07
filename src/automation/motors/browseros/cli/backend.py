@@ -26,18 +26,32 @@ class BrowserOSApplyProvider:
     def __init__(
         self,
         *,
-        portal_map: AriadnePortalMap,
+        source_name: str,
         candidate_profile: dict[str, Any] | None = None,
         data_manager: DataManager | None = None,
         client: BrowserOSClient | None = None,
     ) -> None:
-        self.portal_map = portal_map
-        self.source_name = portal_map.portal_name
-        self.portal_base_url = portal_map.base_url
-        self.candidate_profile = candidate_profile or {}
         self.data_manager = data_manager or DataManager()
+        self.source_name = source_name
+        self._portal_map: Optional[AriadnePortalMap] = None
+        self.candidate_profile = candidate_profile or {}
         self.client = client or BrowserOSClient()
         self.executor = BrowserOSPlaybookExecutor(self.client)
+
+    @property
+    def portal_map(self) -> AriadnePortalMap:
+        """Loads and returns the unified semantic map for this portal."""
+        if not self._portal_map:
+            map_path = Path(__file__).parent.parent.parent.parent.parent / "portals" / self.source_name / "maps" / "easy_apply.json"
+            if not map_path.exists():
+                raise FileNotFoundError(f"Ariadne Map not found for {self.source_name} at {map_path}")
+            with open(map_path, "r") as f:
+                self._portal_map = AriadnePortalMap.model_validate(json.load(f))
+        return self._portal_map
+
+    @property
+    def portal_base_url(self) -> str:
+        return self.portal_map.base_url
 
     async def setup_session(self) -> None:
         """Open a visible BrowserOS page and wait for manual login."""
@@ -233,21 +247,15 @@ def build_browseros_providers(
     *,
     profile_data: dict[str, Any] | None = None,
 ) -> dict[str, BrowserOSApplyProvider]:
-    """Build BrowserOS-backed apply providers from Ariadne Maps."""
+    """Build BrowserOS-backed apply providers."""
     manager = data_manager or DataManager()
     
-    portals_root = Path(__file__).parent.parent.parent.parent.parent / "portals"
     providers = {}
-    
     for portal in ["linkedin", "xing", "stepstone"]:
-        map_path = portals_root / portal / "maps" / "easy_apply.json"
-        if map_path.exists():
-            with open(map_path, "r") as f:
-                portal_map = AriadnePortalMap.model_validate(json.load(f))
-                providers[portal] = BrowserOSApplyProvider(
-                    portal_map=portal_map,
-                    candidate_profile=profile_data,
-                    data_manager=manager,
-                )
+        providers[portal] = BrowserOSApplyProvider(
+            source_name=portal,
+            candidate_profile=profile_data,
+            data_manager=manager,
+        )
     
     return providers
