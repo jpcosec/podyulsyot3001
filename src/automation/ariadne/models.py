@@ -5,6 +5,7 @@ This module defines the backend-neutral models for automation:
 2. Intent Vocabulary (What actions to perform)
 3. Standardized Path (Linear sequences)
 4. Semantic Layer (States, Tasks, and Goals)
+5. Execution Contracts (JobPosting, ApplyMeta, etc.)
 """
 
 from __future__ import annotations
@@ -31,6 +32,40 @@ class ScrapePortalDefinition(BaseModel):
     def must_be_valid_regex(cls, v: str) -> str:
         re.compile(v)
         return v
+
+
+class JobPosting(BaseModel):
+    """Standardized extraction output contract for all scraping sources."""
+
+    # Mandatory
+    job_title: str = Field(..., description="The official job title")
+    company_name: str = Field(..., description="Name of the company, university, or institution")
+    location: str = Field(..., description="City or primary location")
+    employment_type: str = Field(..., description="Type of employment (e.g. Full-time, Part-time, Internship)")
+    responsibilities: List[str] = Field(
+        ..., min_length=1, description="List of responsibilities or tasks. Extract as short action phrases."
+    )
+    requirements: List[str] = Field(
+        ..., min_length=1, description="List of requirements, profile or skills."
+    )
+
+    # Optional
+    salary: Optional[str] = Field(default=None, description="Estimated salary or salary range.")
+    remote_policy: Optional[str] = Field(default=None, description="Remote work policy (On-site, Hybrid, 100% Remote).")
+    benefits: List[str] = Field(default_factory=list, description="Extra benefits offered.")
+    company_description: Optional[str] = Field(default=None, description="Short description of the company.")
+    company_industry: Optional[str] = Field(default=None, description="Sector or industry.")
+    company_size: Optional[str] = Field(default=None, description="Company size.")
+    posted_date: Optional[str] = Field(default=None, description="Date of publication (ISO timestamp preferred).")
+    days_ago: Optional[str] = Field(default=None, description="Relative publication age.")
+    application_deadline: Optional[str] = Field(default=None, description="Deadline to apply.")
+    application_method: Optional[str] = Field(default=None, description="How to apply (e.g. 'email', 'external portal').")
+    application_url: Optional[str] = Field(default=None, description="Direct application URL or apply button target.")
+    application_email: Optional[str] = Field(default=None, description="Application email address.")
+    application_instructions: Optional[str] = Field(default=None, description="Short instructions on how to apply.")
+    reference_number: Optional[str] = Field(default=None, description="Internal reference code for the posting.")
+    contact_info: Optional[str] = Field(default=None, description="Email or contact person for application.")
+    original_language: Optional[str] = Field(default=None, description="The detected ISO 639-1 language code.")
 
 
 # --- Target Layer ---
@@ -164,11 +199,7 @@ class AriadnePath(BaseModel):
 # --- The Unified Map ---
 
 class AriadnePortalMap(BaseModel):
-    """The 'One Map' per portal flow, containing all semantics and paths.
-    
-    This is the top-level container for all knowledge about a portal's 
-    automation structure.
-    """
+    """The 'One Map' per portal flow, containing all semantics and paths."""
 
     portal_name: str = Field(description="Unique identifier for the portal (e.g., 'linkedin').")
     base_url: str = Field(description="The starting URL for automation on this portal.")
@@ -191,3 +222,36 @@ class AriadnePortalMap(BaseModel):
         default_factory=dict,
         description="Reusable targets that appear across multiple states (e.g., Logout button)."
     )
+
+
+# --- Execution Contracts ---
+
+class ApplicationRecord(BaseModel):
+    """Persisted record of one apply attempt for a specific job."""
+
+    source: str = Field(description="The portal source name.")
+    job_id: str = Field(description="Unique identifier for the job.")
+    job_title: str = Field(description="Title of the job applied for.")
+    company_name: str = Field(description="Name of the company.")
+    application_url: str = Field(description="URL used for the application.")
+    cv_path: str = Field(description="Local path to the CV used.")
+    letter_path: Optional[str] = Field(default=None, description="Local path to the cover letter if used.")
+    fields_filled: List[str] = Field(default_factory=list, description="List of semantic fields/components interacted with.")
+    dry_run: bool = Field(description="Whether this was a dry-run.")
+    submitted_at: Optional[str] = Field(default=None, description="ISO timestamp of submission.")
+    confirmation_text: Optional[str] = Field(default=None, description="Success text fragment captured after submission.")
+
+
+class ApplyMeta(BaseModel):
+    """Small status artifact describing the outcome of an apply run."""
+
+    status: Literal["submitted", "dry_run", "failed", "portal_changed"] = Field(description="Final outcome status.")
+    timestamp: str = Field(description="ISO timestamp of the attempt.")
+    error: Optional[str] = Field(default=None, description="Error message if failed.")
+
+
+# Rebuild models to resolve forward references
+AriadneAction.model_rebuild()
+AriadneStep.model_rebuild()
+AriadnePath.model_rebuild()
+AriadnePortalMap.model_rebuild()

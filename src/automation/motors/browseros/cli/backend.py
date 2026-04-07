@@ -8,13 +8,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from src.automation.ariadne.models import AriadnePortalMap
+from src.automation.ariadne.models import ApplicationRecord, ApplyMeta, AriadnePortalMap
 from src.automation.motors.browseros.cli.client import BrowserOSClient
 from src.automation.motors.browseros.cli.executor import (
     BrowserOSObserveError,
     BrowserOSPlaybookExecutor,
 )
-from src.automation.motors.crawl4ai.models import ApplicationRecord, ApplyMeta
 from src.core.data_manager import DataManager
 from src.shared.log_tags import LogTag
 

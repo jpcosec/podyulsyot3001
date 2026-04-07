@@ -16,7 +16,15 @@ from typing import Any, Optional
 
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig
 
-from src.automation.ariadne.models import AriadnePortalMap, AriadnePath, AriadneTask, AriadneStep, AriadneIntent
+from src.automation.ariadne.models import (
+    ApplicationRecord,
+    ApplyMeta,
+    AriadneIntent,
+    AriadnePath,
+    AriadnePortalMap,
+    AriadneStep,
+    AriadneTask,
+)
 from src.automation.motors.crawl4ai.compiler.compiler import AriadneC4AICompiler
 from src.automation.motors.crawl4ai.compiler.serializer import C4AIScriptSerializer
 from src.automation.ariadne.exceptions import (
@@ -27,7 +35,6 @@ from src.automation.ariadne.exceptions import (
     TerminalStateReached,
 )
 from src.automation.ariadne.navigator import AriadneNavigator
-from src.automation.motors.crawl4ai.models import ApplicationRecord, ApplyMeta
 from src.automation.storage import AutomationStorage
 from src.shared.log_tags import LogTag
 

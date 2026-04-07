@@ -24,7 +24,7 @@ from crawl4ai.extraction_strategy import JsonCssExtractionStrategy
 from dotenv import load_dotenv
 
 from src.core.data_manager import DataManager
-from src.automation.motors.crawl4ai.models import JobPosting
+from src.automation.ariadne.models import JobPosting
 from src.shared.log_tags import LogTag
 
 load_dotenv()

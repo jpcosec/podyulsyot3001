@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from src.automation.motors.crawl4ai.models import (
+from src.automation.ariadne.models import (
     ApplicationRecord,
     ApplyMeta,
     JobPosting,
