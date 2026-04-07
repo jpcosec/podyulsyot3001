@@ -72,11 +72,8 @@ function renderNodeBody(data: ASTNode['data'], colorToken: string, zoom: number)
   const asJson = asDataRecord(data);
   const typeId = asJson.typeId as string | undefined;
   
-  if (!typeId) {
-    return null;
-  }
-  
-  const definition = registry.get(typeId);
+  const safeTypeId = typeId ?? 'entity';
+  const definition = registry.get(safeTypeId);
   if (!definition) {
     return null;
   }
