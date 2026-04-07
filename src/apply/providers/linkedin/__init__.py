@@ -1,1 +1,0 @@
-"""LinkedIn apply provider package."""

@@ -1,1 +1,0 @@
-"""XING apply provider package."""
