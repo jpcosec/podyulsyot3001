@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from typing import Any
+from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
@@ -16,6 +17,22 @@ XING_SCRAPE = ScrapePortalDefinition(
     base_url="https://www.xing.com",
     supported_params=["job_query", "city", "max_days"],
     job_id_pattern=r"-(\d+)(?:[?#]|$)",
+)
+
+_RELATIVE_DATE_RE = re.compile(
+    r"(vor\s+\d+\s+(?:minute[n]?|stunde[n]?|tag(?:en)?|woche[n]?|monat(?:en)?)|"
+    r"\d+\s+(?:minute|minutes|hour|hours|day|days|week|weeks|month|months)\s+ago|"
+    r"heute|gestern|today|yesterday)",
+    re.IGNORECASE,
+)
+_SALARY_RE = re.compile(r"(?:€|eur|salary|gehalt|k\b|\d+\s*[kK])", re.IGNORECASE)
+_EMPLOYMENT_RE = re.compile(
+    r"(full[- ]?time|part[- ]?time|intern(ship)?|contract|temporary|freelance|"
+    r"vollzeit|teilzeit|werkstudent|praktikum|befristet|unbefristet)",
+    re.IGNORECASE,
+)
+_LOCATION_RE = re.compile(
+    r"(remote|hybrid|onsite|vor ort|homeoffice|[A-Z][A-Za-z\-]+(?:,\s*[A-Z][A-Za-z\-]+)?)"
 )
 
 
@@ -65,34 +82,215 @@ class XingAdapter(SmartScraperAdapter):
         if not html:
             return []
         soup = BeautifulSoup(html, "html.parser")
+        raw_html = getattr(crawl_result, "html", "") or html
+        raw_fragment_map = self._fragment_map(BeautifulSoup(raw_html, "html.parser"))
         job_links: list[ScrapeDiscoveryEntry] = []
         seen: set[str] = set()
         for a in soup.find_all("a", href=True):
-            href = a["href"]
-            if re.search(r"-(\d+)$", href) and "xing.com/jobs/" in href:
-                if href in seen:
-                    continue
-                seen.add(href)
-                teaser_text = a.get_text(" ", strip=True) or None
-                job_links.append(
-                    ScrapeDiscoveryEntry(
-                        url=href,
-                        job_id=self.extract_job_id(href),
-                        listing_position=len(job_links),
-                        listing_snippet=teaser_text,
-                        listing_data={"job_title": teaser_text} if teaser_text else {},
-                        listing_link={
-                            "href": href,
-                            "title": a.get("title"),
-                            "aria_label": a.get("aria-label"),
-                        },
-                        source_metadata={
-                            "anchor_title": a.get("title"),
-                            "anchor_aria_label": a.get("aria-label"),
-                        },
-                    )
+            href = self._normalize_job_url(a["href"])
+            if not href:
+                continue
+            if href in seen:
+                continue
+            seen.add(href)
+            card = self._find_listing_card(a, href)
+            texts = self._card_texts(card)
+            title = self._pick_title(a, card)
+            posted_date = self._pick_posted_date(card, texts)
+            salary = self._pick_salary(card, texts)
+            employment_type = self._pick_employment_type(card, texts)
+            company_name, location = self._pick_company_and_location(
+                card,
+                texts,
+                title=title,
+                posted_date=posted_date,
+                salary=salary,
+                employment_type=employment_type,
+            )
+            teaser_text = "\n".join(texts) or None
+            raw_fragments = raw_fragment_map.get(href, [])
+            raw_fragment = raw_fragments.pop(0) if raw_fragments else None
+            listing_data = {
+                key: value
+                for key, value in {
+                    "job_title": title,
+                    "company_name": company_name,
+                    "location": location,
+                    "salary": salary,
+                    "employment_type": employment_type,
+                    "posted_date": posted_date,
+                }.items()
+                if value
+            }
+            job_links.append(
+                ScrapeDiscoveryEntry(
+                    url=href,
+                    job_id=self.extract_job_id(href),
+                    listing_position=len(job_links),
+                    listing_snippet=teaser_text,
+                    listing_data=listing_data,
+                    listing_link={
+                        "href": href,
+                        "title": a.get("title"),
+                        "aria_label": a.get("aria-label"),
+                    },
+                    source_metadata={
+                        "anchor_title": a.get("title"),
+                        "anchor_aria_label": a.get("aria-label"),
+                        "listing_texts": texts,
+                    },
+                    listing_case_html=raw_fragment or str(card),
+                    listing_case_cleaned_html=str(card),
                 )
+            )
         return job_links
+
+    def _normalize_job_url(self, href: str | None) -> str | None:
+        if not href:
+            return None
+        absolute = urljoin(f"{self.portal.base_url}/", href)
+        if "xing.com/jobs/" not in absolute:
+            return None
+        return absolute if re.search(r"-(\d+)(?:[?#]|$)", absolute) else None
+
+    def _find_listing_card(self, anchor, href: str):
+        card = anchor
+        for parent in anchor.parents:
+            if getattr(parent, "name", None) not in {"article", "li", "div", "section"}:
+                continue
+            matches = [
+                self._normalize_job_url(link.get("href"))
+                for link in parent.find_all("a", href=True)
+            ]
+            if matches.count(href) == 1:
+                card = parent
+                if len(self._card_texts(parent)) > 1:
+                    return parent
+        return card
+
+    def _fragment_map(self, soup: BeautifulSoup) -> dict[str, list[str]]:
+        fragments: dict[str, list[str]] = {}
+        for anchor in soup.find_all("a", href=True):
+            href = self._normalize_job_url(anchor.get("href"))
+            if not href:
+                continue
+            fragments.setdefault(href, []).append(
+                str(self._find_listing_card(anchor, href))
+            )
+        return fragments
+
+    def _card_texts(self, card) -> list[str]:
+        texts: list[str] = []
+        seen: set[str] = set()
+        for value in card.stripped_strings:
+            cleaned = " ".join(value.split())
+            if not cleaned or cleaned in seen:
+                continue
+            seen.add(cleaned)
+            texts.append(cleaned)
+        return texts
+
+    def _pick_text(self, card, selectors: tuple[str, ...], matcher=None) -> str | None:
+        for selector in selectors:
+            for node in card.select(selector):
+                text = node.get_text(" ", strip=True)
+                if text and (matcher is None or matcher.search(text)):
+                    return text
+        return None
+
+    def _pick_title(self, anchor, card) -> str | None:
+        return self._pick_text(
+            card, ("h1", "h2", "h3", "[role='heading']")
+        ) or anchor.get_text(" ", strip=True)
+
+    def _pick_posted_date(self, card, texts: list[str]) -> str | None:
+        text = self._pick_text(
+            card,
+            ("time", "[datetime]", "[class*='date']", "[data-testid*='date']"),
+            _RELATIVE_DATE_RE,
+        )
+        if text:
+            return text
+        return next((value for value in texts if _RELATIVE_DATE_RE.search(value)), None)
+
+    def _pick_salary(self, card, texts: list[str]) -> str | None:
+        text = self._pick_text(
+            card,
+            ("[class*='salary']", "[class*='compensation']", "[data-testid*='salary']"),
+            _SALARY_RE,
+        )
+        if text:
+            return text
+        return next((value for value in texts if _SALARY_RE.search(value)), None)
+
+    def _pick_employment_type(self, card, texts: list[str]) -> str | None:
+        text = self._pick_text(
+            card,
+            (
+                "[class*='employment']",
+                "[class*='contract']",
+                "[data-testid*='employment']",
+            ),
+            _EMPLOYMENT_RE,
+        )
+        if text:
+            return text
+        return next((value for value in texts if _EMPLOYMENT_RE.search(value)), None)
+
+    def _pick_company_and_location(
+        self,
+        card,
+        texts: list[str],
+        *,
+        title: str | None,
+        posted_date: str | None,
+        salary: str | None,
+        employment_type: str | None,
+    ) -> tuple[str | None, str | None]:
+        company = self._pick_text(
+            card,
+            ("[class*='company']", "[data-testid*='company']", "[data-qa*='company']"),
+        )
+        location = self._pick_text(
+            card,
+            (
+                "[class*='location']",
+                "[data-testid*='location']",
+                "[data-qa*='location']",
+            ),
+            _LOCATION_RE,
+        )
+        reserved = {
+            value
+            for value in (
+                title,
+                company,
+                location,
+                posted_date,
+                salary,
+                employment_type,
+            )
+            if value
+        }
+        candidates = [
+            value
+            for value in texts
+            if value not in reserved
+            and not value.startswith("http")
+            and len(value) <= 80
+        ]
+        if company is None and candidates:
+            company = candidates[0]
+        if location is None:
+            location = next(
+                (
+                    value
+                    for value in [*candidates[1:], *candidates[:1]]
+                    if _LOCATION_RE.search(value) and value != company
+                ),
+                None,
+            )
+        return company, location
 
     def get_llm_instructions(self) -> str:
         """LLM extraction hints for XING job detail pages."""

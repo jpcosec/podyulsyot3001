@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-07] - XING Listing Metadata Composition
+
+### Added
+- Added XING scrape regression coverage for teaser-card metadata extraction and pre-validation listing/detail payload composition.
+
+### Changed
+- Reworked `src/automation/motors/crawl4ai/portals/xing/scrape.py` to capture job-scoped listing card fragments, preserve richer teaser evidence, and feed listing-side publication metadata into the shared scrape-engine merge path before `JobPosting` validation.
+
 ## [2026-04-07] - BrowserOS Letter Upload Routing
 
 ### Added
