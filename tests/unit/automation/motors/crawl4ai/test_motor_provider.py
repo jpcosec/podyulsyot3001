@@ -31,3 +31,12 @@ async def test_open_session_yields_session_with_correct_interface():
         async with provider.open_session("test-session") as session:
             assert hasattr(session, "observe")
             assert hasattr(session, "execute_step")
+
+
+@pytest.mark.asyncio
+async def test_observe_returns_empty_for_empty_selectors():
+    from src.automation.motors.crawl4ai.apply_engine import C4AIMotorSession
+    from unittest.mock import MagicMock
+    session = C4AIMotorSession(MagicMock(), "sess", MagicMock())
+    result = await session.observe(set())
+    assert result == {}

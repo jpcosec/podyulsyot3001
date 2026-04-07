@@ -6,18 +6,15 @@ Orchestration (map loading, navigation, run loop) is owned by AriadneSession.
 from __future__ import annotations
 
 import json
-import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any, AsyncIterator
 
 from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig
 
+from src.automation.ariadne.exceptions import ObservationFailed
 from src.automation.ariadne.models import AriadneStep
 from src.automation.motors.crawl4ai.replayer import C4AIReplayer
-from src.shared.log_tags import LogTag
-
-logger = logging.getLogger(__name__)
 
 
 class C4AIMotorSession:
@@ -39,7 +36,7 @@ class C4AIMotorSession:
             return {}
 
         js_checks = ", ".join(
-            f'"{sel}": !!document.querySelector({json.dumps(sel)})'
+            f"{json.dumps(sel)}: !!document.querySelector({json.dumps(sel)})"
             for sel in selectors
         )
         js_code = f"return {{{js_checks}}};"
@@ -58,6 +55,8 @@ class C4AIMotorSession:
                 hooks={"before_retrieve_html": _check_hook},
             ),
         )
+        if selectors and not results:
+            raise ObservationFailed("observe() returned empty results — hook may not have fired")
         return results
 
     async def execute_step(
