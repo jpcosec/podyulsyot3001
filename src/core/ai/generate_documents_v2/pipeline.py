@@ -33,10 +33,12 @@ from src.core.ai.generate_documents_v2.nodes.requirement_filter import (
     run_requirement_filter,
 )
 from src.core.ai.generate_documents_v2.profile_loader import (
+    filter_sections_by_strategy,
     load_profile_kg,
     load_section_mapping,
 )
 from src.core.ai.generate_documents_v2.storage import PipelineArtifactStore
+from src.core.ai.generate_documents_v2.strategies import select_strategy
 
 
 def generate_application_documents(
@@ -90,12 +92,17 @@ def generate_application_documents(
     )
     matches = [MatchEdge.model_validate(item) for item in alignment["matches"]]
 
+    strategy = select_strategy(strategy_type, target_language)
+    filtered_mapping = filter_sections_by_strategy(section_mapping, strategy)
+
     blueprint_state = run_blueprint(
         source=source,
         job_id=job_id,
         application_id=f"{source}-{job_id}",
         strategy_type=strategy_type,
-        section_mapping=section_mapping,
+        chosen_strategy=strategy.name,
+        section_order=strategy.section_order,
+        section_mapping=filtered_mapping,
         job_delta=job_delta,
         matches=matches,
         chain=build_blueprint_chain(),

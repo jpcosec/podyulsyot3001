@@ -2,20 +2,25 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 from langgraph.graph import END, START, StateGraph
 
 from src.core.ai.generate_documents_v2.contracts.profile import ProfileKG
 from src.core.ai.generate_documents_v2.contracts.job import JobKG
+from src.core.ai.generate_documents_v2.hitl_patch_engine import apply_patches
 from src.core.ai.generate_documents_v2.state import GenerateDocumentsV2State
 from src.core.ai.generate_documents_v2.storage import PipelineArtifactStore
+from src.shared.log_tags import LogTag
+
+logger = logging.getLogger(__name__)
 
 
 def build_stage2_semantic_bridge(store: PipelineArtifactStore) -> Any:
     """Build the Stage 2 subgraph."""
     workflow = StateGraph(GenerateDocumentsV2State)
     workflow.add_node("alignment_engine", _make_alignment_node(store))
-    workflow.add_node("hitl_1_match_evidence", _make_hitl1_node())
+    workflow.add_node("hitl_1_match_evidence", _make_hitl1_node(store))
     workflow.add_edge(START, "alignment_engine")
 
     def _route_to_hitl(state: GenerateDocumentsV2State) -> str:
@@ -55,9 +60,20 @@ def _make_alignment_node(store: PipelineArtifactStore):
     return node
 
 
-def _make_hitl1_node():
+def _make_hitl1_node(store: PipelineArtifactStore):
     def node(state: GenerateDocumentsV2State) -> dict[str, Any]:
         if state.get("auto_approve_review", False):
-            return {"match_outcome": "approved", "status": "running"}
-        return {"status": "interrupted"}
+            logger.warning("%s auto_approve_review=True: skipping HITL review for match", LogTag.WARN)
+            return {"match_outcome": "approved", "status": "running", "pending_patches": []}
+
+        if not state.get("pending_patches"):
+            return {"status": "interrupted"}
+
+        return apply_patches(
+            state=state,
+            stage="hitl_1_match_evidence",
+            outcome_key="match_outcome",
+            mutable_state_key="matches",
+            store=store,
+        )
     return node

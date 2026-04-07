@@ -42,6 +42,7 @@ Produce a JobKG with:
 - soft_context: culture, collaboration, growth mentions
 - logistics: location, remote/hybrid, contract type, relocation support, visa sponsorship
 - company: company name, hiring department, contact person if mentioned
+- salary_range: salary or pay-grade as stated (e.g. "EUR 70k–90k", "Grade IC4"); omit if not mentioned
 """
 
 
@@ -70,6 +71,7 @@ Produce a JobKG with:
 - soft_context written in English for human auditability
 - logistics normalized from the canonical state
 - company metadata
+- salary_range: salary or pay-grade from canonical state or teaser; omit if not mentioned
 
 Important:
 - Keep company names and original titles exact where possible.

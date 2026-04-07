@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import os
 from typing import Any
 
 from src.core.ai.generate_documents_v2.contracts.blueprint import GlobalBlueprint
@@ -17,12 +16,9 @@ from src.core.ai.generate_documents_v2.prompts.blueprint import (
 from src.core.ai.generate_documents_v2.storage import PipelineArtifactStore
 from src.shared.log_tags import LogTag
 
+from ._utils import _google_api_key
+
 logger = logging.getLogger(__name__)
-
-
-# TODO(future): extract to shared helper — see future_docs/issues/core/ai/generate_documents_v2/google_api_key_duplication.md
-def _google_api_key() -> str | None:
-    return os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
 
 
 def run_blueprint(
@@ -31,6 +27,8 @@ def run_blueprint(
     job_id: str,
     application_id: str,
     strategy_type: str,
+    chosen_strategy: str,
+    section_order: list[str],
     section_mapping: list[SectionMappingItem],
     job_delta: JobDelta,
     matches: list[MatchEdge],
@@ -44,8 +42,10 @@ def run_blueprint(
         source: Source name for artifact placement.
         job_id: Job identifier for artifact placement.
         application_id: Stable application identifier.
-        strategy_type: Document strategy name.
-        section_mapping: Section mapping configuration.
+        strategy_type: Raw strategy name from state (forwarded to prompt).
+        chosen_strategy: Resolved strategy name from ``select_strategy``.
+        section_order: Preferred section ordering from the resolved strategy.
+        section_mapping: Section mapping configuration (pre-filtered by strategy).
         job_delta: Focused job delta from requirement filtering.
         matches: Match edges produced by alignment.
         chain: Structured-output chain used for blueprint generation.
@@ -55,7 +55,10 @@ def run_blueprint(
     Returns:
         Serialized blueprint plus artifact refs and stage status.
     """
-    logger.info("%s Blueprint: planning sections for %s/%s", LogTag.LLM, source, job_id)
+    logger.info(
+        "%s Blueprint: planning sections for %s/%s (strategy=%s)",
+        LogTag.LLM, source, job_id, chosen_strategy,
+    )
     job_title = (
         job_kg.job_title_original or job_kg.job_title_english if job_kg else None
     )
@@ -71,9 +74,10 @@ def run_blueprint(
     blueprint: GlobalBlueprint = chain.invoke(
         {"system": BLUEPRINT_SYSTEM_PROMPT, "user": user_prompt}
     )
-    # Ensure context fields are preserved
+    # Preserve context fields and record the resolved strategy
     blueprint.job_title = job_title
     blueprint.source = source
+    blueprint.chosen_strategy = chosen_strategy
 
     refs = store.write_stage(source, job_id, "blueprint", blueprint.model_dump())
     return {
@@ -118,6 +122,7 @@ class _DemoBlueprintChain:
         return GlobalBlueprint(
             application_id="demo",
             strategy_type="professional",
+            chosen_strategy="generic",
             sections=[
                 SectionBlueprint(
                     section_id="summary",

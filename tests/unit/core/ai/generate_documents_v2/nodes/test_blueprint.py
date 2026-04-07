@@ -61,6 +61,8 @@ def test_run_blueprint_returns_blueprint(store):
         job_id="job-1",
         application_id="APP1",
         strategy_type="professional",
+        chosen_strategy="generic",
+        section_order=["summary", "experience", "education", "skills"],
         section_mapping=MAPPING,
         job_delta=DELTA,
         matches=MATCHES,
@@ -90,6 +92,8 @@ def test_run_blueprint_writes_disk(store, tmp_path):
         job_id="job-2",
         application_id="APP1",
         strategy_type="professional",
+        chosen_strategy="generic",
+        section_order=["summary", "experience", "education", "skills"],
         section_mapping=MAPPING,
         job_delta=DELTA,
         matches=MATCHES,
@@ -102,6 +106,7 @@ def test_run_blueprint_writes_disk(store, tmp_path):
         ).read_text()
     )
     assert payload["strategy_type"] == "professional"
+    assert payload["chosen_strategy"] == "generic"
 
 
 def test_blueprint_prompt_includes_mapping_and_delta(store):
@@ -115,6 +120,8 @@ def test_blueprint_prompt_includes_mapping_and_delta(store):
         job_id="job-3",
         application_id="APP1",
         strategy_type="professional",
+        chosen_strategy="generic",
+        section_order=["summary", "experience", "education", "skills"],
         section_mapping=MAPPING,
         job_delta=DELTA,
         matches=MATCHES,

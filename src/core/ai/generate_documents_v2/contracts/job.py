@@ -54,6 +54,14 @@ class JobKG(BaseModel):
     soft_context: list[JobRequirement] = Field(default_factory=list)
     logistics: JobLogistics = Field(default_factory=JobLogistics)
     company: CompanyData = Field(default_factory=CompanyData)
+    salary_range: str | None = Field(
+        default=None,
+        description=(
+            "Salary or pay-grade information as stated in the posting "
+            "(e.g. 'EUR 70k–90k', 'Grade IC4', 'competitive'). "
+            "Preserve the original wording; omit when not mentioned."
+        ),
+    )
     source_anchors: list[TextAnchor] = Field(default_factory=list)
 
 

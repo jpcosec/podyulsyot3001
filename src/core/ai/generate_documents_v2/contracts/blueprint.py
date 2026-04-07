@@ -20,6 +20,7 @@ class GlobalBlueprint(BaseModel):
 
     application_id: str
     strategy_type: str
+    chosen_strategy: str = "generic"
     job_title: str | None = None
     source: str | None = None
     sections: list[SectionBlueprint] = Field(default_factory=list)

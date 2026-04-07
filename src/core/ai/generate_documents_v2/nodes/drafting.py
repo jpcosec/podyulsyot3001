@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import os
 from typing import Any
 
 from src.core.ai.generate_documents_v2.contracts.blueprint import GlobalBlueprint
@@ -15,12 +14,9 @@ from src.core.ai.generate_documents_v2.prompts.drafting import (
 from src.core.ai.generate_documents_v2.storage import PipelineArtifactStore
 from src.shared.log_tags import LogTag
 
+from ._utils import _google_api_key
+
 logger = logging.getLogger(__name__)
-
-
-# TODO(future): extract to shared helper — see future_docs/issues/core/ai/generate_documents_v2/google_api_key_duplication.md
-def _google_api_key() -> str | None:
-    return os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY")
 
 
 def run_drafting(

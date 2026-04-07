@@ -68,11 +68,70 @@ The contract layer lives in `src/core/ai/generate_documents_v2/contracts/`.
 
 ## 🛠️ How to Add / Extend
 
+### Stable extension points
+
+These are the surfaces designed for external configuration or downstream use.  Changes here do not require touching node internals.
+
+**1. Graph control fields in `GenerateDocumentsV2State`**
+(`src/core/ai/generate_documents_v2/state.py`)
+
+Set these fields in the initial state dict to control pipeline behavior:
+
+| Field | Effect |
+|---|---|
+| `target_language` | BCP-47 tag (e.g. `"de"`); controls assembly localization and file suffixes |
+| `auto_approve_review` | `True` skips all three HITL checkpoints; always emits a `WARN` log |
+| `profile_path` | Override default profile JSON path |
+| `mapping_path` | Override default section mapping JSON path |
+| `profile_evidence` | Inject a raw profile dict directly, bypassing file loading |
+| `strategy_type` | Blueprint strategy name forwarded to the LLM prompt (e.g. `"academic"`) |
+
+Full field documentation is in the `GenerateDocumentsV2State` docstring.
+
+**2. Profile and section mapping patch files**
+(`src/core/ai/generate_documents_v2/profile_loader.py`)
+
+Drop JSON patch files alongside the profile to extend content without code changes:
+
+- `profile_patches.json` beside the profile file — add skills, traits, or entries
+- `section_mapping_patches.json` beside the mapping file — reorder, retarget, or update section rules
+
+The patch format is documented in `load_profile_kg` and `load_section_mapping` in `profile_loader.py`.
+
+**3. `SectionMappingItem.country_context`**
+(`src/core/ai/generate_documents_v2/contracts/profile.py`)
+
+This field is the reserved seam for regional document strategies.  It defaults to `"global"` and is currently unused by the pipeline.  A future `regional_document_strategies` phase will filter or reorder `SectionMappingItem` lists by this field before the blueprint node runs — no changes to node signatures or contracts are required for that extension.
+
+**4. LLM model injection via `build_*_chain(model=...)`**
+(`src/core/ai/generate_documents_v2/nodes/`)
+
+Every node exposes a `build_<stage>_chain(model=None)` factory.  Pass a pre-configured `ChatGoogleGenerativeAI` (or any LangChain-compatible model) to override the default Gemini 2.5 Flash model.  Used in tests and for swapping model tiers without touching prompts.
+
+**5. `build_profile_kg(raw_data, patch_path=None)`**
+(`src/core/ai/generate_documents_v2/profile_loader.py`)
+
+The dict-based entry point for profile loading.  Call this directly (instead of `load_profile_kg`) when the profile dict is already in memory, or pass `patch_path=None` to skip patching.
+
+### Internal — requires direct edits
+
+The following are implementation detail and do not have stable public interfaces yet.  Extending them means editing the relevant files directly and running the test suite.
+
+| Area | Location | How to change |
+|---|---|---|
+| Prompt text and structure | `src/core/ai/generate_documents_v2/prompts/` | Edit the module for the relevant stage |
+| Node logic | `src/core/ai/generate_documents_v2/nodes/` | Edit the node and update its tests |
+| Subgraph wiring | `src/core/ai/generate_documents_v2/subgraphs/` | Edit the subgraph builder |
+| Top-level graph topology | `src/core/ai/generate_documents_v2/graph.py` | Edit node registration and edge definitions |
+| Contract shapes | `src/core/ai/generate_documents_v2/contracts/` | Edit the Pydantic model and update all callers |
+
+### Adding a new pipeline stage
+
 1. Add or update a contract in `src/core/ai/generate_documents_v2/contracts/` first if the data shape changes.
 2. Add the stage logic in `src/core/ai/generate_documents_v2/nodes/` and keep node functions narrow and testable.
 3. Wire or adjust the corresponding subgraph in `src/core/ai/generate_documents_v2/subgraphs/`.
 4. Persist new stage outputs through `PipelineArtifactStore` in `src/core/ai/generate_documents_v2/storage.py`.
-5. Add focused tests under `tests/test_generate_documents_v2/`.
+5. Add focused tests under `tests/unit/core/ai/generate_documents_v2/`.
 6. If the change is deferred or intentionally not implemented now, record it in `future_docs/issues/core/ai/generate_documents_v2/` instead of over-documenting it here.
 
 ## 💻 How to Use

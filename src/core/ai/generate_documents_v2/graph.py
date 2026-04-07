@@ -6,8 +6,10 @@ application document generation engine.
 
 from __future__ import annotations
 
+import json
 import logging
 import os
+from pathlib import Path
 from typing import Any
 
 from langgraph.graph import END, START, StateGraph
@@ -18,6 +20,8 @@ from src.core.ai.generate_documents_v2.profile_loader import (
     load_profile_kg,
     load_section_mapping,
 )
+from src.core.ai.generate_documents_v2.contracts.hitl import ProfileUpdateRecord
+from src.core.ai.generate_documents_v2.hitl_patch_engine import _apply_dot_path
 from src.core.ai.generate_documents_v2.subgraphs.stage1_ingestion import build_stage1_ingestion
 from src.core.ai.generate_documents_v2.subgraphs.stage2_semantic_bridge import build_stage2_semantic_bridge
 from src.core.ai.generate_documents_v2.subgraphs.stage3_macroplanning import build_stage3_macroplanning
@@ -95,7 +99,8 @@ def _route_after_stage5(state: GenerateDocumentsV2State) -> str:
         return "__end__"
     if outcome == "content_regen":
         return "stage_4_microplanning"
-    if state.get("auto_approve_review", True):
+    if state.get("auto_approve_review", False):
+        logger.warning("%s auto_approve_review=True: skipping HITL review for bundle", LogTag.WARN)
         return "profile_updater"
     return "__end__"
 
@@ -135,11 +140,54 @@ def _make_load_inputs_node():
 
 
 def _make_profile_updater_node():
-    """Stage 6 helper: applying successful application insights back to profile."""
+    """Stage 6 helper: applying approved profile updates back to disk."""
     def node(state: GenerateDocumentsV2State) -> dict[str, Any]:
-        logger.info("%s Profile updater: (no-op in v2 prototype)", LogTag.OK)
-        return {"status": "completed"}
+        updates = [
+            ProfileUpdateRecord(**u)
+            for u in (state.get("approved_profile_updates") or [])
+        ]
+        if not updates:
+            logger.info("%s Profile updater: no approved updates to persist", LogTag.OK)
+            return {"approved_profile_updates": [], "status": "completed"}
+
+        profile_path = state.get("profile_path")
+        if not profile_path:
+            logger.warning(
+                "%s Profile updater: no profile_path in state, skipping writes",
+                LogTag.WARN,
+            )
+            return {"approved_profile_updates": [], "status": "completed"}
+
+        path = Path(profile_path)
+        profile = json.loads(path.read_text(encoding="utf-8"))
+        for update in updates:
+            profile = _apply_dot_path(profile, update.field_path, update.new_value)
+        path.write_text(json.dumps(profile, ensure_ascii=False, indent=2), encoding="utf-8")
+
+        _persist_profile_update_record(state, updates)
+
+        logger.info(
+            "%s Profile updater: persisted %d profile update(s) to %s",
+            LogTag.OK,
+            len(updates),
+            profile_path,
+        )
+        return {"approved_profile_updates": [], "status": "completed"}
     return node
+
+
+def _persist_profile_update_record(
+    state: GenerateDocumentsV2State,
+    updates: list[ProfileUpdateRecord],
+) -> None:
+    """Write an audit record of profile updates to the artifact store."""
+    store = PipelineArtifactStore()
+    store.write_stage(
+        source=state["source"],
+        job_id=state["job_id"],
+        stage="profile_updater",
+        payload={"updates": [u.model_dump() for u in updates]},
+    )
 
 
 __all__ = [

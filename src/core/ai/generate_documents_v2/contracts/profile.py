@@ -35,7 +35,16 @@ class ProfileKG(BaseModel):
 
 
 class SectionMappingItem(BaseModel):
-    """Strategy rule for one document section (P2)."""
+    """Strategy rule for one document section (P2).
+
+    ``country_context``
+        Reserved seam for regional document strategies.  Currently unused by
+        the pipeline (defaults to ``"global"``).  A future
+        ``regional_document_strategies`` phase will filter or reorder
+        ``SectionMappingItem`` lists by this field before passing them to the
+        blueprint node — no changes to the contract or the node signatures are
+        required for that extension.
+    """
 
     section_id: str
     target_document: str
