@@ -114,8 +114,8 @@ def test_normalize_flags_tool_errors_for_review():
                 conversation_id,
                 "tool-input-available",
                 {
-                    "toolCallId": "functions.get_active_page:0",
-                    "toolName": "get_active_page",
+                    "toolCallId": "functions.custom_tool:0",
+                    "toolName": "custom_tool",
                     "input": {},
                 },
             ),
@@ -123,8 +123,8 @@ def test_normalize_flags_tool_errors_for_review():
                 conversation_id,
                 "tool-output-available",
                 {
-                    "toolCallId": "functions.get_active_page:0",
-                    "toolName": "get_active_page",
+                    "toolCallId": "functions.custom_tool:0",
+                    "toolName": "custom_tool",
                     "output": {"isError": True},
                 },
             ),

@@ -15,6 +15,16 @@ from .recording import BrowserOSMcpRecordedCall, BrowserOSMcpRecording
 class BrowserOSMcpTraceNormalizer:
     """Convert deterministic BrowserOS MCP recordings into shared step candidates."""
 
+    _IGNORED_TOOLS = {
+        "browseros_info",
+        "get_active_page",
+        "list_pages",
+        "take_snapshot",
+        "take_enhanced_snapshot",
+        "get_dom",
+        "get_page_content",
+    }
+
     _INTENT_MAP = {
         "navigate_page": "navigate",
         "click": "click",
@@ -31,7 +41,7 @@ class BrowserOSMcpTraceNormalizer:
         candidates: list[BrowserOSStepCandidate] = []
         step_index = 0
         for call in recording.calls:
-            if call.tool_name == "take_snapshot":
+            if call.tool_name in self._IGNORED_TOOLS:
                 continue
             step_index += 1
             action = self._action_from_call(call)

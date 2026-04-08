@@ -200,6 +200,44 @@ So `/chat` is live, but the hosted default provider/model can still be quota-lim
 - Successful MCP-client search proof: `/tmp/browseros-proof/youtube-misilo-results.png`
 - Internal UI troubleshooting guide screenshot: `/tmp/browseros-proof/browseros-troubleshooting-guide.png`
 - Direct `/chat` stream capture: `/tmp/browseros-proof/direct-chat-stream.txt`
+- End-to-end discovery to replay artifacts: `/tmp/browseros-proof/live-discovery-replay-2/`
+
+### Attempt 4 - low-load discovery to replay proof
+
+Goal:
+
+```text
+Use browser actions to navigate to https://example.com and then stop.
+```
+
+What was validated:
+
+1. BrowserOS `/chat` captured a real Level 2 agent session.
+2. The trace normalized into shared BrowserOS promotion candidates.
+3. The grouped/validated candidates promoted into a draft replay path.
+4. The promoted path was replayed through the deterministic BrowserOS replayer on a fresh page.
+
+Observed replay destination:
+
+```text
+https://example.com/
+```
+
+Observed replay title:
+
+```text
+Example Domain
+```
+
+Artifacts written:
+
+- `/tmp/browseros-proof/live-discovery-replay-2/trace.json`
+- `/tmp/browseros-proof/live-discovery-replay-2/candidates.json`
+- `/tmp/browseros-proof/live-discovery-replay-2/assessment.json`
+- `/tmp/browseros-proof/live-discovery-replay-2/playbook.json`
+- `/tmp/browseros-proof/live-discovery-replay-2/replay_result.json`
+- `/tmp/browseros-proof/live-discovery-replay-2/replay_page.json`
+- `/tmp/browseros-proof/live-discovery-replay-2/replay.png`
 
 ## Practical conclusion
 
@@ -209,6 +247,7 @@ There are now several validated facts:
 2. **BrowserOS natural-language UI agent surface is reachable**, but the internal BrowserOS UI is miswired to `null/chat`.
 3. **BrowserOS direct `/chat` works** and returns structured SSE events, including tool-call events in `mode=agent`.
 4. **The documented integration model works**: using BrowserOS as an MCP server from an external agent successfully completed a real browser task end-to-end.
+5. **Discovery to replay now has a live proof**: a BrowserOS agent trace was promoted into a draft replay path and successfully replayed deterministically on a fresh page.
 
 That means the next work should focus on two separate tracks:
 

@@ -27,6 +27,7 @@ All notable changes to this project will be documented in this file.
 - Updated `src/automation/motors/browseros/agent/provider.py` so BrowserOS agent sessions can delegate Level 2 capture/discovery into the working `/chat` client even though deterministic motor execution is still not implemented.
 - Updated BrowserOS MCP and Level 2 promotion paths so both now converge through one shared promotion intermediate and one shared validation/grouping pipeline before replay-path emission.
 - Updated `src/automation/motors/browseros/cli/client.py` with explicit wrappers for `focus`, `handle_dialog`, `take_enhanced_snapshot`, `get_dom`, and `get_page_content`.
+- Updated BrowserOS live validation docs with a successful low-load discovery -> promotion -> deterministic replay proof against `https://example.com/`.
 
 ## [2026-04-08] - ATS Analyzer And Conceptual Motor Coverage
 

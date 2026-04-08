@@ -48,6 +48,16 @@ class BrowserOSLevel2StepCandidate(BaseModel):
 class BrowserOSLevel2TraceNormalizer:
     """Convert BrowserOS `/chat` tool events into step candidates."""
 
+    _IGNORED_TOOLS = {
+        "browseros_info",
+        "get_active_page",
+        "list_pages",
+        "take_snapshot",
+        "take_enhanced_snapshot",
+        "get_dom",
+        "get_page_content",
+    }
+
     _INTENT_MAP = {
         "navigate_page": "navigate",
         "click": "click",
@@ -77,6 +87,8 @@ class BrowserOSLevel2TraceNormalizer:
             events = grouped[tool_call_id]
             first_payload = events[0].payload
             tool_name = str(first_payload.get("toolName") or "unknown")
+            if tool_name in self._IGNORED_TOOLS:
+                continue
             input_payload = self._input_payload(events)
             candidate = BrowserOSLevel2StepCandidate(
                 step_index=index,
