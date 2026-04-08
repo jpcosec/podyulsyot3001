@@ -117,7 +117,7 @@ class HumanAnnotation(BaseModel):
 |---|---|---|
 | `HumanSessionConfig` | (no equivalent) | — |
 | `HumanSessionResult` | (no equivalent) | — |
-| `CdpCaptureEvent` | (documented in browseros_interfaces.md, not implemented) | — |
+| `CdpCaptureEvent` | (documented in `docs/reference/external_libs/browseros/ports_and_runtime.md`, not implemented) | — |
 | `CdpClickData` | (documented as capture script JSON fields) | — |
 | `CdpChangeData` | (documented as capture script JSON fields) | — |
 | `CdpSubmitData` | (documented as capture script JSON fields) | — |
@@ -126,4 +126,4 @@ class HumanAnnotation(BaseModel):
 
 Everything here is new — the human motor has no code today. The CDP event
 shapes come from the capture script documented in
-`docs/reference/external_libs/browseros_interfaces.md`.
+`docs/reference/external_libs/browseros/ports_and_runtime.md`.

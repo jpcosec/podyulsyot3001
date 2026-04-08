@@ -17,3 +17,10 @@ replay path.
 This package currently provides a `BrowserOSAgentMotorProvider` and
 `BrowserOSAgentMotorSession` that satisfy the Ariadne motor protocol, but all
 execution methods intentionally raise `NotImplementedError`.
+
+## Reference Docs
+
+- `docs/reference/external_libs/browseros/readme.txt`
+- `docs/reference/external_libs/browseros/graph_and_hitl.md`
+- `docs/reference/external_libs/browseros/deep_findings.md`
+- `docs/reference/external_libs/browseros/recording_for_ariadne.md`

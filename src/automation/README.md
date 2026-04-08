@@ -40,6 +40,11 @@ python -m src.automation.main apply --source <portal> --job-id <id> --cv <path> 
 
 Arguments are defined in the `build_parser()` function in `src/automation/main.py`.
 
+## 📚 External References
+
+- `docs/reference/external_libs/browseros/readme.txt` — BrowserOS integration reference index
+- `docs/reference/external_libs/crawl4ai/readme.txt` — Crawl4AI integration reference index
+
 ## 📝 Data Contract
 
 All automation models are strictly typed via Pydantic:

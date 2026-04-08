@@ -18,6 +18,12 @@ This package contains backend-specific execution adapters.
 - BrowserOS motor configuration is handled by `browseros/cli/client.py` and the local BrowserOS runtime.
 - Motor selection is done through `--backend` in `src/automation/main.py`.
 
+## 📚 External References
+
+- `docs/reference/external_libs/browseros/readme.txt` — BrowserOS interface index
+- `docs/reference/external_libs/browseros/recording_for_ariadne.md` — BrowserOS recording strategy for Ariadne
+- `docs/reference/external_libs/crawl4ai/readme.txt` — Crawl4AI reference index
+
 ## 🚀 CLI / Usage
 
 ```bash

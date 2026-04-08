@@ -26,5 +26,9 @@ Once an issue is solved, the next step is always:
 ### Phase 5 — Higher-level capability
 
 13. `plan_docs/issues/unimplemented/browseros-live-session-validation.md`
+14. `plan_docs/issues/unimplemented/browseros-agent-interface-coverage.md`
+15. `plan_docs/issues/unimplemented/browseros-openbrowser-level-separation.md`
+16. `plan_docs/issues/unimplemented/browseros-deep-interface-alignment.md`
+17. `plan_docs/issues/unimplemented/browseros-recording-to-ariadne.md`
 
 ## Dependency summary

@@ -35,7 +35,7 @@ Use cases:
 
 ## What already exists (reference material, no code)
 
-Source: `docs/reference/external_libs/browseros_interfaces.md`
+Source: `docs/reference/external_libs/browseros/readme.txt` (see `graph_and_hitl.md` and `deep_findings.md`)
 
 ### OpenBrowser Agent API
 

@@ -15,6 +15,7 @@ where data crosses from one concern to another should have a defined contract.
 | [motor_crawl4ai.md](motor_crawl4ai.md) | Ariadne translator → Crawl4AI executor |
 | [motor_browseros_cli.md](motor_browseros_cli.md) | Ariadne translator → BrowserOS CLI executor |
 | [motor_browseros_agent.md](motor_browseros_agent.md) | BrowserOS Agent session → recording pipeline |
+| [browseros_level2_trace.md](browseros_level2_trace.md) | BrowserOS `/chat` SSE stream → BrowserOS Level 2 trace |
 | [motor_human.md](motor_human.md) | Human session → recording pipeline |
 | [motor_vision.md](motor_vision.md) | Vision resolver ↔ other motors/translators |
 | [motor_os_native.md](motor_os_native.md) | OS native executor ← coordinates + intents |

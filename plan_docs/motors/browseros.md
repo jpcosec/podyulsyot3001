@@ -21,7 +21,7 @@ Only the CLI path is implemented today.
 
 ## BrowserOS interfaces available
 
-Source: `docs/reference/external_libs/browseros_interfaces.md` (live-verified 2026-04-02)
+Source: `docs/reference/external_libs/browseros/readme.txt` (see `ports_and_runtime.md` and `deep_findings.md`)
 
 ### Port 9200 — MCP Server (primary, currently used)
 
@@ -257,7 +257,7 @@ Status: `dry_run_complete` (recorded 2026-04-01, stopped before submit)
 ## Existing documentation
 
 - Apply README: `src/apply/README.md`
-- BrowserOS interface reference: `docs/reference/external_libs/browseros_interfaces.md`
+- BrowserOS interface reference: `docs/reference/external_libs/browseros/readme.txt`
 
 ## Known gaps between docs and code
 

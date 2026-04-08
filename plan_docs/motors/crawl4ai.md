@@ -142,7 +142,7 @@ Base class: `ApplyAdapter` in `src/apply/smart_adapter.py`
 - Scraper README: `src/scraper/README.md`
 - Apply README: `src/apply/README.md`
 - Crawl4AI usage standard: `docs/standards/code/crawl4ai_usage.md`
-- Crawl4AI external reference (large): `docs/reference/external_libs/crawl4ai_custom_context.md`
+- Crawl4AI external reference: `docs/reference/external_libs/crawl4ai/readme.txt`
 
 ## Known gaps between docs and code
 

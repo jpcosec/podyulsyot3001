@@ -83,21 +83,40 @@ class BrowserOSClient:
         """
         return self.call_tool("browseros_info", {})
 
-    def new_page(self) -> int:
+    def get_active_page(self) -> dict[str, Any]:
+        """Return the currently active BrowserOS page payload."""
+        return self.call_tool("get_active_page", {})
+
+    def list_pages(self) -> dict[str, Any]:
+        """Return the list_pages BrowserOS payload."""
+        return self.call_tool("list_pages", {})
+
+    def new_page(
+        self,
+        url: str = "about:blank",
+        *,
+        background: bool = True,
+        hidden: bool = False,
+    ) -> int:
         """Create a visible BrowserOS page.
 
         Returns:
             The created page id.
         """
-        return self._extract_page_id(self.call_tool("new_page", {}))
+        return self._extract_page_id(
+            self.call_tool(
+                "new_page",
+                {"url": url, "background": background, "hidden": hidden},
+            )
+        )
 
-    def new_hidden_page(self) -> int:
+    def new_hidden_page(self, url: str = "about:blank") -> int:
         """Create a hidden BrowserOS page.
 
         Returns:
             The created page id.
         """
-        return self._extract_page_id(self.call_tool("new_hidden_page", {}))
+        return self._extract_page_id(self.call_tool("new_hidden_page", {"url": url}))
 
     def close_page(self, page_id: int) -> None:
         """Close a BrowserOS page.
@@ -203,7 +222,11 @@ class BrowserOSClient:
         Returns:
             None.
         """
-        self.call_tool("fill", {"page": page_id, "element": element_id, "value": value})
+        self.call_tool("fill", {"page": page_id, "element": element_id, "text": value})
+
+    def clear(self, page_id: int, element_id: int) -> None:
+        """Clear a text-like element."""
+        self.call_tool("clear", {"page": page_id, "element": element_id})
 
     def select_option(self, page_id: int, element_id: int, value: str) -> None:
         """Select an option in a native select element.
@@ -220,6 +243,10 @@ class BrowserOSClient:
             "select_option",
             {"page": page_id, "element": element_id, "value": value},
         )
+
+    def press_key(self, page_id: int, key: str) -> None:
+        """Press a key on the page."""
+        self.call_tool("press_key", {"page": page_id, "key": key})
 
     def upload_file(self, page_id: int, element_id: int, file_path: Path) -> None:
         """Upload a local file into a file input element.

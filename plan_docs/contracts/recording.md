@@ -10,6 +10,9 @@ used between the pipeline stages (watch → record → process → update). Moto
 input contracts (McpProxyEvent, CdpCaptureEvent) are defined in their respective
 motor contract docs — this document covers the shared pipeline internals.
 
+For BrowserOS Level 2 `/chat` raw trace capture, see
+`plan_docs/contracts/browseros_level2_trace.md`.
+
 ## Pipeline stage contracts
 
 ### RawRecordingEvent

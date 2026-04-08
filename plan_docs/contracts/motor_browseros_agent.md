@@ -10,6 +10,9 @@ consume Ariadne paths via a translator — it produces them via the recording
 pipeline. These contracts define the agent session interface and what the
 recording pipeline receives.
 
+For the BrowserOS `/chat` SSE stream contract specifically, see
+`plan_docs/contracts/browseros_level2_trace.md`.
+
 ## Session contracts
 
 ### AgentSessionConfig
@@ -44,6 +47,9 @@ class AgentSessionResult(BaseModel):
 
 These contracts define what the recording pipeline receives from the MCP proxy
 during an agent session.
+
+Direct BrowserOS `/chat` stream capture is specified separately in
+`plan_docs/contracts/browseros_level2_trace.md`.
 
 ### McpProxyEvent
 
