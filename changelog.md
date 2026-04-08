@@ -13,10 +13,12 @@ All notable changes to this project will be documented in this file.
 - Added `src/automation/motors/browseros/agent/promoter.py` plus regression coverage in `tests/unit/automation/motors/browseros/agent/test_promoter.py` for promoting deterministic Level 2 candidates into draft replay paths.
 - Added `src/automation/motors/browseros/cli/recording.py` plus regression coverage in `tests/unit/automation/motors/browseros/cli/test_recording.py` for deterministic BrowserOS MCP call and snapshot recording.
 - Added `src/automation/motors/browseros/cdp_recorder.py` plus regression coverage in `tests/unit/automation/motors/browseros/test_cdp_recorder.py` for low-level BrowserOS CDP capture parsing.
+- Added `src/automation/motors/browseros/runtime.py` plus regression coverage in `tests/unit/automation/motors/browseros/test_runtime.py` for shared BrowserOS runtime endpoint resolution.
 
 ### Changed
 - Updated `src/automation/motors/browseros/agent/openbrowser.py` to capture raw BrowserOS `/chat` SSE traces instead of driving the internal BrowserOS UI as if it were a deterministic motor.
 - Updated `src/automation/motors/browseros/cli/client.py` to default to the stable local BrowserOS front door on `9000` and optionally record MCP calls/snapshots.
+- Updated BrowserOS MCP and `/chat` clients to resolve endpoints through the shared BrowserOS runtime config instead of ad-hoc hardcoded assumptions.
 - Updated BrowserOS and automation docs in `docs/automation/README.md`, `docs/reference/README.md`, `src/automation/README.md`, and `src/automation/motors/README.md` to point at the new external-reference indexes and recording guidance.
 - Updated BrowserOS planning contracts and references so Level 2 BrowserOS recording is modeled as raw trace capture first, Ariadne normalization second.
 - Updated `src/automation/ariadne/session.py` so failed Level 2 BrowserOS path discovery persists both the captured raw trace and normalized Level 2 step candidates for later promotion.

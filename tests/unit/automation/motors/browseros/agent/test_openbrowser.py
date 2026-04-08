@@ -70,6 +70,23 @@ def test_communicate_captures_chat_trace_and_writes_artifact(tmp_path: Path):
     assert session.calls[0][1]["message"] == "Say only ready."
 
 
+def test_communicate_uses_explicit_runtime_base_url():
+    session = _FakeSession(
+        _FakeResponse(
+            200,
+            [
+                'data: {"type":"finish","finishReason":"stop"}',
+                "data: [DONE]",
+            ],
+        )
+    )
+    client = OpenBrowserClient(base_url="http://127.0.0.1:9201", session=session)
+
+    client.communicate("hello", timeout_seconds=5.0)
+
+    assert session.calls[0][0] == "http://127.0.0.1:9201/chat"
+
+
 def test_communicate_captures_agent_tool_events():
     session = _FakeSession(
         _FakeResponse(

@@ -75,3 +75,20 @@ def test_browseros_client_default_base_url_uses_stable_front_door():
     client.browseros_info()
 
     assert session.requests[0]["url"] == "http://127.0.0.1:9000/mcp"
+
+
+def test_browseros_client_uses_explicit_runtime_base_url():
+    session = _FakeSession(
+        [
+            _FakeResponse(
+                {"jsonrpc": "2.0", "id": 1, "result": {}},
+                headers={"Mcp-Session-Id": "sess-1"},
+            ),
+            _FakeResponse({"jsonrpc": "2.0", "id": 2, "result": {}}),
+        ]
+    )
+    client = BrowserOSClient(base_url="http://127.0.0.1:9201", session=session)
+
+    client.browseros_info()
+
+    assert session.requests[0]["url"] == "http://127.0.0.1:9201/mcp"

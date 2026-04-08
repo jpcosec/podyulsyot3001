@@ -16,6 +16,7 @@ from uuid import uuid4
 import requests
 from pydantic import BaseModel, Field
 
+from src.automation.motors.browseros.runtime import resolve_browseros_runtime
 from .models import BrowserOSLevel2StreamEvent, BrowserOSLevel2Trace
 from .normalizer import BrowserOSLevel2StepCandidate, BrowserOSLevel2TraceNormalizer
 from .promoter import BrowserOSLevel2Promoter
@@ -56,10 +57,11 @@ class OpenBrowserClient:
 
     def __init__(
         self,
-        base_url: str = "http://127.0.0.1:9000",
+        base_url: str | None = None,
         session: requests.Session | None = None,
     ) -> None:
-        self.base_url = base_url.rstrip("/")
+        self.runtime = resolve_browseros_runtime(preferred_base_url=base_url)
+        self.base_url = self.runtime.base_http_url
         self.session = session or requests.Session()
         self.session.headers.update({"Content-Type": "application/json"})
         self.normalizer = BrowserOSLevel2TraceNormalizer()

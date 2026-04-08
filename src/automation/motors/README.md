@@ -19,6 +19,7 @@ BrowserOS-specific recording status:
 - `browseros/agent/promoter.py` promotes deterministic Level 2 candidates into draft replay paths.
 - `browseros/cli/recording.py` records deterministic MCP tool calls and snapshots.
 - `browseros/cdp_recorder.py` parses lower-level BrowserOS CDP capture signals for fallback or augmentation.
+- `browseros/runtime.py` resolves the canonical BrowserOS local MCP and `/chat` endpoints.
 
 ## ⚙️ Configuration
 

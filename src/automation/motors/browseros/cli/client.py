@@ -12,6 +12,7 @@ from typing import Any
 import requests
 
 from src.shared.log_tags import LogTag
+from src.automation.motors.browseros.runtime import resolve_browseros_runtime
 from .recording import BrowserOSMcpRecorder
 
 logger = logging.getLogger(__name__)
@@ -39,11 +40,12 @@ class BrowserOSClient:
     def __init__(
         self,
         *,
-        base_url: str = "http://127.0.0.1:9000/mcp",
+        base_url: str | None = None,
         session: requests.Session | None = None,
         recorder: BrowserOSMcpRecorder | None = None,
     ) -> None:
-        self.base_url = base_url
+        self.runtime = resolve_browseros_runtime(preferred_base_url=base_url)
+        self.base_url = self.runtime.mcp_url
         self.session = session or requests.Session()
         self.session.headers.update(
             {
