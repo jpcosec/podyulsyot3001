@@ -92,3 +92,37 @@ def test_browseros_client_uses_explicit_runtime_base_url():
     client.browseros_info()
 
     assert session.requests[0]["url"] == "http://127.0.0.1:9201/mcp"
+
+
+def test_browseros_client_exposes_high_value_interface_wrappers():
+    session = _FakeSession(
+        [
+            _FakeResponse(
+                {"jsonrpc": "2.0", "id": 1, "result": {}},
+                headers={"Mcp-Session-Id": "sess-1"},
+            ),
+            _FakeResponse({"jsonrpc": "2.0", "id": 2, "result": {"content": []}}),
+            _FakeResponse(
+                {"jsonrpc": "2.0", "id": 3, "result": {"path": "/tmp/dom.html"}}
+            ),
+            _FakeResponse({"jsonrpc": "2.0", "id": 4, "result": {"text": "hello"}}),
+            _FakeResponse({"jsonrpc": "2.0", "id": 5, "result": {}}),
+            _FakeResponse({"jsonrpc": "2.0", "id": 6, "result": {}}),
+        ]
+    )
+    client = BrowserOSClient(session=session)
+
+    client.take_enhanced_snapshot(1)
+    client.get_dom(1)
+    client.get_page_content(1)
+    client.focus(1, 5)
+    client.handle_dialog(1, accept=True, prompt_text="yes")
+
+    tool_names = [request["json"]["params"]["name"] for request in session.requests[1:]]
+    assert tool_names == [
+        "take_enhanced_snapshot",
+        "get_dom",
+        "get_page_content",
+        "focus",
+        "handle_dialog",
+    ]

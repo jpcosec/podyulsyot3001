@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - Added `src/automation/motors/browseros/cli/recording.py` plus regression coverage in `tests/unit/automation/motors/browseros/cli/test_recording.py` for deterministic BrowserOS MCP call and snapshot recording.
 - Added `src/automation/motors/browseros/cdp_recorder.py` plus regression coverage in `tests/unit/automation/motors/browseros/test_cdp_recorder.py` for low-level BrowserOS CDP capture parsing.
 - Added `src/automation/motors/browseros/runtime.py` plus regression coverage in `tests/unit/automation/motors/browseros/test_runtime.py` for shared BrowserOS runtime endpoint resolution.
+- Added `src/automation/motors/browseros/promotion_models.py`, `src/automation/motors/browseros/promotion_pipeline.py`, and `src/automation/motors/browseros/cli/promoter.py` plus regression coverage for shared BrowserOS promotion intermediates, grouping, validation, and deterministic MCP promotion.
 
 ### Changed
 - Updated `src/automation/motors/browseros/agent/openbrowser.py` to capture raw BrowserOS `/chat` SSE traces instead of driving the internal BrowserOS UI as if it were a deterministic motor.
@@ -24,6 +25,8 @@ All notable changes to this project will be documented in this file.
 - Updated `src/automation/ariadne/session.py` so failed Level 2 BrowserOS path discovery persists both the captured raw trace and normalized Level 2 step candidates for later promotion.
 - Updated `src/automation/motors/browseros/agent/openbrowser.py` so successful deterministic Level 2 candidates are promoted into a draft replay path instead of remaining capture-only.
 - Updated `src/automation/motors/browseros/agent/provider.py` so BrowserOS agent sessions can delegate Level 2 capture/discovery into the working `/chat` client even though deterministic motor execution is still not implemented.
+- Updated BrowserOS MCP and Level 2 promotion paths so both now converge through one shared promotion intermediate and one shared validation/grouping pipeline before replay-path emission.
+- Updated `src/automation/motors/browseros/cli/client.py` with explicit wrappers for `focus`, `handle_dialog`, `take_enhanced_snapshot`, `get_dom`, and `get_page_content`.
 
 ## [2026-04-08] - ATS Analyzer And Conceptual Motor Coverage
 

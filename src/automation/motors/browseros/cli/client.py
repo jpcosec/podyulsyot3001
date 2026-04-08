@@ -187,6 +187,18 @@ class BrowserOSClient:
             )
         return elements
 
+    def take_enhanced_snapshot(self, page_id: int) -> dict[str, Any]:
+        """Return BrowserOS enhanced snapshot payload for the page."""
+        return self.call_tool("take_enhanced_snapshot", {"page": page_id})
+
+    def get_dom(self, page_id: int) -> dict[str, Any]:
+        """Return BrowserOS DOM export payload for the page."""
+        return self.call_tool("get_dom", {"page": page_id})
+
+    def get_page_content(self, page_id: int) -> dict[str, Any]:
+        """Return BrowserOS page-content payload for the page."""
+        return self.call_tool("get_page_content", {"page": page_id})
+
     def search_dom(self, page_id: int, selector: str) -> list[int]:
         """Search the DOM for elements matching a CSS selector.
 
@@ -219,6 +231,10 @@ class BrowserOSClient:
             None.
         """
         self.call_tool("click", {"page": page_id, "element": element_id})
+
+    def focus(self, page_id: int, element_id: int) -> None:
+        """Focus an element identified from a BrowserOS snapshot."""
+        self.call_tool("focus", {"page": page_id, "element": element_id})
 
     def fill(self, page_id: int, element_id: int, value: str) -> None:
         """Fill a text-like element with a value.
@@ -272,6 +288,19 @@ class BrowserOSClient:
             "upload_file",
             {"page": page_id, "element": element_id, "filePath": str(file_path)},
         )
+
+    def handle_dialog(
+        self,
+        page_id: int,
+        *,
+        accept: bool,
+        prompt_text: str | None = None,
+    ) -> None:
+        """Accept or dismiss a browser dialog."""
+        arguments: dict[str, Any] = {"page": page_id, "accept": accept}
+        if prompt_text is not None:
+            arguments["promptText"] = prompt_text
+        self.call_tool("handle_dialog", arguments)
 
     def save_screenshot(self, page_id: int, file_path: Path) -> None:
         """Save a BrowserOS screenshot to disk.
