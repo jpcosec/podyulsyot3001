@@ -1,103 +1,195 @@
-"""OpenBrowser Level 2 Agent Integration.
+"""BrowserOS Level 2 agent integration.
 
-Wraps the OpenBrowser API behind a local service interface.
+This module captures BrowserOS `/chat` SSE traces for Level 2 agent sessions.
+It does not attempt to behave like a deterministic replay motor.
 """
 
 from __future__ import annotations
 
+import json
 import logging
-import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
 import requests
-from pydantic import BaseModel
-
-from src.automation.ariadne.contracts import ReplayPath
-from src.automation.motors.browseros.cli.client import BrowserOSClient, SnapshotElement
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
 
-_AGENT_LAUNCHER_TEXT = "Ask BrowserOS or search Google"
-_AGENT_COMPOSER_TEXT = "What should I do?"
-_SEND_BUTTON_TEXT = "Send"
+def _utc_now() -> str:
+    return datetime.now(timezone.utc).isoformat()
 
 
 class OpenBrowserAgentResult(BaseModel):
-    """Playbook data returned by OpenBrowser agent."""
+    """Compatibility wrapper for older Level 2 callers."""
 
     status: str
-    playbook: ReplayPath | None = None
+    playbook: dict[str, Any] | None = None
     error: str | None = None
+    conversation_id: str | None = None
+    recording_path: str | None = None
+    trace: dict[str, Any] | None = None
+
+
+class BrowserOSLevel2StreamEvent(BaseModel):
+    """One parsed SSE event from BrowserOS `/chat`."""
+
+    timestamp: str
+    conversation_id: str
+    event_type: str
+    payload: dict[str, Any]
+
+
+class BrowserOSLevel2Trace(BaseModel):
+    """Raw Level 2 trace captured from BrowserOS `/chat`."""
+
+    conversation_id: str
+    source: str
+    goal: str
+    provider: str
+    model: str
+    mode: str
+    started_at: str
+    ended_at: str | None = None
+    stream_events: list[BrowserOSLevel2StreamEvent] = Field(default_factory=list)
+    final_text: str | None = None
+    finish_reason: str | None = None
+    evidence_paths: list[str] = Field(default_factory=list)
 
 
 class OpenBrowserConversationResult(BaseModel):
-    """Outcome of a natural-language BrowserOS agent interaction."""
+    """Outcome of a Level 2 BrowserOS `/chat` session."""
 
     status: str
-    page_id: int | None = None
-    page_url: str | None = None
-    page_title: str | None = None
-    screenshot_path: str | None = None
-    snapshot_excerpt: str | None = None
+    conversation_id: str
+    final_text: str | None = None
+    finish_reason: str | None = None
+    trace: BrowserOSLevel2Trace
+    recording_path: str | None = None
     error: str | None = None
 
 
 class OpenBrowserClient:
-    """Client for invoking the OpenBrowser agent API."""
+    """Client for BrowserOS Level 2 `/chat` sessions."""
 
     def __init__(
         self,
-        base_url: str = "http://127.0.0.1:9200",
-        browser_client: BrowserOSClient | None = None,
+        base_url: str = "http://127.0.0.1:9000",
+        session: requests.Session | None = None,
     ) -> None:
-        self.base_url = base_url
-        self.session = requests.Session()
+        self.base_url = base_url.rstrip("/")
+        self.session = session or requests.Session()
         self.session.headers.update({"Content-Type": "application/json"})
-        self.browser_client = browser_client or BrowserOSClient(
-            base_url=f"{base_url}/mcp"
-        )
 
     def communicate(
         self,
         prompt: str,
         *,
-        screenshot_path: Path | None = None,
-        timeout_seconds: float = 90.0,
-        poll_interval: float = 2.0,
+        source: str = "browseros",
+        provider: str = "browseros",
+        model: str = "browseros-auto",
+        mode: str = "agent",
+        recording_path: Path | None = None,
+        browser_context: dict[str, Any] | None = None,
+        user_system_prompt: str | None = None,
+        user_working_dir: str | None = None,
+        timeout_seconds: float = 180.0,
     ) -> OpenBrowserConversationResult:
-        """Send a natural-language prompt to the BrowserOS UI agent.
+        """Run a Level 2 BrowserOS `/chat` session and capture its raw trace."""
+        conversation_id = str(uuid4())
+        started_at = _utc_now()
+        trace = BrowserOSLevel2Trace(
+            conversation_id=conversation_id,
+            source=source,
+            goal=prompt,
+            provider=provider,
+            model=model,
+            mode=mode,
+            started_at=started_at,
+        )
+        payload = {
+            "conversationId": conversation_id,
+            "message": prompt,
+            "provider": provider,
+            "model": model,
+            "mode": mode,
+        }
+        if browser_context is not None:
+            payload["browserContext"] = browser_context
+        if user_system_prompt is not None:
+            payload["userSystemPrompt"] = user_system_prompt
+        if user_working_dir is not None:
+            payload["userWorkingDir"] = user_working_dir
 
-        This uses BrowserOS's own new-tab agent surface via MCP tool calls rather
-        than the undocumented `/chat` endpoint.
-        """
-        created_page_id = self.browser_client.new_page(
-            "chrome://newtab/", background=False
-        )
-        page_id = self._wait_for_agent_surface(
-            created_page_id,
-            timeout_seconds=timeout_seconds,
-        )
-        self._submit_prompt(page_id, prompt)
-        final_page = self._wait_for_agent_progress(
-            page_id,
-            timeout_seconds=timeout_seconds,
-            poll_interval=poll_interval,
-        )
-        shot = str(screenshot_path) if screenshot_path else None
-        if screenshot_path is not None:
-            self.browser_client.save_screenshot(final_page["pageId"], screenshot_path)
-        snapshot = self.browser_client.take_snapshot(final_page["pageId"])
-        excerpt = "\n".join(element.raw_line for element in snapshot[:12])
-        return OpenBrowserConversationResult(
-            status="success",
-            page_id=final_page["pageId"],
-            page_url=final_page.get("url"),
-            page_title=final_page.get("title"),
-            screenshot_path=shot,
-            snapshot_excerpt=excerpt,
-        )
+        text_chunks: list[str] = []
+        stream_errors: list[str] = []
+        try:
+            with self.session.post(
+                f"{self.base_url}/chat",
+                json=payload,
+                stream=True,
+                timeout=timeout_seconds,
+            ) as response:
+                if response.status_code == 429:
+                    return self._finalize_result(
+                        trace=trace,
+                        status="rate_limited",
+                        recording_path=recording_path,
+                        error="BrowserOS /chat rate limited the request.",
+                    )
+                response.raise_for_status()
+                for raw_line in response.iter_lines(decode_unicode=True):
+                    event = self._parse_sse_line(raw_line, conversation_id)
+                    if event is None:
+                        continue
+                    trace.stream_events.append(event)
+                    if event.event_type == "text-delta":
+                        delta = event.payload.get("delta")
+                        if isinstance(delta, str):
+                            text_chunks.append(delta)
+                    if event.event_type == "tool-output-available":
+                        output = event.payload.get("output")
+                        if isinstance(output, dict) and output.get("isError") is True:
+                            stream_errors.append(
+                                self._extract_tool_error(output)
+                                or "BrowserOS tool output reported an error."
+                            )
+                    if event.event_type == "finish":
+                        finish_reason = event.payload.get("finishReason")
+                        trace.finish_reason = (
+                            str(finish_reason) if finish_reason is not None else None
+                        )
+            trace.final_text = "".join(text_chunks) or None
+            status = "success"
+            error = None
+            if stream_errors:
+                status = "failed"
+                error = "; ".join(stream_errors)
+            return self._finalize_result(
+                trace=trace,
+                status=status,
+                recording_path=recording_path,
+                error=error,
+            )
+        except requests.HTTPError as exc:
+            logger.error("BrowserOS /chat HTTP error: %s", exc)
+            return self._finalize_result(
+                trace=trace,
+                status="failed",
+                recording_path=recording_path,
+                error=str(exc),
+            )
+        except requests.RequestException as exc:
+            logger.error("BrowserOS /chat request failed: %s", exc)
+            return self._finalize_result(
+                trace=trace,
+                status="failed",
+                recording_path=recording_path,
+                error=str(exc),
+            )
 
     def run_agent(
         self,
@@ -105,124 +197,93 @@ class OpenBrowserClient:
         url: str,
         context: dict[str, Any],
     ) -> OpenBrowserAgentResult:
-        """Invoke OpenBrowser, pass context, and validate returned playbook.
+        """Compatibility path for older callers.
 
-        Args:
-            portal: Portal name for context.
-            url: Starting application URL.
-            context: Job/profile/document context.
-
-        Returns:
-            Validated playbook result.
+        This captures a Level 2 trace but does not yet promote it into a replay path.
         """
-        payload = {"portal": portal, "url": url, "context": context}
-        try:
-            resp = self.session.post(f"{self.base_url}/chat", json=payload, timeout=300)
-            resp.raise_for_status()
-            data = resp.json()
-            return OpenBrowserAgentResult.model_validate(data)
-        except Exception as exc:
-            logger.error("OpenBrowser agent invocation failed: %s", exc)
-            return OpenBrowserAgentResult(status="error", error=str(exc))
+        goal = self._build_goal(portal=portal, url=url, context=context)
+        result = self.communicate(
+            goal,
+            source=portal,
+            browser_context={"entry_url": url, "context": context},
+        )
+        return OpenBrowserAgentResult(
+            status="capture_only" if result.status == "success" else result.status,
+            error=result.error
+            or "Level 2 trace captured but Ariadne path promotion is not implemented yet.",
+            conversation_id=result.conversation_id,
+            recording_path=result.recording_path,
+            trace=result.trace.model_dump(mode="json"),
+        )
 
-    def _wait_for_agent_surface(
+    def _finalize_result(
         self,
-        page_id: int,
         *,
-        timeout_seconds: float,
-    ) -> int:
-        deadline = time.monotonic() + timeout_seconds
-        while time.monotonic() < deadline:
-            active = (
-                self.browser_client.get_active_page()
-                .get("structuredContent", {})
-                .get("page", {})
-            )
-            active_page_id = active.get("pageId") or page_id
-            snapshot = self.browser_client.take_snapshot(active_page_id)
-            if self._find_element(snapshot, _AGENT_LAUNCHER_TEXT) or self._find_element(
-                snapshot, _AGENT_COMPOSER_TEXT
-            ):
-                return active_page_id
-            time.sleep(1.0)
-        raise RuntimeError("BrowserOS agent surface did not become ready")
+        trace: BrowserOSLevel2Trace,
+        status: str,
+        recording_path: Path | None,
+        error: str | None = None,
+    ) -> OpenBrowserConversationResult:
+        trace.ended_at = _utc_now()
+        final_path = None
+        if recording_path is not None:
+            recording_path.parent.mkdir(parents=True, exist_ok=True)
+            recording_path.write_text(trace.model_dump_json(indent=2), encoding="utf-8")
+            final_path = str(recording_path)
+        return OpenBrowserConversationResult(
+            status=status,
+            conversation_id=trace.conversation_id,
+            final_text=trace.final_text,
+            finish_reason=trace.finish_reason,
+            trace=trace,
+            recording_path=final_path,
+            error=error,
+        )
 
-    def _submit_prompt(self, page_id: int, prompt: str) -> None:
-        snapshot = self.browser_client.take_snapshot(page_id)
-        composer = self._find_element(snapshot, _AGENT_COMPOSER_TEXT)
-        if composer is not None:
-            self._send_from_composer(page_id, composer.element_id, prompt)
-            return
-
-        launcher = self._find_element(snapshot, _AGENT_LAUNCHER_TEXT)
-        if launcher is None:
-            raise RuntimeError("Could not find BrowserOS agent prompt input")
-        self.browser_client.click(page_id, launcher.element_id)
-        self.browser_client.fill(page_id, launcher.element_id, prompt)
-
-        launcher_snapshot = self.browser_client.take_snapshot(page_id)
-        ask_option = self._find_element(launcher_snapshot, f"Ask BrowserOS: {prompt}")
-        if ask_option is not None:
-            self.browser_client.click(page_id, ask_option.element_id)
-        else:
-            self.browser_client.press_key(page_id, "Enter")
-
-        time.sleep(1.0)
-        composer_snapshot = self.browser_client.take_snapshot(page_id)
-        composer = self._find_element(composer_snapshot, _AGENT_COMPOSER_TEXT)
-        send_button = self._find_element(composer_snapshot, _SEND_BUTTON_TEXT)
-        if composer is not None and send_button is not None:
-            self._send_from_composer(page_id, composer.element_id, prompt)
-
-    def _send_from_composer(self, page_id: int, composer_id: int, prompt: str) -> None:
-        self.browser_client.click(page_id, composer_id)
-        self.browser_client.fill(page_id, composer_id, prompt)
-        snapshot = self.browser_client.take_snapshot(page_id)
-        send_button = self._find_element(snapshot, _SEND_BUTTON_TEXT)
-        if send_button is None:
-            raise RuntimeError("Could not find BrowserOS agent send button")
-        self.browser_client.click(page_id, send_button.element_id)
-
-    def _wait_for_agent_progress(
+    def _parse_sse_line(
         self,
-        page_id: int,
-        *,
-        timeout_seconds: float,
-        poll_interval: float,
-    ) -> dict[str, Any]:
-        deadline = time.monotonic() + timeout_seconds
-        while time.monotonic() < deadline:
-            active = (
-                self.browser_client.get_active_page()
-                .get("structuredContent", {})
-                .get("page", {})
-            )
-            active_id = active.get("pageId")
-            if (
-                active_id
-                and active.get("url")
-                and active.get("url") != "chrome://newtab/"
-            ):
-                return active
+        raw_line: str | bytes,
+        conversation_id: str,
+    ) -> BrowserOSLevel2StreamEvent | None:
+        if not raw_line:
+            return None
+        line = raw_line.decode("utf-8") if isinstance(raw_line, bytes) else raw_line
+        if not line.startswith("data: "):
+            return None
+        payload_text = line[6:]
+        if payload_text == "[DONE]":
+            return None
+        payload = json.loads(payload_text)
+        event_type = str(payload.get("type", "unknown"))
+        return BrowserOSLevel2StreamEvent(
+            timestamp=_utc_now(),
+            conversation_id=conversation_id,
+            event_type=event_type,
+            payload=payload,
+        )
 
-            snapshot = self.browser_client.take_snapshot(active_id or page_id)
-            stop_button = self._find_element(snapshot, "Stop")
-            send_button = self._find_element(snapshot, _SEND_BUTTON_TEXT)
-            if stop_button is None and send_button is not None:
-                return active or {"pageId": page_id}
-            time.sleep(poll_interval)
-        raise RuntimeError("BrowserOS agent did not complete within timeout")
-
-    def _find_element(
-        self,
-        snapshot: list[SnapshotElement],
-        text: str,
-    ) -> SnapshotElement | None:
-        normalized = self._normalize(text)
-        for element in snapshot:
-            if normalized in self._normalize(element.text):
-                return element
+    def _extract_tool_error(self, output: dict[str, Any]) -> str | None:
+        content = output.get("content")
+        if isinstance(content, list):
+            parts: list[str] = []
+            for item in content:
+                if not isinstance(item, dict):
+                    continue
+                text = item.get("text")
+                if isinstance(text, str) and text:
+                    parts.append(text)
+            if parts:
+                return " ".join(parts)
         return None
 
-    def _normalize(self, value: str) -> str:
-        return " ".join(value.lower().split())
+    def _build_goal(self, *, portal: str, url: str, context: dict[str, Any]) -> str:
+        summary = {
+            "portal": portal,
+            "url": url,
+            "context_keys": sorted(context.keys()),
+        }
+        return (
+            "Start from the provided application URL and explore the flow. "
+            "Capture enough information to later normalize the interaction into a reusable application path. "
+            f"Session summary: {json.dumps(summary, sort_keys=True)}"
+        )

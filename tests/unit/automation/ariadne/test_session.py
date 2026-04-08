@@ -135,7 +135,11 @@ async def test_already_submitted_raises():
 @patch("src.automation.ariadne.session.OpenBrowserClient")
 async def test_invalid_path_id_raises(mock_client_class):
     mock_client = MagicMock()
-    mock_client.run_agent.return_value = MagicMock(status="error", error="not found")
+    mock_client.run_agent.return_value = MagicMock(
+        status="error",
+        error="not found",
+        trace=None,
+    )
     mock_client_class.return_value = mock_client
 
     sess, _ = _make_session(_minimal_map())
@@ -143,6 +147,32 @@ async def test_invalid_path_id_raises(mock_client_class):
 
     with pytest.raises(ValueError, match="Level 2 OpenBrowser agent failed"):
         await sess.run(motor, job_id="job1", cv_path=Path("cv.pdf"), path_id="missing")
+
+
+@pytest.mark.asyncio
+@patch("src.automation.ariadne.session.OpenBrowserClient")
+async def test_invalid_path_id_persists_level2_trace_when_available(mock_client_class):
+    mock_client = MagicMock()
+    mock_client.run_agent.return_value = MagicMock(
+        status="error",
+        error="not normalized",
+        trace={"conversation_id": "conv-1", "stream_events": []},
+        playbook=None,
+    )
+    mock_client_class.return_value = mock_client
+
+    sess, storage = _make_session(_minimal_map())
+    motor = _FakeProvider(_FakeSession())
+
+    with pytest.raises(ValueError, match="Level 2 OpenBrowser agent failed"):
+        await sess.run(motor, job_id="job1", cv_path=Path("cv.pdf"), path_id="missing")
+
+    storage.write_artifact.assert_any_call(
+        "xing",
+        "job1",
+        "browseros_level2_trace_missing.json",
+        '{\n  "conversation_id": "conv-1",\n  "stream_events": []\n}',
+    )
 
 
 @pytest.mark.asyncio

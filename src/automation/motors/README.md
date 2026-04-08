@@ -12,6 +12,12 @@ This package contains backend-specific execution adapters.
 - Each backend exposes a `MotorProvider` that opens a backend-specific `MotorSession`.
 - Motors execute steps and observations; they do not load maps or decide navigation policy.
 
+BrowserOS-specific recording status:
+
+- `browseros/agent/openbrowser.py` captures raw Level 2 `/chat` SSE traces.
+- `browseros/agent/normalizer.py` derives candidate Ariadne steps from Level 2 tool events.
+- `browseros/cli/recording.py` records deterministic MCP tool calls and snapshots.
+
 ## ⚙️ Configuration
 
 - Crawl4AI motor configuration is assembled in `crawl4ai/browser_config.py`.

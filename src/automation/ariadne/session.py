@@ -174,6 +174,13 @@ class AriadneSession:
                     url=route.application_url or "",
                     context=agent_context,
                 )
+                if agent_result.trace:
+                    self.storage.write_artifact(
+                        self.portal_name,
+                        job_id,
+                        f"browseros_level2_trace_{selected_path_id}.json",
+                        json.dumps(agent_result.trace, indent=2),
+                    )
                 if agent_result.status != "success" or not agent_result.playbook:
                     raise ValueError(
                         f"Level 2 OpenBrowser agent failed to produce a valid path for '{selected_path_id}': {agent_result.error}"

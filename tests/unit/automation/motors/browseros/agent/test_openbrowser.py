@@ -1,132 +1,131 @@
-"""Tests for BrowserOS natural-language agent communication."""
+"""Tests for BrowserOS Level 2 /chat trace capture."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
 from src.automation.motors.browseros.agent.openbrowser import OpenBrowserClient
-from src.automation.motors.browseros.cli.client import SnapshotElement
 
 
-def _snapshot(*entries: tuple[int, str, str]) -> list[SnapshotElement]:
-    return [
-        SnapshotElement(
-            element_id=element_id,
-            element_type=element_type,
-            text=text,
-            raw_line=f'[{element_id}] {element_type} "{text}"',
+class _FakeResponse:
+    def __init__(self, status_code: int, lines: list[str]):
+        self.status_code = status_code
+        self._lines = lines
+
+    def raise_for_status(self) -> None:
+        if self.status_code >= 400:
+            raise RuntimeError(f"http {self.status_code}")
+
+    def iter_lines(self, decode_unicode: bool = True):
+        yield from self._lines
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        return False
+
+
+class _FakeSession:
+    def __init__(self, response: _FakeResponse):
+        self.response = response
+        self.headers: dict[str, str] = {}
+        self.calls: list[tuple[str, dict, bool, float]] = []
+
+    def post(self, url: str, json: dict, stream: bool, timeout: float):
+        self.calls.append((url, json, stream, timeout))
+        return self.response
+
+
+def test_communicate_captures_chat_trace_and_writes_artifact(tmp_path: Path):
+    session = _FakeSession(
+        _FakeResponse(
+            200,
+            [
+                'data: {"type":"start"}',
+                'data: {"type":"text-start","id":"txt-0"}',
+                'data: {"type":"text-delta","id":"txt-0","delta":"Ready."}',
+                'data: {"type":"text-end","id":"txt-0"}',
+                'data: {"type":"finish","finishReason":"stop"}',
+                "data: [DONE]",
+            ],
         )
-        for element_id, element_type, text in entries
-    ]
-
-
-class _FakeBrowserClient:
-    def __init__(
-        self, snapshots: list[list[SnapshotElement]], active_pages: list[dict]
-    ):
-        self.snapshots = list(snapshots)
-        self.active_pages = list(active_pages)
-        self.calls: list[tuple] = []
-
-    def new_page(
-        self, url: str = "about:blank", *, background: bool = True, hidden: bool = False
-    ) -> int:
-        self.calls.append(("new_page", url, background, hidden))
-        return 7
-
-    def take_snapshot(self, page_id: int):
-        self.calls.append(("take_snapshot", page_id))
-        if self.snapshots:
-            return self.snapshots.pop(0)
-        return []
-
-    def click(self, page_id: int, element_id: int) -> None:
-        self.calls.append(("click", page_id, element_id))
-
-    def fill(self, page_id: int, element_id: int, text: str) -> None:
-        self.calls.append(("fill", page_id, element_id, text))
-
-    def press_key(self, page_id: int, key: str) -> None:
-        self.calls.append(("press_key", page_id, key))
-
-    def get_active_page(self) -> dict:
-        self.calls.append(("get_active_page",))
-        if self.active_pages:
-            page = self.active_pages.pop(0)
-        else:
-            page = {"pageId": 7, "url": "chrome://newtab/", "title": "BrowserOS"}
-        return {"structuredContent": {"page": page}}
-
-    def save_screenshot(self, page_id: int, file_path: Path) -> None:
-        self.calls.append(("save_screenshot", page_id, str(file_path)))
-
-
-def test_communicate_submits_prompt_from_agent_page(tmp_path: Path):
-    fake = _FakeBrowserClient(
-        snapshots=[
-            _snapshot(
-                (387, "textbox", "What should I do?"),
-                (386, "button", "Send"),
-            ),
-            _snapshot(
-                (387, "textbox", "What should I do?"),
-                (386, "button", "Send"),
-            ),
-            _snapshot(
-                (387, "textbox", "What should I do?"),
-                (386, "button", "Send"),
-            ),
-            _snapshot((1, "link", "YouTube Home")),
-        ],
-        active_pages=[
-            {"pageId": 7, "url": "chrome://newtab/", "title": "BrowserOS"},
-            {"pageId": 7, "url": "https://www.youtube.com/", "title": "YouTube"},
-        ],
     )
-    client = OpenBrowserClient(browser_client=fake)
+    client = OpenBrowserClient(base_url="http://127.0.0.1:9000", session=session)
 
     result = client.communicate(
-        "Go to YouTube",
-        screenshot_path=tmp_path / "proof.png",
-        timeout_seconds=0.1,
-        poll_interval=0.0,
+        "Say only ready.",
+        source="browseros",
+        mode="chat",
+        recording_path=tmp_path / "trace.json",
+        timeout_seconds=5.0,
     )
 
     assert result.status == "success"
-    assert result.page_url == "https://www.youtube.com/"
-    assert ("fill", 7, 387, "Go to YouTube") in fake.calls
-    assert ("click", 7, 386) in fake.calls
-    assert ("save_screenshot", 7, str(tmp_path / "proof.png")) in fake.calls
+    assert result.final_text == "Ready."
+    assert result.finish_reason == "stop"
+    assert result.recording_path == str(tmp_path / "trace.json")
+    assert (tmp_path / "trace.json").exists()
+    assert session.calls[0][0] == "http://127.0.0.1:9000/chat"
+    assert session.calls[0][1]["message"] == "Say only ready."
 
 
-def test_communicate_uses_launcher_suggestion_before_navigation():
-    prompt = "Search for misilo"
-    fake = _FakeBrowserClient(
-        snapshots=[
-            _snapshot((13, "combobox", "Ask BrowserOS or search Google...")),
-            _snapshot((13, "combobox", "Ask BrowserOS or search Google...")),
-            _snapshot(
-                (13, "combobox", "Ask BrowserOS or search Google..."),
-                (279, "option", f"Ask BrowserOS: {prompt}"),
-            ),
-            _snapshot((1, "button", "Stop")),
-            _snapshot((1, "link", "misilo - YouTube")),
-        ],
-        active_pages=[
-            {"pageId": 7, "url": "chrome://newtab/", "title": "BrowserOS"},
-            {
-                "pageId": 7,
-                "url": "https://www.youtube.com/results?search_query=misilo",
-                "title": "misilo - YouTube",
-            },
-        ],
+def test_communicate_captures_agent_tool_events():
+    session = _FakeSession(
+        _FakeResponse(
+            200,
+            [
+                'data: {"type":"tool-input-start","toolCallId":"functions.get_active_page:0","toolName":"get_active_page"}',
+                'data: {"type":"tool-input-available","toolCallId":"functions.get_active_page:0","toolName":"get_active_page","input":{}}',
+                'data: {"type":"tool-output-available","toolCallId":"functions.get_active_page:0","output":{"content":[{"type":"text","text":"No active page found."}],"isError":true}}',
+                'data: {"type":"finish","finishReason":"stop"}',
+                "data: [DONE]",
+            ],
+        )
     )
-    client = OpenBrowserClient(browser_client=fake)
+    client = OpenBrowserClient(session=session)
 
-    result = client.communicate(prompt, timeout_seconds=0.1, poll_interval=0.0)
+    result = client.communicate(
+        "Tell me the title of the active page.",
+        source="demo",
+        mode="agent",
+        timeout_seconds=5.0,
+    )
 
-    assert result.status == "success"
-    assert result.page_title == "misilo - YouTube"
-    assert ("click", 7, 13) in fake.calls
-    assert ("fill", 7, 13, prompt) in fake.calls
-    assert ("click", 7, 279) in fake.calls
+    assert result.status == "failed"
+    assert result.error == "No active page found."
+    event_types = [event.event_type for event in result.trace.stream_events]
+    assert "tool-input-start" in event_types
+    assert "tool-input-available" in event_types
+    assert "tool-output-available" in event_types
+
+
+def test_communicate_marks_rate_limit_without_raising():
+    session = _FakeSession(_FakeResponse(429, []))
+    client = OpenBrowserClient(session=session)
+
+    result = client.communicate("hello", timeout_seconds=5.0)
+
+    assert result.status == "rate_limited"
+    assert result.error == "BrowserOS /chat rate limited the request."
+
+
+def test_run_agent_returns_trace_metadata_without_playbook():
+    session = _FakeSession(
+        _FakeResponse(
+            200,
+            [
+                'data: {"type":"text-start","id":"txt-0"}',
+                'data: {"type":"text-delta","id":"txt-0","delta":"done"}',
+                'data: {"type":"finish","finishReason":"stop"}',
+                "data: [DONE]",
+            ],
+        )
+    )
+    client = OpenBrowserClient(session=session)
+
+    result = client.run_agent("xing", "https://example.com", {"profile": {}})
+
+    assert result.status == "capture_only"
+    assert result.playbook is None
+    assert result.conversation_id is not None

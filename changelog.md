@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-08] - BrowserOS Recording Contracts And Level 2 Trace Capture
+
+### Added
+- Added split external-library reference indexes under `docs/reference/external_libs/browseros/` and `docs/reference/external_libs/crawl4ai/`, including focused BrowserOS docs for live validation, deep findings, recording strategy, and Ariadne recording guidance.
+- Added `plan_docs/contracts/browseros_level2_trace.md` to formalize BrowserOS `/chat` SSE capture as the Level 2 trace boundary.
+- Added `plan_docs/issues/unimplemented/browseros-recording-to-ariadne.md` plus follow-up BrowserOS issue refinements for deep interface alignment and level separation.
+- Added regression coverage in `tests/unit/automation/motors/browseros/agent/test_openbrowser.py` for BrowserOS `/chat` trace capture, tool-event parsing, and rate-limit handling.
+- Added `src/automation/motors/browseros/agent/normalizer.py` plus regression coverage in `tests/unit/automation/motors/browseros/agent/test_normalizer.py` for turning BrowserOS Level 2 tool streams into Ariadne step candidates.
+- Added `src/automation/motors/browseros/cli/recording.py` plus regression coverage in `tests/unit/automation/motors/browseros/cli/test_recording.py` for deterministic BrowserOS MCP call and snapshot recording.
+
+### Changed
+- Updated `src/automation/motors/browseros/agent/openbrowser.py` to capture raw BrowserOS `/chat` SSE traces instead of driving the internal BrowserOS UI as if it were a deterministic motor.
+- Updated `src/automation/motors/browseros/cli/client.py` to default to the stable local BrowserOS front door on `9000` and optionally record MCP calls/snapshots.
+- Updated BrowserOS and automation docs in `docs/automation/README.md`, `docs/reference/README.md`, `src/automation/README.md`, and `src/automation/motors/README.md` to point at the new external-reference indexes and recording guidance.
+- Updated BrowserOS planning contracts and references so Level 2 BrowserOS recording is modeled as raw trace capture first, Ariadne normalization second.
+- Updated `src/automation/ariadne/session.py` so failed Level 2 BrowserOS path discovery still persists the captured trace artifact for later promotion.
+
 ## [2026-04-08] - ATS Analyzer And Conceptual Motor Coverage
 
 ### Added

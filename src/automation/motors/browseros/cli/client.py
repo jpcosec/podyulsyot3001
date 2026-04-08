@@ -12,6 +12,7 @@ from typing import Any
 import requests
 
 from src.shared.log_tags import LogTag
+from .recording import BrowserOSMcpRecorder
 
 logger = logging.getLogger(__name__)
 
@@ -38,8 +39,9 @@ class BrowserOSClient:
     def __init__(
         self,
         *,
-        base_url: str = "http://127.0.0.1:9200/mcp",
+        base_url: str = "http://127.0.0.1:9000/mcp",
         session: requests.Session | None = None,
+        recorder: BrowserOSMcpRecorder | None = None,
     ) -> None:
         self.base_url = base_url
         self.session = session or requests.Session()
@@ -52,6 +54,7 @@ class BrowserOSClient:
         )
         self._request_id = 0
         self._initialized = False
+        self.recorder = recorder
 
     def initialize(self) -> None:
         """Initialize the MCP session and store any returned session id.
@@ -175,6 +178,10 @@ class BrowserOSClient:
                     text=match.group("text"),
                     raw_line=line,
                 )
+            )
+        if self.recorder is not None:
+            self.recorder.record_snapshot(
+                request_id=self._request_id, elements=elements
             )
         return elements
 
@@ -332,11 +339,27 @@ class BrowserOSClient:
             params={"name": name, "arguments": arguments},
         )
         payload = response.json()
+        result = payload.get("result", {})
         if payload.get("error"):
+            if self.recorder is not None:
+                self.recorder.record_call(
+                    request_id=self._request_id,
+                    tool_name=name,
+                    arguments=arguments,
+                    result=result if isinstance(result, dict) else None,
+                    error=payload["error"].get("message"),
+                )
             raise BrowserOSError(
                 payload["error"].get("message", f"BrowserOS tool failed: {name}")
             )
-        return payload.get("result", {})
+        if self.recorder is not None:
+            self.recorder.record_call(
+                request_id=self._request_id,
+                tool_name=name,
+                arguments=arguments,
+                result=result if isinstance(result, dict) else {"value": result},
+            )
+        return result
 
     def _post(self, *, method: str, params: dict[str, Any]) -> requests.Response:
         self._request_id += 1
