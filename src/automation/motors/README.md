@@ -16,7 +16,9 @@ BrowserOS-specific recording status:
 
 - `browseros/agent/openbrowser.py` captures raw Level 2 `/chat` SSE traces.
 - `browseros/agent/normalizer.py` derives candidate Ariadne steps from Level 2 tool events.
+- `browseros/agent/promoter.py` promotes deterministic Level 2 candidates into draft replay paths.
 - `browseros/cli/recording.py` records deterministic MCP tool calls and snapshots.
+- `browseros/cdp_recorder.py` parses lower-level BrowserOS CDP capture signals for fallback or augmentation.
 
 ## ⚙️ Configuration
 

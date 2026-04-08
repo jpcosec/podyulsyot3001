@@ -14,6 +14,16 @@ The first normalization pass from BrowserOS Level 2 tool events into Ariadne-
 oriented step candidates now lives in
 `src/automation/motors/browseros/agent/normalizer.py`.
 
+Deterministic candidate promotion into a draft replay path now lives in
+`src/automation/motors/browseros/agent/promoter.py`.
+
+Failed Level 2 discovery attempts now persist both:
+
+- the raw BrowserOS `/chat` trace
+- normalized Level 2 step candidates
+
+for later promotion into Ariadne paths.
+
 ## Potential Use Cases
 
 - Recovering from portal drift when a deterministic path no longer matches.
@@ -28,8 +38,8 @@ This package currently provides:
 - a conceptual `BrowserOSAgentMotorProvider` and `BrowserOSAgentMotorSession`
   that still raise `NotImplementedError`
 
-That means BrowserOS Level 2 capture is partially implemented, but promotion
-into Ariadne paths and full motor-session execution are not finished yet.
+That means BrowserOS Level 2 capture and draft-path promotion are implemented,
+but full motor-session execution through the conceptual provider is not finished yet.
 
 ## Reference Docs
 

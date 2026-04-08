@@ -16,6 +16,10 @@ from uuid import uuid4
 import requests
 from pydantic import BaseModel, Field
 
+from .models import BrowserOSLevel2StreamEvent, BrowserOSLevel2Trace
+from .normalizer import BrowserOSLevel2StepCandidate, BrowserOSLevel2TraceNormalizer
+from .promoter import BrowserOSLevel2Promoter
+
 logger = logging.getLogger(__name__)
 
 
@@ -27,37 +31,12 @@ class OpenBrowserAgentResult(BaseModel):
     """Compatibility wrapper for older Level 2 callers."""
 
     status: str
-    playbook: dict[str, Any] | None = None
+    playbook: Any | None = None
     error: str | None = None
     conversation_id: str | None = None
     recording_path: str | None = None
     trace: dict[str, Any] | None = None
-
-
-class BrowserOSLevel2StreamEvent(BaseModel):
-    """One parsed SSE event from BrowserOS `/chat`."""
-
-    timestamp: str
-    conversation_id: str
-    event_type: str
-    payload: dict[str, Any]
-
-
-class BrowserOSLevel2Trace(BaseModel):
-    """Raw Level 2 trace captured from BrowserOS `/chat`."""
-
-    conversation_id: str
-    source: str
-    goal: str
-    provider: str
-    model: str
-    mode: str
-    started_at: str
-    ended_at: str | None = None
-    stream_events: list[BrowserOSLevel2StreamEvent] = Field(default_factory=list)
-    final_text: str | None = None
-    finish_reason: str | None = None
-    evidence_paths: list[str] = Field(default_factory=list)
+    candidates: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class OpenBrowserConversationResult(BaseModel):
@@ -83,6 +62,8 @@ class OpenBrowserClient:
         self.base_url = base_url.rstrip("/")
         self.session = session or requests.Session()
         self.session.headers.update({"Content-Type": "application/json"})
+        self.normalizer = BrowserOSLevel2TraceNormalizer()
+        self.promoter = BrowserOSLevel2Promoter()
 
     def communicate(
         self,
@@ -207,13 +188,24 @@ class OpenBrowserClient:
             source=portal,
             browser_context={"entry_url": url, "context": context},
         )
+        candidates = self.normalizer.normalize(result.trace)
+        playbook = self.promoter.promote(portal=portal, candidates=candidates)
+        status = result.status
+        error = result.error
+        if result.status == "success" and playbook is None:
+            status = "capture_only"
+            error = (
+                error
+                or "Level 2 trace captured but Ariadne path promotion is not implemented yet."
+            )
         return OpenBrowserAgentResult(
-            status="capture_only" if result.status == "success" else result.status,
-            error=result.error
-            or "Level 2 trace captured but Ariadne path promotion is not implemented yet.",
+            status=status,
+            playbook=playbook,
+            error=error,
             conversation_id=result.conversation_id,
             recording_path=result.recording_path,
             trace=result.trace.model_dump(mode="json"),
+            candidates=[candidate.model_dump(mode="json") for candidate in candidates],
         )
 
     def _finalize_result(

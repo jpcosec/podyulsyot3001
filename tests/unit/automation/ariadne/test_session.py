@@ -19,6 +19,7 @@ from src.automation.ariadne.exceptions import (
 from src.automation.ariadne.danger_contracts import ApplyDangerReport
 from src.automation.ariadne.danger_detection import ApplyDangerDetector
 from src.automation.ariadne.models import (
+    AriadneAction,
     AriadneObserve,
     AriadnePath,
     AriadnePortalMap,
@@ -139,6 +140,7 @@ async def test_invalid_path_id_raises(mock_client_class):
         status="error",
         error="not found",
         trace=None,
+        candidates=[],
     )
     mock_client_class.return_value = mock_client
 
@@ -157,6 +159,7 @@ async def test_invalid_path_id_persists_level2_trace_when_available(mock_client_
         status="error",
         error="not normalized",
         trace={"conversation_id": "conv-1", "stream_events": []},
+        candidates=[{"step_index": 1, "candidate_intent": "navigate"}],
         playbook=None,
     )
     mock_client_class.return_value = mock_client
@@ -172,6 +175,53 @@ async def test_invalid_path_id_persists_level2_trace_when_available(mock_client_
         "job1",
         "browseros_level2_trace_missing.json",
         '{\n  "conversation_id": "conv-1",\n  "stream_events": []\n}',
+    )
+    storage.write_artifact.assert_any_call(
+        "xing",
+        "job1",
+        "browseros_level2_candidates_missing.json",
+        '[\n  {\n    "step_index": 1,\n    "candidate_intent": "navigate"\n  }\n]',
+    )
+
+
+@pytest.mark.asyncio
+@patch("src.automation.ariadne.session.OpenBrowserClient")
+async def test_missing_path_uses_promoted_level2_playbook(mock_client_class):
+    mock_client = MagicMock()
+    promoted = AriadnePath(
+        id="draft",
+        task_id="browseros_level2_discovery",
+        steps=[
+            AriadneStep(
+                step_index=1,
+                name="navigate_1",
+                description="Navigate",
+                observe=AriadneObserve(required_elements=[]),
+                actions=[AriadneAction(intent="navigate", value="https://example.com")],
+            )
+        ],
+    )
+    mock_client.run_agent.return_value = MagicMock(
+        status="success",
+        error=None,
+        trace={"conversation_id": "conv-2", "stream_events": []},
+        candidates=[{"step_index": 1, "candidate_intent": "navigate"}],
+        playbook=promoted,
+    )
+    mock_client_class.return_value = mock_client
+
+    sess, storage = _make_session(_minimal_map())
+    fake_session = _FakeSession()
+    motor = _FakeProvider(fake_session)
+
+    await sess.run(motor, job_id="job1", cv_path=Path("cv.pdf"), path_id="missing")
+
+    fake_session.execute_step.assert_awaited_once()
+    storage.write_artifact.assert_any_call(
+        "xing",
+        "job1",
+        "agent_discovered_path_missing.json",
+        promoted.model_dump_json(indent=2).encode("utf-8"),
     )
 
 

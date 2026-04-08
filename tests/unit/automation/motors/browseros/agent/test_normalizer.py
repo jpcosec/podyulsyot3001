@@ -5,7 +5,7 @@ from __future__ import annotations
 from src.automation.motors.browseros.agent.normalizer import (
     BrowserOSLevel2TraceNormalizer,
 )
-from src.automation.motors.browseros.agent.openbrowser import (
+from src.automation.motors.browseros.agent.models import (
     BrowserOSLevel2StreamEvent,
     BrowserOSLevel2Trace,
 )

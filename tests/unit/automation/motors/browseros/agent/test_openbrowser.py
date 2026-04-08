@@ -129,3 +129,26 @@ def test_run_agent_returns_trace_metadata_without_playbook():
     assert result.status == "capture_only"
     assert result.playbook is None
     assert result.conversation_id is not None
+    assert result.candidates == []
+
+
+def test_run_agent_includes_normalized_candidates_when_tool_events_exist():
+    session = _FakeSession(
+        _FakeResponse(
+            200,
+            [
+                'data: {"type":"tool-input-available","toolCallId":"functions.navigate_page:0","toolName":"navigate_page","input":{"url":"https://example.com/apply"}}',
+                'data: {"type":"finish","finishReason":"stop"}',
+                "data: [DONE]",
+            ],
+        )
+    )
+    client = OpenBrowserClient(session=session)
+
+    result = client.run_agent("xing", "https://example.com", {"profile": {}})
+
+    assert result.status == "success"
+    assert len(result.candidates) == 1
+    assert result.candidates[0]["candidate_intent"] == "navigate"
+    assert result.playbook is not None
+    assert result.playbook.steps[0].actions[0].value == "https://example.com/apply"

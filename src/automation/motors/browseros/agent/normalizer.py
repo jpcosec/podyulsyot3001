@@ -6,7 +6,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from .openbrowser import BrowserOSLevel2Trace, BrowserOSLevel2StreamEvent
+from .models import BrowserOSLevel2Trace, BrowserOSLevel2StreamEvent
 
 
 class BrowserOSLevel2StepCandidate(BaseModel):

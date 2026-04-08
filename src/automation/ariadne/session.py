@@ -22,7 +22,7 @@ from src.automation.ariadne.danger_contracts import (
 )
 from src.automation.ariadne.danger_detection import ApplyDangerDetector
 from src.automation.ariadne.hitl import ApplyHitlController
-from src.automation.ariadne.models import ApplyMeta, AriadnePortalMap
+from src.automation.ariadne.models import ApplyMeta, AriadnePath, AriadnePortalMap
 from src.automation.ariadne.motor_protocol import MotorProvider
 from src.automation.ariadne.navigator import AriadneNavigator
 from src.automation.storage import AutomationStorage
@@ -181,13 +181,26 @@ class AriadneSession:
                         f"browseros_level2_trace_{selected_path_id}.json",
                         json.dumps(agent_result.trace, indent=2),
                     )
+                if (
+                    isinstance(agent_result.candidates, list)
+                    and agent_result.candidates
+                ):
+                    self.storage.write_artifact(
+                        self.portal_name,
+                        job_id,
+                        f"browseros_level2_candidates_{selected_path_id}.json",
+                        json.dumps(agent_result.candidates, indent=2),
+                    )
                 if agent_result.status != "success" or not agent_result.playbook:
                     raise ValueError(
                         f"Level 2 OpenBrowser agent failed to produce a valid path for '{selected_path_id}': {agent_result.error}"
                     )
 
                 # Hand successful playbook into the promotion/storage flow
-                path = agent_result.playbook
+                path = AriadnePath.model_validate(
+                    agent_result.playbook,
+                    from_attributes=True,
+                )
                 path.id = selected_path_id
 
                 # For now, write it as a trace/artifact for promotion
