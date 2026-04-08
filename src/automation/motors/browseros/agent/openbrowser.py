@@ -20,6 +20,10 @@ from src.automation.motors.browseros.runtime import resolve_browseros_runtime
 from .models import BrowserOSLevel2StreamEvent, BrowserOSLevel2Trace
 from .normalizer import BrowserOSLevel2TraceNormalizer
 from .promoter import BrowserOSLevel2Promoter
+from src.automation.motors.browseros.promotion_pipeline import (
+    BrowserOSCandidateGrouper,
+    BrowserOSPathValidator,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +69,8 @@ class OpenBrowserClient:
         self.session = session or requests.Session()
         self.session.headers.update({"Content-Type": "application/json"})
         self.normalizer = BrowserOSLevel2TraceNormalizer()
+        self.grouper = BrowserOSCandidateGrouper()
+        self.validator = BrowserOSPathValidator()
         self.promoter = BrowserOSLevel2Promoter()
 
     def communicate(
@@ -191,14 +197,21 @@ class OpenBrowserClient:
             browser_context={"entry_url": url, "context": context},
         )
         candidates = self.normalizer.normalize_shared(result.trace)
-        playbook = self.promoter.promote(portal=portal, candidates=candidates)
+        grouped_candidates = self.grouper.group(candidates)
+        assessment = self.validator.assess(grouped_candidates)
+        playbook = None
+        if assessment.outcome == "promotable":
+            playbook = self.promoter.promote(
+                portal=portal, candidates=grouped_candidates
+            )
         status = result.status
         error = result.error
         if result.status == "success" and playbook is None:
             status = "capture_only"
             error = (
                 error
-                or "Level 2 trace captured but Ariadne path promotion is not implemented yet."
+                or "; ".join(assessment.reasons)
+                or "Level 2 trace captured but could not be promoted into a replay path."
             )
         return OpenBrowserAgentResult(
             status=status,
@@ -207,7 +220,9 @@ class OpenBrowserClient:
             conversation_id=result.conversation_id,
             recording_path=result.recording_path,
             trace=result.trace.model_dump(mode="json"),
-            candidates=[candidate.model_dump(mode="json") for candidate in candidates],
+            candidates=[
+                candidate.model_dump(mode="json") for candidate in grouped_candidates
+            ],
         )
 
     def _finalize_result(
