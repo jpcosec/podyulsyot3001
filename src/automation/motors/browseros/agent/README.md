@@ -35,8 +35,9 @@ for later promotion into Ariadne paths.
 This package currently provides:
 
 - a Level 2 `/chat` trace capture client in `openbrowser.py`
-- a conceptual `BrowserOSAgentMotorProvider` and `BrowserOSAgentMotorSession`
-  that still raise `NotImplementedError`
+- a partially wired `BrowserOSAgentMotorProvider` and `BrowserOSAgentMotorSession`
+  that can delegate Level 2 capture/discovery into the working client
+  but still do not implement deterministic `execute_step()` motor behavior
 
 That means BrowserOS Level 2 capture and draft-path promotion are implemented,
 but full motor-session execution through the conceptual provider is not finished yet.

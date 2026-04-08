@@ -8,7 +8,7 @@ from __future__ import annotations
 import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any, AsyncIterator
+from typing import Any, AsyncIterator, Callable
 
 from src.automation.ariadne.contracts import ReplayStep
 from src.automation.ariadne.danger_contracts import (
@@ -17,6 +17,11 @@ from src.automation.ariadne.danger_contracts import (
 )
 from src.automation.ariadne.danger_detection import ApplyDangerDetector
 from src.automation.credentials import ResolvedPortalCredentials
+from src.automation.motors.browseros.agent.openbrowser import (
+    OpenBrowserAgentResult,
+    OpenBrowserClient,
+    OpenBrowserConversationResult,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -27,9 +32,41 @@ class BrowserOSAgentMotorSession:
     Currently unimplemented. Asserts that this is a planned future motor.
     """
 
-    def __init__(self, credentials: ResolvedPortalCredentials | None = None) -> None:
+    def __init__(
+        self,
+        credentials: ResolvedPortalCredentials | None = None,
+        *,
+        client: OpenBrowserClient | None = None,
+    ) -> None:
         self._credentials = credentials
         self._danger_detector = ApplyDangerDetector()
+        self._client = client or OpenBrowserClient()
+
+    async def capture_goal(
+        self,
+        goal: str,
+        *,
+        source: str,
+        recording_path: Path | None = None,
+        browser_context: dict[str, Any] | None = None,
+    ) -> OpenBrowserConversationResult:
+        """Capture a Level 2 BrowserOS `/chat` session for a high-level goal."""
+        return self._client.communicate(
+            goal,
+            source=source,
+            recording_path=recording_path,
+            browser_context=browser_context,
+        )
+
+    async def discover_path(
+        self,
+        *,
+        portal: str,
+        url: str,
+        context: dict[str, Any],
+    ) -> OpenBrowserAgentResult:
+        """Capture and promote a BrowserOS Level 2 session into a draft path."""
+        return self._client.run_agent(portal=portal, url=url, context=context)
 
     async def observe(self, selectors: set[str]) -> dict[str, bool]:
         """Check selector presence via BrowserOS agent.
@@ -95,6 +132,13 @@ class BrowserOSAgentMotorProvider:
     Conceptual stub for future agent-powered automation.
     """
 
+    def __init__(
+        self,
+        *,
+        client_factory: Callable[[], OpenBrowserClient] | None = None,
+    ) -> None:
+        self._client_factory = client_factory or OpenBrowserClient
+
     @asynccontextmanager
     async def open_session(
         self,
@@ -110,4 +154,7 @@ class BrowserOSAgentMotorProvider:
         Yields:
             BrowserOSAgentMotorSession (currently unimplemented).
         """
-        yield BrowserOSAgentMotorSession(credentials=credentials)
+        yield BrowserOSAgentMotorSession(
+            credentials=credentials,
+            client=self._client_factory(),
+        )

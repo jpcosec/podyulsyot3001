@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 - Updated BrowserOS planning contracts and references so Level 2 BrowserOS recording is modeled as raw trace capture first, Ariadne normalization second.
 - Updated `src/automation/ariadne/session.py` so failed Level 2 BrowserOS path discovery persists both the captured raw trace and normalized Level 2 step candidates for later promotion.
 - Updated `src/automation/motors/browseros/agent/openbrowser.py` so successful deterministic Level 2 candidates are promoted into a draft replay path instead of remaining capture-only.
+- Updated `src/automation/motors/browseros/agent/provider.py` so BrowserOS agent sessions can delegate Level 2 capture/discovery into the working `/chat` client even though deterministic motor execution is still not implemented.
 
 ## [2026-04-08] - ATS Analyzer And Conceptual Motor Coverage
 
