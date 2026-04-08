@@ -11,7 +11,7 @@ from typing import Any
 import requests
 from pydantic import BaseModel
 
-from src.automation.ariadne.models import AriadnePath
+from src.automation.ariadne.contracts import ReplayPath
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ class OpenBrowserAgentResult(BaseModel):
     """Playbook data returned by OpenBrowser agent."""
 
     status: str
-    playbook: AriadnePath | None = None
+    playbook: ReplayPath | None = None
     error: str | None = None
 
 
@@ -50,9 +50,7 @@ class OpenBrowserClient:
         """
         payload = {"portal": portal, "url": url, "context": context}
         try:
-            resp = self.session.post(
-                f"{self.base_url}/chat", json=payload, timeout=300
-            )
+            resp = self.session.post(f"{self.base_url}/chat", json=payload, timeout=300)
             resp.raise_for_status()
             data = resp.json()
             return OpenBrowserAgentResult.model_validate(data)

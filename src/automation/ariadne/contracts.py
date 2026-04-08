@@ -21,6 +21,7 @@ ReplayIntent = Literal[
     "scroll",
     "wait",
     "navigate",
+    "analyze_form",
 ]
 
 

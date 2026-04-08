@@ -6,7 +6,7 @@ consistently to failures (e.g., triggering a manual recovery or a retry).
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
 
 
 class AriadneError(Exception):
@@ -80,3 +80,26 @@ class HumanInterventionRequired(AriadneError):
         super().__init__(message, step_index=step_index, state_id=state_id)
         self.reason = reason
         self.details = details or {}
+
+
+class FormReviewRequired(HumanInterventionRequired):
+    """Raised when an analyzed form requires human review."""
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        form: Any,  # AnalyzedForm
+        reason: str = "form_review_required",
+        step_index: Optional[int] = None,
+        state_id: Optional[str] = None,
+        details: Optional[dict[str, object]] = None,
+    ):
+        super().__init__(
+            message,
+            reason=reason,
+            step_index=step_index,
+            state_id=state_id,
+            details=details,
+        )
+        self.form = form

@@ -15,6 +15,11 @@ from src.automation.ariadne.contracts import (
     ReplayStep,
     ReplayTarget,
 )
+from src.automation.ariadne.exceptions import FormReviewRequired
+from src.automation.ariadne.form_analyzer import (
+    AriadneFormAnalyzer,
+    BrowserOSFieldElement,
+)
 from src.automation.ariadne.danger_contracts import (
     ApplyDangerReport,
     ApplyDangerSignals,
@@ -49,6 +54,7 @@ class BrowserOSReplayer:
         self.client = client
         self.input_func = input_func
         self._danger_detector = ApplyDangerDetector()
+        self._form_analyzer = AriadneFormAnalyzer()
 
     def run(
         self,
@@ -255,7 +261,13 @@ class BrowserOSReplayer:
                 e for e in snapshot if normalized_target in self._normalize_text(e.text)
             ]
             if matches:
-                return matches[0].element_id
+                interactive = [
+                    element
+                    for element in matches
+                    if element.element_type not in {"text", "label"}
+                ]
+                chosen = interactive[0] if interactive else matches[0]
+                return chosen.element_id
 
         # 2. Try CSS Selection (Requires page_id for live search)
         if target.css and page_id is not None:
@@ -295,6 +307,16 @@ class BrowserOSReplayer:
         if action.intent == "navigate":
             url = self.render_template(action.value or "", context)
             self.client.navigate(url, page_id)
+            return
+
+        if action.intent == "analyze_form":
+            self._execute_analyze_form(
+                page_id=page_id,
+                context=context,
+                cv_path=cv_path,
+                letter_path=letter_path,
+                fields_filled=fields_filled,
+            )
             return
 
         if not action.target:
@@ -347,6 +369,8 @@ class BrowserOSReplayer:
         elif action.intent == "upload_letter":
             upload_path = Path(rendered_value) if rendered_value else letter_path
             if upload_path is None:
+                if action.optional:
+                    return
                 raise ValueError(
                     "upload_letter action requires letter_path or an explicit value"
                 )
@@ -354,6 +378,46 @@ class BrowserOSReplayer:
 
         if action.target.text:
             fields_filled.append(action.target.text)
+
+    def _execute_analyze_form(
+        self,
+        *,
+        page_id: int,
+        context: dict[str, Any],
+        cv_path: Path,
+        letter_path: Path | None,
+        fields_filled: list[str],
+    ) -> None:
+        snapshot = self.client.take_snapshot(page_id)
+        analyzed_form = self._form_analyzer.analyze_browseros_snapshot(
+            [
+                BrowserOSFieldElement(
+                    element_id=element.element_id,
+                    element_type=element.element_type,
+                    text=element.text,
+                )
+                for element in snapshot
+            ]
+        )
+        if analyzed_form.requires_review():
+            raise FormReviewRequired(
+                "Form analysis requires human review before submission.",
+                form=analyzed_form,
+                details={"summary": analyzed_form.review_summary()},
+            )
+
+        for derived_action in analyzed_form.to_ariadne_actions():
+            replay_action = ReplayAction.model_validate(
+                derived_action, from_attributes=True
+            )
+            self._execute_action(
+                page_id=page_id,
+                action=replay_action,
+                context=context,
+                cv_path=cv_path,
+                letter_path=letter_path,
+                fields_filled=fields_filled,
+            )
 
     def _build_hitl_request(
         self,

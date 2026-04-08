@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+from importlib import import_module
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -24,12 +25,22 @@ from src.automation.ariadne.hitl import ApplyHitlController
 from src.automation.ariadne.models import ApplyMeta, AriadnePortalMap
 from src.automation.ariadne.motor_protocol import MotorProvider
 from src.automation.ariadne.navigator import AriadneNavigator
-from src.automation.motors.browseros.agent.openbrowser import OpenBrowserClient
-from src.automation.portals.routing import resolve_portal_routing
 from src.automation.storage import AutomationStorage
 from src.shared.log_tags import LogTag
 
 logger = logging.getLogger(__name__)
+
+
+def resolve_portal_routing(portal_name: str, ingest_data: dict[str, Any]) -> Any:
+    routing_module = import_module("src.automation.portals.routing")
+    return routing_module.resolve_portal_routing(portal_name, ingest_data)
+
+
+def OpenBrowserClient() -> Any:
+    openbrowser_module = import_module(
+        "src.automation.motors.browseros.agent.openbrowser"
+    )
+    return openbrowser_module.OpenBrowserClient()
 
 
 class UnsupportedRoutingDecisionError(Exception):
@@ -167,11 +178,11 @@ class AriadneSession:
                     raise ValueError(
                         f"Level 2 OpenBrowser agent failed to produce a valid path for '{selected_path_id}': {agent_result.error}"
                     )
-                
+
                 # Hand successful playbook into the promotion/storage flow
                 path = agent_result.playbook
                 path.id = selected_path_id
-                
+
                 # For now, write it as a trace/artifact for promotion
                 self.storage.write_artifact(
                     self.portal_name,

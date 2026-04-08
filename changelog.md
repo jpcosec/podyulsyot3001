@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-08] - ATS Analyzer And Conceptual Motor Coverage
+
+### Added
+- Added `src/automation/ariadne/form_analyzer.py` to classify unknown ATS form fields, map them to candidate-profile semantics, and escalate unsafe or unresolved fields for human review.
+- Added conceptual BrowserOS agent scaffolding docs in `src/automation/motors/browseros/agent/README.md` plus regression coverage for BrowserOS agent, vision, and OS-native stub providers under `tests/unit/automation/motors/`.
+- Added analyzer regression coverage in `tests/unit/automation/ariadne/test_form_analyzer.py` and dynamic form-analysis coverage for BrowserOS and Crawl4AI replayers.
+
+### Changed
+- Updated `src/automation/motors/browseros/cli/replayer.py` to execute the backend-neutral `analyze_form` intent, prefer interactive BrowserOS targets over label text, and pause for HITL review when form semantics are unknown.
+- Updated `src/automation/motors/crawl4ai/replayer.py` to expand `analyze_form` into concrete actions, require actionable selectors before deterministic replay, and preserve CV/cover-letter upload routing.
+- Updated conceptual motor tests and package layout so duplicated `test_provider.py` basenames collect cleanly and assert against the current danger-report contract.
+
 ## [2026-04-07] - OpenBrowser Level 2 Agent Integration
 
 ### Added

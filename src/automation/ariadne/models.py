@@ -177,6 +177,7 @@ class AriadneIntent(str, Enum):
     SCROLL = "scroll"
     WAIT = "wait"
     NAVIGATE = "navigate"
+    ANALYZE_FORM = "analyze_form"
 
 
 class AriadneAction(BaseModel):

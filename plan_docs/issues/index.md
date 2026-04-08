@@ -25,8 +25,6 @@ Once an issue is solved, the next step is always:
 
 ### Phase 5 — Higher-level capability
 
-13. `plan_docs/issues/unimplemented/ats-form-analyzer.md`
-14. `plan_docs/issues/unimplemented/conceptual-motors.md`
-   - no blocking dependency; lower urgency unless roadmap scaffolding is needed
+13. `plan_docs/issues/unimplemented/browseros-live-session-validation.md`
 
 ## Dependency summary

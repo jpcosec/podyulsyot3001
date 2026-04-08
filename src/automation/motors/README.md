@@ -4,8 +4,11 @@
 
 This package contains backend-specific execution adapters.
 
-- `crawl4ai/` implements Ariadne replay on top of Crawl4AI.
-- `browseros/` implements Ariadne replay on top of BrowserOS MCP tools.
+- `crawl4ai/` — Unified Replayer for the Crawl4AI engine.
+- `browseros/cli/` — Unified Replayer for the BrowserOS (MCP) engine.
+- `browseros/agent/` — (Conceptual) Agentic control of BrowserOS.
+- `os_native_tools/` — (Conceptual) Stub for OS-level native automation.
+- `vision/` — (Conceptual) Stub for vision-first/AI-vision automation.
 - Each backend exposes a `MotorProvider` that opens a backend-specific `MotorSession`.
 - Motors execute steps and observations; they do not load maps or decide navigation policy.
 
