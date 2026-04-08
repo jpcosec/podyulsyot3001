@@ -62,6 +62,11 @@ def test_normalize_maps_supported_tools_to_candidates():
     assert candidates[1].target_hint == "#first-name"
     assert candidates[1].value_hint == "Ada"
 
+    shared = BrowserOSLevel2TraceNormalizer().normalize_shared(trace)
+    assert shared[0].source == "level2"
+    assert shared[0].actions[0].candidate_intent == "navigate"
+    assert shared[1].actions[0].candidate_intent == "fill"
+
 
 def test_normalize_flags_snapshot_local_element_ids_for_review():
     conversation_id = "conv-2"

@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field
 
 from src.automation.motors.browseros.runtime import resolve_browseros_runtime
 from .models import BrowserOSLevel2StreamEvent, BrowserOSLevel2Trace
-from .normalizer import BrowserOSLevel2StepCandidate, BrowserOSLevel2TraceNormalizer
+from .normalizer import BrowserOSLevel2TraceNormalizer
 from .promoter import BrowserOSLevel2Promoter
 
 logger = logging.getLogger(__name__)
@@ -190,7 +190,7 @@ class OpenBrowserClient:
             source=portal,
             browser_context={"entry_url": url, "context": context},
         )
-        candidates = self.normalizer.normalize(result.trace)
+        candidates = self.normalizer.normalize_shared(result.trace)
         playbook = self.promoter.promote(portal=portal, candidates=candidates)
         status = result.status
         error = result.error

@@ -159,7 +159,19 @@ async def test_invalid_path_id_persists_level2_trace_when_available(mock_client_
         status="error",
         error="not normalized",
         trace={"conversation_id": "conv-1", "stream_events": []},
-        candidates=[{"step_index": 1, "candidate_intent": "navigate"}],
+        candidates=[
+            {
+                "step_index": 1,
+                "source": "level2",
+                "actions": [
+                    {
+                        "source": "level2",
+                        "origin": "navigate_page",
+                        "candidate_intent": "navigate",
+                    }
+                ],
+            }
+        ],
         playbook=None,
     )
     mock_client_class.return_value = mock_client
@@ -180,7 +192,7 @@ async def test_invalid_path_id_persists_level2_trace_when_available(mock_client_
         "xing",
         "job1",
         "browseros_level2_candidates_missing.json",
-        '[\n  {\n    "step_index": 1,\n    "candidate_intent": "navigate"\n  }\n]',
+        '[\n  {\n    "step_index": 1,\n    "source": "level2",\n    "actions": [\n      {\n        "source": "level2",\n        "origin": "navigate_page",\n        "candidate_intent": "navigate"\n      }\n    ]\n  }\n]',
     )
 
 
@@ -205,7 +217,19 @@ async def test_missing_path_uses_promoted_level2_playbook(mock_client_class):
         status="success",
         error=None,
         trace={"conversation_id": "conv-2", "stream_events": []},
-        candidates=[{"step_index": 1, "candidate_intent": "navigate"}],
+        candidates=[
+            {
+                "step_index": 1,
+                "source": "level2",
+                "actions": [
+                    {
+                        "source": "level2",
+                        "origin": "navigate_page",
+                        "candidate_intent": "navigate",
+                    }
+                ],
+            }
+        ],
         playbook=promoted,
     )
     mock_client_class.return_value = mock_client

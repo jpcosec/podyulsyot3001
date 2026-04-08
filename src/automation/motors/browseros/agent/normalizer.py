@@ -7,6 +7,10 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from .models import BrowserOSLevel2Trace, BrowserOSLevel2StreamEvent
+from src.automation.motors.browseros.promotion_models import (
+    BrowserOSActionCandidate,
+    BrowserOSStepCandidate,
+)
 
 
 class BrowserOSLevel2StepCandidate(BaseModel):
@@ -20,6 +24,25 @@ class BrowserOSLevel2StepCandidate(BaseModel):
     requires_review: bool = False
     review_reason: str | None = None
     tool_events: list[BrowserOSLevel2StreamEvent] = Field(default_factory=list)
+
+    def to_shared_step(self) -> BrowserOSStepCandidate:
+        action = BrowserOSActionCandidate(
+            source="level2",
+            origin=self.tool_name,
+            candidate_intent=self.candidate_intent,
+            target_hint=self.target_hint,
+            value_hint=self.value_hint,
+            requires_review=self.requires_review,
+            review_reason=self.review_reason,
+            evidence=[event.model_dump(mode="json") for event in self.tool_events],
+        )
+        return BrowserOSStepCandidate(
+            step_index=self.step_index,
+            source="level2",
+            actions=[action],
+            requires_review=self.requires_review,
+            review_reason=self.review_reason,
+        )
 
 
 class BrowserOSLevel2TraceNormalizer:
@@ -79,6 +102,11 @@ class BrowserOSLevel2TraceNormalizer:
                 )
             candidates.append(candidate)
         return candidates
+
+    def normalize_shared(
+        self, trace: BrowserOSLevel2Trace
+    ) -> list[BrowserOSStepCandidate]:
+        return [candidate.to_shared_step() for candidate in self.normalize(trace)]
 
     def _input_payload(
         self, events: list[BrowserOSLevel2StreamEvent]

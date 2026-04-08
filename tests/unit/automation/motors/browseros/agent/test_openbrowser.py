@@ -166,6 +166,6 @@ def test_run_agent_includes_normalized_candidates_when_tool_events_exist():
 
     assert result.status == "success"
     assert len(result.candidates) == 1
-    assert result.candidates[0]["candidate_intent"] == "navigate"
+    assert result.candidates[0]["actions"][0]["candidate_intent"] == "navigate"
     assert result.playbook is not None
     assert result.playbook.steps[0].actions[0].value == "https://example.com/apply"
