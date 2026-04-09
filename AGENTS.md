@@ -6,25 +6,30 @@ Guidance for coding agents working in `podyulsyot3001`.
 
 - Python codebase for a modular job-application pipeline.
 - Main modules live under `src/`:
-  - `src/scraper/` - ingest job postings
-  - `src/core/tools/translator/` - translate job artifacts
+  - `src/core/` - core infrastructure (DataManager, API client, state)
   - `src/core/ai/generate_documents_v2/` - LangGraph document generation
+  - `src/core/tools/translator/` - translate job artifacts
   - `src/core/tools/render/` - deterministic PDF/DOCX rendering
   - `src/review_ui/` - Textual human review UI
 - Main operator entrypoint: `python -m src.cli.main`
 - LangGraph assistant entrypoint: `langgraph.json` -> `src.core.ai.generate_documents_v2.graph:create_studio_graph`
+- Python package metadata in `pyproject.toml` with package-dir mapping to `src/`
 
-## Rules Files Checked
+## Standards Reference
 
-- No repo-local `AGENTS.md` existed when this file was created.
-- No `.cursorrules` file was found.
-- No `.cursor/rules/` directory was found.
-- No `.github/copilot-instructions.md` file was found.
+All implementation, tests, and documentation must stay aligned with `docs/standards/`:
+- `docs/standards/code/basic.md` - coding style and patterns
+- `docs/standards/code/llm_langgraph_components.md` - LLM/LangGraph component patterns
+- `docs/standards/code/llm_langgraph_methodology.md` - LLM/LangGraph development methodology
+- `docs/standards/docs/documentation_and_planning_guide.md` - documentation conventions
+- `docs/standards/docs/documentation_quality_checklist.md` - docs quality checklist
+- `docs/standards/docs/future_docs_guide.md` - future_docs/ usage guide
+- `docs/standards/feature_creation_methodology.md` - feature development workflow
+- `docs/standards/issue_guide.md` - issue handling process
 
 ## Environment And Setup
 
-- Python package metadata is in `pyproject.toml`.
-- Direct dependencies are pinned in `requirements.txt`.
+- Dependencies in `requirements.txt`.
 - Typical setup:
 
 ```bash
@@ -57,17 +62,17 @@ pip install -e .
 
 ```bash
 python -m src.cli.main api start
-python -m src.cli.main run-batch --sources xing stepstone --limit 5 --profile-evidence path/to/profile.json
+python -m src.cli.main pipeline --source xing --job-id 148172603
+python -m src.cli.main run-batch --sources xing stepstone --limit 5
 python -m src.cli.main review
-python -m src.cli.main review --source xing --job-id 12345
-python -m src.cli.main generate --source stepstone --job-id <ID> --language en --render
-python -m src.core.tools.render.main cv --source stepstone --job-id <ID> --language en
-python -m src.core.tools.translator.main --source stepstone
+python -m src.cli.main review --source xing --job-id 148172603
+python -m src.cli.main generate --source xing --job-id 148172603 --language en --render
+python -m src.cli.main render cv --source xing --job-id 148172603 --language en
+python -m src.cli.main translate --source xing
 ```
 
 ### Test commands
 
-- Full suite currently includes stale legacy coverage and is not fully green.
 - Active suite that passes in the current repo:
 
 ```bash
@@ -87,28 +92,10 @@ python -m pytest tests/unit/cli/test_main.py -q
 python -m pytest tests/unit/core/ai/generate_documents_v2/test_profile_updater.py -q
 ```
 
-- Single test function:
-
-```bash
-python -m pytest tests/unit/cli/test_main.py::test_main_without_command_prints_help -q
-python -m pytest tests/unit/core/ai/generate_documents_v2/test_profile_updater.py::test_profile_updater_writes_to_disk_and_clears_list -q
-```
-
 - Test subtree:
 
 ```bash
 python -m pytest tests/unit/core/ai/generate_documents_v2 -q
-```
-
-### Lint / static checks
-
-- No dedicated repo-wide linter or type-checker configuration was found in `pyproject.toml`.
-- No confirmed canonical `ruff`, `black`, `mypy`, `pyright`, `tox`, or `nox` command is checked in.
-- Treat `pytest` as the mandatory verification baseline.
-- If you need a lightweight syntax smoke check, use:
-
-```bash
-python -m compileall src tests
 ```
 
 ## Workflow Expectations
@@ -124,14 +111,14 @@ python -m compileall src tests
 - Each module should have one clear responsibility.
 - Public surface goes through `__init__.py`; avoid deep imports from implementation internals when a public import exists.
 - `main.py` is for CLI entrypoints only.
-- `storage.py` owns persistence and artifact paths.
+- `data_manager.py` or `storage.py` owns persistence and artifact paths.
 - `contracts/` or `contracts.py` owns typed schemas.
 - `graph.py` owns orchestration, nodes, edges, and Studio graph exposure.
 - Prompt construction belongs in dedicated prompt modules, not in graph wiring.
 
 ## Imports
 
-- Use `from __future__ import annotations` at the top of Python modules; this is common across the repo.
+- Use `from __future__ import annotations` at the top of Python modules.
 - Group imports in this order:
   1. standard library
   2. third-party packages

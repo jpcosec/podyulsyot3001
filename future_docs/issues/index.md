@@ -17,10 +17,10 @@ Once an issue is solved, the next step is always:
 
 ┄┄ Priority roadmap
 
-┄┄┄ Phase 1 — [Phase name]
+┄┄┄ Phase 1 — Translation Debug
 
- 1. `future_docs/issues/[path]/issue-name.md`
- 2. `future_docs/issues/[path]/issue-name.md`
+1. `future_docs/issues/translation_debugging/issue-translation-logging.md`
+2. `future_docs/issues/translation_debugging/issue-translation-failure.md`
 
     • [Parallelization note if applicable]
 
