@@ -17,7 +17,7 @@ Once an issue is solved:
 - No indexed issue is currently marked for deletion instead of repair.
 - The prior root-level `plan_docs/issues/index.md` and ad-hoc root issue file were replaced so the issue entrypoint now follows `docs/standards/issue_guide.md`.
 - Extraction and normalization issues are resolved on the currently tested live scrape pages.
-- Remaining issues now cover backend-specific live apply validation, broader live portal coverage, and BrowserOS `/chat` runtime confidence; both the live apply matrix and `/chat` dependency inventory are now defined in docs.
+- Remaining issues now cover backend-specific live apply validation, broader live portal coverage, BrowserOS `/chat` runtime confidence, and a narrower StepStone live location normalization defect discovered during broader StepStone coverage sampling.
 
 ## Roots
 
@@ -27,13 +27,13 @@ Once an issue is solved:
 - `plan_docs/issues/gaps/browseros-live-apply-backend-is-not-validated.md`
 - `plan_docs/issues/gaps/crawl4ai-live-apply-backend-is-not-validated.md`
 - `plan_docs/issues/gaps/xing-live-coverage-is-not-broad-enough.md`
-- `plan_docs/issues/gaps/stepstone-live-coverage-is-not-broad-enough.md`
 - `plan_docs/issues/gaps/tuberlin-live-coverage-is-not-broad-enough.md`
 - `plan_docs/issues/gaps/browseros-chat-runtime-reliability-is-not-validated.md`
+- `plan_docs/issues/gaps/stepstone-live-location-normalization-still-misclassifies-hero-metadata.md`
 
 ## Parallelizable groups
 
-- Depth 0: `plan_docs/issues/gaps/browseros-live-apply-backend-is-not-validated.md`, `plan_docs/issues/gaps/crawl4ai-live-apply-backend-is-not-validated.md`, `plan_docs/issues/gaps/xing-live-coverage-is-not-broad-enough.md`, `plan_docs/issues/gaps/stepstone-live-coverage-is-not-broad-enough.md`, `plan_docs/issues/gaps/tuberlin-live-coverage-is-not-broad-enough.md`, `plan_docs/issues/gaps/browseros-chat-runtime-reliability-is-not-validated.md`
+- Depth 0: `plan_docs/issues/gaps/browseros-live-apply-backend-is-not-validated.md`, `plan_docs/issues/gaps/crawl4ai-live-apply-backend-is-not-validated.md`, `plan_docs/issues/gaps/xing-live-coverage-is-not-broad-enough.md`, `plan_docs/issues/gaps/tuberlin-live-coverage-is-not-broad-enough.md`, `plan_docs/issues/gaps/browseros-chat-runtime-reliability-is-not-validated.md`, `plan_docs/issues/gaps/stepstone-live-location-normalization-still-misclassifies-hero-metadata.md`
 - Depth 1: `plan_docs/issues/gaps/live-apply-flows-are-not-fully-validated.md`, `plan_docs/issues/gaps/live-portal-coverage-is-not-broad-enough.md`, `plan_docs/issues/gaps/browseros-chat-agent-surface-is-not-fully-validated-for-runtime-use.md`
 - Depth 2: `plan_docs/issues/gaps/browseros-chat-agent-surface-is-not-fully-validated-for-runtime-use.md`
 
@@ -42,6 +42,7 @@ Once an issue is solved:
 - `plan_docs/issues/gaps/live-apply-flows-are-not-fully-validated.md` blocks confidence in real end-to-end application behavior because scrape validation does not prove live apply correctness.
 - `plan_docs/issues/gaps/live-portal-coverage-is-not-broad-enough.md` blocks confidence across portal/page variants because current live scrape validation is still narrow.
 - `plan_docs/issues/gaps/browseros-chat-agent-surface-is-not-fully-validated-for-runtime-use.md` blocks confidence in workflows that still depend on BrowserOS `/chat` beyond MCP-first scrape rescue.
+- `plan_docs/issues/gaps/stepstone-live-location-normalization-still-misclassifies-hero-metadata.md` blocks full StepStone confidence because some live hero layouts still fill `location` with contract metadata.
 
 ## Dependency graph
 
@@ -49,11 +50,11 @@ Once an issue is solved:
 - `plan_docs/issues/gaps/crawl4ai-live-apply-backend-is-not-validated.md` -> no dependencies
 - `plan_docs/issues/gaps/live-apply-flows-are-not-fully-validated.md` -> `plan_docs/issues/gaps/browseros-live-apply-backend-is-not-validated.md`, `plan_docs/issues/gaps/crawl4ai-live-apply-backend-is-not-validated.md`
 - `plan_docs/issues/gaps/xing-live-coverage-is-not-broad-enough.md` -> no dependencies
-- `plan_docs/issues/gaps/stepstone-live-coverage-is-not-broad-enough.md` -> no dependencies
 - `plan_docs/issues/gaps/tuberlin-live-coverage-is-not-broad-enough.md` -> no dependencies
-- `plan_docs/issues/gaps/live-portal-coverage-is-not-broad-enough.md` -> `plan_docs/issues/gaps/xing-live-coverage-is-not-broad-enough.md`, `plan_docs/issues/gaps/stepstone-live-coverage-is-not-broad-enough.md`, `plan_docs/issues/gaps/tuberlin-live-coverage-is-not-broad-enough.md`
+- `plan_docs/issues/gaps/live-portal-coverage-is-not-broad-enough.md` -> `plan_docs/issues/gaps/xing-live-coverage-is-not-broad-enough.md`, `plan_docs/issues/gaps/tuberlin-live-coverage-is-not-broad-enough.md`
 - `plan_docs/issues/gaps/browseros-chat-runtime-reliability-is-not-validated.md` -> no dependencies
 - `plan_docs/issues/gaps/browseros-chat-agent-surface-is-not-fully-validated-for-runtime-use.md` -> `plan_docs/issues/gaps/browseros-chat-runtime-reliability-is-not-validated.md`
+- `plan_docs/issues/gaps/stepstone-live-location-normalization-still-misclassifies-hero-metadata.md` -> no dependencies
 
 ## Current indexed issues
 
@@ -64,7 +65,7 @@ Once an issue is solved:
 
 2. `plan_docs/issues/gaps/live-portal-coverage-is-not-broad-enough.md`
    - Scope: Parent issue for broader live scrape coverage after each portal variant set is validated independently
-   - Depends on: `plan_docs/issues/gaps/xing-live-coverage-is-not-broad-enough.md`, `plan_docs/issues/gaps/stepstone-live-coverage-is-not-broad-enough.md`, `plan_docs/issues/gaps/tuberlin-live-coverage-is-not-broad-enough.md`
+   - Depends on: `plan_docs/issues/gaps/xing-live-coverage-is-not-broad-enough.md`, `plan_docs/issues/gaps/tuberlin-live-coverage-is-not-broad-enough.md`
    - Expected outputs: Broader live portal evidence, variant coverage notes, regression artifacts/tests
 
 3. `plan_docs/issues/gaps/browseros-chat-agent-surface-is-not-fully-validated-for-runtime-use.md`
@@ -87,17 +88,17 @@ Once an issue is solved:
    - Depends on: none
    - Expected outputs: XING variant coverage notes and regression artifacts/tests
 
-7. `plan_docs/issues/gaps/stepstone-live-coverage-is-not-broad-enough.md`
-   - Scope: Validate more StepStone live scrape variants
-   - Depends on: none
-   - Expected outputs: StepStone variant coverage notes and regression artifacts/tests
-
-8. `plan_docs/issues/gaps/tuberlin-live-coverage-is-not-broad-enough.md`
+7. `plan_docs/issues/gaps/tuberlin-live-coverage-is-not-broad-enough.md`
    - Scope: Validate more TU Berlin live scrape variants
    - Depends on: none
    - Expected outputs: TU Berlin variant coverage notes and regression artifacts/tests
 
-9. `plan_docs/issues/gaps/browseros-chat-runtime-reliability-is-not-validated.md`
+8. `plan_docs/issues/gaps/browseros-chat-runtime-reliability-is-not-validated.md`
    - Scope: Validate `/chat` runtime behavior for the workflows that still intentionally use it
    - Depends on: none
    - Expected outputs: Runtime evidence and support classification for `/chat` workflows
+
+9. `plan_docs/issues/gaps/stepstone-live-location-normalization-still-misclassifies-hero-metadata.md`
+   - Scope: Fix remaining StepStone live location misclassification on broader hero layouts
+   - Depends on: none
+   - Expected outputs: Correct StepStone location extraction across the broader sampled layouts
