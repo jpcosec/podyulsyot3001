@@ -15,4 +15,4 @@
 3. Record whether each workflow is supported, optional, experimental, or best-effort.
 4. Update docs/contracts to match observed reality.
 
-**Depends on:** `plan_docs/issues/gaps/browseros-chat-dependency-inventory-is-not-explicit.md`
+**Depends on:** none

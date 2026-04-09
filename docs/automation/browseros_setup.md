@@ -22,6 +22,9 @@ stable local front door at `http://127.0.0.1:9000` by default.
 The deeper BrowserOS reference index lives at
 `docs/reference/external_libs/browseros/readme.txt`.
 
+The current `/chat` dependency inventory lives at
+`docs/automation/browseros_chat_dependency_inventory.md`.
+
 ## Extraction Fallback Configuration
 
 Scrape runs use `src/automation/motors/crawl4ai/scrape_engine.py` as the

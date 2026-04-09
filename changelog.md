@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 - Added child issue files for scrape validation, routing validation, onsite apply dry-run validation, and live-validation triage under `plan_docs/issues/gaps/`.
 
 ### Changed
+- Added `docs/automation/browseros_chat_dependency_inventory.md` to explicitly inventory the current BrowserOS `/chat` dependency surface and distinguish Level 2 `/chat` workflows from MCP-first scrape rescue.
 - Added `docs/automation/live_apply_validation_matrix.md` as the canonical live apply validation matrix, aligned BrowserOS setup/integration docs with the `127.0.0.1:9000/mcp` runtime contract, and added integration-test coverage that the matrix doc exists.
 - Moved canonical job normalization ownership into `src/automation/ariadne/job_normalization.py` and updated `src/automation/motors/crawl4ai/scrape_engine.py` to delegate to that Ariadne semantic module. Added backend-neutral normalization tests in `tests/unit/automation/ariadne/test_job_normalization.py`, so the `raw` / `cleaned` / `extracted` contract is now owned and tested at the semantic layer rather than the motor layer.
 - Extended XING normalization in `src/automation/motors/crawl4ai/scrape_engine.py` so rescue payloads preserve good CSS scalars, listing metadata can repair polluted teaser company/location values, and additional XING headings like `Deine Rolle`, `Qualifikation`, and `Beschreibung` are mined into canonical responsibility/requirement fields. Repeated live XING scrapes now ingest successfully.

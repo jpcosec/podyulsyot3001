@@ -22,4 +22,4 @@ But current repo confidence is weaker there than for MCP.
 2. Validate runtime reliability in `plan_docs/issues/gaps/browseros-chat-runtime-reliability-is-not-validated.md`.
 3. Update docs/contracts from the resulting evidence.
 
-**Depends on:** `plan_docs/issues/gaps/browseros-chat-dependency-inventory-is-not-explicit.md`, `plan_docs/issues/gaps/browseros-chat-runtime-reliability-is-not-validated.md`
+**Depends on:** `plan_docs/issues/gaps/browseros-chat-runtime-reliability-is-not-validated.md`
