@@ -171,23 +171,50 @@ def hero_markdown_value(markdown_text: str, *, field: str) -> Optional[str]:
             r"\binc\b",
             r"\bllc\b",
             r"\bse\b",
+            r"\bgroup\b",
+            r"\bntt\b",
+            r"\breply\b",
+            r"\bdata\b",
         )
+        metadata_markers = {
+            "feste anstellung",
+            "vollzeit",
+            "teilzeit",
+            "homeoffice möglich",
+            "homeoffice moglich",
+            "erschienen",
+            "gehalt anzeigen",
+        }
+        
         for line in hero_lines:
+            if not line.startswith(("*", "-")):
+                continue
+            
+            # Check for link-based company (e.g. [Company](url))
             for candidate in re.findall(r"\[([^\]]+)\]\([^\)]+\)", line):
                 candidate = candidate.strip()
                 if candidate and candidate != title:
-                    if any(
-                        re.search(marker, candidate.lower())
-                        for marker in company_markers
-                    ):
+                    if any(re.search(marker, candidate.lower()) for marker in company_markers):
                         return candidate
+            
+            # Check for plain text company
             candidate = re.sub(r"^[*-]\s+", "", line)
             candidate = re.sub(r"\[([^\]]*)\]\([^\)]+\)", r"\1", candidate)
             candidate = re.sub(r"\*+", "", candidate).strip()
+            
             if not candidate or candidate == title:
                 continue
+                
             if any(re.search(marker, candidate.lower()) for marker in company_markers):
                 return candidate
+            
+            # Heuristic fallback: if it's the first bullet after title and doesn't look like metadata/location
+            if candidate.lower() not in metadata_markers and not any(m in candidate.lower() for m in metadata_markers):
+                # If it doesn't look like a location (no commas, no obvious city-only pattern)
+                # This is risky, but StepStone's first bullet is ALMOST ALWAYS the company.
+                if "," not in candidate and len(candidate) > 2:
+                    return candidate
+        
         return None
 
     return None

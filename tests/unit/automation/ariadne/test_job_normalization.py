@@ -146,3 +146,25 @@ def test_normalize_job_payload_does_not_swap_valid_location() -> None:
     assert result.payload["company_name"] == "Google"
     assert result.payload["location"] == "Berlin"
     assert "swap_location_to_company" not in result.diagnostics["operations"]
+
+
+def test_hero_markdown_value_recovers_stepstone_company_without_markers() -> None:
+    markdown = (
+        "# Junior AI Application Engineer || AI Products LLM & RAG (m/w/d)\n"
+        "  * Reply\n"
+        "  * Munchen, Berlin\n"
+        "  * Feste Anstellung\n"
+    )
+
+    assert hero_markdown_value(markdown, field="company_name") == "Reply"
+    assert hero_markdown_value(markdown, field="location") == "Munchen, Berlin"
+
+
+def test_hero_markdown_value_recovers_stepstone_ntt_data() -> None:
+    markdown = (
+        "# Senior Data Strategy Consultant (w/m/x)\n"
+        "  * NTT DATA\n"
+        "  * Berlin, Hamburg\n"
+    )
+
+    assert hero_markdown_value(markdown, field="company_name") == "NTT DATA"
