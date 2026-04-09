@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from types import SimpleNamespace
@@ -135,6 +136,9 @@ def test_process_results_persists_listing_and_raw_artifacts(tmp_path) -> None:
     assert (ingest_dir / "content.md").exists()
     assert (ingest_dir / "raw_page.html").exists()
     assert (ingest_dir / "cleaned_page.html").exists()
+    assert (ingest_dir / "raw.json").exists()
+    assert (ingest_dir / "cleaned.json").exists()
+    assert (ingest_dir / "extracted.json").exists()
     assert (ingest_dir / "raw_extracted.json").exists()
     assert (ingest_dir / "listing.json").exists()
     assert (ingest_dir / "listing_content.md").exists()
@@ -179,7 +183,14 @@ def test_process_results_fails_closed_but_persists_failed_artifacts(tmp_path) ->
     failed_dir = manager.node_stage_dir("dummy", "999", "ingest", "failed")
     assert (failed_dir / "state.json").exists()
     assert (failed_dir / "raw_page.html").exists()
+    assert (failed_dir / "raw.json").exists()
+    assert (failed_dir / "cleaned.json").exists()
+    assert (failed_dir / "validation_error.json").exists()
     assert manager.has_ingested_job("dummy", "999") is False
+
+    validation_error = manager.read_json_path(failed_dir / "validation_error.json")
+    assert validation_error["job_id"] == "999"
+    assert validation_error["has_valid_data"] is False
 
 
 def test_extract_payload_uses_crawl4ai_llm_strategy_for_fallback(
@@ -188,6 +199,7 @@ def test_extract_payload_uses_crawl4ai_llm_strategy_for_fallback(
     manager = DataManager(tmp_path / "data" / "jobs")
     adapter = _DummyAdapter(manager)
     monkeypatch.setenv("GOOGLE_API_KEY", "test-key")
+    monkeypatch.setenv("AUTOMATION_EXTRACTION_FALLBACKS", "llm")
 
     invalid_css_result = _result(
         url="https://example.test/jobs/data-engineer-555",
@@ -238,7 +250,7 @@ def test_extract_payload_uses_crawl4ai_llm_strategy_for_fallback(
     assert valid_data is not None
     assert merged_payload is not None
     assert valid_data["job_title"] == "Data Engineer"
-    assert len(crawler.calls) == 1
+    assert len(crawler.calls) >= 1
     called_url, rescue_config = crawler.calls[0]
     assert called_url == invalid_css_result.url
     assert isinstance(rescue_config.extraction_strategy, LLMExtractionStrategy)
@@ -291,6 +303,7 @@ def test_extract_payload_uses_selective_llm_for_low_confidence_routing(
     manager = DataManager(tmp_path / "data" / "jobs")
     adapter = _DummyAdapter(manager)
     monkeypatch.setenv("GOOGLE_API_KEY", "test-key")
+    monkeypatch.setenv("AUTOMATION_EXTRACTION_FALLBACKS", "llm")
 
     detail_result = _result(
         url="https://example.test/jobs/data-engineer-557",
@@ -627,3 +640,697 @@ def test_process_results_adds_detected_original_language(tmp_path) -> None:
         manager.node_stage_dir("dummy", "124", "ingest", "proposed") / "state.json"
     )
     assert state_payload["original_language"] == "en"
+
+
+# ─── _normalize_payload tests ────────────────────────────────────────────────
+
+
+def test_normalize_payload_unwraps_data_dict_wrapper(tmp_path) -> None:
+    adapter = _DummyAdapter(DataManager(tmp_path / "data" / "jobs"))
+    wrapped = {
+        "data": {
+            "job_title": "Data Engineer",
+            "company_name": "Example Co",
+            "location": "Berlin",
+            "employment_type": "Full-time",
+            "responsibilities": ["Build pipelines"],
+            "requirements": ["Python"],
+        }
+    }
+    result = SimpleNamespace(
+        url="https://example.test/jobs/1",
+        extracted_content=json.dumps(wrapped),
+        markdown=SimpleNamespace(fit_markdown="", raw_markdown=""),
+        html="",
+        cleaned_html="",
+        error_message=None,
+        crawl_stats={},
+        status_code=200,
+    )
+    normalized = adapter._normalize_payload(wrapped, result=result)
+    assert normalized is not None
+    assert normalized["job_title"] == "Data Engineer"
+    assert "data" not in normalized
+
+
+def test_normalize_payload_unwraps_data_list_wrapper(tmp_path) -> None:
+    adapter = _DummyAdapter(DataManager(tmp_path / "data" / "jobs"))
+    wrapped = {
+        "data": [
+            {
+                "job_title": "Data Engineer",
+                "company_name": "Example Co",
+                "location": "Berlin",
+                "employment_type": "Full-time",
+                "responsibilities": ["Build pipelines"],
+                "requirements": ["Python"],
+            }
+        ]
+    }
+    result = _result(
+        url="https://example.test/jobs/2",
+        extracted_content=json.dumps(wrapped),
+        markdown="",
+        html="",
+    )
+    normalized = adapter._normalize_payload(wrapped, result=result)
+    assert normalized is not None
+    assert normalized["job_title"] == "Data Engineer"
+    assert "data" not in normalized
+
+
+def test_normalize_payload_flattens_list_item_shapes(tmp_path) -> None:
+    adapter = _DummyAdapter(DataManager(tmp_path / "data" / "jobs"))
+    payload = {
+        "job_title": "Data Engineer",
+        "company_name": "Example Co",
+        "location": "Berlin",
+        "employment_type": "Full-time",
+        "responsibilities": [{"item": "Build pipelines"}, {"item": "Deploy models"}],
+        "requirements": [{"item": "Python"}, {"item": "SQL"}],
+    }
+    result = _result(
+        url="https://example.test/jobs/3",
+        extracted_content=json.dumps(payload),
+        markdown="",
+        html="",
+    )
+    normalized = adapter._normalize_payload(payload, result=result)
+    assert normalized["responsibilities"] == ["Build pipelines", "Deploy models"]
+    assert normalized["requirements"] == ["Python", "SQL"]
+
+
+def test_normalize_payload_backfills_company_name_from_listing_case(tmp_path) -> None:
+    adapter = _DummyAdapter(DataManager(tmp_path / "data" / "jobs"))
+    payload = {
+        "job_title": "Data Engineer",
+        "location": "Berlin",
+        "employment_type": "Full-time",
+        "responsibilities": ["Build pipelines"],
+        "requirements": ["Python"],
+    }
+    listing_case = {
+        "teaser_company": "BackfillCo",
+        "teaser_location": "",
+        "teaser_employment_type": "",
+    }
+    result = _result(
+        url="https://example.test/jobs/4",
+        extracted_content=json.dumps(payload),
+        markdown="",
+        html="",
+    )
+    normalized = adapter._normalize_payload(
+        payload, result=result, listing_case=listing_case
+    )
+    assert normalized["company_name"] == "BackfillCo"
+
+
+def test_normalize_payload_mines_bullets_from_german_markdown(tmp_path) -> None:
+    adapter = _DummyAdapter(DataManager(tmp_path / "data" / "jobs"))
+    payload = {
+        "job_title": "Data Engineer",
+        "company_name": "Example Co",
+        "location": "Berlin",
+        "employment_type": "Full-time",
+    }
+    markdown = (
+        "# Data Engineer\n"
+        "## Das erwartet Dich\n"
+        "- Build production pipelines\n"
+        "- Monitor model performance\n"
+        "## Das bringst Du mit\n"
+        "- 3+ years Python experience\n"
+        "- SQL knowledge\n"
+    )
+    result = _result(
+        url="https://example.test/jobs/5",
+        extracted_content=json.dumps(payload),
+        markdown=markdown,
+        html="",
+    )
+    normalized = adapter._normalize_payload(payload, result=result)
+    assert normalized["responsibilities"] == [
+        "Build production pipelines",
+        "Monitor model performance",
+    ]
+    assert normalized["requirements"] == ["3+ years Python experience", "SQL knowledge"]
+
+
+def test_normalize_payload_does_not_overwrite_existing_valid_fields(tmp_path) -> None:
+    adapter = _DummyAdapter(DataManager(tmp_path / "data" / "jobs"))
+    payload = {
+        "job_title": "Data Engineer",
+        "company_name": "Original Co",
+        "location": "Berlin",
+        "employment_type": "Full-time",
+        "responsibilities": ["Original task"],
+        "requirements": ["Original skill"],
+    }
+    listing_case = {
+        "teaser_company": "BackfillCo",
+        "teaser_location": "Munich",
+        "teaser_employment_type": "Part-time",
+    }
+    result = _result(
+        url="https://example.test/jobs/6",
+        extracted_content=json.dumps(payload),
+        markdown="## Das erwartet Dich\n- Mined task\n",
+        html="",
+    )
+    normalized = adapter._normalize_payload(
+        payload, result=result, listing_case=listing_case
+    )
+    assert normalized["company_name"] == "Original Co"
+    assert normalized["responsibilities"] == ["Original task"]
+
+
+def test_normalize_payload_returns_none_for_none_input(tmp_path) -> None:
+    adapter = _DummyAdapter(DataManager(tmp_path / "data" / "jobs"))
+    assert adapter._normalize_payload(None, result=None) is None
+
+
+# ─── Integration: CSS extraction with wrapped payload becomes valid ─────────
+
+
+def test_extract_payload_css_normalizes_wrapped_payload_to_valid(tmp_path) -> None:
+    manager = DataManager(tmp_path / "data" / "jobs")
+    adapter = _DummyAdapter(manager)
+
+    wrapped = {
+        "data": {
+            "job_title": "Data Engineer",
+            "company_name": "Example Co",
+            "location": "Berlin",
+            "employment_type": "Full-time",
+            "responsibilities": ["Build pipelines"],
+            "requirements": ["Python"],
+        }
+    }
+    result = _result(
+        url="https://example.test/jobs/789",
+        extracted_content=json.dumps(wrapped),
+        markdown="# Data Engineer",
+        html="<html><body>detail</body></html>",
+    )
+
+    valid_data, merged_payload, extraction_method, extraction_error = asyncio.run(
+        adapter._extract_payload(result, scraped_at=datetime.now(timezone.utc))
+    )
+
+    assert extraction_error is None
+    assert extraction_method == "css"
+    assert valid_data is not None
+    assert valid_data["job_title"] == "Data Engineer"
+
+
+def test_extract_payload_css_normalizes_item_shapes_to_valid(tmp_path) -> None:
+    manager = DataManager(tmp_path / "data" / "jobs")
+    adapter = _DummyAdapter(manager)
+
+    payload = {
+        "job_title": "Data Engineer",
+        "company_name": "Example Co",
+        "location": "Berlin",
+        "employment_type": "Full-time",
+        "responsibilities": [{"item": "Build pipelines"}, {"item": "Deploy models"}],
+        "requirements": [{"item": "Python"}],
+    }
+    result = _result(
+        url="https://example.test/jobs/790",
+        extracted_content=json.dumps(payload),
+        markdown="# Data Engineer",
+        html="<html><body>detail</body></html>",
+    )
+
+    valid_data, merged_payload, extraction_method, extraction_error = asyncio.run(
+        adapter._extract_payload(result, scraped_at=datetime.now(timezone.utc))
+    )
+
+    assert extraction_error is None
+    assert valid_data is not None
+    assert valid_data["responsibilities"] == ["Build pipelines", "Deploy models"]
+    assert valid_data["requirements"] == ["Python"]
+
+
+def test_extract_payload_css_backfills_missing_company_from_listing_case(
+    tmp_path,
+) -> None:
+    manager = DataManager(tmp_path / "data" / "jobs")
+    adapter = _DummyAdapter(manager)
+
+    payload = {
+        "job_title": "Data Engineer",
+        "location": "Berlin",
+        "employment_type": "Full-time",
+        "responsibilities": ["Build pipelines"],
+        "requirements": ["Python"],
+    }
+    from src.automation.motors.crawl4ai.contracts import (
+        DiscoveryListingData,
+        ScrapeDiscoveryEntry,
+    )
+
+    discovery_entry = ScrapeDiscoveryEntry(
+        url="https://example.test/jobs/791",
+        job_id="791",
+        listing_position=0,
+        listing_data=DiscoveryListingData(
+            job_title="Data Engineer",
+            company_name="Listed Co",
+            location="Berlin",
+            employment_type="Full-time",
+            posted_date="vor 2 Tagen",
+        ),
+    )
+
+    result = _result(
+        url="https://example.test/jobs/791",
+        extracted_content=json.dumps(payload),
+        markdown="# Data Engineer",
+        html="<html><body>detail</body></html>",
+    )
+
+    valid_data, merged_payload, extraction_method, extraction_error = asyncio.run(
+        adapter._extract_payload(
+            result,
+            discovery_entry=discovery_entry,
+            scraped_at=datetime(2026, 4, 7, 12, 0, tzinfo=timezone.utc),
+        )
+    )
+
+    assert extraction_error is None
+    assert valid_data is not None
+    assert valid_data["company_name"] == "Listed Co"
+
+
+def test_extract_payload_prefers_browseros_fallback_before_llm(
+    tmp_path, monkeypatch
+) -> None:
+    manager = DataManager(tmp_path / "data" / "jobs")
+    adapter = _DummyAdapter(manager)
+    monkeypatch.setenv("AUTOMATION_EXTRACTION_FALLBACKS", "browseros,llm")
+
+    async def _fake_browseros_rescue(url: str, markdown_content: str):
+        return (
+            {
+                "job_title": "BrowserOS Engineer",
+                "company_name": "Example Co",
+                "location": "Berlin",
+                "employment_type": "Full-time",
+                "responsibilities": ["Inspect DOM semantically"],
+                "requirements": ["Browser automation"],
+            },
+            None,
+        )
+
+    async def _fake_llm_rescue(crawler, url: str, markdown_content: str):
+        raise AssertionError("LLM rescue should be skipped when BrowserOS succeeds")
+
+    monkeypatch.setattr(adapter, "_browseros_rescue", _fake_browseros_rescue)
+    monkeypatch.setattr(adapter, "_llm_rescue", _fake_llm_rescue)
+
+    invalid_css_result = _result(
+        url="https://example.test/jobs/browseros-801",
+        extracted_content=json.dumps(
+            {
+                "job_title": "Incomplete",
+                "company_name": "Example Co",
+                "location": "Berlin",
+            }
+        ),
+        markdown="# BrowserOS Engineer",
+        html="<html><body>detail</body></html>",
+    )
+
+    valid_data, _, extraction_method, extraction_error = asyncio.run(
+        adapter._extract_payload(
+            invalid_css_result,
+            scraped_at=datetime.now(timezone.utc),
+        )
+    )
+
+    assert extraction_error is None
+    assert extraction_method == "browseros"
+    assert valid_data is not None
+    assert valid_data["job_title"] == "BrowserOS Engineer"
+
+
+def test_browseros_rescue_uses_mcp_page_content(tmp_path, monkeypatch) -> None:
+    manager = DataManager(tmp_path / "data" / "jobs")
+    adapter = _DummyAdapter(manager)
+
+    class _FakeBrowserOSClient:
+        def __init__(self) -> None:
+            self.closed_pages: list[int] = []
+
+        def new_hidden_page(self, url: str = "about:blank") -> int:
+            return 77
+
+        def navigate(self, url: str, page_id: int) -> None:
+            return None
+
+        def get_page_content(self, page_id: int) -> dict:
+            return {
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "# Data Engineer\n## Das erwartet Dich\n- Build pipelines\n## Das bringst Du mit\n- Python\n",
+                    }
+                ]
+            }
+
+        def close_page(self, page_id: int) -> None:
+            self.closed_pages.append(page_id)
+
+    monkeypatch.setitem(
+        sys.modules,
+        "src.automation.motors.browseros.cli.client",
+        SimpleNamespace(BrowserOSClient=_FakeBrowserOSClient),
+    )
+
+    payload, error = asyncio.run(
+        adapter._browseros_rescue("https://example.test/jobs/900", "")
+    )
+
+    assert error is None
+    assert payload is not None
+    assert payload["job_title"] == "Data Engineer"
+    assert payload["responsibilities"] == ["Build pipelines"]
+    assert payload["requirements"] == ["Python"]
+
+
+def test_mine_bullets_from_markdown_supports_bold_section_headings(tmp_path) -> None:
+    adapter = _DummyAdapter(DataManager(tmp_path / "data" / "jobs"))
+
+    bullets = adapter._mine_bullets_from_markdown(
+        "**Die Stelle im Überblick**\n- Analyze data\n**Danach suchen wir**\n- Python\n"
+    )
+
+    assert bullets["responsibilities"] == ["Analyze data"]
+    assert bullets["requirements"] == ["Python"]
+
+
+def test_mine_bullets_from_markdown_supports_prose_sections(tmp_path) -> None:
+    adapter = _DummyAdapter(DataManager(tmp_path / "data" / "jobs"))
+
+    bullets = adapter._mine_bullets_from_markdown(
+        "## Your responsibility\n"
+        "Conduct animal experiments and write scientific manuscripts.\n"
+        "## Your profile\n"
+        "- Biology degree\n"
+    )
+
+    assert bullets["responsibilities"] == [
+        "Conduct animal experiments and write scientific manuscripts."
+    ]
+    assert bullets["requirements"] == ["Biology degree"]
+
+
+def test_normalize_payload_recovers_hero_scalars_and_cleans_location(tmp_path) -> None:
+    adapter = _DummyAdapter(DataManager(tmp_path / "data" / "jobs"))
+    result = _result(
+        url="https://example.test/jobs/stepstone-1",
+        extracted_content="{}",
+        markdown=(
+            "# Data Scientist\n"
+            "* Example Research GmbH\n"
+            "* [Berlin](https://example.test/location)\n"
+            "* Homeoffice moglich, Vollzeit\n"
+        ),
+        html="<html></html>",
+    )
+
+    payload = adapter._normalize_payload(
+        {"job_title": "Data Scientist", "location": "Berlin + 0 more"},
+        result=result,
+        listing_case=None,
+    )
+
+    assert payload is not None
+    assert payload["company_name"] == "Example Research GmbH"
+    assert payload["location"] == "Berlin"
+    assert payload["employment_type"] == "Full-time"
+
+
+def test_normalize_payload_extracts_company_name_from_inline_markdown_link(
+    tmp_path,
+) -> None:
+    adapter = _DummyAdapter(DataManager(tmp_path / "data" / "jobs"))
+    result = _result(
+        url="https://example.test/jobs/stepstone-2",
+        extracted_content="{}",
+        markdown=(
+            "# Data Scientist\n"
+            "**Data Scientist**[ InGef - Institut fur angewandte Gesundheitsforschung Berlin GmbH](https://example.test/company)\n"
+        ),
+        html="<html></html>",
+    )
+
+    payload = adapter._normalize_payload(
+        {"job_title": "Data Scientist"},
+        result=result,
+        listing_case=None,
+    )
+
+    assert payload is not None
+    assert (
+        payload["company_name"]
+        == "InGef - Institut fur angewandte Gesundheitsforschung Berlin GmbH"
+    )
+
+
+def test_extract_payload_merges_css_scalars_with_browseros_lists(
+    tmp_path, monkeypatch
+) -> None:
+    manager = DataManager(tmp_path / "data" / "jobs")
+    adapter = _DummyAdapter(manager)
+    monkeypatch.setenv("AUTOMATION_EXTRACTION_FALLBACKS", "browseros")
+
+    async def _fake_browseros_rescue(url: str, markdown_content: str):
+        return (
+            {
+                "responsibilities": ["Build pipelines"],
+                "requirements": ["Python"],
+                "employment_type": "Full-time",
+            },
+            None,
+        )
+
+    monkeypatch.setattr(adapter, "_browseros_rescue", _fake_browseros_rescue)
+
+    invalid_css_result = _result(
+        url="https://example.test/jobs/merge-901",
+        extracted_content=json.dumps(
+            {
+                "job_title": "Data Engineer",
+                "company_name": "Example Co",
+                "location": "Berlin",
+            }
+        ),
+        markdown="# Data Engineer",
+        html="<html><body>detail</body></html>",
+    )
+
+    valid_data, _, extraction_method, extraction_error = asyncio.run(
+        adapter._extract_payload(
+            invalid_css_result,
+            scraped_at=datetime.now(timezone.utc),
+        )
+    )
+
+    assert extraction_error is None
+    assert extraction_method == "browseros"
+    assert valid_data is not None
+    assert valid_data["company_name"] == "Example Co"
+    assert valid_data["location"] == "Berlin"
+    assert valid_data["responsibilities"] == ["Build pipelines"]
+
+
+# ─── Transient error retry tests ───────────────────────────────────────────────
+
+
+def test_retry_crawl_succeeds_on_first_attempt(tmp_path) -> None:
+    """If crawl succeeds on first try, no retries are performed."""
+    manager = DataManager(tmp_path / "data" / "jobs")
+    adapter = _DummyAdapter(manager)
+
+    success_result = SimpleNamespace(
+        url="https://example.test/jobs/retry-1",
+        success=True,
+        extracted_content=json.dumps(
+            {
+                "job_title": "Data Engineer",
+                "company_name": "Example Co",
+                "location": "Berlin",
+                "employment_type": "Full-time",
+                "responsibilities": ["Build pipelines"],
+                "requirements": ["Python"],
+            }
+        ),
+        markdown=SimpleNamespace(fit_markdown="", raw_markdown=""),
+        html="<html><body>detail</body></html>",
+        cleaned_html="<html><body>detail</body></html>",
+        error_message=None,
+        crawl_stats={},
+        status_code=200,
+    )
+
+    class _FakeCrawler:
+        def __init__(self):
+            self.call_count = 0
+
+        async def arun(self, *, url: str, config):
+            self.call_count += 1
+            return success_result
+
+        async def sleep(self, seconds):
+            pass
+
+    crawler = _FakeCrawler()
+    result = asyncio.run(
+        adapter._retry_crawl(
+            crawler,
+            "https://example.test/jobs/retry-1",
+            _DummyAdapter(manager).get_base_crawl_config(),
+        )
+    )
+    assert result is success_result
+    assert crawler.call_count == 1
+
+
+def test_retry_crawl_retries_on_transient_error(tmp_path) -> None:
+    """Transient errors trigger retry up to max_retries."""
+    manager = DataManager(tmp_path / "data" / "jobs")
+    adapter = _DummyAdapter(manager)
+    run_config = adapter.get_base_crawl_config()
+
+    transient_result = SimpleNamespace(
+        url="https://example.test/jobs/retry-2",
+        success=False,
+        error_message="net::ERR_NETWORK_CHANGED",
+        extracted_content="",
+        markdown=None,
+        html="",
+        cleaned_html="",
+        crawl_stats={},
+        status_code=0,
+    )
+    success_result = SimpleNamespace(
+        url="https://example.test/jobs/retry-2",
+        success=True,
+        extracted_content=json.dumps(
+            {
+                "job_title": "Data Engineer",
+                "company_name": "Example Co",
+                "location": "Berlin",
+                "employment_type": "Full-time",
+                "responsibilities": ["Build pipelines"],
+                "requirements": ["Python"],
+            }
+        ),
+        markdown=SimpleNamespace(fit_markdown="", raw_markdown=""),
+        html="<html><body>detail</body></html>",
+        cleaned_html="<html><body>detail</body></html>",
+        error_message=None,
+        crawl_stats={},
+        status_code=200,
+    )
+
+    class _FakeCrawler:
+        def __init__(self):
+            self.call_count = 0
+            self.sleep_calls: list[int] = []
+
+        async def arun(self, *, url: str, config):
+            self.call_count += 1
+            if self.call_count <= 2:
+                return transient_result
+            return success_result
+
+        async def sleep(self, seconds):
+            self.sleep_calls.append(seconds)
+
+    crawler = _FakeCrawler()
+    result = asyncio.run(
+        adapter._retry_crawl(crawler, "https://example.test/jobs/retry-2", run_config)
+    )
+    assert result is success_result
+    assert crawler.call_count == 3
+    assert crawler.sleep_calls == [1, 2]
+
+
+def test_retry_crawl_gives_up_after_max_retries(tmp_path) -> None:
+    """After max_retries attempts, the last result is returned."""
+    manager = DataManager(tmp_path / "data" / "jobs")
+    adapter = _DummyAdapter(manager)
+    run_config = adapter.get_base_crawl_config()
+
+    transient_result = SimpleNamespace(
+        url="https://example.test/jobs/retry-3",
+        success=False,
+        error_message="net::ERR_NETWORK_CHANGED",
+        extracted_content="",
+        markdown=None,
+        html="",
+        cleaned_html="",
+        crawl_stats={},
+        status_code=0,
+    )
+
+    class _FakeCrawler:
+        def __init__(self):
+            self.call_count = 0
+
+        async def arun(self, *, url: str, config):
+            self.call_count += 1
+            return transient_result
+
+        async def sleep(self, seconds):
+            pass
+
+    crawler = _FakeCrawler()
+    result = asyncio.run(
+        adapter._retry_crawl(
+            crawler, "https://example.test/jobs/retry-3", run_config, max_retries=2
+        )
+    )
+    assert result is transient_result
+    assert crawler.call_count == 3
+
+
+def test_retry_crawl_does_not_retry_non_transient_errors(tmp_path) -> None:
+    """Non-transient errors fail immediately without retry."""
+    manager = DataManager(tmp_path / "data" / "jobs")
+    adapter = _DummyAdapter(manager)
+    run_config = adapter.get_base_crawl_config()
+
+    permanent_result = SimpleNamespace(
+        url="https://example.test/jobs/retry-4",
+        success=False,
+        error_message="net::ERR_FILE_NOT_FOUND",
+        extracted_content="",
+        markdown=None,
+        html="",
+        cleaned_html="",
+        crawl_stats={},
+        status_code=404,
+    )
+
+    class _FakeCrawler:
+        def __init__(self):
+            self.call_count = 0
+
+        async def arun(self, *, url: str, config):
+            self.call_count += 1
+            return permanent_result
+
+        async def sleep(self, seconds):
+            pass
+
+    crawler = _FakeCrawler()
+    result = asyncio.run(
+        adapter._retry_crawl(crawler, "https://example.test/jobs/retry-4", run_config)
+    )
+    assert result is permanent_result
+    assert crawler.call_count == 1

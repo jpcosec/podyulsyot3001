@@ -16,64 +16,73 @@ Once an issue is solved:
 
 - No indexed issue is currently marked for deletion instead of repair.
 - The prior root-level `plan_docs/issues/index.md` and ad-hoc root issue file were replaced so the issue entrypoint now follows `docs/standards/issue_guide.md`.
-- The live scrape validation issue was executed and removed; it exposed one concrete shared runtime gap for real portal navigation.
-- The shared live portal navigation blocker is resolved; real XING, StepStone, and TU Berlin pages now load with Crawl4AI's local browser, so the next shared runtime issue is extraction normalization.
+- Added live-data extraction issues for stale real-page schemas, explicit extraction-vs-normalization staging, Ariadne ownership of canonical normalization, BrowserOS runtime reachability, and missing BrowserOS fallback. Failed-run artifact visibility is now resolved in code.
 
 ## Roots
 
-- `plan_docs/issues/gaps/crawl4ai-live-portal-extraction-normalization.md`
+- `plan_docs/issues/gaps/extraction-and-canonical-normalization-are-not-explicitly-separated.md`
+- `plan_docs/issues/gaps/xing-live-extraction-remains-unstable.md`
+- `plan_docs/issues/gaps/stepstone-scalar-normalization-still-overmatches.md`
+- `plan_docs/issues/gaps/browseros-runtime-is-not-reachable-and-endpoints-are-inconsistent.md`
 
 ## Parallelizable groups
 
-- Depth 0: `plan_docs/issues/gaps/crawl4ai-live-portal-extraction-normalization.md`
-- Depth 1: `plan_docs/issues/gaps/portal-live-routing-validation.md`
-- Depth 2: `plan_docs/issues/gaps/portal-live-onsite-apply-validation.md`
-- Depth 3: `plan_docs/issues/gaps/portal-live-validation-triage.md`, `plan_docs/issues/unimplemented/crawl4ai-persistent-profile-auth.md`, `plan_docs/issues/unimplemented/crawl4ai-browseros-session-import.md`, `plan_docs/issues/unimplemented/crawl4ai-env-secret-login.md`
+- Depth 0: `plan_docs/issues/gaps/extraction-and-canonical-normalization-are-not-explicitly-separated.md`, `plan_docs/issues/gaps/xing-live-extraction-remains-unstable.md`, `plan_docs/issues/gaps/stepstone-scalar-normalization-still-overmatches.md`, `plan_docs/issues/gaps/browseros-runtime-is-not-reachable-and-endpoints-are-inconsistent.md`
+- Depth 1: `plan_docs/issues/gaps/crawl4ai-live-portal-extraction-normalization.md`, `plan_docs/issues/gaps/canonical-job-normalization-is-not-owned-by-ariadne.md`
+- Depth 2: `plan_docs/issues/unimplemented/browseros-agent-schema-fallback.md`
 
 ## Blockers
 
-- `plan_docs/issues/gaps/crawl4ai-live-portal-extraction-normalization.md` blocks the live routing pass because the real scrape pass still cannot produce valid ingest payloads.
-- `plan_docs/issues/gaps/portal-live-routing-validation.md` blocks the onsite apply dry-run pass because only confirmed onsite routes should enter safe live apply validation.
-- `plan_docs/issues/gaps/portal-live-onsite-apply-validation.md` and the earlier passes block triage because follow-up defects should be grounded in observed runtime behavior.
-- `plan_docs/issues/gaps/crawl4ai-live-portal-extraction-normalization.md` also blocks the three Crawl4AI auth implementation tracks because they need stable real-portal ingestion and runtime behavior before auth validation can be trusted.
+- `plan_docs/issues/gaps/xing-live-extraction-remains-unstable.md` blocks fully reliable live portal scraping because XING still fails intermittently on real runs.
+- `plan_docs/issues/gaps/stepstone-scalar-normalization-still-overmatches.md` blocks clean data quality on StepStone because scalar normalization still overmatches surrounding content on some live postings.
+- `plan_docs/issues/gaps/crawl4ai-live-portal-extraction-normalization.md` is the umbrella portal extraction issue and remains open until the remaining portal-specific child issues are resolved.
+- `plan_docs/issues/gaps/extraction-and-canonical-normalization-are-not-explicitly-separated.md` blocks clean contract boundaries because raw extraction noise and canonical cleanup currently leak into the same phase.
+- `plan_docs/issues/gaps/canonical-job-normalization-is-not-owned-by-ariadne.md` blocks semantic ownership because canonical job cleanup lives in a motor implementation instead of the neutral Ariadne layer.
+- `plan_docs/issues/gaps/browseros-runtime-is-not-reachable-and-endpoints-are-inconsistent.md` blocks BrowserOS-backed schema fallback because the BrowserOS MCP runtime cannot currently be reached from this repo.
 
 ## Dependency graph
 
-- `plan_docs/issues/gaps/crawl4ai-live-portal-extraction-normalization.md` -> no dependencies
-- `plan_docs/issues/gaps/portal-live-routing-validation.md` -> `plan_docs/issues/gaps/crawl4ai-live-portal-extraction-normalization.md`
-- `plan_docs/issues/gaps/portal-live-onsite-apply-validation.md` -> `plan_docs/issues/gaps/portal-live-routing-validation.md`
-- `plan_docs/issues/gaps/portal-live-validation-triage.md` -> `plan_docs/issues/gaps/crawl4ai-live-portal-extraction-normalization.md`, `plan_docs/issues/gaps/portal-live-routing-validation.md`, `plan_docs/issues/gaps/portal-live-onsite-apply-validation.md`
-- `plan_docs/issues/unimplemented/crawl4ai-persistent-profile-auth.md` -> `plan_docs/issues/gaps/crawl4ai-live-portal-extraction-normalization.md`
-- `plan_docs/issues/unimplemented/crawl4ai-browseros-session-import.md` -> `plan_docs/issues/gaps/crawl4ai-live-portal-extraction-normalization.md`
-- `plan_docs/issues/unimplemented/crawl4ai-env-secret-login.md` -> `plan_docs/issues/gaps/crawl4ai-live-portal-extraction-normalization.md`
+- `plan_docs/issues/gaps/extraction-and-canonical-normalization-are-not-explicitly-separated.md` -> no dependencies
+- `plan_docs/issues/gaps/xing-live-extraction-remains-unstable.md` -> no dependencies
+- `plan_docs/issues/gaps/stepstone-scalar-normalization-still-overmatches.md` -> no dependencies
+- `plan_docs/issues/gaps/crawl4ai-live-portal-extraction-normalization.md` -> `plan_docs/issues/gaps/xing-live-extraction-remains-unstable.md`, `plan_docs/issues/gaps/stepstone-scalar-normalization-still-overmatches.md`
+- `plan_docs/issues/gaps/canonical-job-normalization-is-not-owned-by-ariadne.md` -> `plan_docs/issues/gaps/extraction-and-canonical-normalization-are-not-explicitly-separated.md`
+- `plan_docs/issues/gaps/browseros-runtime-is-not-reachable-and-endpoints-are-inconsistent.md` -> no dependencies
+- `plan_docs/issues/unimplemented/browseros-agent-schema-fallback.md` -> `plan_docs/issues/gaps/crawl4ai-live-portal-extraction-normalization.md`, `plan_docs/issues/gaps/browseros-runtime-is-not-reachable-and-endpoints-are-inconsistent.md`
 
 ## Current indexed issues
 
 1. `plan_docs/issues/gaps/crawl4ai-live-portal-extraction-normalization.md`
-   - Scope: normalize real portal extractor output into valid `JobPosting` payloads
+   - Scope: Track the remaining umbrella extraction problem across portals after child portal issues were atomized
+   - Depends on: `plan_docs/issues/gaps/xing-live-extraction-remains-unstable.md`, `plan_docs/issues/gaps/stepstone-scalar-normalization-still-overmatches.md`
+   - Expected outputs: All remaining live portal child issues resolved and repeated live scrapes stable
+
+2. `plan_docs/issues/gaps/extraction-and-canonical-normalization-are-not-explicitly-separated.md`
+   - Scope: Separate raw extraction cleanup from final `JobPosting` validation and make `raw`, `cleaned`, and `extracted` distinct outputs
    - Depends on: none
-   - Expected outputs: successful ingestion where data is already sufficient, plus narrower follow-up issues where it is not
-2. `plan_docs/issues/gaps/portal-live-routing-validation.md`
-   - Scope: prove routing outcomes against live ingest payloads
-   - Depends on: `plan_docs/issues/gaps/crawl4ai-live-portal-extraction-normalization.md`
-   - Expected outputs: routing validation matrix and routing-specific follow-up issues where needed
-3. `plan_docs/issues/gaps/portal-live-onsite-apply-validation.md`
-   - Scope: prove safe live onsite apply dry-run behavior for supported apply portals
-   - Depends on: `plan_docs/issues/gaps/portal-live-routing-validation.md`
-   - Expected outputs: apply dry-run matrix and portal-specific replay/session follow-up issues where needed
-4. `plan_docs/issues/gaps/portal-live-validation-triage.md`
-   - Scope: convert live validation results into the next concrete issue backlog
-   - Depends on: `plan_docs/issues/gaps/crawl4ai-live-portal-extraction-normalization.md`, `plan_docs/issues/gaps/portal-live-routing-validation.md`, `plan_docs/issues/gaps/portal-live-onsite-apply-validation.md`
-   - Expected outputs: follow-up issue files, cleaned index, and changelog update
-5. `plan_docs/issues/unimplemented/crawl4ai-persistent-profile-auth.md`
-   - Scope: make Crawl4AI reuse persistent authenticated browser profiles when credential metadata requests it
-   - Depends on: `plan_docs/issues/gaps/crawl4ai-live-portal-extraction-normalization.md`
-   - Expected outputs: runtime profile wiring, tests, and real-portal validation path
-6. `plan_docs/issues/unimplemented/crawl4ai-browseros-session-import.md`
-   - Scope: let BrowserOS-seeded authenticated sessions be handed off into Crawl4AI
-   - Depends on: `plan_docs/issues/gaps/crawl4ai-live-portal-extraction-normalization.md`
-   - Expected outputs: session import/export contract, implementation, and validation path
-7. `plan_docs/issues/unimplemented/crawl4ai-env-secret-login.md`
-   - Scope: let Crawl4AI execute direct env-secret login flows where a stable login form exists
-   - Depends on: `plan_docs/issues/gaps/crawl4ai-live-portal-extraction-normalization.md`
-   - Expected outputs: guarded login bootstrap, secret resolution wiring, and tests
+   - Expected outputs: Explicit normalization stage, intermediate payload shape, `raw`/`cleaned`/`extracted` artifacts, normalization diagnostics
+
+3. `plan_docs/issues/gaps/xing-live-extraction-remains-unstable.md`
+   - Scope: Stabilize XING live scrape runs so they repeatedly ingest valid `JobPosting` objects
+   - Depends on: none
+   - Expected outputs: Stable live XING detail fetch, XING-specific normalization fixes, repeated successful live runs
+
+4. `plan_docs/issues/gaps/stepstone-scalar-normalization-still-overmatches.md`
+   - Scope: Restrict StepStone scalar recovery to the real hero block so company and location fields stay clean across postings
+   - Depends on: none
+   - Expected outputs: Clean StepStone company/location recovery on repeated live scrapes
+
+5. `plan_docs/issues/gaps/browseros-runtime-is-not-reachable-and-endpoints-are-inconsistent.md`
+   - Scope: Make BrowserOS runtime addressing consistent and verify MCP reachability from this repo
+   - Depends on: none
+   - Expected outputs: One canonical BrowserOS base URL, matching docs/code, successful runtime connectivity check
+
+6. `plan_docs/issues/gaps/canonical-job-normalization-is-not-owned-by-ariadne.md`
+   - Scope: Move canonical job normalization ownership into Ariadne or an adjacent neutral semantic layer instead of leaving it in Crawl4AI motor code
+   - Depends on: `plan_docs/issues/gaps/extraction-and-canonical-normalization-are-not-explicitly-separated.md`
+   - Expected outputs: Clear Ariadne ownership boundary, semantic-layer normalization module, backend-neutral tests, Ariadne-owned `raw`/`cleaned`/`extracted` contract
+
+7. `plan_docs/issues/unimplemented/browseros-agent-schema-fallback.md`
+   - Scope: Add BrowserOS agent fallback to generate extraction schemas when CSS+LLM fail
+   - Depends on: `plan_docs/issues/gaps/crawl4ai-live-portal-extraction-normalization.md`, `plan_docs/issues/gaps/browseros-runtime-is-not-reachable-and-endpoints-are-inconsistent.md`
+   - Expected outputs: SchemaGenerationFallback class, integration into extraction pipeline, tests

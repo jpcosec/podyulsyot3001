@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import os
 import re
+import time
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from datetime import datetime, timedelta, timezone
@@ -483,13 +485,16 @@ class SmartScraperAdapter(ABC):
         """Return the default browser configuration for scraping runs.
 
         Returns:
-            Browser settings injected with BrowserOS Chromium.
+            Browser settings using Crawl4AI's local Chromium.
+            BrowserOS injection is not used for scrape runs because real portal
+            listing pages have proven more reliable with Crawl4AI's own browser
+            than with the BrowserOS CDP-attached browser.
         """
-        from src.automation.motors.crawl4ai.browser_config import (
-            get_browseros_injected_config,
+        return BrowserConfig(
+            browser_type="chromium",
+            headless=True,
+            text_mode=True,
         )
-
-        return get_browseros_injected_config(headless=True, text_mode=True)
 
     def get_base_crawl_config(self) -> CrawlerRunConfig:
         """Return the shared Crawl4AI run configuration.
@@ -652,6 +657,56 @@ class SmartScraperAdapter(ABC):
             ],
         }
 
+    class _TransientNetworkError(Exception):
+        """Raised when a crawl fails with a transient network condition."""
+
+        pass
+
+    _TRANSIENT_ERROR_PATTERNS = (
+        "net::ERR_NETWORK_CHANGED",
+        "net::ERR_INTERNET_DISCONNECTED",
+        "net::ERR_CONNECTION_RESET",
+        "net::ERR_CONNECTION_TIMED_OUT",
+        "net::ERR_NAME_NOT_RESOLVED",
+    )
+
+    async def _retry_crawl(
+        self,
+        crawler: AsyncWebCrawler,
+        url: str,
+        config: Any,
+        *,
+        max_retries: int = 3,
+    ) -> Any:
+        """Retry a crawl up to max_retries on transient network errors.
+
+        Each retry waits 2^(attempt) seconds (exponential backoff).
+        Logs each attempt with LogTag.RETRY.
+        """
+        last_error: str | None = None
+        for attempt in range(max_retries + 1):
+            result = await crawler.arun(url=url, config=config)
+            if result.success:
+                return result
+            error_msg = result.error_message or ""
+            is_transient = any(
+                pat in error_msg for pat in self._TRANSIENT_ERROR_PATTERNS
+            )
+            if not is_transient or attempt == max_retries:
+                return result
+            wait_seconds = 2**attempt
+            logger.info(
+                "%s Transient network error for %s (attempt %s/%s), retrying in %ss: %s",
+                LogTag.RETRY,
+                url,
+                attempt + 1,
+                max_retries + 1,
+                wait_seconds,
+                error_msg,
+            )
+            await crawler.sleep(wait_seconds)
+        return None
+
     def _schema_sample_urls(
         self,
         *,
@@ -674,13 +729,14 @@ class SmartScraperAdapter(ABC):
     ) -> list[tuple[str, str]]:
         samples: list[tuple[str, str]] = []
         for url in sample_urls:
-            result = await crawler.arun(url=url, config=self.get_base_crawl_config())
-            if not result.success or not result.cleaned_html:
+            result = await self._retry_crawl(crawler, url, self.get_base_crawl_config())
+            if not result or not result.success or not result.cleaned_html:
                 logger.warning(
                     "%s Skipping schema sample %s: %s",
                     LogTag.WARN,
                     url,
-                    result.error_message or "missing cleaned HTML",
+                    (result.error_message if result else "no result")
+                    or "missing cleaned HTML",
                 )
                 continue
             samples.append((url, result.cleaned_html[:50000]))
@@ -854,6 +910,173 @@ class SmartScraperAdapter(ABC):
         )
         return "\n\n".join(part for part in instructions if part)
 
+    def get_extraction_fallback_order(self) -> tuple[str, ...]:
+        """Return the configured rescue order after CSS extraction fails.
+
+        The order is configured via ``AUTOMATION_EXTRACTION_FALLBACKS`` as a
+        comma-separated list. Supported values are ``browseros`` and ``llm``.
+        The default is ``browseros`` so live scraping does not depend on a
+        Gemini key unless explicitly enabled.
+        """
+        raw = os.environ.get("AUTOMATION_EXTRACTION_FALLBACKS", "browseros")
+        allowed = {"browseros", "llm"}
+        ordered: list[str] = []
+        for item in raw.split(","):
+            name = item.strip().lower()
+            if not name or name not in allowed or name in ordered:
+                continue
+            ordered.append(name)
+        return tuple(ordered)
+
+    def _browseros_payload_text(self, value: Any) -> str:
+        """Flatten BrowserOS MCP payloads into one text blob."""
+        chunks: list[str] = []
+
+        def _walk(node: Any) -> None:
+            if isinstance(node, str):
+                if node.strip():
+                    chunks.append(node)
+                return
+            if isinstance(node, dict):
+                for child in node.values():
+                    _walk(child)
+                return
+            if isinstance(node, list):
+                for child in node:
+                    _walk(child)
+
+        _walk(value)
+        return "\n".join(chunks)
+
+    def _extract_job_title_from_markdown(self, markdown_text: str) -> str | None:
+        """Return the first plausible title heading from page markdown."""
+        if not markdown_text:
+            return None
+        for line in markdown_text.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("# "):
+                title = stripped[2:].strip()
+                if title:
+                    return title
+        for line in markdown_text.splitlines():
+            stripped = line.strip()
+            if stripped and not stripped.startswith(("-", "*", "#")):
+                return stripped[:200]
+        return None
+
+    def _detect_employment_type_from_text(self, markdown_text: str) -> str | None:
+        """Infer employment type from page text when the teaser did not provide it."""
+        lower = markdown_text.lower()
+        patterns = {
+            "Full-time": ["full-time", "full time", "vollzeit"],
+            "Part-time": ["part-time", "part time", "teilzeit"],
+            "Internship": ["internship", "praktikum", "intern"],
+            "Working Student": ["werkstudent", "working student"],
+            "Contract": ["contract", "befristet"],
+        }
+        for label, variants in patterns.items():
+            if any(variant in lower for variant in variants):
+                return label
+        return None
+
+    def _clean_location_text(self, value: Any) -> str | None:
+        """Normalize noisy location strings from hero and teaser content."""
+        if not isinstance(value, str):
+            return None
+        cleaned = re.sub(r"\*+", "", value).strip()
+        cleaned = re.sub(r"\s*\+\s*\d+\s+more$", "", cleaned, flags=re.IGNORECASE)
+        cleaned = re.sub(r"\s+", " ", cleaned).strip(" ,")
+        return cleaned or None
+
+    def _hero_markdown_value(self, markdown_text: str, *, field: str) -> str | None:
+        """Recover scalar values from hero-style markdown content."""
+        if not markdown_text:
+            return None
+        lines = [line.strip() for line in markdown_text.splitlines() if line.strip()]
+        title = self._extract_job_title_from_markdown(markdown_text)
+
+        if field == "location":
+            for line in lines[:30]:
+                match = re.match(r"^[*-]\s+\[([^\]]+)\]\([^\)]+\)$", line)
+                candidate = match.group(1) if match else re.sub(r"^[*-]\s+", "", line)
+                candidate = self._clean_location_text(candidate)
+                if candidate and candidate.lower() not in {"login", "menu"}:
+                    if re.fullmatch(
+                        r"[A-Z][A-Za-z\-]+(?: [A-Z][A-Za-z\-]+)*", candidate
+                    ):
+                        return candidate
+            return None
+
+        if field == "company_name":
+            company_markers = (
+                "gmbh",
+                "ag",
+                "e.v.",
+                "universit",
+                "institute",
+                "institut",
+                "charité",
+                "charite",
+                "inc",
+                "llc",
+            )
+            for line in lines[:40]:
+                for candidate in re.findall(r"\[([^\]]+)\]\([^\)]+\)", line):
+                    candidate = candidate.strip()
+                    if candidate and candidate != title:
+                        if any(
+                            marker in candidate.lower() for marker in company_markers
+                        ):
+                            return candidate
+                candidate = re.sub(r"^[*-]\s+", "", line)
+                candidate = re.sub(r"\[([^\]]*)\]\([^\)]+\)", r"\1", candidate)
+                candidate = re.sub(r"\*+", "", candidate).strip()
+                if not candidate or candidate == title:
+                    continue
+                if any(marker in candidate.lower() for marker in company_markers):
+                    return candidate
+            return None
+
+        return None
+
+    def _merge_rescue_payloads(
+        self,
+        *,
+        base_payload: dict | None,
+        rescue_payload: dict | None,
+    ) -> dict | None:
+        """Merge rescue output onto the best existing CSS payload."""
+        if base_payload is None and rescue_payload is None:
+            return None
+        merged = dict(base_payload or {})
+        for key, value in (rescue_payload or {}).items():
+            if value in (None, "", [], {}):
+                continue
+            merged[key] = value
+        return merged
+
+    def _build_browseros_payload_from_text(self, markdown_text: str) -> dict[str, Any]:
+        """Build a minimal structured payload from BrowserOS MCP page content."""
+        payload: dict[str, Any] = {}
+        title = self._extract_job_title_from_markdown(markdown_text)
+        if title:
+            payload["job_title"] = title
+        company_name = self._hero_markdown_value(markdown_text, field="company_name")
+        if company_name:
+            payload["company_name"] = company_name
+        location = self._hero_markdown_value(markdown_text, field="location")
+        if location:
+            payload["location"] = location
+        bullets = self._mine_bullets_from_markdown(markdown_text)
+        if bullets.get("responsibilities"):
+            payload["responsibilities"] = bullets["responsibilities"]
+        if bullets.get("requirements"):
+            payload["requirements"] = bullets["requirements"]
+        employment_type = self._detect_employment_type_from_text(markdown_text)
+        if employment_type:
+            payload["employment_type"] = employment_type
+        return payload
+
     def _validate_payload(self, payload: dict | None) -> tuple[dict | None, str | None]:
         """Validate a merged payload against the job posting contract."""
         if not payload:
@@ -862,6 +1085,175 @@ class SmartScraperAdapter(ABC):
             return JobPosting(**payload).model_dump(), None
         except Exception as exc:
             return None, str(exc)
+
+    def _normalize_payload(
+        self,
+        payload: dict | None,
+        *,
+        result: Any | None = None,
+        listing_case: dict | None = None,
+    ) -> dict | None:
+        """Normalize a payload after merge, before validation.
+
+        Handles four failure modes from real portal CSS extraction:
+        1. Wrapped dicts  : { "data": {...} }   -> unwrap
+        2. Wrapped lists  : { "data": [...] }   -> unwrap
+        3. List-item shapes: [{ "item": "..." }] -> flatten to [str]
+        4. Missing scalars : backfill from listing_case teaser fields
+        5. Missing bullets : mine ## / #### heading sections from markdown
+        """
+        if not payload:
+            return None
+
+        normalized = dict(payload)
+
+        data = normalized.get("data")
+        if data is not None:
+            del normalized["data"]
+            if isinstance(data, dict):
+                normalized = {**data, **normalized}
+            elif isinstance(data, list):
+                normalized = {
+                    **normalized,
+                    **{
+                        k: v
+                        for item in data
+                        if isinstance(item, dict)
+                        for k, v in item.items()
+                    },
+                }
+
+        for key in ("responsibilities", "requirements", "benefits"):
+            if isinstance(normalized.get(key), list):
+                normalized[key] = [
+                    v["item"] if isinstance(v, dict) and "item" in v else v
+                    for v in normalized[key]
+                ]
+
+        for key in ("company_name", "location", "employment_type", "posted_date"):
+            if normalized.get(key) == "":
+                normalized[key] = None
+
+        if normalized.get("location"):
+            normalized["location"] = self._clean_location_text(normalized["location"])
+
+        missing_mandatory = []
+        for field in ("company_name", "location", "employment_type"):
+            if not normalized.get(field):
+                missing_mandatory.append(field)
+
+        if missing_mandatory and listing_case:
+            if not normalized.get("company_name"):
+                normalized["company_name"] = listing_case.get("teaser_company", "")
+            if not normalized.get("location"):
+                normalized["location"] = listing_case.get("teaser_location", "")
+            if not normalized.get("employment_type"):
+                normalized["employment_type"] = listing_case.get(
+                    "teaser_employment_type", ""
+                )
+
+        markdown_text = ""
+        if result is not None:
+            markdown_text = self._markdown_text(result)
+
+        if markdown_text:
+            if not normalized.get("company_name"):
+                normalized["company_name"] = self._hero_markdown_value(
+                    markdown_text,
+                    field="company_name",
+                )
+            if not normalized.get("location"):
+                normalized["location"] = self._hero_markdown_value(
+                    markdown_text,
+                    field="location",
+                )
+            if not normalized.get("employment_type"):
+                normalized["employment_type"] = self._detect_employment_type_from_text(
+                    markdown_text
+                )
+
+        if not normalized.get("responsibilities") or not normalized.get("requirements"):
+            bullets = self._mine_bullets_from_markdown(markdown_text)
+            if not normalized.get("responsibilities") and bullets.get(
+                "responsibilities"
+            ):
+                normalized["responsibilities"] = bullets["responsibilities"]
+            if not normalized.get("requirements") and bullets.get("requirements"):
+                normalized["requirements"] = bullets["requirements"]
+
+        return normalized
+
+    def _mine_bullets_from_markdown(self, markdown: str) -> dict[str, list[str]]:
+        """Extract responsibilities / requirements bullet lists from German markdown sections.
+
+        Known German heading patterns (case-insensitive):
+          Responsibilities: "Das erwartet Dich", "Deine Aufgaben", "Aufgaben", "Ihre Aufgaben"
+          Requirements:     "Das bringst Du mit", "Dein Profil", "Anforderungen", "Ihre Qualifikationen"
+        """
+        import re
+
+        responsibilities_headings = {
+            "das erwartet dich",
+            "deine aufgaben",
+            "aufgaben",
+            "ihre aufgaben",
+            "die stelle im überblick",
+            "die stelle im uberblick",
+            "your responsibilities",
+            "your responsibility",
+            "responsibilities",
+        }
+        requirements_headings = {
+            "das bringst du mit",
+            "dein profil",
+            "anforderungen",
+            "ihre qualifikationen",
+            "qualifikationen",
+            "danach suchen wir",
+            "what you bring",
+            "your profile",
+            "requirements",
+        }
+
+        bullets: dict[str, list[str]] = {"responsibilities": [], "requirements": []}
+        prose: dict[str, list[str]] = {"responsibilities": [], "requirements": []}
+        if not markdown:
+            return bullets
+
+        lines = markdown.split("\n")
+        current_section: str | None = None
+
+        for line in lines:
+            stripped = line.strip()
+            heading_match = re.match(r"^#{2,4}\s+(.+)", stripped)
+            if heading_match is None:
+                heading_match = re.match(r"^\*\*(.+?)\*\*$", stripped)
+            if heading_match:
+                heading_lower = heading_match.group(1).lower().strip(" :")
+                if heading_lower in responsibilities_headings:
+                    current_section = "responsibilities"
+                    continue
+                elif heading_lower in requirements_headings:
+                    current_section = "requirements"
+                    continue
+                else:
+                    current_section = None
+                    continue
+
+            if current_section and re.match(r"^[-*•]\s+(.+)", stripped):
+                bullets[current_section].append(stripped[2:].strip())
+                continue
+
+            if current_section and stripped:
+                if stripped.startswith(("[", "!", "|")) or stripped == "* * *":
+                    continue
+                prose[current_section].append(stripped)
+
+        for section, values in prose.items():
+            if values and not bullets[section]:
+                bullets[section] = [" ".join(values)]
+
+        return bullets
 
     async def _llm_rescue(
         self, crawler: AsyncWebCrawler | None, url: str, markdown_content: str
@@ -891,6 +1283,52 @@ class SmartScraperAdapter(ABC):
         except Exception as exc:
             logger.error("%s LLM rescue error: %s", LogTag.FAIL, exc)
             return None, f"LLM exception: {exc}"
+
+    async def _browseros_rescue(
+        self,
+        url: str,
+        markdown_content: str,
+    ) -> tuple[dict | None, str | None]:
+        """Use BrowserOS MCP page-content tools as a schema-free fallback."""
+        try:
+            from src.automation.motors.browseros.cli.client import BrowserOSClient
+        except Exception as exc:
+            return None, f"BrowserOS import failed: {exc}"
+
+        logger.info("%s BrowserOS MCP rescue for %s", LogTag.FALLBACK, self.source_name)
+        page_id: int | None = None
+        try:
+            client = BrowserOSClient()
+            page_id = await asyncio.to_thread(client.new_hidden_page, url)
+            await asyncio.to_thread(client.navigate, url, page_id)
+            await asyncio.sleep(2.5)
+            page_content = await asyncio.to_thread(client.get_page_content, page_id)
+            extracted_markdown = self._browseros_payload_text(page_content).strip()
+            if not extracted_markdown:
+                dom_payload = await asyncio.to_thread(client.get_dom, page_id)
+                extracted_markdown = self._browseros_payload_text(dom_payload).strip()
+            if not extracted_markdown:
+                extracted_markdown = markdown_content.strip()
+            payload = self._build_browseros_payload_from_text(extracted_markdown)
+            if not payload:
+                return (
+                    None,
+                    "BrowserOS MCP rescue could not derive a payload from page content.",
+                )
+            return payload, None
+        except Exception as exc:
+            logger.error("%s BrowserOS rescue error: %s", LogTag.FAIL, exc)
+            return None, f"BrowserOS exception: {exc}"
+        finally:
+            if page_id is not None:
+                try:
+                    await asyncio.to_thread(client.close_page, page_id)
+                except Exception:
+                    logger.warning(
+                        "%s Failed to close BrowserOS rescue page %s",
+                        LogTag.WARN,
+                        page_id,
+                    )
 
     def _routing_markdown_text(self, result: Any) -> str:
         return self._markdown_text(result)
@@ -1292,25 +1730,39 @@ class SmartScraperAdapter(ABC):
     ) -> tuple[dict | None, dict | None, str, str | None]:
         valid_data = None
         merged_payload = None
+        css_payload = None
         extraction_method = "none"
         extraction_error = None
         css_error = None
+
+        listing_case = self._listing_case_payload(
+            discovery_entry=discovery_entry,
+            scraped_at=scraped_at,
+        )
 
         if result.extracted_content:
             raw_payload, parse_error = self._parse_payload(result.extracted_content)
             merged_payload = self._merge_listing_into_payload(
                 payload=raw_payload,
-                listing_case=self._listing_case_payload(
-                    discovery_entry=discovery_entry,
-                    scraped_at=scraped_at,
-                ),
+                listing_case=listing_case,
             )
+            merged_payload = self._normalize_payload(
+                merged_payload,
+                result=result,
+                listing_case=listing_case,
+            )
+            css_payload = dict(merged_payload or {})
             valid_data, css_error = self._validate_payload(merged_payload)
             if valid_data:
                 merged_payload = await self._enrich_application_routing(
                     payload=merged_payload,
                     result=result,
                     crawler=crawler,
+                )
+                merged_payload = self._normalize_payload(
+                    merged_payload,
+                    result=result,
+                    listing_case=listing_case,
                 )
                 valid_data, css_error = self._validate_payload(merged_payload)
             if parse_error and not css_error:
@@ -1320,39 +1772,74 @@ class SmartScraperAdapter(ABC):
                 logger.info("%s %s extracted and validated.", LogTag.FAST, result.url)
 
         if not valid_data:
-            llm_payload, llm_error = await self._llm_rescue(
-                crawler,
-                result.url,
-                self._markdown_text(result),
-            )
-            merged_payload = self._merge_listing_into_payload(
-                payload=llm_payload,
-                listing_case=self._listing_case_payload(
-                    discovery_entry=discovery_entry,
-                    scraped_at=scraped_at,
-                ),
-            )
-            valid_data, validation_error = self._validate_payload(merged_payload)
-            if valid_data:
-                merged_payload = await self._enrich_application_routing(
-                    payload=merged_payload,
+            rescue_errors: list[str] = []
+            validation_error = None
+            for fallback_name in self.get_extraction_fallback_order():
+                if fallback_name == "browseros":
+                    rescue_payload, rescue_error = await self._browseros_rescue(
+                        result.url,
+                        self._markdown_text(result),
+                    )
+                elif fallback_name == "llm":
+                    rescue_payload, rescue_error = await self._llm_rescue(
+                        crawler,
+                        result.url,
+                        self._markdown_text(result),
+                    )
+                else:
+                    continue
+
+                merged_payload = self._merge_listing_into_payload(
+                    payload=self._merge_rescue_payloads(
+                        base_payload=css_payload,
+                        rescue_payload=rescue_payload,
+                    ),
+                    listing_case=listing_case,
+                )
+                merged_payload = self._normalize_payload(
+                    merged_payload,
                     result=result,
-                    crawler=None,
+                    listing_case=listing_case,
                 )
                 valid_data, validation_error = self._validate_payload(merged_payload)
-            if valid_data:
-                extraction_method = "llm"
-                logger.info("%s %s rescued by LLM.", LogTag.OK, result.url)
-            else:
-                extraction_error = (
-                    f"CSS Error: {css_error} | LLM Error: {llm_error} | "
-                    f"Validation Error: {validation_error}"
+                if valid_data:
+                    merged_payload = await self._enrich_application_routing(
+                        payload=merged_payload,
+                        result=result,
+                        crawler=crawler if fallback_name == "llm" else None,
+                    )
+                    merged_payload = self._normalize_payload(
+                        merged_payload,
+                        result=result,
+                        listing_case=listing_case,
+                    )
+                    valid_data, validation_error = self._validate_payload(
+                        merged_payload
+                    )
+                if valid_data:
+                    extraction_method = fallback_name
+                    logger.info(
+                        "%s %s rescued by %s.",
+                        LogTag.OK,
+                        result.url,
+                        fallback_name,
+                    )
+                    break
+                rescue_errors.append(
+                    f"{fallback_name}: {rescue_error or validation_error or 'unknown error'}"
                 )
+
+            if not valid_data:
+                error_parts = [f"CSS Error: {css_error}"]
+                error_parts.extend(rescue_errors)
+                if validation_error:
+                    error_parts.append(f"Validation Error: {validation_error}")
+                extraction_error = " | ".join(error_parts)
                 logger.error(
                     "%s %s structured extraction failed: %s",
                     LogTag.FAIL,
                     result.url,
-                    validation_error or llm_error,
+                    validation_error or "; ".join(rescue_errors),
                 )
 
         return valid_data, merged_payload, extraction_method, extraction_error
@@ -1423,6 +1910,14 @@ class SmartScraperAdapter(ABC):
         )
         raw_extracted = self._parse_extracted_content(result)
         if raw_extracted is not None:
+            refs["raw"] = self.data_manager.write_json_artifact(
+                source=self.source_name,
+                job_id=job_id,
+                node_name=node_name,
+                stage=artifact_stage,
+                filename="raw.json",
+                data={"payload": raw_extracted},
+            )
             refs["raw_extracted"] = self.data_manager.write_json_artifact(
                 source=self.source_name,
                 job_id=job_id,
@@ -1430,6 +1925,39 @@ class SmartScraperAdapter(ABC):
                 stage=artifact_stage,
                 filename="raw_extracted.json",
                 data={"data": raw_extracted},
+            )
+        if merged_payload is not None:
+            refs["cleaned"] = self.data_manager.write_json_artifact(
+                source=self.source_name,
+                job_id=job_id,
+                node_name=node_name,
+                stage=artifact_stage,
+                filename="cleaned.json",
+                data={"payload": merged_payload},
+            )
+        if valid_data is not None:
+            refs["extracted"] = self.data_manager.write_json_artifact(
+                source=self.source_name,
+                job_id=job_id,
+                node_name=node_name,
+                stage=artifact_stage,
+                filename="extracted.json",
+                data={"payload": valid_data},
+            )
+        if extraction_error:
+            refs["validation_error"] = self.data_manager.write_json_artifact(
+                source=self.source_name,
+                job_id=job_id,
+                node_name=node_name,
+                stage=artifact_stage,
+                filename="validation_error.json",
+                data={
+                    "job_id": job_id,
+                    "url": result.url,
+                    "extraction_method": extraction_method,
+                    "error": extraction_error,
+                    "has_valid_data": valid_data is not None,
+                },
             )
         listing_payload = self._listing_artifacts(
             discovery_entry=discovery_entry,
@@ -1725,16 +2253,16 @@ class SmartScraperAdapter(ABC):
             return ingested_job_ids
 
     async def fetch_job(self, url: str, *, save_html: bool = False) -> str:
-        """Fetch and ingest a single explicit job URL."""
+        """Fetch and ingest a single explicit job URL with transient error retry."""
         async with AsyncWebCrawler(config=self.get_browser_config()) as crawler:
             schema = await self.get_fast_schema(crawler, url)
             run_config = self.get_base_crawl_config()
             if schema:
                 run_config.extraction_strategy = JsonCssExtractionStrategy(schema)
-            result = await crawler.arun(url=url, config=run_config)
-            if not result.success:
+            result = await self._retry_crawl(crawler, url, run_config)
+            if not result or not result.success:
                 raise RuntimeError(
-                    f"Failed to fetch job at {url}: {result.error_message}"
+                    f"Failed to fetch job at {url}: {result.error_message if result else 'no result'}"
                 )
             ingested_job_ids = await self._process_results(
                 results=[result],

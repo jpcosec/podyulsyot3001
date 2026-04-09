@@ -5,16 +5,42 @@ All notable changes to this project will be documented in this file.
 ## [2026-04-09] - Portal Real-Life Validation Plan
 
 ### Added
+- Added `_normalize_payload()` method to `SmartScraperAdapter` in `src/automation/motors/crawl4ai/scrape_engine.py` to handle four common extraction failure modes from real portal CSS schemas: (1) `{ "data": {...} }` dict wrappers, (2) `{ "data": [...] }` list wrappers, (3) `[{ "item": "..." }]` list-item shapes, and (4) missing mandatory scalars backfilled from listing_case teaser fields. Also mines German heading sections (`Das erwartet Dich`, `Das bringst Du mit`, etc.) from markdown to populate `responsibilities` and `requirements`.
+- Added 8 regression tests for `_normalize_payload` and `_extract_payload` normalization integration covering wrapped payloads, item-shape flattening, listing_case backfill, and markdown bullet mining.
 - Added `plan_docs/issues/gaps/portal-real-life-validation.md` in the issue-guide format to define the live-validation gap for real scrape, routing, and safe onsite apply dry-runs across the currently supported portals.
 - Added `plan_docs/issues/Index.md` as the issue-guide-compliant issues entrypoint and dependency index for the current portal validation work.
 - Added child issue files for scrape validation, routing validation, onsite apply dry-run validation, and live-validation triage under `plan_docs/issues/gaps/`.
 
 ### Changed
+- Updated `src/automation/motors/crawl4ai/scrape_engine.py` so every ingest attempt now persists explicit `raw.json`, `cleaned.json`, and `extracted.json` artifacts where applicable, plus `validation_error.json` for failed validations. This makes failed live scrape runs debuggable from one artifact bundle and formalizes the `raw` / `cleaned` / `extracted` output contract in stored artifacts.
+- Updated `README.md`, `docs/automation/browseros_setup.md`, and `AGENTS.md` so BrowserOS startup is documented from the top level: launch `/home/jp/BrowserOS.AppImage --no-sandbox`, use `http://127.0.0.1:9000` as the stable local front door, and start BrowserOS work from `docs/reference/external_libs/browseros/readme.txt`.
+- Updated scrape fallback configuration in `src/automation/motors/crawl4ai/scrape_engine.py` so extraction rescue order is explicitly defined by `AUTOMATION_EXTRACTION_FALLBACKS`, with BrowserOS as the default fallback and Gemini rescue opt-in.
+- Updated the BrowserOS scrape rescue path in `src/automation/motors/crawl4ai/scrape_engine.py` to use documented BrowserOS MCP tools (`new_hidden_page`, `navigate_page`, `get_page_content`, `get_dom`) instead of depending on BrowserOS `/chat`.
+- Updated `src/automation/main.py` so the CLI basic usage now includes BrowserOS startup guidance, a `browseros-check` subcommand for runtime verification, and help text that points users to the AppImage launch flow and fallback configuration.
+- Updated `src/automation/motors/crawl4ai/scrape_engine.py` normalization to merge CSS scalars with BrowserOS rescue output, recover hero-block scalars, clean teaser-style locations, and convert prose-only responsibility sections into canonical list fields; this restored live ingest for StepStone and TU Berlin while leaving StepStone scalar scoping as a remaining live-data issue.
 - Updated `plan_docs/issues/gaps/portal-real-life-validation.md` from a broad execution plan into a parent atomization issue and regenerated `plan_docs/issues/Index.md` with the resulting dependency graph.
 - Removed the parent atomization issue after splitting it into executable child issues and updated `plan_docs/issues/Index.md` to make scrape validation the next root issue.
 - Executed the live scrape validation issue against real XING, StepStone, and TU Berlin portal pages, then replaced it with `plan_docs/issues/gaps/crawl4ai-live-portal-navigation-aborts.md` after all three failed on the same shared BrowserOS-injected Crawl4AI navigation abort.
 - Added three follow-up Crawl4AI auth issues for persistent profile reuse, BrowserOS session import, and env-secret login automation so authenticated Crawl4AI execution can be built explicitly instead of remaining only contractual.
-- Resolved the shared live portal navigation blocker by switching scrape runs to Crawl4AI's local browser, then replaced it with `plan_docs/issues/gaps/crawl4ai-live-portal-extraction-normalization.md` after real portals loaded but failed ingestion on extraction-normalization mismatches.
+- Resolved the shared live portal navigation blocker by switching scrape runs to Crawl4AI's local browser in `src/automation/motors/crawl4ai/scrape_engine.py`, confirmed XING, StepStone, and TU Berlin listing pages now load, then updated `plan_docs/issues/gaps/crawl4ai-live-portal-extraction-normalization.md` with precise diagnosis after a broad normalization patch attempt was reverted to avoid breaking existing tests. The remaining shared blocker is extraction normalization in `SmartScraperAdapter`.
+
+### Fixed
+- Fixed `build_default_portal_route` in `src/automation/portals/routing.py` — removed `detail_url` from routing decisions (was causing `mailto:` and `ftp://` schemes to incorrectly resolve as "onsite") and fixed email routing condition (was missing cases where `application_url` was a non-http scheme).
+
+### Added
+- Added 15 comprehensive routing unit tests covering all 4 outcomes (onsite, external_url, email, unsupported) for XING, StepStone, and LinkedIn in `tests/unit/automation/portals/test_routing.py`.
+- Added `_retry_crawl()` to `src/automation/motors/crawl4ai/scrape_engine.py` with 3 retries and exponential backoff (up to 2^attempt seconds wait), applied to `_load_schema_samples()` and `fetch_job()`. Added `LogTag.RETRY = "[🔁]"`. Resolved TU Berlin transient `net::ERR_NETWORK_CHANGED` errors.
+- Added 4 retry regression tests for `_retry_crawl()` in `tests/unit/automation/motors/crawl4ai/test_scrape_engine.py`.
+- Added `C4AIMotorProvider` auth support in `src/automation/motors/crawl4ai/apply_engine.py` — three tracks: (1) `persistent_profile` uses `user_data_dir` in BrowserConfig, (2) `env_secrets` bootstraps login via C4AI DSL script (navigates to login URL, fills username/password selectors, submits), (3) `mixed` executes both. All guarded against missing secrets or absent login forms.
+- Added 5 auth tests in `TestC4AIMotorProviderAuth` covering `persistent_profile`, `env_secrets`, `mixed`, and missing-secret guard paths.
+- Added 15 structural portal map tests across XING, LinkedIn, and StepStone (`tests/unit/automation/portals/{xing,linkedin,stepstone}/test_apply_map.py`).
+- Added 2 new E2E apply tests in `tests/unit/automation/test_apply_e2e.py` for email handoff and unsupported routing failures.
+- Added 2 new danger detection tests in `tests/unit/automation/ariadne/test_danger_detection.py` for email and unsupported routing scenarios.
+- Added test infrastructure: `tests/fixtures/test-cv.pdf` (minimal valid PDF), `tests/integration/test_live_apply.py` (BrowserOS infrastructure tests that skip when unavailable), `tests/integration/__init__.py`.
+- Added `docs/automation/browseros_setup.md` documenting BrowserOS setup, session management, and troubleshooting.
+
+### Removed
+- Removed all gap and unimplemented issue files from `plan_docs/issues/`. Index is now empty. `plan_docs/issues/Index.md` retains only the root instructions and legacy audit.
 
 ## [2026-04-08] - BrowserOS Recording Contracts And Level 2 Trace Capture
 
