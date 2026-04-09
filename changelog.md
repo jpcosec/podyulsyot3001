@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 - Added child issue files for scrape validation, routing validation, onsite apply dry-run validation, and live-validation triage under `plan_docs/issues/gaps/`.
 
 ### Changed
+- Closed the parent live-portal-coverage issue after documenting broader live coverage samples for XING, StepStone, and TU Berlin in `docs/automation/live_scrape_coverage.md`. The remaining StepStone concern is now tracked separately as a narrower live location-normalization defect.
 - Expanded `docs/automation/live_scrape_coverage.md` with a broader live TU Berlin sample (`limit 3`). All sampled TU Berlin postings ingested successfully, including one BrowserOS-rescued variant, so TU Berlin broader-coverage is now considered resolved for the currently observed page envelope.
 - Expanded `docs/automation/live_scrape_coverage.md` with a broader live XING sample (`limit 3`). All sampled XING postings ingested successfully, so XING broader-coverage is now considered resolved for the currently observed page envelope.
 - Added `docs/automation/live_scrape_coverage.md` to record broader live scrape coverage evidence. The first broader StepStone sample confirms successful ingest across three live postings but exposes a remaining location-classification defect on some hero layouts.
