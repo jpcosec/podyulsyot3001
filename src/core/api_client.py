@@ -438,3 +438,37 @@ class LangGraphAPIClient:
             source_url=source_url,
             initial_input=initial_input,
         )
+
+    async def get_profile(self, source_name: str) -> Dict[str, Any]:
+        """Fetch the raw profile data for a given source name.
+
+        Args:
+            source_name: Name of the source to sync from (e.g., 'xing', 'linkedin').
+
+        Returns:
+            The raw profile data dictionary.
+        """
+        logger.info(f"{LogTag.FAST} Fetching profile for source '{source_name}'...")
+        # Note: 'profile_sync' is the expected assistant for this operation.
+        result = await self.invoke_assistant(
+            "profile_sync",
+            source=source_name,
+            job_id="full_sync",
+            initial_input={"action": "fetch"},
+        )
+
+        if result.get("status") == "failed":
+            error = result.get("error", "Unknown error")
+            logger.error(f"{LogTag.FAIL} Profile fetch failed: {error}")
+            raise LangGraphConnectionError(f"Remote profile fetch failed: {error}")
+
+        # Extract profile from final thread values
+        thread_id = self.thread_id_for(source_name, "full_sync")
+        state = await self.client.threads.get_state(thread_id)
+        profile_data = state.get("values", {}).get("profile_data")
+
+        if not profile_data:
+            logger.error(f"{LogTag.FAIL} No profile data returned from 'profile_sync'")
+            raise ValueError(f"No profile data found for source {source_name}")
+
+        return profile_data

@@ -25,7 +25,8 @@ The active and full test suites are healthy and the current operator/runtime doc
 
 ## Priority Roadmap
 
-No open indexed issues at the moment.
+- [ ] **#5, #7 HITL Review Screens Redesign** — Replace existing `ReviewScreen` with four stage-specific screens and fix the submit bug. See `plan_docs/issues/gaps/hitl_review_screens.md`.
+- [ ] **#3, #4, #6, #8, #9 Review UI Bugs and Refactors** — Address smaller bugs, dead code, and misalignments in the `review_ui` and its connection to the LangGraph API. See `plan_docs/issues/gaps/review_ui_bugs_and_refactors.md`.
 
 ---
 

@@ -55,6 +55,9 @@ def _add_pipeline_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("--profile-evidence", dest="profile_evidence")
     p.add_argument("--requirements")
     p.add_argument("--auto-approve-review", action="store_true")
+    p.add_argument(
+        "--full-sync", action="store_true", help="Force full synchronization of profile from source."
+    )
 
 
 def _add_run_batch_parser(subparsers: argparse._SubParsersAction) -> None:
@@ -80,6 +83,9 @@ def _add_run_batch_parser(subparsers: argparse._SubParsersAction) -> None:
     p.add_argument("--profile-evidence", dest="profile_evidence")
     p.add_argument("--requirements")
     p.add_argument("--auto-approve-review", action="store_true")
+    p.add_argument(
+        "--full-sync", action="store_true", help="Force full synchronization of profile from source."
+    )
 
 
 def _add_translate_parser(subparsers: argparse._SubParsersAction) -> None:

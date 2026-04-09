@@ -1,5 +1,10 @@
 # Documentation
 
+## Runtime
+- `runtime/pipeline_overview.md` — generate_documents_v2 pipeline flow
+- `runtime/data_management.md` — DataManager and artifact storage
+- `runtime/review_ui.md` — Review UI (TUI) architecture and usage
+
 ## Standards
 
 ### docs/

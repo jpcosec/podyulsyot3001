@@ -70,6 +70,15 @@ class MatchBus:
             raise FileNotFoundError(
                 f"No review payload found for {source}/{job_id} at stage {artifact_stage}."
             )
+
+        if artifact_stage == "match_edges":
+            job_kg = self.store.load_stage(source, job_id, "job_kg")
+            job_delta = self.store.load_stage(source, job_id, "job_delta")
+            if job_kg:
+                payload["job_kg"] = job_kg
+            if job_delta:
+                payload["job_delta"] = job_delta
+
         return ReviewSurfaceData(
             stage=stage,
             title=title,
@@ -81,20 +90,37 @@ class MatchBus:
     # LangGraph actions (sync wrappers - called from Textual workers)
     # ------------------------------------------------------------------
 
-    def resume_with_review(self, action: str) -> dict[str, Any]:
-        """Resume the paused LangGraph thread with a simple review action."""
+    def resume_with_review(
+        self,
+        action: str,
+        patches: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
+        """Resume the paused LangGraph thread with review action and optional patches.
+
+        Args:
+            action: Main action (approve/reject)
+            patches: Optional per-match modifications
+        """
         thread_id = self.config.get("configurable", {}).get("thread_id")
         if not thread_id:
             raise ValueError("thread_id missing in config for remote resume")
 
         stage = self._pending_review_stage()
-        patch = GraphPatch(action=action, target_id="__review__")
+
+        all_patches: list[GraphPatch] = []
+
+        if patches:
+            for p in patches:
+                all_patches.append(GraphPatch(**p))
+
+        all_patches.append(GraphPatch(action=action, target_id="__review__"))
+
         client = LangGraphAPIClient(self.client.url)
 
         logger.info(f"{LogTag.OK} Resuming remote thread {thread_id} via API")
         loop = asyncio.new_event_loop()
         try:
-            payload = {"pending_patches": [patch.model_dump()]}
+            payload = {"pending_patches": [p.model_dump() for p in all_patches]}
             return loop.run_until_complete(
                 client.resume_thread(thread_id, payload, node_name=stage)
             )
