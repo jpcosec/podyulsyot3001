@@ -38,6 +38,7 @@ All notable changes to this project will be documented in this file.
 - Resolved the shared live portal navigation blocker by switching scrape runs to Crawl4AI's local browser in `src/automation/motors/crawl4ai/scrape_engine.py`, confirmed XING, StepStone, and TU Berlin listing pages now load, then updated `plan_docs/issues/gaps/crawl4ai-live-portal-extraction-normalization.md` with precise diagnosis after a broad normalization patch attempt was reverted to avoid breaking existing tests. The remaining shared blocker is extraction normalization in `SmartScraperAdapter`.
 
 ### Fixed
+- Stabilized StepStone rescue extraction in `src/automation/ariadne/job_normalization.py` by blacklisting error page titles (e.g. "Your connection was interrupted") and adding a swap guard to recover misclassified company names from the location field. Broader StepStone live scrapes now correctly ingest or fail with explicit degraded-page diagnostics.
 - Fixed `build_default_portal_route` in `src/automation/portals/routing.py` — removed `detail_url` from routing decisions (was causing `mailto:` and `ftp://` schemes to incorrectly resolve as "onsite") and fixed email routing condition (was missing cases where `application_url` was a non-http scheme).
 
 ### Added

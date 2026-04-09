@@ -110,3 +110,39 @@ def test_mine_bullets_from_markdown_supports_xing_headings() -> None:
 
     assert bullets["responsibilities"] == ["Build secure ML pipelines"]
     assert bullets["requirements"] == ["Python"]
+
+
+def test_extract_job_title_rejects_error_titles() -> None:
+    from src.automation.ariadne.job_normalization import extract_job_title_from_markdown
+
+    assert (
+        extract_job_title_from_markdown("# Your connection was interrupted") is None
+    )
+    assert (
+        extract_job_title_from_markdown("# Software Engineer") == "Software Engineer"
+    )
+
+
+def test_normalize_job_payload_swaps_company_from_location_when_missing() -> None:
+    # Scenario: BrowserOS misread 'Reply' as location and left company null
+    result = normalize_job_payload(
+        {"job_title": "AI Engineer", "location": "Reply", "company_name": None}
+    )
+
+    assert result.payload["company_name"] == "Reply"
+    assert result.payload["location"] is None
+    assert "swap_location_to_company" in result.diagnostics["operations"]
+
+
+def test_normalize_job_payload_does_not_swap_valid_location() -> None:
+    result = normalize_job_payload(
+        {
+            "job_title": "AI Engineer",
+            "location": "Berlin",
+            "company_name": "Google",
+        }
+    )
+
+    assert result.payload["company_name"] == "Google"
+    assert result.payload["location"] == "Berlin"
+    assert "swap_location_to_company" not in result.diagnostics["operations"]

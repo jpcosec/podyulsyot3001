@@ -38,15 +38,30 @@ def _record_operation(diagnostics: Dict[str, Any], operation: str) -> None:
 def extract_job_title_from_markdown(markdown_text: str) -> Optional[str]:
     if not markdown_text:
         return None
+    
+    error_titles = {
+        "your connection was interrupted",
+        "access denied",
+        "page not found",
+        "404 not found",
+        "service unavailable",
+        "just a moment",
+        "checking your browser",
+    }
+
     for line in markdown_text.splitlines():
         stripped = line.strip()
         if stripped.startswith("# "):
             title = stripped[2:].strip()
             if title:
+                if title.lower() in error_titles:
+                    continue
                 return title
     for line in markdown_text.splitlines():
         stripped = line.strip()
         if stripped and not stripped.startswith(("-", "*", "#")):
+            if stripped.lower() in error_titles:
+                continue
             return stripped[:200]
     return None
 
@@ -106,6 +121,12 @@ def hero_markdown_value(markdown_text: str, *, field: str) -> Optional[str]:
             r"\bkg\b",
             r"\binc\b",
             r"\bllc\b",
+            r"\bgroup\b",
+            r"\bconsulting\b",
+            r"\bservices\b",
+            r"\bdata\b",
+            r"\breply\b",
+            r"\bntt\b",
         )
         for line in hero_lines:
             if not line.startswith(("*", "-")):
@@ -123,6 +144,11 @@ def hero_markdown_value(markdown_text: str, *, field: str) -> Optional[str]:
                     for pattern in company_like_patterns
                 ):
                     continue
+                
+                # Broad rejection: if it contains 'data' or 'reply' or other markers, skip it as location
+                # unless it also has a comma (e.g. "Berlin, Reply Group" - wait, that's still bad)
+                # Actually, if it has a comma, it's more likely a location if the first part is a city.
+                
                 if "," in candidate:
                     return candidate
                 if re.fullmatch(
@@ -447,5 +473,13 @@ def normalize_job_payload(
             _record_field_source(
                 diagnostics, field="requirements", source="text_mining"
             )
+
+    # Final swap guard: if company is null but location contains obvious company markers
+    company_markers = r"\bgmbh\b|\bag\b|\bse\b|\bgroup\b|\bconsulting\b|\bservices\b|\bdata\b|\breply\b|\bntt\b"
+    if not normalized.get("company_name") and normalized.get("location"):
+        if re.search(company_markers, normalized["location"].lower()):
+            normalized["company_name"] = normalized["location"]
+            normalized["location"] = None
+            _record_operation(diagnostics, "swap_location_to_company")
 
     return JobNormalizationResult(payload=normalized, diagnostics=diagnostics)
