@@ -84,6 +84,21 @@ def test_hero_markdown_value_scopes_stepstone_hero_block() -> None:
     assert hero_markdown_value(markdown, field="location") == "Berlin, Bremen"
 
 
+def test_hero_markdown_value_skips_stepstone_contract_metadata_for_location() -> None:
+    markdown = (
+        "# IT Business Analyst:in Payroll\n"
+        "* Deutsche Bahn AG\n"
+        "* Berlin, Essen, Frankfurt am Main, Hannover, Nurnberg, Regensburg\n"
+        "* Feste Anstellung\n"
+        "* Homeoffice moglich, Teilzeit, Vollzeit\n"
+    )
+
+    assert (
+        hero_markdown_value(markdown, field="location")
+        == "Berlin, Essen, Frankfurt am Main, Hannover, Nurnberg, Regensburg"
+    )
+
+
 def test_mine_bullets_from_markdown_supports_xing_headings() -> None:
     bullets = mine_bullets_from_markdown(
         "## **Deine Rolle**\n"

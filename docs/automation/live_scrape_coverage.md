@@ -39,6 +39,13 @@ Current confidence reading:
 - StepStone routing extraction is usable across the sampled variants
 - StepStone location normalization is still not broad enough for some hero layouts
 
+Update after location fix:
+
+- the narrower hero-location rule is now fixed in the Ariadne normalization layer
+- a newer broader sample exposed a different StepStone defect instead: some live
+  pages can degrade into bad BrowserOS rescue reads (`company_name` missing,
+  `location` reading as company text, or title reading as an interruption page)
+
 Follow-up:
 
 - keep this coverage note as evidence

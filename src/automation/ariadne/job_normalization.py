@@ -90,6 +90,15 @@ def hero_markdown_value(markdown_text: str, *, field: str) -> Optional[str]:
 
     if field == "location":
         skip_values = {"suche", "login", "menu", "jobs finden", "speichern"}
+        metadata_like_terms = {
+            "feste anstellung",
+            "vollzeit",
+            "teilzeit",
+            "homeoffice möglich",
+            "homeoffice moglich",
+            "erschienen",
+            "gehalt anzeigen",
+        }
         company_like_patterns = (
             r"\bgmbh\b",
             r"\bag\b",
@@ -105,11 +114,17 @@ def hero_markdown_value(markdown_text: str, *, field: str) -> Optional[str]:
             candidate = match.group(1) if match else re.sub(r"^[*-]\s+", "", line)
             candidate = clean_location_text(candidate)
             if candidate and candidate.lower() not in skip_values:
+                if candidate.lower() in metadata_like_terms:
+                    continue
+                if any(term in candidate.lower() for term in metadata_like_terms):
+                    continue
                 if any(
                     re.search(pattern, candidate.lower())
                     for pattern in company_like_patterns
                 ):
                     continue
+                if "," in candidate:
+                    return candidate
                 if re.fullmatch(
                     r"[A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-]+(?:,? [A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-]+)*",
                     candidate,
