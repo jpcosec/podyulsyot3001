@@ -43,3 +43,33 @@ Follow-up:
 
 - keep this coverage note as evidence
 - track the remaining defect in a dedicated issue instead of treating coverage as unresolved forever
+
+## XING
+
+Validation sample run:
+
+```bash
+AUTOMATION_EXTRACTION_FALLBACKS=browseros python -m src.automation.main scrape --source xing --limit 3
+```
+
+Observed job ids:
+
+- `152604219`
+- `152976018`
+- `152986026`
+
+Observed outcomes:
+
+- all 3 postings ingested successfully
+- sampled employers/templates varied across the run
+- XING-specific heading normalization continued to recover valid responsibilities and requirements
+
+Current confidence reading:
+
+- current XING scrape behavior is stable across the sampled live variants
+- no new XING-specific extraction defect was exposed in this broader sample
+
+Follow-up:
+
+- treat current XING broader-coverage issue as resolved for the sampled envelope
+- continue to widen coverage only if new variants expose different live shapes

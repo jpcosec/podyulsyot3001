@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 - Added child issue files for scrape validation, routing validation, onsite apply dry-run validation, and live-validation triage under `plan_docs/issues/gaps/`.
 
 ### Changed
+- Expanded `docs/automation/live_scrape_coverage.md` with a broader live XING sample (`limit 3`). All sampled XING postings ingested successfully, so XING broader-coverage is now considered resolved for the currently observed page envelope.
 - Added `docs/automation/live_scrape_coverage.md` to record broader live scrape coverage evidence. The first broader StepStone sample confirms successful ingest across three live postings but exposes a remaining location-classification defect on some hero layouts.
 - Added `docs/automation/browseros_chat_dependency_inventory.md` to explicitly inventory the current BrowserOS `/chat` dependency surface and distinguish Level 2 `/chat` workflows from MCP-first scrape rescue.
 - Added `docs/automation/live_apply_validation_matrix.md` as the canonical live apply validation matrix, aligned BrowserOS setup/integration docs with the `127.0.0.1:9000/mcp` runtime contract, and added integration-test coverage that the matrix doc exists.

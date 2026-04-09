@@ -22,4 +22,4 @@ This matters because one successful live sample per portal does not prove resili
 3. Validate TU Berlin variants in `plan_docs/issues/gaps/tuberlin-live-coverage-is-not-broad-enough.md`.
 4. Fold confirmed variants back into regression artifacts/tests.
 
-**Depends on:** `plan_docs/issues/gaps/xing-live-coverage-is-not-broad-enough.md`, `plan_docs/issues/gaps/tuberlin-live-coverage-is-not-broad-enough.md`
+**Depends on:** `plan_docs/issues/gaps/tuberlin-live-coverage-is-not-broad-enough.md`
