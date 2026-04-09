@@ -25,4 +25,4 @@ In practice, this means the system has a pre-Ariadne semantic layer hidden insid
 5. Add tests at the semantic layer using real artifact samples from XING, StepStone, and TU Berlin.
 6. Ensure both Crawl4AI extraction and BrowserOS rescue feed the same Ariadne-owned normalization pipeline.
 
-**Depends on:** `plan_docs/issues/gaps/extraction-and-canonical-normalization-are-not-explicitly-separated.md`
+**Depends on:** none

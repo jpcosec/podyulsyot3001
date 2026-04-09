@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 - Added child issue files for scrape validation, routing validation, onsite apply dry-run validation, and live-validation triage under `plan_docs/issues/gaps/`.
 
 ### Changed
+- Updated `src/automation/motors/crawl4ai/scrape_engine.py` so `_extract_payload()` now follows an explicit `raw -> cleaned -> extracted` flow in memory, with cleaned-stage normalization diagnostics persisted into `cleaned.json`. This makes the extraction/normalization boundary explicit instead of mutating one payload through the whole pipeline.
 - Updated `src/automation/motors/crawl4ai/scrape_engine.py` so every ingest attempt now persists explicit `raw.json`, `cleaned.json`, and `extracted.json` artifacts where applicable, plus `validation_error.json` for failed validations. This makes failed live scrape runs debuggable from one artifact bundle and formalizes the `raw` / `cleaned` / `extracted` output contract in stored artifacts.
 - Updated `README.md`, `docs/automation/browseros_setup.md`, and `AGENTS.md` so BrowserOS startup is documented from the top level: launch `/home/jp/BrowserOS.AppImage --no-sandbox`, use `http://127.0.0.1:9000` as the stable local front door, and start BrowserOS work from `docs/reference/external_libs/browseros/readme.txt`.
 - Updated scrape fallback configuration in `src/automation/motors/crawl4ai/scrape_engine.py` so extraction rescue order is explicitly defined by `AUTOMATION_EXTRACTION_FALLBACKS`, with BrowserOS as the default fallback and Gemini rescue opt-in.

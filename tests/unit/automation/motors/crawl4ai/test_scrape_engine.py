@@ -237,7 +237,13 @@ def test_extract_payload_uses_crawl4ai_llm_strategy_for_fallback(
 
     crawler = _FakeCrawler()
 
-    valid_data, merged_payload, extraction_method, extraction_error = asyncio.run(
+    (
+        valid_data,
+        cleaned_payload,
+        normalization_diagnostics,
+        extraction_method,
+        extraction_error,
+    ) = asyncio.run(
         adapter._extract_payload(
             invalid_css_result,
             crawler=crawler,
@@ -248,7 +254,8 @@ def test_extract_payload_uses_crawl4ai_llm_strategy_for_fallback(
     assert extraction_error is None
     assert extraction_method == "llm"
     assert valid_data is not None
-    assert merged_payload is not None
+    assert cleaned_payload is not None
+    assert normalization_diagnostics is not None
     assert valid_data["job_title"] == "Data Engineer"
     assert len(crawler.calls) >= 1
     called_url, rescue_config = crawler.calls[0]
@@ -281,7 +288,7 @@ def test_extract_payload_enriches_routing_from_payload_without_llm(tmp_path) -> 
         html="<html><body>detail</body></html>",
     )
 
-    valid_data, _, extraction_method, extraction_error = asyncio.run(
+    valid_data, _, _, extraction_method, extraction_error = asyncio.run(
         adapter._extract_payload(
             detail_result,
             scraped_at=datetime.now(timezone.utc),
@@ -341,7 +348,7 @@ def test_extract_payload_uses_selective_llm_for_low_confidence_routing(
             )
 
     crawler = _FakeCrawler()
-    valid_data, _, extraction_method, extraction_error = asyncio.run(
+    valid_data, _, _, extraction_method, extraction_error = asyncio.run(
         adapter._extract_payload(
             detail_result,
             crawler=crawler,
@@ -834,13 +841,14 @@ def test_extract_payload_css_normalizes_wrapped_payload_to_valid(tmp_path) -> No
         html="<html><body>detail</body></html>",
     )
 
-    valid_data, merged_payload, extraction_method, extraction_error = asyncio.run(
+    valid_data, cleaned_payload, _, extraction_method, extraction_error = asyncio.run(
         adapter._extract_payload(result, scraped_at=datetime.now(timezone.utc))
     )
 
     assert extraction_error is None
     assert extraction_method == "css"
     assert valid_data is not None
+    assert cleaned_payload is not None
     assert valid_data["job_title"] == "Data Engineer"
 
 
@@ -863,7 +871,7 @@ def test_extract_payload_css_normalizes_item_shapes_to_valid(tmp_path) -> None:
         html="<html><body>detail</body></html>",
     )
 
-    valid_data, merged_payload, extraction_method, extraction_error = asyncio.run(
+    valid_data, _, _, extraction_method, extraction_error = asyncio.run(
         adapter._extract_payload(result, scraped_at=datetime.now(timezone.utc))
     )
 
@@ -911,7 +919,7 @@ def test_extract_payload_css_backfills_missing_company_from_listing_case(
         html="<html><body>detail</body></html>",
     )
 
-    valid_data, merged_payload, extraction_method, extraction_error = asyncio.run(
+    valid_data, _, _, extraction_method, extraction_error = asyncio.run(
         adapter._extract_payload(
             result,
             discovery_entry=discovery_entry,
@@ -963,7 +971,7 @@ def test_extract_payload_prefers_browseros_fallback_before_llm(
         html="<html><body>detail</body></html>",
     )
 
-    valid_data, _, extraction_method, extraction_error = asyncio.run(
+    valid_data, _, _, extraction_method, extraction_error = asyncio.run(
         adapter._extract_payload(
             invalid_css_result,
             scraped_at=datetime.now(timezone.utc),
@@ -1100,6 +1108,72 @@ def test_normalize_payload_extracts_company_name_from_inline_markdown_link(
     )
 
 
+def test_normalize_payload_with_diagnostics_tracks_field_sources(tmp_path) -> None:
+    adapter = _DummyAdapter(DataManager(tmp_path / "data" / "jobs"))
+    result = _result(
+        url="https://example.test/jobs/diag-1",
+        extracted_content="{}",
+        markdown=(
+            "# Data Scientist\n"
+            "* Example Research GmbH\n"
+            "* [Berlin](https://example.test/location)\n"
+            "## Your responsibility\n"
+            "Conduct experiments.\n"
+            "## Your profile\n"
+            "- Python\n"
+        ),
+        html="<html></html>",
+    )
+
+    payload, diagnostics = adapter._normalize_payload_with_diagnostics(
+        {"job_title": "Data Scientist"},
+        result=result,
+        listing_case=None,
+    )
+
+    assert payload is not None
+    assert diagnostics["field_sources"]["job_title"] == "raw"
+    assert diagnostics["field_sources"]["company_name"] == "hero_markdown"
+    assert diagnostics["field_sources"]["location"] == "hero_markdown"
+    assert diagnostics["field_sources"]["responsibilities"] == "text_mining"
+    assert diagnostics["field_sources"]["requirements"] == "text_mining"
+
+
+def test_process_results_persists_cleaned_diagnostics(tmp_path) -> None:
+    manager = DataManager(tmp_path / "data" / "jobs")
+    adapter = _DummyAdapter(manager)
+    detail_result = _result(
+        url="https://example.test/jobs/data-engineer-321",
+        extracted_content=json.dumps(
+            {
+                "job_title": "Data Engineer",
+                "company_name": "",
+                "location": "Berlin + 0 more",
+                "employment_type": "",
+                "responsibilities": [{"item": "Build pipelines"}],
+                "requirements": [{"item": "Python"}],
+            }
+        ),
+        markdown=(
+            "# Data Engineer\n"
+            "* Example Research GmbH\n"
+            "* [Berlin](https://example.test/location)\n"
+            "* Vollzeit\n"
+        ),
+        html="<html><body>detail</body></html>",
+    )
+
+    asyncio.run(adapter._process_results(results=[detail_result]))
+
+    cleaned = manager.read_json_path(
+        manager.node_stage_dir("dummy", "321", "ingest", "proposed") / "cleaned.json"
+    )
+    assert cleaned["payload"]["company_name"] == "Example Research GmbH"
+    assert cleaned["payload"]["location"] == "Berlin"
+    assert cleaned["diagnostics"]["field_sources"]["company_name"] == "hero_markdown"
+    assert "clean_location_suffix" in cleaned["diagnostics"]["operations"]
+
+
 def test_extract_payload_merges_css_scalars_with_browseros_lists(
     tmp_path, monkeypatch
 ) -> None:
@@ -1132,7 +1206,7 @@ def test_extract_payload_merges_css_scalars_with_browseros_lists(
         html="<html><body>detail</body></html>",
     )
 
-    valid_data, _, extraction_method, extraction_error = asyncio.run(
+    valid_data, _, _, extraction_method, extraction_error = asyncio.run(
         adapter._extract_payload(
             invalid_css_result,
             scraped_at=datetime.now(timezone.utc),

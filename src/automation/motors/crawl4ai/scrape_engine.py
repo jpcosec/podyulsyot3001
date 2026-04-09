@@ -1086,30 +1086,65 @@ class SmartScraperAdapter(ABC):
         except Exception as exc:
             return None, str(exc)
 
-    def _normalize_payload(
+    def _init_normalization_diagnostics(self) -> dict[str, Any]:
+        """Create the default normalization diagnostics payload."""
+        return {
+            "field_sources": {},
+            "operations": [],
+        }
+
+    def _record_field_source(
+        self,
+        diagnostics: dict[str, Any],
+        *,
+        field: str,
+        source: str,
+    ) -> None:
+        """Record which stage produced a cleaned field."""
+        diagnostics.setdefault("field_sources", {})[field] = source
+
+    def _record_operation(self, diagnostics: dict[str, Any], operation: str) -> None:
+        """Record a normalization operation once."""
+        operations = diagnostics.setdefault("operations", [])
+        if operation not in operations:
+            operations.append(operation)
+
+    def _normalize_payload_with_diagnostics(
         self,
         payload: dict | None,
         *,
         result: Any | None = None,
         listing_case: dict | None = None,
-    ) -> dict | None:
-        """Normalize a payload after merge, before validation.
-
-        Handles four failure modes from real portal CSS extraction:
-        1. Wrapped dicts  : { "data": {...} }   -> unwrap
-        2. Wrapped lists  : { "data": [...] }   -> unwrap
-        3. List-item shapes: [{ "item": "..." }] -> flatten to [str]
-        4. Missing scalars : backfill from listing_case teaser fields
-        5. Missing bullets : mine ## / #### heading sections from markdown
-        """
+        rescue_source: str | None = None,
+        existing_diagnostics: dict[str, Any] | None = None,
+    ) -> tuple[dict | None, dict[str, Any]]:
+        """Normalize a payload and capture cleanup provenance."""
+        diagnostics = {
+            "field_sources": dict(
+                (existing_diagnostics or {}).get("field_sources", {})
+            ),
+            "operations": list((existing_diagnostics or {}).get("operations", [])),
+        }
         if not payload:
-            return None
+            return None, diagnostics
 
         normalized = dict(payload)
+        for field, value in normalized.items():
+            if (
+                field != "listing_case"
+                and value not in (None, "", [], {})
+                and field not in diagnostics.get("field_sources", {})
+            ):
+                self._record_field_source(
+                    diagnostics,
+                    field=field,
+                    source=rescue_source or "raw",
+                )
 
         data = normalized.get("data")
         if data is not None:
             del normalized["data"]
+            self._record_operation(diagnostics, "unwrap_data")
             if isinstance(data, dict):
                 normalized = {**data, **normalized}
             elif isinstance(data, list):
@@ -1122,20 +1157,43 @@ class SmartScraperAdapter(ABC):
                         for k, v in item.items()
                     },
                 }
+            for field, value in normalized.items():
+                if (
+                    field != "listing_case"
+                    and value not in (None, "", [], {})
+                    and field not in diagnostics.get("field_sources", {})
+                ):
+                    self._record_field_source(
+                        diagnostics,
+                        field=field,
+                        source=rescue_source or "raw",
+                    )
 
         for key in ("responsibilities", "requirements", "benefits"):
             if isinstance(normalized.get(key), list):
-                normalized[key] = [
+                flattened = [
                     v["item"] if isinstance(v, dict) and "item" in v else v
                     for v in normalized[key]
                 ]
+                if flattened != normalized.get(key):
+                    self._record_operation(diagnostics, f"flatten_{key}")
+                normalized[key] = flattened
 
         for key in ("company_name", "location", "employment_type", "posted_date"):
             if normalized.get(key) == "":
                 normalized[key] = None
+                self._record_operation(diagnostics, f"empty_to_none:{key}")
 
         if normalized.get("location"):
-            normalized["location"] = self._clean_location_text(normalized["location"])
+            cleaned_location = self._clean_location_text(normalized["location"])
+            if cleaned_location != normalized["location"]:
+                self._record_operation(diagnostics, "clean_location_suffix")
+                self._record_field_source(
+                    diagnostics,
+                    field="location",
+                    source="normalized",
+                )
+            normalized["location"] = cleaned_location
 
         missing_mandatory = []
         for field in ("company_name", "location", "employment_type"):
@@ -1143,13 +1201,32 @@ class SmartScraperAdapter(ABC):
                 missing_mandatory.append(field)
 
         if missing_mandatory and listing_case:
-            if not normalized.get("company_name"):
+            if not normalized.get("company_name") and listing_case.get(
+                "teaser_company"
+            ):
                 normalized["company_name"] = listing_case.get("teaser_company", "")
-            if not normalized.get("location"):
+                self._record_field_source(
+                    diagnostics,
+                    field="company_name",
+                    source="listing_case",
+                )
+            if not normalized.get("location") and listing_case.get("teaser_location"):
                 normalized["location"] = listing_case.get("teaser_location", "")
-            if not normalized.get("employment_type"):
+                self._record_field_source(
+                    diagnostics,
+                    field="location",
+                    source="listing_case",
+                )
+            if not normalized.get("employment_type") and listing_case.get(
+                "teaser_employment_type"
+            ):
                 normalized["employment_type"] = listing_case.get(
                     "teaser_employment_type", ""
+                )
+                self._record_field_source(
+                    diagnostics,
+                    field="employment_type",
+                    source="listing_case",
                 )
 
         markdown_text = ""
@@ -1158,19 +1235,38 @@ class SmartScraperAdapter(ABC):
 
         if markdown_text:
             if not normalized.get("company_name"):
-                normalized["company_name"] = self._hero_markdown_value(
+                company_name = self._hero_markdown_value(
                     markdown_text,
                     field="company_name",
                 )
+                if company_name:
+                    normalized["company_name"] = company_name
+                    self._record_field_source(
+                        diagnostics,
+                        field="company_name",
+                        source="hero_markdown",
+                    )
             if not normalized.get("location"):
-                normalized["location"] = self._hero_markdown_value(
+                location = self._hero_markdown_value(
                     markdown_text,
                     field="location",
                 )
+                if location:
+                    normalized["location"] = location
+                    self._record_field_source(
+                        diagnostics,
+                        field="location",
+                        source="hero_markdown",
+                    )
             if not normalized.get("employment_type"):
-                normalized["employment_type"] = self._detect_employment_type_from_text(
-                    markdown_text
-                )
+                employment_type = self._detect_employment_type_from_text(markdown_text)
+                if employment_type:
+                    normalized["employment_type"] = employment_type
+                    self._record_field_source(
+                        diagnostics,
+                        field="employment_type",
+                        source="hero_markdown",
+                    )
 
         if not normalized.get("responsibilities") or not normalized.get("requirements"):
             bullets = self._mine_bullets_from_markdown(markdown_text)
@@ -1178,10 +1274,47 @@ class SmartScraperAdapter(ABC):
                 "responsibilities"
             ):
                 normalized["responsibilities"] = bullets["responsibilities"]
+                self._record_field_source(
+                    diagnostics,
+                    field="responsibilities",
+                    source="text_mining",
+                )
             if not normalized.get("requirements") and bullets.get("requirements"):
                 normalized["requirements"] = bullets["requirements"]
+                self._record_field_source(
+                    diagnostics,
+                    field="requirements",
+                    source="text_mining",
+                )
 
+        return normalized, diagnostics
+
+    def _normalize_payload(
+        self,
+        payload: dict | None,
+        *,
+        result: Any | None = None,
+        listing_case: dict | None = None,
+    ) -> dict | None:
+        """Normalize a payload after merge, before validation."""
+        normalized, _ = self._normalize_payload_with_diagnostics(
+            payload,
+            result=result,
+            listing_case=listing_case,
+        )
         return normalized
+
+    def _finalize_extracted_payload(
+        self,
+        *,
+        payload: dict,
+        cleaned_payload: dict,
+    ) -> dict:
+        """Build the final validated payload from the cleaned stage."""
+        finalized = dict(payload)
+        if cleaned_payload.get("listing_case"):
+            finalized["listing_case"] = cleaned_payload["listing_case"]
+        return finalized
 
     def _mine_bullets_from_markdown(self, markdown: str) -> dict[str, list[str]]:
         """Extract responsibilities / requirements bullet lists from German markdown sections.
@@ -1727,10 +1860,11 @@ class SmartScraperAdapter(ABC):
         crawler: AsyncWebCrawler | None = None,
         discovery_entry: ScrapeDiscoveryEntry | None = None,
         scraped_at: datetime,
-    ) -> tuple[dict | None, dict | None, str, str | None]:
+    ) -> tuple[dict | None, dict | None, dict | None, str, str | None]:
         valid_data = None
-        merged_payload = None
+        cleaned_payload = None
         css_payload = None
+        normalization_diagnostics: dict[str, Any] | None = None
         extraction_method = "none"
         extraction_error = None
         css_error = None
@@ -1742,32 +1876,41 @@ class SmartScraperAdapter(ABC):
 
         if result.extracted_content:
             raw_payload, parse_error = self._parse_payload(result.extracted_content)
-            merged_payload = self._merge_listing_into_payload(
+            candidate_payload = self._merge_listing_into_payload(
                 payload=raw_payload,
                 listing_case=listing_case,
             )
-            merged_payload = self._normalize_payload(
-                merged_payload,
-                result=result,
-                listing_case=listing_case,
-            )
-            css_payload = dict(merged_payload or {})
-            valid_data, css_error = self._validate_payload(merged_payload)
-            if valid_data:
-                merged_payload = await self._enrich_application_routing(
-                    payload=merged_payload,
-                    result=result,
-                    crawler=crawler,
-                )
-                merged_payload = self._normalize_payload(
-                    merged_payload,
+            cleaned_payload, normalization_diagnostics = (
+                self._normalize_payload_with_diagnostics(
+                    candidate_payload,
                     result=result,
                     listing_case=listing_case,
                 )
-                valid_data, css_error = self._validate_payload(merged_payload)
+            )
+            css_payload = dict(cleaned_payload or {})
+            valid_data, css_error = self._validate_payload(cleaned_payload)
+            if valid_data:
+                routed_payload = await self._enrich_application_routing(
+                    payload=cleaned_payload,
+                    result=result,
+                    crawler=crawler,
+                )
+                cleaned_payload, normalization_diagnostics = (
+                    self._normalize_payload_with_diagnostics(
+                        routed_payload,
+                        result=result,
+                        listing_case=listing_case,
+                        existing_diagnostics=normalization_diagnostics,
+                    )
+                )
+                valid_data, css_error = self._validate_payload(cleaned_payload)
             if parse_error and not css_error:
                 css_error = parse_error
             if valid_data:
+                valid_data = self._finalize_extracted_payload(
+                    payload=valid_data,
+                    cleaned_payload=cleaned_payload or {},
+                )
                 extraction_method = "css"
                 logger.info("%s %s extracted and validated.", LogTag.FAST, result.url)
 
@@ -1789,34 +1932,45 @@ class SmartScraperAdapter(ABC):
                 else:
                     continue
 
-                merged_payload = self._merge_listing_into_payload(
+                candidate_payload = self._merge_listing_into_payload(
                     payload=self._merge_rescue_payloads(
                         base_payload=css_payload,
                         rescue_payload=rescue_payload,
                     ),
                     listing_case=listing_case,
                 )
-                merged_payload = self._normalize_payload(
-                    merged_payload,
-                    result=result,
-                    listing_case=listing_case,
+                cleaned_payload, normalization_diagnostics = (
+                    self._normalize_payload_with_diagnostics(
+                        candidate_payload,
+                        result=result,
+                        listing_case=listing_case,
+                        rescue_source=fallback_name,
+                    )
                 )
-                valid_data, validation_error = self._validate_payload(merged_payload)
+                valid_data, validation_error = self._validate_payload(cleaned_payload)
                 if valid_data:
-                    merged_payload = await self._enrich_application_routing(
-                        payload=merged_payload,
+                    routed_payload = await self._enrich_application_routing(
+                        payload=cleaned_payload,
                         result=result,
                         crawler=crawler if fallback_name == "llm" else None,
                     )
-                    merged_payload = self._normalize_payload(
-                        merged_payload,
-                        result=result,
-                        listing_case=listing_case,
+                    cleaned_payload, normalization_diagnostics = (
+                        self._normalize_payload_with_diagnostics(
+                            routed_payload,
+                            result=result,
+                            listing_case=listing_case,
+                            rescue_source=fallback_name,
+                            existing_diagnostics=normalization_diagnostics,
+                        )
                     )
                     valid_data, validation_error = self._validate_payload(
-                        merged_payload
+                        cleaned_payload
                     )
                 if valid_data:
+                    valid_data = self._finalize_extracted_payload(
+                        payload=valid_data,
+                        cleaned_payload=cleaned_payload or {},
+                    )
                     extraction_method = fallback_name
                     logger.info(
                         "%s %s rescued by %s.",
@@ -1842,7 +1996,13 @@ class SmartScraperAdapter(ABC):
                     validation_error or "; ".join(rescue_errors),
                 )
 
-        return valid_data, merged_payload, extraction_method, extraction_error
+        return (
+            valid_data,
+            cleaned_payload,
+            normalization_diagnostics,
+            extraction_method,
+            extraction_error,
+        )
 
     def _meta_log(
         self,
@@ -1871,7 +2031,8 @@ class SmartScraperAdapter(ABC):
         job_id: str,
         result: Any,
         valid_data: dict | None,
-        merged_payload: dict | None,
+        cleaned_payload: dict | None,
+        normalization_diagnostics: dict[str, Any] | None,
         extraction_method: str,
         extraction_error: str | None,
         scraped_at: datetime,
@@ -1884,9 +2045,9 @@ class SmartScraperAdapter(ABC):
             scraped_at=scraped_at,
         )
         artifact_stage = "proposed" if valid_data else "failed"
-        payload = dict(valid_data or merged_payload or {})
-        if valid_data and merged_payload and merged_payload.get("listing_case"):
-            payload["listing_case"] = merged_payload["listing_case"]
+        payload = dict(valid_data or cleaned_payload or {})
+        if valid_data and cleaned_payload and cleaned_payload.get("listing_case"):
+            payload["listing_case"] = cleaned_payload["listing_case"]
         content = self._markdown_text(result)
         if payload and not payload.get("original_language"):
             payload["original_language"] = detect_language(content)
@@ -1926,14 +2087,17 @@ class SmartScraperAdapter(ABC):
                 filename="raw_extracted.json",
                 data={"data": raw_extracted},
             )
-        if merged_payload is not None:
+        if cleaned_payload is not None:
             refs["cleaned"] = self.data_manager.write_json_artifact(
                 source=self.source_name,
                 job_id=job_id,
                 node_name=node_name,
                 stage=artifact_stage,
                 filename="cleaned.json",
-                data={"payload": merged_payload},
+                data={
+                    "payload": cleaned_payload,
+                    "diagnostics": normalization_diagnostics or {},
+                },
             )
         if valid_data is not None:
             refs["extracted"] = self.data_manager.write_json_artifact(
@@ -2077,7 +2241,8 @@ class SmartScraperAdapter(ABC):
             scraped_at = _now_utc()
             (
                 valid_data,
-                merged_payload,
+                cleaned_payload,
+                normalization_diagnostics,
                 extraction_method,
                 extraction_error,
             ) = await self._extract_payload(
@@ -2090,7 +2255,8 @@ class SmartScraperAdapter(ABC):
                 job_id=job_id,
                 result=result,
                 valid_data=valid_data,
-                merged_payload=merged_payload,
+                cleaned_payload=cleaned_payload,
+                normalization_diagnostics=normalization_diagnostics,
                 extraction_method=extraction_method,
                 extraction_error=extraction_error,
                 scraped_at=scraped_at,
