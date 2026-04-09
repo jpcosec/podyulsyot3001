@@ -1,7 +1,7 @@
 """Integration tests for live onsite apply dry-run.
 
 These tests require:
-1. BrowserOS running at port 9200 (`python -m src.automation.motors.browseros.cli.backend`)
+1. BrowserOS running at `http://127.0.0.1:9000/mcp` (`/home/jp/BrowserOS.AppImage --no-sandbox`)
 2. Authenticated session for each portal (`--setup-session`)
 3. A real CV file and real job IDs
 
@@ -19,11 +19,11 @@ from src.core.data_manager import DataManager
 
 
 def _is_browseros_available() -> bool:
-    """Check if BrowserOS backend is reachable at port 9200."""
+    """Check if BrowserOS MCP front door is reachable."""
     try:
         import urllib.request
 
-        with urllib.request.urlopen("http://localhost:9200/health", timeout=2):
+        with urllib.request.urlopen("http://127.0.0.1:9000/mcp", timeout=2):
             return True
     except Exception:
         return False
@@ -63,8 +63,8 @@ class TestLiveApplyRequiresBrowserOS:
 
     @pytest.mark.skipif(
         not BROWSEROS_AVAILABLE,
-        reason="BrowserOS backend not running at port 9200. "
-        "Start with: python -m src.automation.motors.browseros.cli.backend "
+        reason="BrowserOS runtime not running at http://127.0.0.1:9000/mcp. "
+        "Start with: /home/jp/BrowserOS.AppImage --no-sandbox "
         "Then authenticate with: python -m src.automation.main apply "
         "--source xing --backend browseros --setup-session",
     )
@@ -85,7 +85,7 @@ class TestLiveApplyRequiresBrowserOS:
 
     @pytest.mark.skipif(
         not BROWSEROS_AVAILABLE,
-        reason="BrowserOS backend not running at port 9200",
+        reason="BrowserOS runtime not running at http://127.0.0.1:9000/mcp",
     )
     def test_stepstone_email_handoff_documentation(self):
         """Documentation: expected command to verify StepStone email routing.
@@ -116,4 +116,15 @@ def test_browseros_setup_docs_exist():
     assert docs_path.exists(), (
         f"BrowserOS setup docs not found at {docs_path}. "
         "This file should document BrowserOS setup and session management."
+    )
+
+
+def test_live_apply_validation_matrix_docs_exist():
+    """Verify the live apply validation matrix exists."""
+    from pathlib import Path
+
+    docs_path = Path("docs/automation/live_apply_validation_matrix.md")
+    assert docs_path.exists(), (
+        f"Live apply validation matrix not found at {docs_path}. "
+        "This file should define the canonical live apply validation scope."
     )

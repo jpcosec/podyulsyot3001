@@ -61,6 +61,9 @@ python -m src.automation.main apply \
 
 This opens an interactive browser where you log in normally. On success, the session is persisted to `~/.config/browseros/sessions/<portal>.json`.
 
+The canonical live apply validation scope is defined in
+`docs/automation/live_apply_validation_matrix.md`.
+
 ## Running a Dry-Run Apply
 
 ```bash
@@ -80,6 +83,9 @@ python -m src.automation.main apply \
   --cv /path/to/cv.pdf \
   --dry-run
 ```
+
+Use `docs/automation/live_apply_validation_matrix.md` to decide whether a
+portal/backend/mode combination is in scope before running live validation.
 
 ## Session Persistence Location
 

@@ -16,4 +16,96 @@ Once an issue is solved:
 
 - No indexed issue is currently marked for deletion instead of repair.
 - The prior root-level `plan_docs/issues/index.md` and ad-hoc root issue file were replaced so the issue entrypoint now follows `docs/standards/issue_guide.md`.
-- All currently indexed extraction and normalization issues have been resolved. The index is empty.
+- Extraction and normalization issues are resolved on the currently tested live scrape pages.
+- Remaining issues now cover backend-specific live apply validation, broader live portal coverage, and BrowserOS `/chat` runtime confidence; the live apply validation matrix is now defined in docs.
+
+## Roots
+
+- `plan_docs/issues/gaps/live-apply-flows-are-not-fully-validated.md`
+- `plan_docs/issues/gaps/live-portal-coverage-is-not-broad-enough.md`
+- `plan_docs/issues/gaps/browseros-chat-agent-surface-is-not-fully-validated-for-runtime-use.md`
+- `plan_docs/issues/gaps/browseros-live-apply-backend-is-not-validated.md`
+- `plan_docs/issues/gaps/crawl4ai-live-apply-backend-is-not-validated.md`
+- `plan_docs/issues/gaps/xing-live-coverage-is-not-broad-enough.md`
+- `plan_docs/issues/gaps/stepstone-live-coverage-is-not-broad-enough.md`
+- `plan_docs/issues/gaps/tuberlin-live-coverage-is-not-broad-enough.md`
+- `plan_docs/issues/gaps/browseros-chat-dependency-inventory-is-not-explicit.md`
+- `plan_docs/issues/gaps/browseros-chat-runtime-reliability-is-not-validated.md`
+
+## Parallelizable groups
+
+- Depth 0: `plan_docs/issues/gaps/browseros-live-apply-backend-is-not-validated.md`, `plan_docs/issues/gaps/crawl4ai-live-apply-backend-is-not-validated.md`, `plan_docs/issues/gaps/xing-live-coverage-is-not-broad-enough.md`, `plan_docs/issues/gaps/stepstone-live-coverage-is-not-broad-enough.md`, `plan_docs/issues/gaps/tuberlin-live-coverage-is-not-broad-enough.md`, `plan_docs/issues/gaps/browseros-chat-dependency-inventory-is-not-explicit.md`
+- Depth 1: `plan_docs/issues/gaps/browseros-chat-runtime-reliability-is-not-validated.md`, `plan_docs/issues/gaps/live-apply-flows-are-not-fully-validated.md`, `plan_docs/issues/gaps/live-portal-coverage-is-not-broad-enough.md`
+- Depth 2: `plan_docs/issues/gaps/browseros-chat-agent-surface-is-not-fully-validated-for-runtime-use.md`
+
+## Blockers
+
+- `plan_docs/issues/gaps/live-apply-flows-are-not-fully-validated.md` blocks confidence in real end-to-end application behavior because scrape validation does not prove live apply correctness.
+- `plan_docs/issues/gaps/live-portal-coverage-is-not-broad-enough.md` blocks confidence across portal/page variants because current live scrape validation is still narrow.
+- `plan_docs/issues/gaps/browseros-chat-agent-surface-is-not-fully-validated-for-runtime-use.md` blocks confidence in workflows that still depend on BrowserOS `/chat` beyond MCP-first scrape rescue.
+- `plan_docs/issues/gaps/browseros-chat-dependency-inventory-is-not-explicit.md` blocks `/chat` runtime validation because the current dependency surface is not clearly scoped.
+
+## Dependency graph
+
+- `plan_docs/issues/gaps/browseros-live-apply-backend-is-not-validated.md` -> no dependencies
+- `plan_docs/issues/gaps/crawl4ai-live-apply-backend-is-not-validated.md` -> no dependencies
+- `plan_docs/issues/gaps/live-apply-flows-are-not-fully-validated.md` -> `plan_docs/issues/gaps/browseros-live-apply-backend-is-not-validated.md`, `plan_docs/issues/gaps/crawl4ai-live-apply-backend-is-not-validated.md`
+- `plan_docs/issues/gaps/xing-live-coverage-is-not-broad-enough.md` -> no dependencies
+- `plan_docs/issues/gaps/stepstone-live-coverage-is-not-broad-enough.md` -> no dependencies
+- `plan_docs/issues/gaps/tuberlin-live-coverage-is-not-broad-enough.md` -> no dependencies
+- `plan_docs/issues/gaps/live-portal-coverage-is-not-broad-enough.md` -> `plan_docs/issues/gaps/xing-live-coverage-is-not-broad-enough.md`, `plan_docs/issues/gaps/stepstone-live-coverage-is-not-broad-enough.md`, `plan_docs/issues/gaps/tuberlin-live-coverage-is-not-broad-enough.md`
+- `plan_docs/issues/gaps/browseros-chat-dependency-inventory-is-not-explicit.md` -> no dependencies
+- `plan_docs/issues/gaps/browseros-chat-runtime-reliability-is-not-validated.md` -> `plan_docs/issues/gaps/browseros-chat-dependency-inventory-is-not-explicit.md`
+- `plan_docs/issues/gaps/browseros-chat-agent-surface-is-not-fully-validated-for-runtime-use.md` -> `plan_docs/issues/gaps/browseros-chat-dependency-inventory-is-not-explicit.md`, `plan_docs/issues/gaps/browseros-chat-runtime-reliability-is-not-validated.md`
+
+## Current indexed issues
+
+1. `plan_docs/issues/gaps/live-apply-flows-are-not-fully-validated.md`
+   - Scope: Parent issue for live apply validation after child tasks define the matrix and validate each backend
+   - Depends on: `plan_docs/issues/gaps/browseros-live-apply-backend-is-not-validated.md`, `plan_docs/issues/gaps/crawl4ai-live-apply-backend-is-not-validated.md`
+   - Expected outputs: Working live apply matrix, backend-specific evidence, updated docs/routing assumptions
+
+2. `plan_docs/issues/gaps/live-portal-coverage-is-not-broad-enough.md`
+   - Scope: Parent issue for broader live scrape coverage after each portal variant set is validated independently
+   - Depends on: `plan_docs/issues/gaps/xing-live-coverage-is-not-broad-enough.md`, `plan_docs/issues/gaps/stepstone-live-coverage-is-not-broad-enough.md`, `plan_docs/issues/gaps/tuberlin-live-coverage-is-not-broad-enough.md`
+   - Expected outputs: Broader live portal evidence, variant coverage notes, regression artifacts/tests
+
+3. `plan_docs/issues/gaps/browseros-chat-agent-surface-is-not-fully-validated-for-runtime-use.md`
+   - Scope: Parent issue for `/chat` runtime confidence after dependency inventory and runtime validation are completed
+   - Depends on: `plan_docs/issues/gaps/browseros-chat-dependency-inventory-is-not-explicit.md`, `plan_docs/issues/gaps/browseros-chat-runtime-reliability-is-not-validated.md`
+   - Expected outputs: `/chat` support statement by workflow, validated runtime evidence, updated docs/contracts
+
+4. `plan_docs/issues/gaps/browseros-live-apply-backend-is-not-validated.md`
+   - Scope: Validate BrowserOS-backed live apply flows against the matrix
+   - Depends on: none
+   - Expected outputs: BrowserOS live apply evidence and support status by portal
+
+5. `plan_docs/issues/gaps/crawl4ai-live-apply-backend-is-not-validated.md`
+   - Scope: Validate Crawl4AI-backed live apply flows against the matrix
+   - Depends on: none
+   - Expected outputs: Crawl4AI live apply evidence and support status by portal
+
+6. `plan_docs/issues/gaps/xing-live-coverage-is-not-broad-enough.md`
+   - Scope: Validate more XING live scrape variants
+   - Depends on: none
+   - Expected outputs: XING variant coverage notes and regression artifacts/tests
+
+7. `plan_docs/issues/gaps/stepstone-live-coverage-is-not-broad-enough.md`
+   - Scope: Validate more StepStone live scrape variants
+   - Depends on: none
+   - Expected outputs: StepStone variant coverage notes and regression artifacts/tests
+
+8. `plan_docs/issues/gaps/tuberlin-live-coverage-is-not-broad-enough.md`
+   - Scope: Validate more TU Berlin live scrape variants
+   - Depends on: none
+   - Expected outputs: TU Berlin variant coverage notes and regression artifacts/tests
+
+9. `plan_docs/issues/gaps/browseros-chat-dependency-inventory-is-not-explicit.md`
+   - Scope: Inventory current `/chat` dependencies and classify them by workflow/support level
+   - Depends on: none
+   - Expected outputs: Explicit `/chat` dependency inventory
+
+10. `plan_docs/issues/gaps/browseros-chat-runtime-reliability-is-not-validated.md`
+   - Scope: Validate `/chat` runtime behavior for the workflows that still intentionally use it
+   - Depends on: `plan_docs/issues/gaps/browseros-chat-dependency-inventory-is-not-explicit.md`
+   - Expected outputs: Runtime evidence and support classification for `/chat` workflows
