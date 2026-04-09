@@ -69,7 +69,22 @@ def test_apply_dot_path_replaces_non_dict_intermediate():
 
 def _make_profile_updater():
     from src.core.ai.generate_documents_v2.graph import _make_profile_updater_node
+
     return _make_profile_updater_node()
+
+
+def _make_prepare_profile_review():
+    from src.core.ai.generate_documents_v2.graph import (
+        _make_prepare_profile_review_node,
+    )
+
+    return _make_prepare_profile_review_node()
+
+
+def _make_profile_review():
+    from src.core.ai.generate_documents_v2.graph import _make_profile_review_node
+
+    return _make_profile_review_node()
 
 
 def test_profile_updater_no_updates_returns_empty_list():
@@ -111,10 +126,13 @@ def test_profile_updater_no_profile_path_skips_write(tmp_path):
 
 def test_profile_updater_writes_to_disk_and_clears_list(tmp_path, monkeypatch):
     profile_file = tmp_path / "profile.json"
-    profile_file.write_text(json.dumps({"skills": {"technical": ["Python"]}}), encoding="utf-8")
+    profile_file.write_text(
+        json.dumps({"skills": {"technical": ["Python"]}}), encoding="utf-8"
+    )
 
     # Patch PipelineArtifactStore so it writes inside tmp_path
     import src.core.ai.generate_documents_v2.graph as graph_mod
+
     monkeypatch.setattr(
         graph_mod,
         "PipelineArtifactStore",
@@ -150,6 +168,7 @@ def test_profile_updater_persists_audit_artifact(tmp_path, monkeypatch):
     profile_file.write_text(json.dumps({}), encoding="utf-8")
 
     import src.core.ai.generate_documents_v2.graph as graph_mod
+
     monkeypatch.setattr(
         graph_mod,
         "PipelineArtifactStore",
@@ -197,7 +216,7 @@ def store(tmp_path):
     return PipelineArtifactStore(tmp_path)
 
 
-def test_persist_to_profile_patch_adds_approved_update(store):
+def test_persist_to_profile_patch_adds_pending_update(store):
     patch = GraphPatch(
         action="modify",
         target_id="skills.languages",
@@ -217,16 +236,18 @@ def test_persist_to_profile_patch_adds_approved_update(store):
         mutable_state_key="blueprint",
         store=store,
     )
-    updates = result.get("approved_profile_updates", [])
+    updates = result.get("pending_profile_updates", [])
     assert len(updates) == 1
     assert updates[0]["field_path"] == "skills.languages"
     assert updates[0]["new_value"] == ["en"]
-    assert updates[0]["approved"] is True
+    assert updates[0]["approved"] is False
     assert updates[0]["source_stage"] == "hitl_2_blueprint_logic"
 
 
 def test_non_persist_patch_does_not_add_update(store):
-    patch = GraphPatch(action="modify", target_id="title", new_value="new", persist_to_profile=False)
+    patch = GraphPatch(
+        action="modify", target_id="title", new_value="new", persist_to_profile=False
+    )
     state = {
         "source": "test",
         "job_id": "j1",
@@ -240,13 +261,23 @@ def test_non_persist_patch_does_not_add_update(store):
         mutable_state_key="blueprint",
         store=store,
     )
-    assert result.get("approved_profile_updates", []) == []
+    assert result.get("pending_profile_updates", []) == []
 
 
 def test_persist_to_profile_accumulates_across_patches(store):
     patches = [
-        GraphPatch(action="modify", target_id="skills.a", new_value="x", persist_to_profile=True).model_dump(),
-        GraphPatch(action="modify", target_id="skills.b", new_value="y", persist_to_profile=True).model_dump(),
+        GraphPatch(
+            action="modify",
+            target_id="skills.a",
+            new_value="x",
+            persist_to_profile=True,
+        ).model_dump(),
+        GraphPatch(
+            action="modify",
+            target_id="skills.b",
+            new_value="y",
+            persist_to_profile=True,
+        ).model_dump(),
     ]
     state = {
         "source": "test",
@@ -261,7 +292,7 @@ def test_persist_to_profile_accumulates_across_patches(store):
         mutable_state_key="blueprint",
         store=store,
     )
-    assert len(result["approved_profile_updates"]) == 2
+    assert len(result["pending_profile_updates"]) == 2
 
 
 def test_persist_to_profile_appends_to_existing_state_updates(store):
@@ -270,7 +301,7 @@ def test_persist_to_profile_appends_to_existing_state_updates(store):
         old_value=None,
         new_value="resilient",
         source_stage="hitl_1_match_evidence",
-        approved=True,
+        approved=False,
     )
     patch = GraphPatch(
         action="modify",
@@ -283,7 +314,7 @@ def test_persist_to_profile_appends_to_existing_state_updates(store):
         "job_id": "j1",
         "blueprint": {},
         "pending_patches": [patch.model_dump()],
-        "approved_profile_updates": [existing.model_dump()],
+        "pending_profile_updates": [existing.model_dump()],
     }
     result = apply_patches(
         state=state,
@@ -292,4 +323,87 @@ def test_persist_to_profile_appends_to_existing_state_updates(store):
         mutable_state_key="blueprint",
         store=store,
     )
-    assert len(result["approved_profile_updates"]) == 2
+    assert len(result["pending_profile_updates"]) == 2
+
+
+def test_prepare_profile_review_persists_pending_updates(tmp_path, monkeypatch):
+    import src.core.ai.generate_documents_v2.graph as graph_mod
+
+    monkeypatch.setattr(
+        graph_mod,
+        "PipelineArtifactStore",
+        lambda: PipelineArtifactStore(tmp_path),
+    )
+
+    node = _make_prepare_profile_review()
+    state = {
+        "source": "test",
+        "job_id": "j1",
+        "pending_profile_updates": [
+            {
+                "field_path": "skills.languages",
+                "old_value": None,
+                "new_value": ["en"],
+                "source_stage": "hitl_3_content_style",
+                "approved": False,
+            }
+        ],
+    }
+
+    result = node(state)
+    assert result["status"] == "pending_review"
+
+    artifact = json.loads(
+        (
+            tmp_path
+            / "test"
+            / "j1"
+            / "nodes"
+            / "generate_documents_v2"
+            / "profile_updater"
+            / "current.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert artifact["updates"][0]["field_path"] == "skills.languages"
+
+
+def test_profile_review_moves_pending_updates_to_approved():
+    node = _make_profile_review()
+    state = {
+        "pending_patches": [{"action": "approve", "target_id": "__review__"}],
+        "pending_profile_updates": [
+            {
+                "field_path": "name",
+                "old_value": None,
+                "new_value": "Alice",
+                "source_stage": "hitl_2_blueprint_logic",
+                "approved": False,
+            }
+        ],
+    }
+
+    result = node(state)
+    assert result["profile_update_outcome"] == "approved"
+    assert result["pending_profile_updates"] == []
+    assert result["approved_profile_updates"][0]["approved"] is True
+
+
+def test_profile_review_reject_clears_pending_updates():
+    node = _make_profile_review()
+    state = {
+        "pending_patches": [{"action": "reject", "target_id": "__review__"}],
+        "pending_profile_updates": [
+            {
+                "field_path": "name",
+                "old_value": None,
+                "new_value": "Alice",
+                "source_stage": "hitl_2_blueprint_logic",
+                "approved": False,
+            }
+        ],
+    }
+
+    result = node(state)
+    assert result["profile_update_outcome"] == "rejected"
+    assert result["pending_profile_updates"] == []
+    assert result["approved_profile_updates"] == []

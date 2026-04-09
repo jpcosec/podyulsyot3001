@@ -13,6 +13,8 @@ from src.core.ai.generate_documents_v2.profile_loader import (
     load_section_mapping,
 )
 
+DEFAULT_PROFILE_PATH = "data/reference_data/profile/base_profile/profile_base_data.json"
+
 SAMPLE_PROFILE = {
     "owner": {
         "full_name": "Juan Perez",
@@ -86,6 +88,13 @@ def test_load_profile_kg_extracts_traits(tmp_path):
 def test_load_profile_kg_missing_file_raises(tmp_path):
     with pytest.raises(FileNotFoundError):
         load_profile_kg(tmp_path / "nonexistent.json")
+
+
+def test_load_profile_kg_checked_in_default_profile_exists():
+    kg = load_profile_kg(DEFAULT_PROFILE_PATH)
+    assert isinstance(kg, ProfileKG)
+    assert len(kg.entries) >= 1
+    assert "Python" in kg.skills
 
 
 def test_load_section_mapping_returns_items(tmp_path):

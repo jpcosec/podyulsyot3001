@@ -14,7 +14,6 @@ Navigation index for the Postulator 3000 pipeline. Each module has its own READM
 | `src/core/ai/generate_documents_v2/` | LangGraph | `src/core/ai/generate_documents_v2/README.md` | Multi-stage CV, letter, and email generation pipeline |
 | `src/core/tools/render/` | Deterministic | `src/core/tools/render/README.md` | Pandoc + Jinja2 → PDF / DOCX |
 | `src/shared/` | Library | `src/shared/README.md` | Cross-cutting utilities (log tags) |
-| `src/apply/` | Hybrid automation | `src/apply/README.md` | Crawl4AI and BrowserOS-backed application submission |
 
 ---
 
@@ -25,14 +24,14 @@ src/scraper/
   ↓  canonical raw job artifacts under `nodes/ingest/proposed/`
 src/core/tools/translator/
   ↓  translated fields + content.md
-src/review_ui/                    ← review surfaces used by operator workflows
-  ↓  approved inputs / decisions
-src/core/ai/generate_documents_v2/   ← LangGraph
+src/core/ai/generate_documents_v2/   ← LangGraph with HITL checkpoints
+  ↓  persisted reviewable artifacts + pending review states
+src/review_ui/                    ← operator review/explorer surfaces over LangGraph threads
+  ↓  approve/reject decisions and profile-writeback approval
+src/core/ai/generate_documents_v2/
   ↓  cv.md, cover_letter.md, email_body.txt
 src/core/tools/render/
   ↓  PDF / DOCX artifacts
-src/apply/
-  ↓  portal submission artifacts
 ```
 
 Schema-v0 runtime rules for artifact placement, job metadata, and the central data manager are defined in `docs/runtime/data_management.md`.
@@ -43,7 +42,7 @@ Schema-v0 runtime rules for artifact placement, job metadata, and the central da
 
 ### Control plane vs. data plane
 
-All LangGraph state (`MatchSkillState`) carries only routing signals — source, job_id, refs, and decision flags. Heavy payloads (match proposals, generated documents) stay on disk. This keeps checkpointed state small and makes artifacts inspectable without replaying the graph.
+All LangGraph state (`GenerateDocumentsV2State`) carries only routing signals, lightweight payload refs, and decision flags. Heavy artifacts (match surfaces, blueprints, drafts, Markdown bundles) stay on disk. This keeps checkpointed state small and makes artifacts inspectable without replaying the graph.
 
 ### Node execution model
 
@@ -61,7 +60,7 @@ See `docs/runtime/data_management.md` for the schema-v0 canonical layout.
 
 ### Failure model
 
-All nodes fail closed — no silent fallback-to-success. LLM calls use `with_structured_output`. Missing credentials fall back to a demo chain in dev only where that behavior is explicitly implemented, for example in `src/core/ai/generate_documents_v2/graph.py`.
+All nodes fail closed — no silent fallback-to-success. LLM calls use `with_structured_output`. Operator-facing CLI flows should surface remote failures explicitly instead of reporting success with unknown status.
 
 ### Observability
 

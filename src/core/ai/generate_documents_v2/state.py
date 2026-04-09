@@ -96,8 +96,12 @@ class GenerateDocumentsV2State(TypedDict, total=False):
     pending_patches: list[dict[str, Any]]
 
     # --- Profile update accumulator ---
-    # Serialized ProfileUpdateRecord items that are ready to be written back to
-    # the profile JSON.  Populated by HITL nodes when a patch has
-    # persist_to_profile=True.  Cleared by profile_updater after writing.
-    # TODO: add explicit operator approval UI — currently self-approving.
+    # Serialized ProfileUpdateRecord items awaiting explicit operator approval.
+    pending_profile_updates: list[dict[str, Any]]
+
+    # Serialized ProfileUpdateRecord items that are approved and ready to be
+    # written back to the profile JSON. Cleared by profile_updater after writing.
     approved_profile_updates: list[dict[str, Any]]
+
+    # --- Profile writeback review outcome ---
+    profile_update_outcome: str

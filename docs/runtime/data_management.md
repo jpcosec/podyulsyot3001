@@ -54,7 +54,7 @@ And per-node outputs under:
 nodes/<node_name>/<stage>/<artifact>
 ```
 
-Example:
+Current canonical example:
 
 ```text
 data/jobs/stepstone/12345/
@@ -89,40 +89,35 @@ data/jobs/stepstone/12345/
       proposed/
         state.json
         content.md
-    extract_bridge/
-      proposed/
-        state.json
-        content.md
-    match_skill/
-      approved/
-        state.json
-      review/
-        current.json
-        decision.json
-        rounds/
-          round_001/
-            proposal.json
-            decision.json
-            feedback.json
     generate_documents_v2/
+      job_kg/
+        current.json
+      job_delta/
+        current.json
+      match_edges/
+        current.json
+        applied_patches/
+          current.json
+      blueprint/
+        current.json
+        applied_patches/
+          current.json
+      draft_cv/
+        current.json
+      draft_letter/
+        current.json
+      draft_email/
+        current.json
+      markdown_bundle/
+        current.json
+        applied_patches/
+          current.json
       proposed/
-        generate_documents_v2_cv.en.md
-        generate_documents_v2_letter.en.md
-        generate_documents_v2_email.en.md
         cv.en.md
         letter.en.md
         email_body.en.txt
+      profile_updater/
         current.json
-    render/
-      proposed/
-        cv.pdf
-        cover_letter.pdf
-    package/
-      final/
-        manifest.json
-        cv.pdf
-        cover_letter.pdf
-        email_body.txt
 ```
 
 ---
@@ -170,7 +165,7 @@ Owns:
 
 Enforcement rule:
 
-- runtime code under `src/core/ai/`, `src/core/tools/`, `src/scraper/`, and `src/apply/` must not bypass `DataManager` for filesystem operations
+- runtime code under `src/core/ai/`, `src/core/tools/`, and `src/scraper/` must not bypass `DataManager` for filesystem operations
 - direct `Path.read_text()`, `read_bytes()`, `write_text()`, `write_bytes()`, and `mkdir()` calls are only allowed inside `src/core/data_manager.py`
 
 Must not own:
@@ -216,3 +211,10 @@ Follows a strict three-step flow:
 
 This keeps disk IO out of business logic while preserving debuggable standalone
 commands.
+
+---
+
+## Notes On Retired Layouts
+
+- `match_skill/` and `extract_bridge/` are legacy schema-v0 paths and are no longer part of the supported runtime.
+- The active review flow now lives inside `generate_documents_v2/` HITL checkpoints and persists stage artifacts under the corresponding node directories.

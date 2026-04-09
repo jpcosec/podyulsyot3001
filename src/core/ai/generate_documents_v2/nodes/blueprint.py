@@ -16,7 +16,7 @@ from src.core.ai.generate_documents_v2.prompts.blueprint import (
 from src.core.ai.generate_documents_v2.storage import PipelineArtifactStore
 from src.shared.log_tags import LogTag
 
-from ._utils import _google_api_key
+from ._utils import _gemini_model, _google_api_key
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +57,10 @@ def run_blueprint(
     """
     logger.info(
         "%s Blueprint: planning sections for %s/%s (strategy=%s)",
-        LogTag.LLM, source, job_id, chosen_strategy,
+        LogTag.LLM,
+        source,
+        job_id,
+        chosen_strategy,
     )
     job_title = (
         job_kg.job_title_original or job_kg.job_title_english if job_kg else None
@@ -106,7 +109,7 @@ def build_blueprint_chain(model: Any | None = None) -> Any:
     if not api_key:
         return _DemoBlueprintChain()
     llm = model or ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash", google_api_key=api_key
+        model=_gemini_model("blueprint"), google_api_key=api_key
     )
     return prompt | llm.with_structured_output(GlobalBlueprint)
 

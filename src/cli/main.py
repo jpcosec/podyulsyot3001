@@ -17,6 +17,8 @@ from src.shared.logging_config import configure_logging
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_PROFILE_PATH = "data/reference_data/profile/base_profile/profile_base_data.json"
+
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -300,7 +302,19 @@ async def _run_pipeline(args: argparse.Namespace) -> int:
         # Resume with empty payload (defaults to approved in the graph for auto_approve_review=True)
         result = await client.resume_thread(thread_id, {}, node_name=target_node)
 
-    logger.info("%s Pipeline finished with status: %s", LogTag.OK, result.get("status"))
+    final_status = result.get("status", "unknown")
+    error_message = result.get("error")
+    if final_status == "failed":
+        logger.error(
+            "%s Pipeline failed for %s/%s: %s",
+            LogTag.FAIL,
+            args.source,
+            args.job_id,
+            error_message or "unknown remote error",
+        )
+        return 1
+
+    logger.info("%s Pipeline finished with status: %s", LogTag.OK, final_status)
     return 0
 
 
@@ -334,6 +348,7 @@ async def _run_batch(args: argparse.Namespace) -> int:
     )
     if args.auto_approve_review:
         initial_input["auto_approve_review"] = True
+    had_failures = False
     for source, job_id in jobs:
         result = await _invoke_remote_pipeline(
             client,
@@ -341,15 +356,26 @@ async def _run_batch(args: argparse.Namespace) -> int:
             job_id=job_id,
             initial_input=initial_input,
         )
-        logger.info(
-            "%s Batch run %s/%s finished with status %s",
-            LogTag.OK,
-            source,
-            job_id,
-            result.get("status"),
-        )
-        print(f"{source}\t{job_id}\t{result.get('status', 'unknown')}")
-    return 0
+        status = result.get("status", "unknown")
+        if status == "failed":
+            had_failures = True
+            logger.error(
+                "%s Batch run %s/%s failed: %s",
+                LogTag.FAIL,
+                source,
+                job_id,
+                result.get("error", "unknown remote error"),
+            )
+        else:
+            logger.info(
+                "%s Batch run %s/%s finished with status %s",
+                LogTag.OK,
+                source,
+                job_id,
+                status,
+            )
+        print(f"{source}\t{job_id}\t{status}")
+    return 1 if had_failures else 0
 
 
 def _run_translate(args: argparse.Namespace) -> int:
@@ -381,25 +407,44 @@ async def _run_match(args: argparse.Namespace) -> int:
 
 def _run_generate(args: argparse.Namespace) -> int:
     from src.core.ai.generate_documents_v2 import generate_application_documents
+    from src.core.tools.render.main import main as render_main
 
-    profile_path = args.profile or "tests/e2e/fixtures/stub_profile.json"
+    profile_path = args.profile or DEFAULT_PROFILE_PATH
     result = generate_application_documents(
         source=args.source,
         job_id=args.job_id,
         profile_path=profile_path,
         target_language=args.language,
-        render=args.render,
-        render_engine=args.engine,
     )
+
+    render_outputs: dict[str, int] = {}
+    if args.render:
+        for document in ("cv", "letter"):
+            render_outputs[document] = render_main(
+                [
+                    document,
+                    "--source",
+                    args.source,
+                    "--job-id",
+                    args.job_id,
+                    "--engine",
+                    args.engine,
+                    "--language",
+                    args.language,
+                ]
+            )
+
     print(
         json.dumps(
             {
                 "status": result.get("status"),
-                "render_outputs": result.get("render_outputs", {}),
+                "render_outputs": render_outputs,
             },
             indent=2,
         )
     )
+    if args.render and any(code != 0 for code in render_outputs.values()):
+        return 1
     return 0
 
 
@@ -427,12 +472,20 @@ def _run_render(args: argparse.Namespace) -> int:
 def _run_review(args: argparse.Namespace) -> int:
     from src.review_ui.app import MatchReviewApp
     from src.review_ui.bus import MatchBus
-    from src.core.ai.match_skill.storage import MatchArtifactStore
+    from src.core.ai.generate_documents_v2.storage import PipelineArtifactStore
 
-    url = LangGraphAPIClient.ensure_server()
-    client = LangGraphAPIClient(url)
-    data_manager = DataManager()
-    store = MatchArtifactStore(data_manager.jobs_root)
+    client = LangGraphAPIClient()
+    if not client.is_healthy():
+        logger.error(
+            "%s Review UI requires the existing LangGraph API server that owns the current thread state.",
+            LogTag.FAIL,
+        )
+        logger.error(
+            "%s Start or keep the API server alive before launching review.",
+            LogTag.WARN,
+        )
+        return 1
+    store = PipelineArtifactStore()
 
     config: dict[str, Any] = {"configurable": {}}
     if args.source and args.job_id:
@@ -444,6 +497,7 @@ def _run_review(args: argparse.Namespace) -> int:
     bus = MatchBus(store=store, client=client, config=config)
     review_app = MatchReviewApp(bus=bus, source=args.source, job_id=args.job_id)
     review_app.run()
+    return 0
     return 0
 
 

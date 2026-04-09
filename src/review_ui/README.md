@@ -52,11 +52,11 @@ Keyboard bindings (Review):
 
 ## 📝 Data Contract
 
-The review UI depends on typed review models from the active review backend and API metadata from the control plane:
+The review UI currently targets the active `generate_documents_v2` HITL checkpoints:
 
-- `ReviewSurface` and `ReviewPayload` are consumed through the review bus/backend integration layer
+- pending review stages are LangGraph nodes such as `hitl_1_match_evidence`, `hitl_2_blueprint_logic`, and `hitl_3_content_style`
 - thread/job metadata comes from `LangGraphAPIClient.list_jobs()` in `src/core/api_client.py`
-- persisted review artifacts live under `data/jobs/<source>/<job_id>/nodes/match_skill/review/`
+- persisted review artifacts live under `data/jobs/<source>/<job_id>/nodes/generate_documents_v2/<stage>/current.json`
 
 ---
 

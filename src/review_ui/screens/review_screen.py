@@ -1,9 +1,4 @@
-"""HITL review screen for the match skill TUI.
-
-This screen is the HITL gate: it loads the persisted ``ReviewSurface`` from the
-``MatchArtifactStore``, renders one ``MatchRow`` per requirement, and lets the
-reviewer submit a complete ``ReviewPayload`` back to the LangGraph thread.
-"""
+"""HITL review screen for generate_documents_v2 checkpoints."""
 
 from __future__ import annotations
 
@@ -13,36 +8,25 @@ from textual import on, work
 from textual.app import ComposeResult
 from textual.containers import Horizontal, ScrollableContainer
 from textual.screen import Screen
-from textual.widgets import Button, Footer, Header, Label, LoadingIndicator, RichLog
-
-from src.core.ai.match_skill.contracts import (
-    ProfileEvidence,
-    ReviewDecision,
-    ReviewItemDecision,
-    ReviewPayload,
-    ReviewSurface,
-    ReviewSurfaceItem,
+from textual.widgets import (
+    Button,
+    Footer,
+    Header,
+    Label,
+    LoadingIndicator,
+    RichLog,
+    Static,
 )
+
 from src.review_ui.bus import MatchBus
-from src.review_ui.widgets.match_row import MatchRow
 
 
 class ReviewScreen(Screen):
-    """Interactive HITL review screen.
-
-    Displays the match proposal from the persisted ``ReviewSurface`` and
-    allows the operator to submit decisions per requirement.  On submission,
-    the screen resumes the paused LangGraph thread via ``MatchBus``.
-
-    Args:
-        bus: ``MatchBus`` instance providing async I/O with LangGraph + disk.
-        source: Source identifier used to locate artifacts.
-        job_id: Job identifier used to locate artifacts.
-    """
+    """Interactive HITL review screen for one pending checkpoint."""
 
     BINDINGS = [
-        ("ctrl+a", "approve_all", "Approve all"),
-        ("ctrl+r", "reject_all", "Reject all"),
+        ("a", "approve", "Approve"),
+        ("r", "reject", "Reject"),
         ("s", "submit", "Submit review"),
         ("q", "quit_screen", "Quit"),
     ]
@@ -60,17 +44,10 @@ class ReviewScreen(Screen):
         border-bottom: solid $accent;
     }
 
-    #summary-line {
-        color: $text-muted;
-    }
-
-    #recommendation-badge {
-        text-style: bold;
-    }
-
-    #rows-container {
+    #payload-container {
         height: 1fr;
         overflow-y: auto;
+        padding: 1 2;
     }
 
     #action-bar {
@@ -101,8 +78,12 @@ class ReviewScreen(Screen):
         display: block;
     }
 
-    Button {
-        margin: 0 1;
+    #payload {
+        text-wrap: wrap;
+    }
+
+    .selected {
+        border: heavy $accent;
     }
     """
 
@@ -117,9 +98,8 @@ class ReviewScreen(Screen):
         self._bus = bus
         self._source = source
         self._job_id = job_id
-        self._surface: ReviewSurface | None = None
-        # Accumulates per-row decisions keyed by requirement_id
-        self._decisions: dict[str, MatchRow.DecisionChanged] = {}
+        self._surface: Any | None = None
+        self._selected_action = "approve"
 
     # ------------------------------------------------------------------
     # Composition
@@ -128,12 +108,15 @@ class ReviewScreen(Screen):
     def compose(self) -> ComposeResult:
         """Compose the review screen layout and action controls."""
         yield Header()
-        yield Label("Loading review surface …", id="header-panel")
-        with ScrollableContainer(id="rows-container"):
+        yield Label("Loading review surface ...", id="header-panel")
+        with ScrollableContainer(id="payload-container"):
             yield LoadingIndicator(id="loading", classes="visible")
+            yield Static("", id="payload")
         with Horizontal(id="action-bar"):
-            yield Button("✓ Approve all", id="btn-approve-all", variant="default")
-            yield Button("✗ Reject all", id="btn-reject-all", variant="error")
+            yield Button(
+                "Approve", id="btn-approve", variant="primary", classes="selected"
+            )
+            yield Button("Reject", id="btn-reject", variant="error")
             yield Button("Submit review »", id="btn-submit", variant="success")
         yield RichLog(id="status-log", markup=True)
         yield Footer()
@@ -160,15 +143,15 @@ class ReviewScreen(Screen):
             self.app.call_from_thread(self._show_error, f"{type(exc).__name__}: {exc}")
 
     @work(thread=True, exit_on_error=False)
-    def _submit_review(self, payload: ReviewPayload) -> None:
-        """Submit the review payload to LangGraph in a background thread."""
+    def _submit_review(self, action: str) -> None:
+        """Submit the selected review action to LangGraph in a background thread."""
         self.app.call_from_thread(self._disable_submit)
         self.app.call_from_thread(
             self.query_one("#status-log", RichLog).write,
-            "[yellow]Submitting review to LangGraph…[/]",
+            f"[yellow]Submitting {action} to LangGraph...[/]",
         )
         try:
-            result = self._bus.resume_with_review(payload)
+            result = self._bus.resume_with_review(action)
             status = (
                 result.get("status", "unknown") if isinstance(result, dict) else "done"
             )
@@ -197,36 +180,18 @@ class ReviewScreen(Screen):
         btn = self.query_one("#btn-submit", Button)
         btn.disabled = False
 
-    def _render_surface(self, surface: ReviewSurface) -> None:
+    def _render_surface(self, surface: Any) -> None:
         """Populate the screen with loaded review surface data."""
         self._surface = surface
-
-        rec_colour = {"proceed": "green", "marginal": "yellow", "reject": "red"}.get(
-            surface.recommendation, "white"
-        )
         header_panel = self.query_one("#header-panel", Label)
         header_panel.update(
-            f"[bold]Round {surface.round_number}[/]  ·  "
-            f"Score: [bold]{surface.total_score * 100:.0f}%[/]  ·  "
-            f"Recommendation: [{rec_colour}]{surface.recommendation}[/]\n"
-            f"[dim]{surface.summary_notes}[/]\n"
-            f"[dim]Hash: {surface.source_state_hash}[/]"
+            f"[bold]{surface.title}[/]  ·  {self._source}/{self._job_id}\n"
+            f"[dim]Stage: {surface.stage}  ·  Artifact: {surface.artifact_stage}[/]"
         )
 
         loading = self.query_one("#loading", LoadingIndicator)
         loading.remove_class("visible")
-
-        container = self.query_one("#rows-container", ScrollableContainer)
-        for item in surface.items:
-            row = MatchRow(item)
-            container.mount(row)
-            # Initialise decision map with default approve
-            self._decisions[item.requirement_id] = MatchRow.DecisionChanged(
-                requirement_id=item.requirement_id,
-                decision="approve",
-                note="",
-                patch_evidence=None,
-            )
+        self.query_one("#payload", Static).update(surface.pretty_json())
 
     def _show_error(self, message: str) -> None:
         log = self.query_one("#status-log", RichLog)
@@ -237,21 +202,17 @@ class ReviewScreen(Screen):
     # Message handlers
     # ------------------------------------------------------------------
 
-    @on(MatchRow.DecisionChanged)
-    def _on_row_decision_changed(self, event: MatchRow.DecisionChanged) -> None:
-        self._decisions[event.requirement_id] = event
-
     # ------------------------------------------------------------------
     # Button handlers
     # ------------------------------------------------------------------
 
-    @on(Button.Pressed, "#btn-approve-all")
-    def _on_approve_all(self, _: Button.Pressed) -> None:
-        self.action_approve_all()
+    @on(Button.Pressed, "#btn-approve")
+    def _on_approve(self, _: Button.Pressed) -> None:
+        self.action_approve()
 
-    @on(Button.Pressed, "#btn-reject-all")
-    def _on_reject_all(self, _: Button.Pressed) -> None:
-        self.action_reject_all()
+    @on(Button.Pressed, "#btn-reject")
+    def _on_reject(self, _: Button.Pressed) -> None:
+        self.action_reject()
 
     @on(Button.Pressed, "#btn-submit")
     def _on_submit(self, _: Button.Pressed) -> None:
@@ -261,35 +222,17 @@ class ReviewScreen(Screen):
     # Actions
     # ------------------------------------------------------------------
 
-    def action_approve_all(self) -> None:
-        """Set all rows to approve."""
-        if self._surface is None:
-            return
-        for item in self._surface.items:
-            if not item.in_regeneration_scope:
-                continue
-            self._decisions[item.requirement_id] = MatchRow.DecisionChanged(
-                requirement_id=item.requirement_id,
-                decision="approve",
-                note="",
-                patch_evidence=None,
-            )
-        self.notify("All rows set to Approve.")
+    def action_approve(self) -> None:
+        """Select approve as the review action."""
+        self._selected_action = "approve"
+        self._sync_action_buttons()
+        self.notify("Selected action: approve")
 
-    def action_reject_all(self) -> None:
-        """Set all rows to reject."""
-        if self._surface is None:
-            return
-        for item in self._surface.items:
-            if not item.in_regeneration_scope:
-                continue
-            self._decisions[item.requirement_id] = MatchRow.DecisionChanged(
-                requirement_id=item.requirement_id,
-                decision="reject",
-                note="",
-                patch_evidence=None,
-            )
-        self.notify("All rows set to Reject.")
+    def action_reject(self) -> None:
+        """Select reject as the review action."""
+        self._selected_action = "reject"
+        self._sync_action_buttons()
+        self.notify("Selected action: reject")
 
     def action_submit(self) -> None:
         """Validate and submit the review payload to LangGraph."""
@@ -297,28 +240,9 @@ class ReviewScreen(Screen):
             self.notify("Review surface not loaded yet.", severity="error")
             return
 
-        items: list[ReviewItemDecision] = []
-        for req_id, decision_msg in self._decisions.items():
-            items.append(
-                ReviewItemDecision(
-                    requirement_id=req_id,
-                    decision=decision_msg.decision,
-                    note=decision_msg.note,
-                    patch_evidence=decision_msg.patch_evidence,
-                )
-            )
-
-        if not items:
-            self.notify("No decisions recorded.", severity="warning")
-            return
-
-        payload = ReviewPayload(
-            source_state_hash=self._surface.source_state_hash,
-            items=items,
-        )
         log = self.query_one("#status-log", RichLog)
         log.add_class("visible")
-        self._submit_review(payload)
+        self._submit_review(self._selected_action)
 
     def action_quit_screen(self) -> None:
         """Pop this screen or quit the app."""
@@ -326,3 +250,14 @@ class ReviewScreen(Screen):
             self.app.pop_screen()
         else:
             self.app.exit()
+
+    def _sync_action_buttons(self) -> None:
+        """Highlight the currently selected action button."""
+        approve = self.query_one("#btn-approve", Button)
+        reject = self.query_one("#btn-reject", Button)
+        if self._selected_action == "approve":
+            approve.add_class("selected")
+            reject.remove_class("selected")
+        else:
+            reject.add_class("selected")
+            approve.remove_class("selected")

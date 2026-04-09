@@ -1,4 +1,4 @@
-"""Main Textual application for the match skill HITL review TUI.
+"""Main Textual application for the generate_documents_v2 HITL review TUI.
 
 Launch via the unified CLI::
 
@@ -22,7 +22,7 @@ from src.review_ui.screens.review_screen import ReviewScreen
 
 
 class MatchReviewApp(App):
-    """Textual application for reviewing a match proposal and submitting decisions.
+    """Textual application for reviewing a pending generate_documents_v2 checkpoint.
 
     Args:
         bus: Pre-configured ``MatchBus`` connecting to LangGraph + disk artifacts.
@@ -30,7 +30,7 @@ class MatchReviewApp(App):
         job_id: Job identifier used to locate artifacts.
     """
 
-    TITLE = "Match Skill · HITL Review"
+    TITLE = "Generate Documents V2 · HITL Review"
     SUB_TITLE = "Human-in-the-loop review gate"
 
     CSS = """
@@ -72,6 +72,4 @@ class MatchReviewApp(App):
             )
         else:
             # Explorer mode
-            self.push_screen(
-                JobExplorerScreen(bus=self._bus)
-            )
+            self.push_screen(JobExplorerScreen(bus=self._bus))

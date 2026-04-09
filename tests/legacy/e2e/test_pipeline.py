@@ -20,6 +20,11 @@ import httpx
 import pytest
 from langgraph.checkpoint.memory import InMemorySaver
 
+pytest.skip(
+    "Legacy match_skill E2E suite is archived until it is migrated to generate_documents_v2.",
+    allow_module_level=True,
+)
+
 from src.core.ai.match_skill.contracts import MatchEnvelope
 from src.core.ai.match_skill.graph import build_match_skill_graph, resume_with_review
 from src.core.ai.match_skill.storage import MatchArtifactStore
@@ -445,9 +450,7 @@ def fresh_job(stub_profile):
 
     dm = DataManager()
     adapter = build_providers(dm)["tuberlin"]
-    job_ids = asyncio.run(
-        adapter.run(already_scraped=[], limit=1, drop_repeated=False)
-    )
+    job_ids = asyncio.run(adapter.run(already_scraped=[], limit=1, drop_repeated=False))
     assert job_ids, "Scraper returned no jobs — check network or tuberlin availability"
     yield "tuberlin", job_ids[0]
 
@@ -455,13 +458,17 @@ def fresh_job(stub_profile):
 
 
 @pytest.mark.e2e
-@pytest.mark.skipif(not _server_available(), reason="LangGraph server not running on port 8124")
+@pytest.mark.skipif(
+    not _server_available(), reason="LangGraph server not running on port 8124"
+)
 class TestFullPipelineE2E:
     """Full pipeline e2e: scrape → translate → match (auto-approve) → generate → render → package."""
 
     def test_scrape_produces_ingest_artifact(self, fresh_job):
         source, job_id = fresh_job
-        state_file = Path(f"data/jobs/{source}/{job_id}/nodes/ingest/proposed/state.json")
+        state_file = Path(
+            f"data/jobs/{source}/{job_id}/nodes/ingest/proposed/state.json"
+        )
         assert state_file.exists(), f"Ingest artifact missing: {state_file}"
         data = json.loads(state_file.read_text())
         assert data.get("job_title"), "Ingest state has no job_title"
@@ -478,7 +485,9 @@ class TestFullPipelineE2E:
         out = Path(f"data/jobs/{source}/{job_id}/nodes/translate/proposed/state.json")
         assert out.exists(), f"Translate artifact missing: {out}"
         data = json.loads(out.read_text())
-        assert data.get("original_language") == "en", "Translated state language not set to 'en'"
+        assert data.get("original_language") == "en", (
+            "Translated state language not set to 'en'"
+        )
 
     def test_full_pipeline_reaches_completed(self, fresh_job):
         """Full pipeline with auto-approve must reach status=completed and produce a manifest."""
@@ -533,10 +542,10 @@ class TestFullPipelineE2E:
 
         base = Path(f"data/jobs/{source}/{job_id}/nodes")
         expected = {
-            "ingest":       base / "ingest/proposed/state.json",
-            "translate":    base / "translate/proposed/state.json",
+            "ingest": base / "ingest/proposed/state.json",
+            "translate": base / "translate/proposed/state.json",
             "load_profile": base / "pipeline_inputs/proposed/profile_evidence.json",
-            "match_skill":  base / "match_skill/approved/state.json",
+            "match_skill": base / "match_skill/approved/state.json",
         }
 
         missing = [name for name, path in expected.items() if not path.exists()]
@@ -562,15 +571,16 @@ class TestFullPipelineE2E:
 
         asyncio.run(_run())
 
-        manifest_path = Path(f"data/jobs/{source}/{job_id}/nodes/package/final/manifest.json")
+        manifest_path = Path(
+            f"data/jobs/{source}/{job_id}/nodes/package/final/manifest.json"
+        )
         assert manifest_path.exists(), "manifest.json not written"
 
         manifest = json.loads(manifest_path.read_text())
         artifacts = manifest.get("artifacts", {})
         assert artifacts, "Manifest has no artifacts"
 
-        missing_files = [
-            ref for ref in artifacts.values()
-            if not Path(ref).exists()
-        ]
-        assert not missing_files, f"Manifest references files that do not exist: {missing_files}"
+        missing_files = [ref for ref in artifacts.values() if not Path(ref).exists()]
+        assert not missing_files, (
+            f"Manifest references files that do not exist: {missing_files}"
+        )

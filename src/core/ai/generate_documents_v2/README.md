@@ -23,13 +23,14 @@ Current stage shape in code:
 4. macroplanning / blueprint
 5. microplanning / drafting
 6. assembly to Markdown bundle
-7. profile updater placeholder
+7. explicit profile-update approval (when needed)
+8. profile updater
 
 Current limitations that are intentionally not documented as supported behavior:
 
-- profile updater is a no-op in `src/core/ai/generate_documents_v2/graph.py`
-- review pauses exist in the graph, but there is no full generate-documents-specific GraphPatch editing UI yet
+- the review UI currently exposes approve/reject flows, not full per-field GraphPatch editing
 - regional document strategies are not fully implemented; deferred items live in `future_docs/issues/core/ai/generate_documents_v2/`
+- profile writeback now requires an explicit approval gate before persistence, but the operator surface is still generic JSON rather than a dedicated profile-diff editor
 
 ## ⚙️ Configuration
 
@@ -80,7 +81,7 @@ Set these fields in the initial state dict to control pipeline behavior:
 | Field | Effect |
 |---|---|
 | `target_language` | BCP-47 tag (e.g. `"de"`); controls assembly localization and file suffixes |
-| `auto_approve_review` | `True` skips all three HITL checkpoints; always emits a `WARN` log |
+| `auto_approve_review` | `True` skips the match/blueprint/bundle checkpoints; profile writeback still requires explicit approval |
 | `profile_path` | Override default profile JSON path |
 | `mapping_path` | Override default section mapping JSON path |
 | `profile_evidence` | Inject a raw profile dict directly, bypassing file loading |
@@ -149,4 +150,5 @@ python -m src.cli.main generate --source stepstone --job-id <ID> --language en -
 - **Pipeline stops before documents are produced** -> inspect stage artifacts under `data/jobs/<source>/<job_id>/nodes/generate_documents_v2/`.
 - **Profile data is missing or wrong** -> verify the profile JSON path or the default base profile file consumed by `src/core/ai/generate_documents_v2/graph.py`.
 - **Review flow feels incomplete** -> this is expected; richer generate-documents review editing is tracked in `future_docs/issues/core/ai/generate_documents_v2/`.
+- **Profile changes are proposed but not written** -> approve the dedicated `hitl_4_profile_updates` checkpoint before `profile_updater` will persist changes.
 - **Regional formatting expectations are missing** -> current behavior is generic; advanced regional strategies are deferred and tracked in `future_docs/issues/core/ai/generate_documents_v2/`.

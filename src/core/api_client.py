@@ -24,6 +24,55 @@ from src.shared.log_tags import LogTag
 logger = logging.getLogger(__name__)
 
 
+def _next_review_node(next_nodes: list[str] | None) -> str | None:
+    """Return the active HITL node name for generate_documents_v2, if any."""
+    if not next_nodes:
+        return None
+    for node in next_nodes:
+        if node.startswith("hitl_") or node in {
+            "stage_2_semantic_bridge",
+            "stage_3_macroplanning",
+            "stage_5_assembly_render",
+        }:
+            return node
+    return None
+
+
+def _derive_thread_status(state: dict[str, Any]) -> str:
+    """Derive a stable run status from thread state."""
+    if _next_review_node(state.get("next", [])) is not None:
+        return "pending_review"
+
+    values = state.get("values", {})
+    error_state = values.get("error_state")
+    if error_state:
+        return "failed"
+
+    return values.get("status", "unknown")
+
+
+def _normalize_run_result(
+    result: dict[str, Any] | None,
+    state: dict[str, Any],
+    *,
+    error: str | None = None,
+) -> dict[str, Any]:
+    """Normalize LangGraph run/join output into a UI-friendly result."""
+    normalized = dict(result or {})
+    normalized["status"] = _derive_thread_status(state)
+
+    values = state.get("values", {})
+    if error:
+        normalized["error"] = error
+    elif values.get("error_state"):
+        normalized["error"] = values["error_state"].get("message")
+
+    if state.get("next"):
+        normalized["next"] = state["next"]
+
+    return normalized
+
+
 class LangGraphConnectionError(Exception):
     """Raised when the LangGraph API is unreachable or returns invalid responses."""
 
@@ -211,15 +260,24 @@ class LangGraphAPIClient:
             enriched_threads = []
             for thread in threads:
                 try:
-                    state = await self.client.threads.get_state(thread["thread_id"])
+                    state = await self.client.threads.get_state(
+                        thread["thread_id"], subgraphs=True
+                    )
                     values = state.get("values", {})
+                    has_review_pending = (
+                        _next_review_node(state.get("next", [])) is not None
+                    )
                     enriched_threads.append(
                         {
                             **thread,
                             "state": state,
                             "source": values.get("source", "unknown"),
                             "job_id": values.get("job_id", "unknown"),
-                            "status": values.get("status", "unknown"),
+                            "status": (
+                                "pending_review"
+                                if has_review_pending
+                                else values.get("status", "unknown")
+                            ),
                             "location": values.get("location")
                             or values.get("city")
                             or "N/A",
@@ -227,8 +285,7 @@ class LangGraphAPIClient:
                             or thread.get("created_at")
                             or "N/A",
                             "current_node": values.get("current_node", "N/A"),
-                            "has_review_pending": "human_review_node"
-                            in state.get("next", []),
+                            "has_review_pending": has_review_pending,
                         }
                     )
                 except Exception:
@@ -245,13 +302,15 @@ class LangGraphAPIClient:
             pending = []
             for thread in threads:
                 state = thread.get("state", {})
-                if state.get("next") and "human_review_node" in state["next"]:
+                review_node = _next_review_node(state.get("next", []))
+                if review_node:
                     pending.append(
                         {
                             "thread_id": thread["thread_id"],
                             "status": "pending_review",
                             "values": state.get("values", {}),
                             "next": state["next"],
+                            "review_node": review_node,
                         }
                     )
             return pending
@@ -262,7 +321,7 @@ class LangGraphAPIClient:
     async def get_thread_metadata(self, thread_id: str) -> Dict[str, Any]:
         """Extract rich metadata from a thread state for UI display."""
         try:
-            state = await self.client.threads.get_state(thread_id)
+            state = await self.client.threads.get_state(thread_id, subgraphs=True)
             values = state.get("values", {})
             return {
                 "source": values.get("source", "unknown"),
@@ -271,7 +330,8 @@ class LangGraphAPIClient:
                 "city": values.get("city") or values.get("location") or "N/A",
                 "next_nodes": state.get("next", []),
                 "last_node": values.get("current_node", "N/A"),
-                "has_review_pending": "human_review_node" in state.get("next", []),
+                "has_review_pending": _next_review_node(state.get("next", []))
+                is not None,
             }
         except Exception:
             return {}
@@ -280,21 +340,26 @@ class LangGraphAPIClient:
         self,
         thread_id: str,
         payload: Dict[str, Any],
-        node_name: str = "human_review_node",
+        node_name: str | None = None,
     ) -> Dict[str, Any]:
         """Update thread state and resume execution."""
-        logger.info(f"  [🚀] Resuming thread {thread_id} at node {node_name}...")
         try:
             state = await self.client.threads.get_state(thread_id, subgraphs=True)
             assistant_id = state.get("metadata", {}).get(
                 "graph_id", "generate_documents_v2"
+            )
+            resolved_node = node_name or _next_review_node(state.get("next", []))
+            if not resolved_node:
+                raise ValueError(f"No pending review node found for thread {thread_id}")
+            logger.info(
+                f"  [🚀] Resuming thread {thread_id} at node {resolved_node}..."
             )
             checkpoint = state.get("checkpoint")
             checkpoint_id = state.get("checkpoint_id")
             await self.client.threads.update_state(
                 thread_id,
                 payload,
-                as_node=node_name,
+                as_node=resolved_node,
                 checkpoint=checkpoint,
                 checkpoint_id=checkpoint_id,
             )
@@ -306,11 +371,18 @@ class LangGraphAPIClient:
                 checkpoint_id=checkpoint_id,
             )
             result = await self.client.runs.join(thread_id, run["run_id"])
+            latest_state = await self.client.threads.get_state(
+                thread_id, subgraphs=True
+            )
             logger.info(f"  [✅] Thread {thread_id} resumed successfully.")
-            return result
+            return _normalize_run_result(result, latest_state)
         except Exception as e:
             logger.error(f"  [❌] Failed to resume thread {thread_id}: {e}")
-            raise
+            try:
+                state = await self.client.threads.get_state(thread_id, subgraphs=True)
+            except Exception:
+                raise
+            return _normalize_run_result({}, state, error=str(e))
 
     async def invoke_assistant(
         self,
@@ -342,7 +414,14 @@ class LangGraphAPIClient:
             assistant_id=assistant_id,
             input=payload,
         )
-        return await self.client.runs.join(thread_id, run["run_id"])
+        try:
+            result = await self.client.runs.join(thread_id, run["run_id"])
+        except Exception as exc:
+            state = await self.client.threads.get_state(thread_id, subgraphs=True)
+            return _normalize_run_result({}, state, error=str(exc))
+
+        state = await self.client.threads.get_state(thread_id, subgraphs=True)
+        return _normalize_run_result(result, state)
 
     async def invoke_pipeline(
         self,

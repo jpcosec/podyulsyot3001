@@ -70,13 +70,12 @@ def apply_patches(
             stage=stage,
         )
         if patch.persist_to_profile and patch.action == "modify":
-            # TODO: defer explicit operator approval UI — self-approving for now.
             record = ProfileUpdateRecord(
                 field_path=patch.target_id,
                 old_value=None,
                 new_value=patch.new_value,
                 source_stage=stage,
-                approved=True,
+                approved=False,
             )
             profile_updates.append(record.model_dump())
 
@@ -89,13 +88,13 @@ def apply_patches(
     )
 
     existing_updates: list[dict[str, Any]] = list(
-        state.get("approved_profile_updates") or []
+        state.get("pending_profile_updates") or []
     )
     result: dict[str, Any] = {
         "pending_patches": [],
         outcome_key: outcome,
         "status": "running" if outcome != OUTCOME_REJECTED else "rejected",
-        "approved_profile_updates": existing_updates + profile_updates,
+        "pending_profile_updates": existing_updates + profile_updates,
     }
     if updated_artifact is not state.get(mutable_state_key):
         result[mutable_state_key] = updated_artifact
@@ -130,12 +129,17 @@ def _apply_one(
         return OUTCOME_APPROVED, artifact
 
     if action == "reject":
-        logger.info("%s %s: patch rejected field=%s", LogTag.WARN, stage, patch.target_id)
+        logger.info(
+            "%s %s: patch rejected field=%s", LogTag.WARN, stage, patch.target_id
+        )
         return OUTCOME_REJECTED, artifact
 
     if action == "request_regeneration":
         logger.info(
-            "%s %s: regeneration requested for field=%s", LogTag.WARN, stage, patch.target_id
+            "%s %s: regeneration requested for field=%s",
+            LogTag.WARN,
+            stage,
+            patch.target_id,
         )
         return OUTCOME_REGENERATING, artifact
 
@@ -157,9 +161,7 @@ def _apply_modify(*, artifact: Any, patch: GraphPatch, stage: str) -> Any:
     if isinstance(artifact, dict):
         updated = dict(artifact)
         updated[patch.target_id] = patch.new_value
-        logger.info(
-            "%s %s: modified dict key=%s", LogTag.OK, stage, patch.target_id
-        )
+        logger.info("%s %s: modified dict key=%s", LogTag.OK, stage, patch.target_id)
         return updated
 
     if isinstance(artifact, list):

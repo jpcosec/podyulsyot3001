@@ -17,7 +17,7 @@ from src.core.ai.generate_documents_v2.prompts.alignment import (
 from src.core.ai.generate_documents_v2.storage import PipelineArtifactStore
 from src.shared.log_tags import LogTag
 
-from ._utils import _google_api_key
+from ._utils import _gemini_model, _google_api_key
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +79,7 @@ def build_alignment_chain(model: Any | None = None) -> Any:
     if not api_key:
         return _DemoAlignmentChain()
     llm = model or ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash", google_api_key=api_key
+        model=_gemini_model("alignment"), google_api_key=api_key
     )
     return prompt | llm.with_structured_output(MatchResult)
 

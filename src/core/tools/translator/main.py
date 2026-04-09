@@ -5,9 +5,12 @@ raw input artifacts from ``nodes/ingest/proposed/``. Translated artifacts are
 written to ``nodes/translate/proposed/``.
 """
 
+from __future__ import annotations
+
 import argparse
-import logging
 import json
+import logging
+import os
 import sys
 from pathlib import Path
 
@@ -152,14 +155,14 @@ def translate_single_job(
     return True
 
 
-def main(argv: list[str] | None = None) -> None:
+def main(argv: list[str] | None = None) -> int:
     """Run the translation CLI over canonical ingest artifacts.
 
     Args:
         argv: Optional command-line arguments. Defaults to ``sys.argv[1:]``.
 
     Returns:
-        None.
+        Process exit code.
     """
     parser = argparse.ArgumentParser(description="Deterministic Translation Pipeline")
     parser.add_argument(
@@ -174,7 +177,11 @@ def main(argv: list[str] | None = None) -> None:
         help="Job portal source folder to scan (e.g. 'tuberlin', 'stepstone').",
     )
     parser.add_argument(
-        "--target_lang", default="en", help="Target language (e.g. 'en')."
+        "--target_lang",
+        "--target-lang",
+        dest="target_lang",
+        default="en",
+        help="Target language (e.g. 'en').",
     )
     parser.add_argument(
         "--data_dir", default="data/jobs", help="Base directory for canonical job data."
@@ -199,7 +206,7 @@ def main(argv: list[str] | None = None) -> None:
 
     if not source_path.exists():
         logger.error(f"Source path {source_path} does not exist.")
-        return
+        return 1
 
     logger.info(f"{LogTag.FAST} Scanning {source_path} for jobs to translate...")
     for job_dir in os.listdir(source_path):
@@ -229,6 +236,8 @@ def main(argv: list[str] | None = None) -> None:
         except Exception as e:
             logger.error(f"  [error] Failed to translate {job_dir}: {e}")
 
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
