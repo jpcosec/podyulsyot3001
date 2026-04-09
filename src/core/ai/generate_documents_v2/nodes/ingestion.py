@@ -149,7 +149,13 @@ def _recover_empty_job_kg(job_kg: JobKG, job_bundle: dict[str, Any] | None) -> J
                 target_lang="en",
                 source_lang=source_language,
             )
-        except Exception:
+        except Exception as exc:
+            logger.warning(
+                "%s Translation failed for requirement %s: %s",
+                LogTag.WARN,
+                text[:50],
+                exc,
+            )
             english_text = text
         translated_requirements.append(
             JobRequirement(id=f"R{index:02d}", text=english_text, priority=4)

@@ -109,13 +109,19 @@ class BaseTranslatorAdapter(ABC):
                     break
                 except Exception as exc:
                     last_error = exc
+                    import traceback
+
+                    tb = traceback.format_exc()
                     logger.warning(
-                        f"{LogTag.WARN} [{self.provider_name}] Chunk translation failed on attempt {attempt}: {exc}"
+                        f"{LogTag.WARN} [{self.provider_name}] Chunk translation failed on attempt {attempt}/{self.max_attempts}: {exc}\nTraceback: {tb}"
                     )
                     if attempt < self.max_attempts and self.retry_delay_seconds > 0:
                         time.sleep(self.retry_delay_seconds)
             else:
-                break
+                # All attempts failed for this chunk
+                logger.error(
+                    f"{LogTag.FAIL} [{self.provider_name}] All {self.max_attempts} translation attempts failed for chunk: {chunk[:100]}..."
+                )
 
         if translated_chunks and len(translated_chunks) == len(chunks):
             return "\n".join(translated_chunks)
