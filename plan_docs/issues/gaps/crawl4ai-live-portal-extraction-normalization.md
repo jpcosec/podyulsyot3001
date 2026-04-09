@@ -28,12 +28,11 @@ This means the base problem is extractor drift on live portals, not just over-st
 - **StepStone** — list extraction is now good enough to ingest, but scalar normalization is still over-broad on some postings and can pick the wrong company/location from surrounding hero or intro content.
 - **TU Berlin** — prose-section normalization was the main gap; live ingest now works after treating `Your responsibility` prose as a valid responsibility block.
 
-**What to fix:** Real portal scraping must reliably extract enough live-page data to build valid `JobPosting` objects for all supported portals without relying on mocks. This parent issue is now atomized into portal-specific remaining work so each live portal problem can be resolved independently.
+**What to fix:** Real portal scraping must reliably extract enough live-page data to build valid `JobPosting` objects for all supported portals without relying on mocks. This parent issue is now narrowed to the remaining XING-specific work after StepStone and TU Berlin live normalization gaps were repaired.
 
 **How to do it:**
 1. Track remaining XING work in `plan_docs/issues/gaps/xing-live-extraction-remains-unstable.md`.
-2. Track remaining StepStone scalar scoping work in `plan_docs/issues/gaps/stepstone-scalar-normalization-still-overmatches.md`.
-3. Keep shared extraction-level diagnostics in place so portal-specific fixes stay evidence-based.
-4. Coordinate with `plan_docs/issues/gaps/extraction-and-canonical-normalization-are-not-explicitly-separated.md` so extraction repair and normalization-stage design do not get mixed together.
+2. Keep shared extraction-level diagnostics in place so portal-specific fixes stay evidence-based.
+3. Coordinate with `plan_docs/issues/gaps/canonical-job-normalization-is-not-owned-by-ariadne.md` so extraction repair and semantic-layer ownership do not get mixed together.
 
-**Depends on:** `plan_docs/issues/gaps/xing-live-extraction-remains-unstable.md`, `plan_docs/issues/gaps/stepstone-scalar-normalization-still-overmatches.md`
+**Depends on:** `plan_docs/issues/gaps/xing-live-extraction-remains-unstable.md`

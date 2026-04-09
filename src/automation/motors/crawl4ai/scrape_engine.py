@@ -994,38 +994,64 @@ class SmartScraperAdapter(ABC):
             return None
         lines = [line.strip() for line in markdown_text.splitlines() if line.strip()]
         title = self._extract_job_title_from_markdown(markdown_text)
+        title_index = 0
+        if title:
+            for index, line in enumerate(lines):
+                if title in line or line == f"# {title}":
+                    title_index = index
+                    break
+        hero_lines = lines[title_index : title_index + 12]
 
         if field == "location":
-            for line in lines[:30]:
+            skip_values = {"suche", "login", "menu", "jobs finden", "speichern"}
+            company_like_patterns = (
+                r"\bgmbh\b",
+                r"\bag\b",
+                r"\bse\b",
+                r"\bkg\b",
+                r"\binc\b",
+                r"\bllc\b",
+            )
+            for line in hero_lines:
+                if not line.startswith(("*", "-")):
+                    continue
                 match = re.match(r"^[*-]\s+\[([^\]]+)\]\([^\)]+\)$", line)
                 candidate = match.group(1) if match else re.sub(r"^[*-]\s+", "", line)
                 candidate = self._clean_location_text(candidate)
-                if candidate and candidate.lower() not in {"login", "menu"}:
+                if candidate and candidate.lower() not in skip_values:
+                    if any(
+                        re.search(pattern, candidate.lower())
+                        for pattern in company_like_patterns
+                    ):
+                        continue
                     if re.fullmatch(
-                        r"[A-Z][A-Za-z\-]+(?: [A-Z][A-Za-z\-]+)*", candidate
+                        r"[A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-]+(?:,? [A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-]+)*",
+                        candidate,
                     ):
                         return candidate
             return None
 
         if field == "company_name":
             company_markers = (
-                "gmbh",
-                "ag",
-                "e.v.",
-                "universit",
-                "institute",
-                "institut",
-                "charité",
-                "charite",
-                "inc",
-                "llc",
+                r"\bgmbh\b",
+                r"\bag\b",
+                r"\be\.v\.\b",
+                r"universit",
+                r"institute",
+                r"institut",
+                r"charité",
+                r"charite",
+                r"\binc\b",
+                r"\bllc\b",
+                r"\bse\b",
             )
-            for line in lines[:40]:
+            for line in hero_lines:
                 for candidate in re.findall(r"\[([^\]]+)\]\([^\)]+\)", line):
                     candidate = candidate.strip()
                     if candidate and candidate != title:
                         if any(
-                            marker in candidate.lower() for marker in company_markers
+                            re.search(marker, candidate.lower())
+                            for marker in company_markers
                         ):
                             return candidate
                 candidate = re.sub(r"^[*-]\s+", "", line)
@@ -1033,7 +1059,9 @@ class SmartScraperAdapter(ABC):
                 candidate = re.sub(r"\*+", "", candidate).strip()
                 if not candidate or candidate == title:
                     continue
-                if any(marker in candidate.lower() for marker in company_markers):
+                if any(
+                    re.search(marker, candidate.lower()) for marker in company_markers
+                ):
                     return candidate
             return None
 

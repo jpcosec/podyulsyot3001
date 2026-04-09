@@ -1108,6 +1108,23 @@ def test_normalize_payload_extracts_company_name_from_inline_markdown_link(
     )
 
 
+def test_hero_markdown_value_scopes_stepstone_hero_block(tmp_path) -> None:
+    adapter = _DummyAdapter(DataManager(tmp_path / "data" / "jobs"))
+    markdown = (
+        "[](https://www.stepstone.de/de)\n"
+        "Suche\n"
+        "# Machine Learning Engineer / Data Scientist Google Cloud (all genders)\n"
+        "* adesso SE\n"
+        "* Berlin, Bremen\n"
+        "* Feste Anstellung\n"
+        "**Machine Learning Engineer / Data Scientist Google Cloud (all genders)**[ adesso SE](https://example.test/company)\n"
+        "adesso steht fur IT-Exzellenz.\n"
+    )
+
+    assert adapter._hero_markdown_value(markdown, field="company_name") == "adesso SE"
+    assert adapter._hero_markdown_value(markdown, field="location") == "Berlin, Bremen"
+
+
 def test_normalize_payload_with_diagnostics_tracks_field_sources(tmp_path) -> None:
     adapter = _DummyAdapter(DataManager(tmp_path / "data" / "jobs"))
     result = _result(
