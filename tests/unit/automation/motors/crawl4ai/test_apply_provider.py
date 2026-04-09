@@ -1,4 +1,4 @@
-"""Unit tests for C4AIReplayer pure logic helpers.
+"""Unit tests for C4AIReplayer pure logic helpers and C4AIMotorProvider auth.
 
 These tests do NOT import crawl4ai. They test only the pure methods
 that can be called without browser infrastructure.
@@ -6,6 +6,7 @@ that can be called without browser infrastructure.
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -18,6 +19,7 @@ from src.automation.ariadne.models import (
     AriadneObserve,
     AriadneStep,
 )
+from src.automation.credentials import ResolvedPortalCredentials
 from src.automation.motors.crawl4ai.replayer import C4AIReplayer
 
 
@@ -278,3 +280,175 @@ def test_upload_targets_skips_optional_letter_when_path_missing():
     )
 
     assert uploads == {"#resume": Path("/tmp/cv.pdf")}
+
+
+# ─── C4AIMotorProvider auth tests ────────────────────────────────────────────────
+
+
+class TestC4AIMotorProviderAuth:
+    """Tests for C4AIMotorProvider persistent profile and env-secret login."""
+
+    def test_browser_config_uses_user_data_dir_for_persistent_profile(self):
+        """When effective_browser_profile_dir is set, BrowserConfig uses user_data_dir."""
+        from src.automation.motors.crawl4ai.apply_engine import C4AIMotorProvider
+
+        provider = C4AIMotorProvider()
+        credentials = ResolvedPortalCredentials(
+            portal_name="xing",
+            matched_domain="xing.com",
+            auth_strategy="persistent_profile",
+            browser_profile_dir="/custom/profile/dir",
+            secret_env_vars={},
+            required_secret_keys=[],
+            optional_secret_keys=[],
+        )
+
+        config = provider._browser_config(credentials=credentials, headless=True)
+
+        assert config.user_data_dir == "/custom/profile/dir"
+        assert config.cdp_url is None
+
+    def test_browser_config_skips_browseros_injection_when_profile_dir_set(self):
+        """Persistent profile BrowserConfig does not use BrowserOS CDP URL."""
+        from src.automation.motors.crawl4ai.apply_engine import C4AIMotorProvider
+
+        provider = C4AIMotorProvider()
+        credentials = ResolvedPortalCredentials(
+            portal_name="linkedin",
+            matched_domain="linkedin.com",
+            auth_strategy="persistent_profile",
+            browser_profile_dir="/tmp/linkedin-profile",
+            secret_env_vars={},
+            required_secret_keys=[],
+            optional_secret_keys=[],
+        )
+
+        config = provider._browser_config(credentials=credentials, headless=True)
+
+        assert config.user_data_dir == "/tmp/linkedin-profile"
+        assert config.cdp_url is None
+
+    def test_browser_config_uses_browseros_injection_when_no_profile(self):
+        """No profile dir means BrowserOS CDP injection is used."""
+        from src.automation.motors.crawl4ai.apply_engine import C4AIMotorProvider
+
+        provider = C4AIMotorProvider()
+        credentials = ResolvedPortalCredentials(
+            portal_name="xing",
+            matched_domain="xing.com",
+            auth_strategy="env_secrets",
+            browser_profile_dir=None,
+            secret_env_vars={"username": "XING_USER", "password": "XING_PASS"},
+            required_secret_keys=["username", "password"],
+            optional_secret_keys=[],
+        )
+
+        config = provider._browser_config(credentials=credentials, headless=True)
+
+        assert config.cdp_url == "http://localhost:9101"
+        assert config.user_data_dir is None
+
+    def test_bootstrap_skips_when_required_secrets_missing(self, monkeypatch):
+        """Login bootstrap silently skips when required env secrets are not set."""
+        from src.automation.motors.crawl4ai.apply_engine import C4AIMotorProvider
+
+        provider = C4AIMotorProvider()
+        credentials = ResolvedPortalCredentials(
+            portal_name="xing",
+            matched_domain="xing.com",
+            auth_strategy="env_secrets",
+            login_url="https://www.xing.com/login",
+            browser_profile_dir=None,
+            secret_env_vars={"username": "XING_USER", "password": "XING_PASS"},
+            required_secret_keys=["username", "password"],
+            optional_secret_keys=[],
+        )
+
+        calls = []
+
+        class _FakeCrawler:
+            async def arun(self, url, config):
+                calls.append((url, config))
+                return SimpleNamespace(success=True)
+
+        class _FakeProvider:
+            def _browser_config(self, credentials, headless):
+                return SimpleNamespace(user_data_dir=None)
+
+        monkeypatch.delenv("XING_USER", raising=False)
+        monkeypatch.delenv("XING_PASS", raising=False)
+
+        import asyncio
+
+        asyncio.run(provider._bootstrap_env_secret_login(_FakeCrawler(), credentials))
+
+        assert calls == []
+
+    def test_bootstrap_navigates_and_fills_when_secrets_available(self, monkeypatch):
+        """Login bootstrap navigates and fills credentials when env secrets are set."""
+        from src.automation.motors.crawl4ai.apply_engine import C4AIMotorProvider
+
+        provider = C4AIMotorProvider()
+        credentials = ResolvedPortalCredentials(
+            portal_name="xing",
+            matched_domain="xing.com",
+            auth_strategy="env_secrets",
+            login_url="https://www.xing.com/login",
+            browser_profile_dir=None,
+            secret_env_vars={"username": "XING_USER", "password": "XING_PASS"},
+            required_secret_keys=["username", "password"],
+            optional_secret_keys=[],
+        )
+
+        monkeypatch.setenv("XING_USER", "ada@example.com")
+        monkeypatch.setenv("XING_PASS", "secretpassword")
+
+        calls = []
+
+        class _FakeCrawler:
+            session_id = "fake-session"
+
+            async def arun(self, url, config):
+                calls.append((url, getattr(config, "c4a_script", None)))
+                return SimpleNamespace(success=True)
+
+        import asyncio
+
+        asyncio.run(provider._bootstrap_env_secret_login(_FakeCrawler(), credentials))
+
+        assert len(calls) >= 3
+        assert calls[0][0] == "https://www.xing.com/login"
+
+    def test_bootstrap_uses_default_url_when_login_url_not_set(self, monkeypatch):
+        """When login_url is None, uses default portal URL."""
+        from src.automation.motors.crawl4ai.apply_engine import C4AIMotorProvider
+
+        provider = C4AIMotorProvider()
+        credentials = ResolvedPortalCredentials(
+            portal_name="linkedin",
+            matched_domain="linkedin.com",
+            auth_strategy="env_secrets",
+            login_url=None,
+            browser_profile_dir=None,
+            secret_env_vars={"username": "LI_USER", "password": "LI_PASS"},
+            required_secret_keys=["username", "password"],
+            optional_secret_keys=[],
+        )
+
+        monkeypatch.setenv("LI_USER", "ada@linkedin.com")
+        monkeypatch.setenv("LI_PASS", "secretpassword")
+
+        calls = []
+
+        class _FakeCrawler:
+            session_id = "fake-session"
+
+            async def arun(self, url, config):
+                calls.append(url)
+                return SimpleNamespace(success=True)
+
+        import asyncio
+
+        asyncio.run(provider._bootstrap_env_secret_login(_FakeCrawler(), credentials))
+
+        assert "https://linkedin.com/login" in calls

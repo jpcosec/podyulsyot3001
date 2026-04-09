@@ -54,3 +54,32 @@ def test_detector_uses_screenshot_text_when_dom_is_unavailable():
     assert report.primary is not None
     assert report.primary.code == "duplicate_submission"
     assert report.primary.source == "screenshot"
+
+
+def test_detector_flags_email_route_as_pause():
+    detector = ApplyDangerDetector()
+
+    report = detector.detect(
+        ApplyDangerSignals(
+            route_outcome="email",
+            route_reason="Enriched ingest state requires an email application handoff.",
+        )
+    )
+
+    assert report.primary is not None
+    assert report.primary.code == "email_application_route"
+    assert report.primary.recommended_action == "abort"
+
+
+def test_detector_flags_unsupported_route_as_external():
+    detector = ApplyDangerDetector()
+
+    report = detector.detect(
+        ApplyDangerSignals(
+            route_outcome="unsupported",
+            route_reason="No usable route found.",
+        )
+    )
+
+    assert report.primary is not None
+    assert report.primary.code == "unsupported_application_route"

@@ -55,3 +55,6 @@ class LogTag(StrEnum):
 
     FAIL = "[❌]"
     """Hard failure. Pipeline execution breaks. Use with logger.error()."""
+
+    RETRY = "[🔁]"
+    """Transient error retry attempt. Used with logger.info() during retry loops."""

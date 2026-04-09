@@ -472,3 +472,112 @@ async def test_apply_cli_persists_failure_when_portal_routing_requires_external_
     assert meta["status"] == "failed"
     assert "external_application_route" in meta["error"]
     assert provider.session_ids == []
+
+
+@pytest.mark.asyncio
+async def test_apply_cli_persists_failure_when_portal_routing_requires_email_handoff(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    jobs_root = tmp_path / "browseros" / "jobs"
+    data_manager = _write_ingest_state(
+        jobs_root,
+        source="stepstone",
+        job_id="job-email-stepstone",
+        state={
+            "job_title": "Data Engineer",
+            "company_name": "Acme GmbH",
+            "application_method": "Apply by email",
+            "application_email": "mailto:karriere@acme.de?subject=Bewerbung",
+            "url": "https://www.stepstone.de/stellenangebote--data-engineer-xyz",
+        },
+    )
+    storage = AutomationStorage(data_manager)
+    cv_path = tmp_path / "browseros" / "stepstone-cv.pdf"
+    cv_path.parent.mkdir(parents=True, exist_ok=True)
+    cv_path.write_bytes(b"cv")
+
+    provider = _RecordingMotorProvider(_RecordingMotorSession(observations=[]))
+    monkeypatch.setattr("src.automation.main._setup_logging", lambda name: None)
+    monkeypatch.setattr("src.automation.main.AutomationStorage", lambda: storage)
+    _install_backend(monkeypatch, "browseros", provider)
+
+    with pytest.raises(
+        UnsupportedRoutingDecisionError, match="email_application_route"
+    ):
+        await main(
+            [
+                "apply",
+                "--backend",
+                "browseros",
+                "--source",
+                "stepstone",
+                "--job-id",
+                "job-email-stepstone",
+                "--cv",
+                str(cv_path),
+            ]
+        )
+
+    meta = data_manager.read_json_artifact(
+        source="stepstone",
+        job_id="job-email-stepstone",
+        node_name="apply",
+        stage="meta",
+        filename="apply_meta.json",
+    )
+    assert meta["status"] == "failed"
+    assert "email_application_route" in meta["error"]
+    assert provider.session_ids == []
+
+
+@pytest.mark.asyncio
+async def test_apply_cli_persists_failure_when_portal_routing_is_unsupported(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    jobs_root = tmp_path / "crawl4ai" / "jobs"
+    data_manager = _write_ingest_state(
+        jobs_root,
+        source="xing",
+        job_id="job-unsupported-xing",
+        state={
+            "job_title": "Data Engineer",
+            "company_name": "Acme",
+        },
+    )
+    storage = AutomationStorage(data_manager)
+    cv_path = tmp_path / "crawl4ai" / "xing-cv.pdf"
+    cv_path.parent.mkdir(parents=True, exist_ok=True)
+    cv_path.write_bytes(b"cv")
+
+    provider = _RecordingMotorProvider(_RecordingMotorSession(observations=[]))
+    monkeypatch.setattr("src.automation.main._setup_logging", lambda name: None)
+    monkeypatch.setattr("src.automation.main.AutomationStorage", lambda: storage)
+    _install_backend(monkeypatch, "crawl4ai", provider)
+
+    with pytest.raises(
+        UnsupportedRoutingDecisionError, match="unsupported_application_route"
+    ):
+        await main(
+            [
+                "apply",
+                "--backend",
+                "crawl4ai",
+                "--source",
+                "xing",
+                "--job-id",
+                "job-unsupported-xing",
+                "--cv",
+                str(cv_path),
+            ]
+        )
+
+    meta = data_manager.read_json_artifact(
+        source="xing",
+        job_id="job-unsupported-xing",
+        node_name="apply",
+        stage="meta",
+        filename="apply_meta.json",
+    )
+    assert meta["status"] == "failed"
+    assert "unsupported_application_route" in meta["error"]
+    assert provider.session_ids == []

@@ -34,41 +34,38 @@ def build_default_portal_route(
     """Resolve an enriched job into an onsite, external, or email route."""
     method = _normalize_method(ingest_data.get("application_method"))
     application_url = _normalize_url(ingest_data.get("application_url"))
-    detail_url = _normalize_url(ingest_data.get("url"))
-    target_url = application_url or detail_url
     application_email = _normalize_email(ingest_data.get("application_email"))
 
     diagnostics = {
         "portal_name": portal_name,
         "application_method": method,
         "portal_host": portal_host,
-        "detail_url": detail_url,
         "application_url": application_url,
         "application_email": application_email,
     }
 
-    if method == "email" or (application_email and not application_url):
+    if method == "email" or application_email:
         return PortalRoutingResult(
             outcome="email",
             application_email=application_email,
-            application_url=target_url,
+            application_url=application_url,
             reason="Enriched ingest state requires an email application handoff.",
             diagnostics=diagnostics,
         )
 
-    if target_url and _url_matches_host(target_url, portal_host):
+    if application_url and _url_matches_host(application_url, portal_host):
         return PortalRoutingResult(
             outcome="onsite",
             path_id=default_path_id,
-            application_url=target_url,
+            application_url=application_url,
             reason="Apply flow stays on the portal and can use the Ariadne map.",
             diagnostics=diagnostics,
         )
 
-    if target_url:
+    if application_url:
         return PortalRoutingResult(
             outcome="external_url",
-            application_url=target_url,
+            application_url=application_url,
             reason="Apply flow redirects to an external ATS or third-party form.",
             diagnostics=diagnostics,
         )
