@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-09] - Portal Real-Life Validation Plan
+
+### Added
+- Added `plan_docs/issues/gaps/portal-real-life-validation.md` in the issue-guide format to define the live-validation gap for real scrape, routing, and safe onsite apply dry-runs across the currently supported portals.
+- Added `plan_docs/issues/Index.md` as the issue-guide-compliant issues entrypoint and dependency index for the current portal validation work.
+- Added child issue files for scrape validation, routing validation, onsite apply dry-run validation, and live-validation triage under `plan_docs/issues/gaps/`.
+
+### Changed
+- Updated `plan_docs/issues/gaps/portal-real-life-validation.md` from a broad execution plan into a parent atomization issue and regenerated `plan_docs/issues/Index.md` with the resulting dependency graph.
+- Removed the parent atomization issue after splitting it into executable child issues and updated `plan_docs/issues/Index.md` to make scrape validation the next root issue.
+- Executed the live scrape validation issue against real XING, StepStone, and TU Berlin portal pages, then replaced it with `plan_docs/issues/gaps/crawl4ai-live-portal-navigation-aborts.md` after all three failed on the same shared BrowserOS-injected Crawl4AI navigation abort.
+- Added three follow-up Crawl4AI auth issues for persistent profile reuse, BrowserOS session import, and env-secret login automation so authenticated Crawl4AI execution can be built explicitly instead of remaining only contractual.
+- Resolved the shared live portal navigation blocker by switching scrape runs to Crawl4AI's local browser, then replaced it with `plan_docs/issues/gaps/crawl4ai-live-portal-extraction-normalization.md` after real portals loaded but failed ingestion on extraction-normalization mismatches.
+
 ## [2026-04-08] - BrowserOS Recording Contracts And Level 2 Trace Capture
 
 ### Added
