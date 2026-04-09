@@ -14,9 +14,27 @@ import datetime
 import json
 import logging
 import sys
+import urllib.request
 from pathlib import Path
 
 from src.automation.storage import AutomationStorage
+
+
+_CLI_EPILOG = """Basic BrowserOS usage:
+  1. Launch BrowserOS: /home/jp/BrowserOS.AppImage --no-sandbox
+  2. Verify runtime: python -m src.automation.main browseros-check
+  3. BrowserOS reference index: docs/reference/external_libs/browseros/readme.txt
+  4. Extraction fallback order: AUTOMATION_EXTRACTION_FALLBACKS=browseros,llm
+"""
+
+
+def _browseros_help_text() -> str:
+    """Return the standard BrowserOS startup hint shown in CLI help."""
+    return (
+        "Requires the external BrowserOS runtime. Launch with "
+        "`/home/jp/BrowserOS.AppImage --no-sandbox`, then verify with "
+        "`python -m src.automation.main browseros-check`."
+    )
 
 
 def _setup_logging(name: str) -> None:
@@ -39,7 +57,14 @@ def _setup_logging(name: str) -> None:
 
 
 def _add_scrape_subcommand(sub: argparse._SubParsersAction) -> None:
-    p = sub.add_parser("scrape", help="Job discovery and ingestion")
+    p = sub.add_parser(
+        "scrape",
+        help="Job discovery and ingestion",
+        description=(
+            "Job discovery and ingestion. If CSS extraction fails, rescue order is "
+            "controlled by AUTOMATION_EXTRACTION_FALLBACKS (default: browseros)."
+        ),
+    )
     p.add_argument("--source", required=True, choices=["tuberlin", "stepstone", "xing"])
     p.add_argument(
         "--drop-repeated", dest="drop_repeated", action="store_true", default=True
@@ -54,7 +79,11 @@ def _add_scrape_subcommand(sub: argparse._SubParsersAction) -> None:
 
 
 def _add_apply_subcommand(sub: argparse._SubParsersAction) -> None:
-    p = sub.add_parser("apply", help="Job auto-application")
+    p = sub.add_parser(
+        "apply",
+        help="Job auto-application",
+        description="Job auto-application. " + _browseros_help_text(),
+    )
     p.add_argument("--backend", choices=["crawl4ai", "browseros"], default="browseros")
     p.add_argument("--source", required=True, choices=["xing", "stepstone", "linkedin"])
     p.add_argument("--job-id", dest="job_id")
@@ -65,6 +94,19 @@ def _add_apply_subcommand(sub: argparse._SubParsersAction) -> None:
     p.add_argument("--dry-run", dest="dry_run", action="store_true", default=False)
     p.add_argument(
         "--setup-session", dest="setup_session", action="store_true", default=False
+    )
+
+
+def _add_browseros_check_subcommand(sub: argparse._SubParsersAction) -> None:
+    p = sub.add_parser(
+        "browseros-check",
+        help="Verify BrowserOS runtime reachability",
+        description="Check whether the local BrowserOS runtime is reachable.",
+    )
+    p.add_argument(
+        "--base-url",
+        dest="base_url",
+        help="Optional BrowserOS base URL override (default: BROWSEROS_BASE_URL or http://127.0.0.1:9000)",
     )
 
 
@@ -83,12 +125,51 @@ def _add_promote_subcommand(sub: argparse._SubParsersAction) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     """Build and return the root ArgumentParser with scrape, apply, and promote registered."""
-    parser = argparse.ArgumentParser(description="Automation CLI")
+    parser = argparse.ArgumentParser(
+        description="Automation CLI",
+        epilog=_CLI_EPILOG,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     sub = parser.add_subparsers(dest="command", required=True)
     _add_scrape_subcommand(sub)
     _add_apply_subcommand(sub)
+    _add_browseros_check_subcommand(sub)
     _add_promote_subcommand(sub)
     return parser
+
+
+def _check_url(url: str) -> tuple[bool, str]:
+    """Return whether a BrowserOS endpoint is reachable."""
+    try:
+        with urllib.request.urlopen(url, timeout=3) as response:
+            return True, str(response.status)
+    except Exception as exc:
+        return False, str(exc)
+
+
+def _run_browseros_check(args) -> None:
+    """Verify the configured BrowserOS runtime endpoints."""
+    from src.automation.motors.browseros.runtime import resolve_browseros_runtime
+    from src.shared.log_tags import LogTag
+
+    runtime = resolve_browseros_runtime(preferred_base_url=args.base_url)
+    checks = {
+        runtime.mcp_url: _check_url(runtime.mcp_url),
+        runtime.chat_url: _check_url(runtime.chat_url),
+    }
+    print(f"BrowserOS base URL: {runtime.base_http_url}")
+    mcp_ok = True
+    for url, (ok, detail) in checks.items():
+        status = LogTag.OK if ok else LogTag.FAIL
+        print(f"{status} {url} -> {detail}")
+        if url == runtime.mcp_url:
+            mcp_ok = ok
+    if not mcp_ok:
+        print(
+            "Launch BrowserOS with `/home/jp/BrowserOS.AppImage --no-sandbox` "
+            "or override the base URL with --base-url / BROWSEROS_BASE_URL."
+        )
+        sys.exit(1)
 
 
 async def _run_scrape(args) -> None:
@@ -284,6 +365,8 @@ async def main(argv: list[str] | None = None) -> None:
         await _run_scrape(args)
     elif args.command == "apply":
         await _run_apply(args)
+    elif args.command == "browseros-check":
+        _run_browseros_check(args)
     elif args.command == "promote":
         await _run_promote(args)
 

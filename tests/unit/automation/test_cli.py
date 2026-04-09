@@ -8,7 +8,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from src.automation.main import _run_apply, build_parser
+from src.automation.main import _run_apply, _run_browseros_check, build_parser
 
 
 def test_scrape_subcommand_requires_source():
@@ -112,6 +112,20 @@ def test_apply_parses_browseros_backend():
     assert args.source == "linkedin"
 
 
+def test_browseros_check_parses_optional_base_url() -> None:
+    parser = build_parser()
+    args = parser.parse_args(["browseros-check", "--base-url", "http://127.0.0.1:9000"])
+    assert args.command == "browseros-check"
+    assert args.base_url == "http://127.0.0.1:9000"
+
+
+def test_parser_epilog_mentions_browseros_usage() -> None:
+    parser = build_parser()
+    assert parser.epilog is not None
+    assert "BrowserOS.AppImage" in parser.epilog
+    assert "browseros-check" in parser.epilog
+
+
 @pytest.mark.asyncio
 async def test_run_apply_passes_profile_json_to_session(tmp_path, monkeypatch):
     profile_path = tmp_path / "profile.json"
@@ -182,3 +196,34 @@ async def test_run_apply_passes_profile_json_to_session(tmp_path, monkeypatch):
     assert captured["motor"] is fake_motor
     assert captured["kwargs"]["profile"] == {"first_name": "Ada"}
     assert captured["kwargs"]["credentials"]["bindings"][0]["portal_name"] == "xing"
+
+
+def test_run_browseros_check_succeeds(monkeypatch, capsys) -> None:
+    monkeypatch.setattr(
+        "src.automation.main._check_url",
+        lambda url: (True, "200"),
+    )
+
+    args = build_parser().parse_args(["browseros-check"])
+    _run_browseros_check(args)
+
+    out = capsys.readouterr().out
+    assert "BrowserOS base URL" in out
+    assert "/mcp" in out
+    assert "/chat" in out
+
+
+def test_run_browseros_check_requires_only_mcp(monkeypatch, capsys) -> None:
+    def _fake_check(url: str):
+        if url.endswith("/mcp"):
+            return True, "200"
+        return False, "503"
+
+    monkeypatch.setattr("src.automation.main._check_url", _fake_check)
+
+    args = build_parser().parse_args(["browseros-check"])
+    _run_browseros_check(args)
+
+    out = capsys.readouterr().out
+    assert "/mcp" in out
+    assert "/chat" in out

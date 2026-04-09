@@ -27,7 +27,30 @@ The worktree uses a root `.env` file for runtime secrets and environment setup.
 PLAYWRIGHT_BROWSERS_PATH="0"
 GOOGLE_API_KEY="your_gemini_key"
 GEMINI_API_KEY="your_gemini_key"
+BROWSEROS_BASE_URL="http://127.0.0.1:9000"
+AUTOMATION_EXTRACTION_FALLBACKS="browseros,llm"
 ```
+
+### BrowserOS Startup
+
+BrowserOS is an external runtime, not a Python server shipped by this repo.
+
+```bash
+# Launch the local BrowserOS runtime
+/home/jp/BrowserOS.AppImage --no-sandbox
+
+# Verify the stable local front door
+curl http://127.0.0.1:9000/mcp
+```
+
+Use `http://127.0.0.1:9000` as the preferred local BrowserOS base URL on this
+machine. Backend ports may rotate, but the repo runtime defaults to the stable
+front door.
+
+For the full BrowserOS reference index, start with
+`docs/reference/external_libs/browseros/readme.txt`.
+
+For setup and session workflow, see `docs/automation/browseros_setup.md`.
 
 ---
 
@@ -44,6 +67,28 @@ python -m src.automation.main apply --source xing --job-id 12345 --cv path/to/cv
 
 # Apply via BrowserOS backend
 python -m src.automation.main apply --backend browseros --source linkedin --job-id 99 --cv path/to/cv.pdf
+```
+
+### Extraction Fallbacks
+
+Scrape extraction now has an explicit fallback order configured through
+`AUTOMATION_EXTRACTION_FALLBACKS`.
+
+- `browseros` uses BrowserOS `/chat` as a semantic extraction fallback.
+- `browseros` uses BrowserOS MCP as the scrape rescue path.
+- `llm` uses the Crawl4AI Gemini rescue path and requires `GOOGLE_API_KEY`.
+
+Examples:
+
+```bash
+# Prefer BrowserOS, then allow Gemini rescue
+export AUTOMATION_EXTRACTION_FALLBACKS="browseros,llm"
+
+# Use only BrowserOS rescue
+export AUTOMATION_EXTRACTION_FALLBACKS="browseros"
+
+# Force only Gemini rescue
+export AUTOMATION_EXTRACTION_FALLBACKS="llm"
 ```
 
 ---

@@ -35,6 +35,32 @@ python -m src.automation.main apply --source <portal> --job-id <id> --cv <path> 
 python -m src.automation.main apply --backend browseros --source <portal> --job-id <id> --cv <path>
 ```
 
+### BrowserOS Runtime
+
+```bash
+# Launch BrowserOS runtime
+/home/jp/BrowserOS.AppImage --no-sandbox
+
+# Verify the stable local front door
+curl http://127.0.0.1:9000/mcp
+```
+
+- BrowserOS is an external runtime, not a Python server in this repo
+- Prefer `http://127.0.0.1:9000` as the stable local BrowserOS base URL
+- If BrowserOS work is involved, start from `docs/reference/external_libs/browseros/readme.txt`
+- Setup workflow lives in `docs/automation/browseros_setup.md`
+
+### Extraction Fallback Order
+
+```bash
+# BrowserOS first, then Gemini rescue
+export AUTOMATION_EXTRACTION_FALLBACKS="browseros,llm"
+```
+
+- Fallback definition point is `src/automation/motors/crawl4ai/scrape_engine.py`
+- `browseros` uses BrowserOS MCP rescue and does not require `GOOGLE_API_KEY`
+- `llm` uses Crawl4AI Gemini rescue and does require `GOOGLE_API_KEY`
+
 ---
 
 ## 2. Project Architecture
@@ -173,3 +199,4 @@ class EventType(str, Enum):
 - **RuntimeError: already submitted**: Delete `apply_meta.json` in the job's artifact directory
 - **Compilation Errors**: Check `src/automation/motors/crawl4ai/compiler/` and portal map JSON
 - **Motor Failures**: Inspect logs under `logs/`
+- **BrowserOS unreachable**: launch `/home/jp/BrowserOS.AppImage --no-sandbox` and verify `http://127.0.0.1:9000/mcp`
