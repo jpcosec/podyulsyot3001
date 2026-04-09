@@ -1077,11 +1077,68 @@ class SmartScraperAdapter(ABC):
         if base_payload is None and rescue_payload is None:
             return None
         merged = dict(base_payload or {})
+        override_fields = {"job_title", "responsibilities", "requirements", "benefits"}
         for key, value in (rescue_payload or {}).items():
             if value in (None, "", [], {}):
                 continue
+            if (
+                key in merged
+                and merged.get(key) not in (None, "", [], {})
+                and key not in override_fields
+            ):
+                continue
             merged[key] = value
         return merged
+
+    def _listing_case_metadata_value(
+        self,
+        listing_case: dict[str, Any],
+        *,
+        field: str,
+    ) -> str | None:
+        """Recover company/location from listing metadata when teaser fields are noisy."""
+        source_metadata = listing_case.get("source_metadata") or {}
+        listing_texts = source_metadata.get("listing_texts") or []
+        if not isinstance(listing_texts, list):
+            return None
+
+        title = str(listing_case.get("teaser_title") or "").strip()
+        skip_texts = {
+            "be an early applicant",
+            "save job",
+            "posted yesterday",
+            "yesterday",
+        }
+
+        if field == "company_name":
+            for text in listing_texts:
+                candidate = str(text).strip()
+                if not candidate or candidate == title:
+                    continue
+                lower = candidate.lower()
+                if lower in skip_texts or candidate.startswith("+") or "€" in candidate:
+                    continue
+                if candidate in {"Berlin", "Full-time"}:
+                    continue
+                return candidate
+
+        if field == "location":
+            for text in listing_texts:
+                candidate = self._clean_location_text(text)
+                if not candidate or candidate == title:
+                    continue
+                lower = candidate.lower()
+                if lower in skip_texts or any(
+                    marker in lower for marker in ("gmbh", "ag", "jobriver", "service")
+                ):
+                    continue
+                if re.fullmatch(
+                    r"[A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-]+(?:,? [A-ZÄÖÜ][A-Za-zÄÖÜäöüß\-]+)*",
+                    candidate,
+                ):
+                    return candidate
+
+        return None
 
     def _build_browseros_payload_from_text(self, markdown_text: str) -> dict[str, Any]:
         """Build a minimal structured payload from BrowserOS MCP page content."""
@@ -1257,6 +1314,38 @@ class SmartScraperAdapter(ABC):
                     source="listing_case",
                 )
 
+        invalid_company_values = {"be an early applicant", "save job"}
+        if listing_case:
+            company_value = str(normalized.get("company_name") or "").strip().lower()
+            if (
+                not normalized.get("company_name")
+                or company_value in invalid_company_values
+            ):
+                company_name = self._listing_case_metadata_value(
+                    listing_case,
+                    field="company_name",
+                )
+                if company_name:
+                    normalized["company_name"] = company_name
+                    self._record_field_source(
+                        diagnostics,
+                        field="company_name",
+                        source="listing_metadata",
+                    )
+
+            if not normalized.get("location"):
+                location = self._listing_case_metadata_value(
+                    listing_case,
+                    field="location",
+                )
+                if location:
+                    normalized["location"] = location
+                    self._record_field_source(
+                        diagnostics,
+                        field="location",
+                        source="listing_metadata",
+                    )
+
         markdown_text = ""
         if result is not None:
             markdown_text = self._markdown_text(result)
@@ -1354,6 +1443,8 @@ class SmartScraperAdapter(ABC):
         import re
 
         responsibilities_headings = {
+            "beschreibung",
+            "deine rolle",
             "das erwartet dich",
             "deine aufgaben",
             "aufgaben",
@@ -1367,6 +1458,8 @@ class SmartScraperAdapter(ABC):
         requirements_headings = {
             "das bringst du mit",
             "dein profil",
+            "dein equipment",
+            "qualifikation",
             "anforderungen",
             "ihre qualifikationen",
             "qualifikationen",
@@ -1390,7 +1483,9 @@ class SmartScraperAdapter(ABC):
             if heading_match is None:
                 heading_match = re.match(r"^\*\*(.+?)\*\*$", stripped)
             if heading_match:
-                heading_lower = heading_match.group(1).lower().strip(" :")
+                heading_lower = (
+                    heading_match.group(1).replace("**", "").lower().strip(" :")
+                )
                 if heading_lower in responsibilities_headings:
                     current_section = "responsibilities"
                     continue

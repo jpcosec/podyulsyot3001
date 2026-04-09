@@ -1125,6 +1125,89 @@ def test_hero_markdown_value_scopes_stepstone_hero_block(tmp_path) -> None:
     assert adapter._hero_markdown_value(markdown, field="location") == "Berlin, Bremen"
 
 
+def test_merge_rescue_payloads_preserves_existing_css_scalars(tmp_path) -> None:
+    adapter = _DummyAdapter(DataManager(tmp_path / "data" / "jobs"))
+
+    merged = adapter._merge_rescue_payloads(
+        base_payload={"location": "Berlin", "company_name": "Example Co"},
+        rescue_payload={
+            "location": "Presencial",
+            "company_name": "Be an early applicant",
+            "requirements": ["Python"],
+        },
+    )
+
+    assert merged == {
+        "location": "Berlin",
+        "company_name": "Example Co",
+        "requirements": ["Python"],
+    }
+
+
+def test_normalize_payload_recovers_xing_company_from_listing_metadata(
+    tmp_path,
+) -> None:
+    adapter = _DummyAdapter(DataManager(tmp_path / "data" / "jobs"))
+    listing_case = {
+        "teaser_title": "Data Scientist",
+        "teaser_company": "Be an early applicant",
+        "source_metadata": {
+            "listing_texts": [
+                "Be an early applicant",
+                "Data Scientist",
+                "Jobriver HR Service",
+                "Berlin",
+                "+ 0 more",
+                "Full-time",
+            ]
+        },
+    }
+
+    payload, diagnostics = adapter._normalize_payload_with_diagnostics(
+        {"job_title": "Data Scientist", "employment_type": "Full-time"},
+        listing_case=listing_case,
+    )
+
+    assert payload is not None
+    assert payload["company_name"] == "Jobriver HR Service"
+    assert diagnostics["field_sources"]["company_name"] == "listing_metadata"
+
+
+def test_mine_bullets_from_markdown_treats_beschreibung_as_responsibilities(
+    tmp_path,
+) -> None:
+    adapter = _DummyAdapter(DataManager(tmp_path / "data" / "jobs"))
+
+    bullets = adapter._mine_bullets_from_markdown(
+        "### Beschreibung\n"
+        "Build RAG quality metrics and optimize search strategies.\n"
+        "### Anforderungen\n"
+        "- Python\n"
+    )
+
+    assert bullets["responsibilities"] == [
+        "Build RAG quality metrics and optimize search strategies."
+    ]
+    assert bullets["requirements"] == ["Python"]
+
+
+def test_mine_bullets_from_markdown_supports_xing_role_and_qualifikation(
+    tmp_path,
+) -> None:
+    adapter = _DummyAdapter(DataManager(tmp_path / "data" / "jobs"))
+
+    bullets = adapter._mine_bullets_from_markdown(
+        "## **Deine Rolle**\n"
+        "- Build secure ML pipelines\n"
+        "## Qualifikation\n"
+        "**Dein Equipment**\n"
+        "- Python\n"
+    )
+
+    assert bullets["responsibilities"] == ["Build secure ML pipelines"]
+    assert bullets["requirements"] == ["Python"]
+
+
 def test_normalize_payload_with_diagnostics_tracks_field_sources(tmp_path) -> None:
     adapter = _DummyAdapter(DataManager(tmp_path / "data" / "jobs"))
     result = _result(
