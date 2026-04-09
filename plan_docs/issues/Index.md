@@ -16,8 +16,8 @@ Once an issue is solved:
 
 - No indexed issue is currently marked for deletion instead of repair.
 - The prior root-level `plan_docs/issues/index.md` and ad-hoc root issue file were replaced so the issue entrypoint now follows `docs/standards/issue_guide.md`.
-- Extraction and normalization issues are resolved on the currently tested live scrape pages.
-- Remaining issues now cover backend-specific live apply validation, a narrower StepStone rescue/detail-page defect discovered during broader StepStone coverage sampling, and evaluation of a possible LangGraph MCP-adapter path as an alternative to `/chat`-style agent orchestration.
+- Extraction and normalization issues are resolved on the currently tested live scrape pages (XING, StepStone, TU Berlin).
+- Remaining issues now cover backend-specific live apply validation and evaluation of a possible LangGraph MCP-adapter path as an alternative to `/chat`-style agent orchestration.
 
 ## Roots
 
