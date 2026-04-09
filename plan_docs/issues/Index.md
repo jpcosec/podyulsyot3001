@@ -16,27 +16,4 @@ Once an issue is solved:
 
 - No indexed issue is currently marked for deletion instead of repair.
 - The prior root-level `plan_docs/issues/index.md` and ad-hoc root issue file were replaced so the issue entrypoint now follows `docs/standards/issue_guide.md`.
-- Added the remaining architectural issue for Ariadne ownership of canonical normalization. The live portal extraction backlog is now resolved on current XING, StepStone, and TU Berlin runs.
-
-## Roots
-
-- `plan_docs/issues/gaps/canonical-job-normalization-is-not-owned-by-ariadne.md`
-
-## Parallelizable groups
-
-- Depth 0: `plan_docs/issues/gaps/canonical-job-normalization-is-not-owned-by-ariadne.md`
-
-## Blockers
-
-- `plan_docs/issues/gaps/canonical-job-normalization-is-not-owned-by-ariadne.md` blocks semantic ownership because canonical job cleanup lives in a motor implementation instead of the neutral Ariadne layer.
-
-## Dependency graph
-
-- `plan_docs/issues/gaps/canonical-job-normalization-is-not-owned-by-ariadne.md` -> no dependencies
-
-## Current indexed issues
-
-1. `plan_docs/issues/gaps/canonical-job-normalization-is-not-owned-by-ariadne.md`
-   - Scope: Move canonical job normalization ownership into Ariadne or an adjacent neutral semantic layer instead of leaving it in Crawl4AI motor code
-   - Depends on: none
-   - Expected outputs: Clear Ariadne ownership boundary, semantic-layer normalization module, backend-neutral tests, Ariadne-owned `raw`/`cleaned`/`extracted` contract
+- All currently indexed extraction and normalization issues have been resolved. The index is empty.
