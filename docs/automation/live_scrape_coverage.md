@@ -73,3 +73,42 @@ Follow-up:
 
 - treat current XING broader-coverage issue as resolved for the sampled envelope
 - continue to widen coverage only if new variants expose different live shapes
+
+## TU Berlin
+
+Validation sample run:
+
+```bash
+AUTOMATION_EXTRACTION_FALLBACKS=browseros python -m src.automation.main scrape --source tuberlin --limit 3
+```
+
+Observed job ids:
+
+- `203038`
+- `203027`
+- `202990`
+
+Observed outcomes:
+
+- all 3 postings ingested successfully
+- 2 postings validated directly from the current extraction path
+- 1 posting required BrowserOS MCP rescue and still ingested successfully
+
+Observed heuristic-sensitive pattern:
+
+- TU Berlin company discovery seed attempts against the downstream `stellenticket`
+  PDF URL can be blocked by anti-bot protection even when the main posting ingests
+  successfully
+
+Current confidence reading:
+
+- current TU Berlin scrape behavior is stable across the sampled live variants
+- BrowserOS rescue provides a viable fallback on at least one sampled variant
+- downstream PDF/company-discovery anti-bot behavior is noisy, but it did not
+  block ingestion in the sampled run
+
+Follow-up:
+
+- treat current TU Berlin broader-coverage issue as resolved for the sampled envelope
+- track downstream PDF/company-discovery anti-bot behavior separately only if it
+  becomes ingestion-blocking
