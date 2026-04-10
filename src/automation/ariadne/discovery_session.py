@@ -28,9 +28,11 @@ class AriadneDiscoverySession:
         self,
         portal_name: str,
         storage: AutomationStorage | None = None,
+        recorder: Any | None = None,
     ) -> None:
         self.portal_name = portal_name
         self.storage = storage or AutomationStorage()
+        self.recorder = recorder
         self._map: AriadnePortalMap | None = None
 
     @property
@@ -59,6 +61,7 @@ class AriadneDiscoverySession:
         keywords: str,
         location: str,
         path_id: str = "standard_search",
+        visible: bool = False,
     ) -> str:
         """Execute a search flow and return the final page URL.
 
@@ -67,6 +70,7 @@ class AriadneDiscoverySession:
             keywords: Search keywords.
             location: Search location.
             path_id: The ID of the search path to execute.
+            visible: Whether to perform the search in a visible browser window.
 
         Returns:
             The URL of the search results page.
@@ -87,7 +91,7 @@ class AriadneDiscoverySession:
         all_selectors = self._collect_selectors(search_map)
         navigator = AriadneNavigator(search_map)
 
-        async with motor.open_session(session_id) as ms:
+        async with motor.open_session(session_id, visible=visible) as ms:
             step_index = 1
             while step_index <= len(path.steps):
                 step = path.steps[step_index - 1]
@@ -111,6 +115,14 @@ class AriadneDiscoverySession:
                     step.name,
                 )
                 
+                if self.recorder:
+                    self.recorder.log_event(
+                        "step_start",
+                        step_index=step_index,
+                        step_name=step.name,
+                        current_state=current_state
+                    )
+
                 # We reuse execute_step but with a simplified context
                 await ms.execute_step(
                     step=step,
@@ -118,6 +130,14 @@ class AriadneDiscoverySession:
                     is_first=(step_index == 1),
                     url=search_map.base_url if step_index == 1 else None
                 )
+
+                if self.recorder:
+                    # Highlight elements that were interacted with
+                    for action in step.actions:
+                        if action.target and action.target.css:
+                            await ms.highlight_element(action.target.css, color="green")
+                    
+                    self.recorder.log_event("step_complete", step_index=step_index)
 
                 obs_after = await ms.observe(all_selectors)
                 next_state = navigator.find_current_state(obs_after)
@@ -132,8 +152,6 @@ class AriadneDiscoverySession:
                 logger.warning("%s Search finished but success state not confirmed.", LogTag.WARN)
 
             # Get the results page URL
-            # Note: BrowserOSMotorSession should provide a way to get current URL if possible
-            # For now, we'll assume the motor session has it or we can evaluate it.
             try:
                 final_url = await ms.evaluate_script("window.location.href")
             except Exception:

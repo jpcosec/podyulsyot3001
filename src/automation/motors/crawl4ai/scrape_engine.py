@@ -472,6 +472,15 @@ class SmartScraperAdapter(ABC):
     def get_llm_instructions(self) -> str:
         """Return portal-specific extraction hints."""
 
+    async def run_interactive_discovery(
+        self,
+        motor: MotorProvider,
+        recorder: Any | None = None,
+        **kwargs,
+    ) -> str:
+        """Perform search using UI interaction. Optional for portal adapters."""
+        raise NotImplementedError("run_interactive_discovery not implemented for this portal")
+
     def discovery_source_contract(self) -> DiscoverySourceContract:
         """Return the persistence contract for this adapter's discovery namespace."""
         return DiscoverySourceContract(kind="portal", source_name=self.source_name)
@@ -2067,15 +2076,25 @@ class SmartScraperAdapter(ABC):
     ) -> list[str]:
         """Discover jobs from a source and ingest them canonically."""
         interactive = kwargs.get("interactive", False)
+        record = kwargs.get("record", False)
         search_url = None
         
+        recorder = None
+        if record:
+            from src.automation.ariadne.recorder import AriadneRecorder
+            recorder = AriadneRecorder(portal_name=self.source_name)
+            logger.info("%s Initialized recorder: %s", LogTag.FAST, recorder.session_id)
+
         if interactive and motor:
             logger.info("%s Performing interactive UI discovery for %s", LogTag.FAST, self.source_name)
             try:
-                search_url = await self.run_interactive_discovery(motor, **kwargs)
+                search_url = await self.run_interactive_discovery(motor, recorder=recorder, **kwargs)
             except Exception as exc:
                 logger.error("%s Interactive discovery failed: %s. Falling back to URL.", LogTag.WARN, exc)
         
+        if recorder:
+            recorder.stop()
+
         if not search_url:
             search_url = self.get_search_url(**kwargs)
             

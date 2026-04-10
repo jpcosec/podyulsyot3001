@@ -77,6 +77,8 @@ def _add_scrape_subcommand(sub: argparse._SubParsersAction) -> None:
     p.add_argument("--limit", type=int)
     p.add_argument("--save-html", action="store_true")
     p.add_argument("--interactive", action="store_true", help="Perform search via UI interaction")
+    p.add_argument("--visible", action="store_true", help="Use a visible browser for interactive discovery")
+    p.add_argument("--record", action="store_true", help="Record the discovery session for promotion")
     p.add_argument(
         "--backend",
         choices=["crawl4ai", "browseros"],

@@ -70,6 +70,13 @@ The system follows a tiered extraction and normalization pipeline to ensure data
 - **Motor Delegation**: Execution motors (Crawl4AI/BrowserOS) MUST delegate to the Ariadne normalization module. They should not implement their own portal-specific cleanup rules.
 - **Field Recovery**: The normalization layer attempts to recover missing or "noisy" fields using listing metadata and hero-section markdown before failing validation.
 
+### 5. Collaborative Interactive Mode
+Allows human-in-the-loop (HITL) collaboration in a visible browser session:
+- **Visible Feedback**: The agent opens a visible window and highlights elements (green glow) during interaction.
+- **Shared Session**: Human can take over, resolve captchas, or click additional filters while the agent records.
+- **Real-Time Recording**: Every action is logged via `AriadneRecorder` for trace promotion.
+- **Usage**: `python -m src.automation.main scrape --interactive --visible --record --backend browseros ...`
+
 ## Key Directory Structure
 
 -   `src/automation/ariadne/`: The "Brain" — Path normalization, navigation logic, and semantic models.

@@ -90,6 +90,20 @@ class BrowserOSMotorSession:
             application_url=application_url,
         )
 
+    async def highlight_element(self, selector: str, color: str = "red") -> None:
+        """Apply a visual highlight glow to an element via JS injection."""
+        js_code = f"""
+            (function() {{
+                const el = document.querySelector({json.dumps(selector)});
+                if (el) {{
+                    el.style.outline = '4px solid {color}';
+                    el.style.boxShadow = '0 0 20px {color}';
+                    el.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
+                }}
+            }})();
+        """
+        self._client.evaluate_script(js_code, self._page_id)
+
     async def begin_human_intervention(
         self,
         artifact_dir: Path,
@@ -142,17 +156,24 @@ class BrowserOSMotorProvider:
         self,
         session_id: str,
         credentials: ResolvedPortalCredentials | None = None,
+        visible: bool = False,
     ) -> AsyncIterator[BrowserOSMotorSession]:
-        """Open a hidden BrowserOS page for the duration of one apply run.
+        """Open a BrowserOS page for the duration of one apply run.
 
         Args:
             session_id: Unused by BrowserOS (page_id is used instead), kept for protocol compat.
             credentials: Optional runtime credential metadata for the session.
+            visible: Whether to open a visible page (default: False/hidden).
 
         Yields:
             BrowserOSMotorSession ready to observe and execute steps.
         """
-        page_id = self._client.new_hidden_page()
+        if visible:
+            page_id = self._client.new_page()
+            self._client.show_page(page_id)
+        else:
+            page_id = self._client.new_hidden_page()
+            
         try:
             yield BrowserOSMotorSession(
                 self._client,

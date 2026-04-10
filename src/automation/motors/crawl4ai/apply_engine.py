@@ -136,6 +136,26 @@ class C4AIMotorSession:
         )
         return self._danger_detector.detect(signals)
 
+    async def highlight_element(self, selector: str, color: str = "red") -> None:
+        """Draw a visual highlight around an element in the browser."""
+        js_code = f"""
+            (function() {{
+                const el = document.querySelector({json.dumps(selector)});
+                if (el) {{
+                    el.style.outline = '4px solid {color}';
+                    el.style.boxShadow = '0 0 20px {color}';
+                    el.scrollIntoView({{ behavior: 'smooth', block: 'center' }});
+                }}
+            }})();
+        """
+        await self._crawler.arun(
+            url="about:blank",
+            config=CrawlerRunConfig(
+                js_code=js_code,
+                session_id=self._session_id,
+            ),
+        )
+
     async def begin_human_intervention(
         self,
         artifact_dir: Path,
@@ -179,6 +199,7 @@ class C4AIMotorProvider:
         self,
         session_id: str,
         credentials: ResolvedPortalCredentials | None = None,
+        visible: bool = False,
     ) -> AsyncIterator[C4AIMotorSession]:
         """Open a Crawl4AI browser session.
 
@@ -187,13 +208,14 @@ class C4AIMotorProvider:
             credentials: Optional runtime credential metadata for the session.
                 When auth_strategy is env_secrets or mixed, login is bootstrapped
                 using resolved environment-variable secrets.
+            visible: Whether to open a visible browser page.
 
         Yields:
             C4AIMotorSession ready to observe and execute steps.
         """
         browser_config = self._browser_config(
             credentials=credentials,
-            headless=True,
+            headless=not visible,
         )
         async with AsyncWebCrawler(config=browser_config) as crawler:
             if credentials and credentials.auth_strategy in ("env_secrets", "mixed"):

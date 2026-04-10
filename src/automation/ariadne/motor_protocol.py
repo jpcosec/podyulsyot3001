@@ -50,6 +50,10 @@ class MotorSession(Protocol):
         """Expose the live session to an operator and capture resumable context."""
         ...
 
+    async def highlight_element(self, selector: str, color: str = "red") -> None:
+        """Draw a visual highlight around an element in the browser."""
+        ...
+
 
 @runtime_checkable
 class MotorProvider(Protocol):
@@ -59,12 +63,14 @@ class MotorProvider(Protocol):
         self,
         session_id: str,
         credentials: ResolvedPortalCredentials | None = None,
+        visible: bool = False,
     ) -> AsyncContextManager[MotorSession]:
         """Open a browser session scoped to one apply run.
 
         Args:
             session_id: Unique identifier for this session (used for browser tab/session reuse).
             credentials: Optional runtime credential metadata for the session.
+            visible: Whether to open a visible browser page (default: False).
 
         Returns:
             Async context manager yielding a MotorSession.
