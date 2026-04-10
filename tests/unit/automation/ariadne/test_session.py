@@ -93,6 +93,7 @@ class _FakeProvider:
         self,
         session_id: str,
         credentials: ResolvedPortalCredentials | None = None,
+        visible: bool = False,
     ) -> AsyncIterator[_FakeSession]:
         self.session_ids.append(session_id)
         self.credentials.append(credentials)

@@ -99,7 +99,7 @@ def test_extract_payload_merges_xing_listing_metadata_before_validation():
         "requirements": ["Python"],
     }
 
-    valid_data, merged_payload, extraction_method, extraction_error = asyncio.run(
+    valid_data, cleaned_payload, css_payload, extraction_method, extraction_error = asyncio.run(
         adapter._extract_payload(
             _detail_result(detail_payload),
             discovery_entry=discovery_entry,
@@ -110,8 +110,8 @@ def test_extract_payload_merges_xing_listing_metadata_before_validation():
     assert extraction_error is None
     assert extraction_method == "css"
     assert valid_data is not None
-    assert merged_payload is not None
+    assert cleaned_payload is not None
     assert valid_data["posted_date"] == "2026-04-05T12:00:00+00:00"
     assert valid_data["days_ago"] == "vor 2 Tagen"
-    assert merged_payload["listing_case"]["teaser_salary"] == "EUR 70.000"
-    assert merged_payload["listing_case"]["teaser_company"] == "Example Co"
+    assert cleaned_payload["listing_case"]["teaser_salary"] == "EUR 70.000"
+    assert cleaned_payload["listing_case"]["teaser_company"] == "Example Co"

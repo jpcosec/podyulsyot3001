@@ -1144,13 +1144,13 @@ class SmartScraperAdapter(ABC):
             return None, f"LLM exception: {exc}"
 
     async def _browseros_rescue(
-        self,
-        url: str,
-        markdown_content: str,
+        self, url: str, markdown_content: str
     ) -> tuple[dict | None, str | None]:
         """Use BrowserOS MCP page-content tools as a schema-free fallback."""
         try:
-            from src.automation.motors.browseros.cli.client import BrowserOSClient
+            import importlib
+            browseros_module = importlib.import_module("src.automation.motors.browseros.cli.client")
+            BrowserOSClient = browseros_module.BrowserOSClient
         except Exception as exc:
             return None, f"BrowserOS import failed: {exc}"
 

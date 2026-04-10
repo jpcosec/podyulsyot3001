@@ -121,7 +121,7 @@ class _RecordingMotorProvider:
         self.session_ids: list[str] = []
 
     @asynccontextmanager
-    async def open_session(self, session_id: str, credentials=None):
+    async def open_session(self, session_id: str, credentials=None, visible: bool = False):
         self.session_ids.append(session_id)
         yield self.session
 

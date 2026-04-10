@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import AsyncIterator
+from typing import AsyncIterator, Any
 
 import pytest
 
@@ -22,14 +22,20 @@ class _FakeSession:
     async def inspect_danger(self, application_url: str | None) -> ApplyDangerReport:
         return ApplyDangerReport()
 
-    async def begin_human_intervention(self, artifact_dir: Path, step, reason: str):
+    async def begin_human_intervention(self, artifact_dir: Path, step, reason: str) -> dict[str, Any]:
         return {}
+
+    async def highlight_element(self, selector: str, color: str = "red") -> None:
+        pass
 
 
 class _FakeProvider:
     @asynccontextmanager
     async def open_session(
-        self, session_id: str, credentials=None
+        self,
+        session_id: str,
+        credentials: Any | None = None,
+        visible: bool = False,
     ) -> AsyncIterator[_FakeSession]:
         yield _FakeSession()
 
