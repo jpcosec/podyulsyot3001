@@ -2,6 +2,7 @@
 
 ## 2026-04-10
 
+- Refactored CLI `main.py` into modular command handlers: created `src/cli/commands/` package with separate modules for each command (`api.py`, `pipeline.py`, `batch.py`, `translate.py`, `match.py`, `generate.py`, `render.py`, `review.py`, `demo.py`), extracted shared utilities to `_utils.py`, and simplified `main.py` to a thin parser and router (~70 lines). Closed `plan_docs/issues/gaps/refactor_cli_main.md`.
 - Implemented HITL Review UI redesign: replaced the single-stage `ReviewScreen` with four stage-specific screens: `MatchReviewScreen` (master-detail), `BlueprintReviewScreen` (intent/drop), `ContentReviewScreen` (Vim visual mode), and `ProfileDiffScreen` (read-only diff).
 - Fixed `JobExplorerScreen` threading and import bugs (#3, #4); resolved race conditions in `action_refresh` and added missing `Dict` import.
 - Refactored `MatchBus` to reuse the `LangGraphAPIClient` and utilize `asyncio.run()` for stable execution in thread workers (#9).

@@ -6,10 +6,12 @@ import asyncio
 from argparse import Namespace
 import json
 
-from src.cli.main import _build_parser, _newest_jobs_for_sources
-import src.cli.main as cli_main
-from src.core.api_client import LangGraphAPIClient
-from src.core.data_manager import DataManager
+from src.cli.main import _build_parser
+from src.cli.commands._utils import newest_jobs_for_sources as _newest_jobs_for_sources
+import src.cli.commands.pipeline as pipeline_cmd
+import src.cli.commands.review as review_cmd
+import src.cli.commands.generate as generate_cmd
+from src.cli.commands._utils import DEFAULT_PROFILE_PATH
 
 
 def test_review_parser_supports_explorer_mode() -> None:
@@ -23,6 +25,8 @@ def test_review_parser_supports_explorer_mode() -> None:
 
 
 def test_newest_jobs_for_sources_returns_most_recent_per_source(tmp_path) -> None:
+    from src.core.data_manager import DataManager
+
     manager = DataManager(tmp_path / "data" / "jobs")
     manager.ingest_raw_job(source="xing", job_id="1", payload={"job_title": "A"})
     manager.ingest_raw_job(source="xing", job_id="2", payload={"job_title": "B"})
@@ -35,6 +39,8 @@ def test_newest_jobs_for_sources_returns_most_recent_per_source(tmp_path) -> Non
 
 
 def test_thread_id_for_is_deterministic_uuid() -> None:
+    from src.core.api_client import LangGraphAPIClient
+
     first = LangGraphAPIClient.thread_id_for("xing", "123")
     second = LangGraphAPIClient.thread_id_for("xing", "123")
 
@@ -66,8 +72,8 @@ def test_run_pipeline_returns_nonzero_on_failed_remote_run(monkeypatch) -> None:
         async def invoke_assistant(self, *args, **kwargs):
             return {"status": "failed", "error": "403 PERMISSION_DENIED"}
 
-    monkeypatch.setattr(cli_main, "LangGraphAPIClient", _FakeAPIClient)
-    monkeypatch.setattr(cli_main, "_translate_jobs", lambda jobs: jobs)
+    monkeypatch.setattr(pipeline_cmd, "LangGraphAPIClient", _FakeAPIClient)
+    monkeypatch.setattr(pipeline_cmd, "translate_jobs", lambda jobs: jobs)
 
     args = Namespace(
         source="xing",
@@ -78,7 +84,7 @@ def test_run_pipeline_returns_nonzero_on_failed_remote_run(monkeypatch) -> None:
         auto_approve_review=False,
     )
 
-    assert asyncio.run(cli_main._run_pipeline(args)) == 1
+    assert asyncio.run(pipeline_cmd.run(args)) == 1
 
 
 def test_run_review_returns_nonzero_when_api_is_unhealthy(monkeypatch) -> None:
@@ -89,11 +95,11 @@ def test_run_review_returns_nonzero_when_api_is_unhealthy(monkeypatch) -> None:
         def is_healthy(self):
             return False
 
-    monkeypatch.setattr(cli_main, "LangGraphAPIClient", _FakeAPIClient)
+    monkeypatch.setattr(review_cmd, "LangGraphAPIClient", _FakeAPIClient)
 
     args = Namespace(source="xing", job_id="123")
 
-    assert cli_main._run_review(args) == 1
+    assert review_cmd.run(args) == 1
 
 
 def test_run_generate_uses_current_pipeline_signature(monkeypatch, capsys) -> None:
@@ -101,13 +107,14 @@ def test_run_generate_uses_current_pipeline_signature(monkeypatch, capsys) -> No
         assert kwargs == {
             "source": "xing",
             "job_id": "123",
-            "profile_path": cli_main.DEFAULT_PROFILE_PATH,
+            "profile_path": DEFAULT_PROFILE_PATH,
             "target_language": "en",
         }
         return {"status": "assembled"}
 
     monkeypatch.setattr(
-        "src.core.ai.generate_documents_v2.generate_application_documents",
+        generate_cmd,
+        "generate_application_documents",
         fake_generate_application_documents,
     )
 
@@ -120,14 +127,15 @@ def test_run_generate_uses_current_pipeline_signature(monkeypatch, capsys) -> No
         engine="tex",
     )
 
-    assert cli_main._run_generate(args) == 0
+    assert generate_cmd.run(args) == 0
     payload = json.loads(capsys.readouterr().out)
     assert payload == {"status": "assembled", "render_outputs": {}}
 
 
 def test_run_generate_renders_cv_and_letter_when_requested(monkeypatch, capsys) -> None:
     monkeypatch.setattr(
-        "src.core.ai.generate_documents_v2.generate_application_documents",
+        generate_cmd,
+        "generate_application_documents",
         lambda **kwargs: {"status": "assembled"},
     )
 
@@ -137,7 +145,7 @@ def test_run_generate_renders_cv_and_letter_when_requested(monkeypatch, capsys) 
         calls.append(argv)
         return 0
 
-    monkeypatch.setattr("src.core.tools.render.main.main", fake_render_main)
+    monkeypatch.setattr(generate_cmd, "render_main", fake_render_main)
 
     args = Namespace(
         source="xing",
@@ -148,7 +156,7 @@ def test_run_generate_renders_cv_and_letter_when_requested(monkeypatch, capsys) 
         engine="docx",
     )
 
-    assert cli_main._run_generate(args) == 0
+    assert generate_cmd.run(args) == 0
     payload = json.loads(capsys.readouterr().out)
     assert payload["render_outputs"] == {"cv": 0, "letter": 0}
     assert calls == [
