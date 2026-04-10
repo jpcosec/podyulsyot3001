@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
 - Pruned stale completed planning overviews in `plan_docs/planning/stage1_baseline.md`, `plan_docs/automation/README.md`, `plan_docs/ariadne/README.md`, and `plan_docs/contracts/README.md` after confirming their guidance is already covered by current docs and code-adjacent READMEs.
 - Pruned additional completed planning docs in `plan_docs/motors/browseros.md`, `plan_docs/motors/crawl4ai.md`, and `plan_docs/automation/2026-04-04-ariadne-common-language-issues.md` after confirming their guidance had been absorbed into current architecture docs, standards, and Ariadne models.
 - Resolved the completed-plan-doc pruning issue after removing the stale implemented planning artifacts and leaving only active issue docs plus still-relevant design docs for unimplemented areas.
+- Tightened `AGENTS.md` so agents do not ask permission for protocol-defined next steps or rhetorical progress questions when the workflow already determines the next action.
 
 ## [2026-04-10] - BrowserOS Auto-Launch and Health Management
 

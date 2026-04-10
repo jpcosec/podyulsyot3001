@@ -165,6 +165,8 @@ When editing code or documentation, refer to `docs/standards/` before making cha
 - The correct order of execution is: atomization of issues, contradiction checking, then prioritization via dependencies.
 - During contradiction checking: if an issue is legacy, delete it; if issues contradict each other, resolve the contradiction or ask the user only when a real design decision is required.
 - Never ask the user which issue to solve next; there is no usefulness in that. Follow dependency order from `plan_docs/issues/Index.md`.
+- Do not ask the user for permission to continue to the next protocol-defined step. If the dependency order, issue workflow, and git-safety rules already determine the next action, just do it.
+- Do not ask rhetorical progress questions such as whether to continue, whether to take the next cleanup step, or whether to make the required snapshot commit.
 - Once an issue is resolved, remove it from `plan_docs/issues/Index.md` and delete the issue file.
 
 ## Documentation Lifecycle
