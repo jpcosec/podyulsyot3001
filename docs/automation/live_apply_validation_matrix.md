@@ -58,3 +58,12 @@ portals and backends.
 - BrowserOS live apply backend validation
 - Crawl4AI live apply backend validation
 - Routing/docs updates when real apply behavior differs from assumptions
+
+## Latest Evidence
+
+- `2026-04-11` - `xing` + `browseros` + `dry-run` on job `150077807`
+  - Runtime: BrowserOS MCP reachable at `http://127.0.0.1:9000/mcp`
+  - Observed outcome: HITL pause at `open_modal`; required target `css="[data-testid='apply-button']"` was not found
+  - Evidence: `data/jobs/xing/150077807/nodes/apply/meta/hitl_interrupt.json`
+  - Snapshot: `data/jobs/xing/150077807/nodes/apply/proposed/hitl/step-001/browseros_snapshot.txt`
+  - Note: the captured snapshot shows XING navigation/home elements instead of an apply surface, so the current map or route assumptions do not yet prove a successful dry-run path for this live posting

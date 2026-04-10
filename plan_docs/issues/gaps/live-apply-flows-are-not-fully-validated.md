@@ -24,4 +24,4 @@ This matters because scrape success does not prove that:
 3. Regenerate `plan_docs/issues/Index.md` if the child issue graph changes.
 4. Fold resulting evidence back into docs and routing assumptions.
 
-**Depends on:** `plan_docs/issues/gaps/browseros-xing-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/browseros-stepstone-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/browseros-linkedin-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/crawl4ai-xing-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/crawl4ai-stepstone-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/crawl4ai-linkedin-live-apply-is-not-validated.md`
+**Depends on:** `plan_docs/issues/gaps/browseros-stepstone-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/browseros-linkedin-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/crawl4ai-xing-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/crawl4ai-stepstone-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/crawl4ai-linkedin-live-apply-is-not-validated.md`
