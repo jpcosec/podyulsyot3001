@@ -2062,10 +2062,23 @@ class SmartScraperAdapter(ABC):
         self,
         already_scraped: list[str],
         save_html: bool = False,
+        motor: MotorProvider | None = None,
         **kwargs,
     ) -> list[str]:
         """Discover jobs from a source and ingest them canonically."""
-        search_url = self.get_search_url(**kwargs)
+        interactive = kwargs.get("interactive", False)
+        search_url = None
+        
+        if interactive and motor:
+            logger.info("%s Performing interactive UI discovery for %s", LogTag.FAST, self.source_name)
+            try:
+                search_url = await self.run_interactive_discovery(motor, **kwargs)
+            except Exception as exc:
+                logger.error("%s Interactive discovery failed: %s. Falling back to URL.", LogTag.WARN, exc)
+        
+        if not search_url:
+            search_url = self.get_search_url(**kwargs)
+            
         drop_repeated = kwargs.get("drop_repeated", True)
 
         async with AsyncWebCrawler(config=self.get_browser_config()) as crawler:

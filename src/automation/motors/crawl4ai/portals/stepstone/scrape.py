@@ -37,6 +37,16 @@ class StepStoneAdapter(SmartScraperAdapter):
         match = re.search(self.portal.job_id_pattern, url)
         return match.group(1) if match else "unknown"
 
+    async def run_interactive_discovery(self, motor: MotorProvider, **kwargs) -> str:
+        """Perform search using UI interaction via AriadneDiscoverySession."""
+        from src.automation.ariadne.discovery_session import AriadneDiscoverySession
+        
+        keywords = kwargs.get("job_query") or "Data Scientist"
+        location = kwargs.get("city") or "Berlin"
+        
+        session = AriadneDiscoverySession(self.source_name)
+        return await session.run_search(motor, keywords=keywords, location=location)
+
     def get_search_url(self, **kwargs) -> str:
         """Build a StepStone search URL. Accepts job_query, city, max_days. Maps max_days to StepStone age filter codes (age_1/7/14/30)."""
         query = (kwargs.get("job_query") or "data-scientist").replace(" ", "-")

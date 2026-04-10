@@ -37,6 +37,16 @@ class TUBerlinAdapter(SmartScraperAdapter):
         match = re.search(self.portal.job_id_pattern, url)
         return match.group(1) if match else "unknown"
 
+    async def run_interactive_discovery(self, motor: MotorProvider, **kwargs) -> str:
+        """Perform search using UI interaction via AriadneDiscoverySession."""
+        from src.automation.ariadne.discovery_session import AriadneDiscoverySession
+        
+        keywords = kwargs.get("job_query") or "Data Scientist"
+        location = kwargs.get("city") or "Berlin"
+        
+        session = AriadneDiscoverySession(self.source_name)
+        return await session.run_search(motor, keywords=keywords, location=location)
+
     def get_search_url(self, **kwargs) -> str:
         """Build a TU Berlin Stellenticket search URL with fulltext and category filters. Category keys map to TU Berlin Stellenticket work-type filter values."""
         categories = kwargs.get("categories")

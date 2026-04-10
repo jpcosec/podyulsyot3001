@@ -76,6 +76,13 @@ def _add_scrape_subcommand(sub: argparse._SubParsersAction) -> None:
     p.add_argument("--max-days", dest="max_days", type=int)
     p.add_argument("--limit", type=int)
     p.add_argument("--save-html", action="store_true")
+    p.add_argument("--interactive", action="store_true", help="Perform search via UI interaction")
+    p.add_argument(
+        "--backend",
+        choices=["crawl4ai", "browseros"],
+        default="crawl4ai",
+        help="Backend to use for interactive discovery (default: crawl4ai)",
+    )
 
 
 def _add_apply_subcommand(sub: argparse._SubParsersAction) -> None:
@@ -225,7 +232,20 @@ async def _run_scrape(args) -> None:
                 and storage.data_manager.has_ingested_job(args.source, p.name)
             )
 
-    ingested = await adapter.run(already_scraped=already_scraped, **vars(args))
+    motor = None
+    if args.interactive:
+        if args.backend == "browseros":
+            from src.automation.motors.browseros.cli.backend import BrowserOSMotorProvider
+            motor = BrowserOSMotorProvider()
+        elif args.backend == "crawl4ai":
+            from src.automation.motors.crawl4ai.apply_engine import C4AIMotorProvider
+            motor = C4AIMotorProvider()
+
+    ingested = await adapter.run(
+        already_scraped=already_scraped, 
+        motor=motor,
+        **vars(args)
+    )
     logger.info(
         "%s Ingested %s jobs for source '%s'", LogTag.OK, len(ingested), args.source
     )

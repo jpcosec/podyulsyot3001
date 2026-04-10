@@ -1,0 +1,66 @@
+{
+  "portal_name": "tuberlin",
+  "base_url": "https://www.jobs.tu-berlin.de/en/job-postings",
+  "states": {
+    "search_landing": {
+      "id": "search_landing",
+      "description": "TU Berlin Stellenticket job board",
+      "presence_predicate": {
+        "required_elements": [
+          { "css": "input[id='job_postings_search_filter_fulltextsearch']" }
+        ]
+      },
+      "components": {
+        "keyword_input": { "css": "input[id='job_postings_search_filter_fulltextsearch']" },
+        "search_button": { "css": "input[name='commit']" }
+      }
+    },
+    "search_results": {
+      "id": "search_results",
+      "description": "TU Berlin search results",
+      "presence_predicate": {
+        "required_elements": [
+          { "css": ".job-postings-list" }
+        ]
+      }
+    }
+  },
+  "tasks": {
+    "perform_search": {
+      "id": "perform_search",
+      "goal": "execute_search_query",
+      "entry_state": "search_landing",
+      "success_states": ["search_results"],
+      "failure_states": [],
+      "success_criteria": { "text_match": "Job postings" }
+    }
+  },
+  "paths": {
+    "standard_search": {
+      "id": "standard_search",
+      "task_id": "perform_search",
+      "steps": [
+        {
+          "step_index": 1,
+          "name": "enter_criteria",
+          "description": "Enter keywords",
+          "state_id": "search_landing",
+          "observe": { "required_elements": [{ "css": "input[id='job_postings_search_filter_fulltextsearch']" }] },
+          "actions": [
+            { "intent": "fill", "target": { "css": "input[id='job_postings_search_filter_fulltextsearch']" }, "value": "{{keywords}}" }
+          ]
+        },
+        {
+          "step_index": 2,
+          "name": "click_search",
+          "description": "Click search button",
+          "state_id": "search_landing",
+          "observe": { "required_elements": [{ "css": "input[name='commit']" }] },
+          "actions": [
+            { "intent": "click", "target": { "css": "input[name='commit']" } }
+          ]
+        }
+      ]
+    }
+  }
+}
