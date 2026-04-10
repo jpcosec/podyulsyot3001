@@ -56,9 +56,9 @@ Describe the structural shape, then **link to the exact file**. The file is auth
 
 The apply module coordinates provider-specific automation adapters and BrowserOS-backed execution helpers.
 
-- CLI entrypoint: `src/apply/main.py`
-- Shared models: `src/apply/models.py`
-- Provider adapters: `src/apply/providers/`
+- CLI entrypoint: `src/automation/main.py`
+- Shared models: `src/automation/ariadne/models.py`
+- Provider adapters: `src/automation/motors/`
 ```
 
 Never describe a function signature or field list in a README — that belongs in docstrings.
@@ -71,9 +71,9 @@ Describe the *intent* of the interface. Do not copy argument tables — they dri
 ## 🚀 CLI / Usage
 
 Run a dry browser-automation flow for one ingested job.
-Arguments are defined in the `build_parser()` function in `src/apply/main.py`.
+Arguments are defined in the `_build_parser()` function in `src/automation/main.py`.
 
-    python -m src.apply.main --source xing --job-id <id> --cv path/to/cv.pdf --dry-run
+    python -m src.automation.main apply --source xing --job-id <id> --cv path/to/cv.pdf --dry-run
 ```
 
 For Settings-driven configuration, point to the Settings class file instead of `--help`.
@@ -85,7 +85,7 @@ The Pydantic model file **is** the contract. Point to it — do not restate fiel
 ```markdown
 ## 📝 Data Contract
 
-Input and output schemas are defined in `src/apply/models.py` and `src/scraper/models.py`.
+Input and output schemas are defined in `src/automation/ariadne/models.py` and `src/automation/contracts.py`.
 Point to those files instead of restating fields inline.
 ```
 

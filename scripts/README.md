@@ -56,7 +56,7 @@ python -m src.cli.main api start
 
 These scripts do not define their own schemas. They delegate to:
 
-- `LangGraphAPIClient` in `src/core/api_client.py` for API startup and thread control
+- `src/cli/main.py` for the current control-plane entrypoints and API command orchestration
 - `MatchReviewApp` in `src/review_ui/app.py` for the review workstation
 - `DataManager` in `src/core/data_manager.py` for job artifact paths where applicable
 
@@ -65,7 +65,7 @@ These scripts do not define their own schemas. They delegate to:
 ## 🛠️ How to Add / Extend
 
 1. **New Automation**: Create a `.sh` or `.py` script and add it to this directory.
-2. **Metadata Enrichment**: If a script interacts with the API, use the `LangGraphAPIClient` from `src.core.api_client`.
+2. **Metadata Enrichment**: If a script interacts with the API, route that behavior through the control-plane commands in `src/cli/main.py`.
 
 ---
 

@@ -73,4 +73,4 @@ python -m src.automation.main apply --source linkedin --job-id 123 --cv my_cv.pd
 - **`State Mismatch`**: The navigator found a different state than expected. Check if the portal DOM changed and update the Map's `presence_predicate`.
 - **`TargetNotFound`**: A CSS or Text selector in the Map no longer matches. Inspect the `error_state.png` in the job's artifact folder.
 - **`Motor Session Error`**: The selected motor could not observe or execute a step. Check the backend-specific implementation under `src/automation/motors/`.
-- **`interrupted` ApplyMeta**: The run paused for operator input. Inspect `apply/meta/hitl_interrupt.json` and the matching artifacts under `apply/proposed/hitl/` for resume context.
+- **`interrupted` ApplyMeta**: The run paused for operator input. Inspect the persisted HITL interrupt artifact and the matching files under the job's apply/proposed/hitl area for resume context.

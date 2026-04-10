@@ -195,12 +195,12 @@ So `/chat` is live, but the hosted default provider/model can still be quota-lim
 
 ## Proof artifacts
 
-- Internal UI-agent failure screenshot: `/tmp/browseros-proof/agent-four.png`
-- YouTube home proof before search: `/tmp/browseros-proof/youtube-home-before-search.png`
-- Successful MCP-client search proof: `/tmp/browseros-proof/youtube-misilo-results.png`
-- Internal UI troubleshooting guide screenshot: `/tmp/browseros-proof/browseros-troubleshooting-guide.png`
-- Direct `/chat` stream capture: `/tmp/browseros-proof/direct-chat-stream.txt`
-- End-to-end discovery to replay artifacts: `/tmp/browseros-proof/live-discovery-replay-2/`
+- Internal UI-agent failure screenshot: /tmp/browseros-proof/agent-four.png
+- YouTube home proof before search: /tmp/browseros-proof/youtube-home-before-search.png
+- Successful MCP-client search proof: /tmp/browseros-proof/youtube-misilo-results.png
+- Internal UI troubleshooting guide screenshot: /tmp/browseros-proof/browseros-troubleshooting-guide.png
+- Direct `/chat` stream capture: /tmp/browseros-proof/direct-chat-stream.txt
+- End-to-end discovery to replay artifacts: /tmp/browseros-proof/live-discovery-replay-2/
 
 ### Attempt 4 - low-load discovery to replay proof
 
@@ -231,13 +231,13 @@ Example Domain
 
 Artifacts written:
 
-- `/tmp/browseros-proof/live-discovery-replay-2/trace.json`
-- `/tmp/browseros-proof/live-discovery-replay-2/candidates.json`
-- `/tmp/browseros-proof/live-discovery-replay-2/assessment.json`
-- `/tmp/browseros-proof/live-discovery-replay-2/playbook.json`
-- `/tmp/browseros-proof/live-discovery-replay-2/replay_result.json`
-- `/tmp/browseros-proof/live-discovery-replay-2/replay_page.json`
-- `/tmp/browseros-proof/live-discovery-replay-2/replay.png`
+- /tmp/browseros-proof/live-discovery-replay-2/trace.json
+- /tmp/browseros-proof/live-discovery-replay-2/candidates.json
+- /tmp/browseros-proof/live-discovery-replay-2/assessment.json
+- /tmp/browseros-proof/live-discovery-replay-2/playbook.json
+- /tmp/browseros-proof/live-discovery-replay-2/replay_result.json
+- /tmp/browseros-proof/live-discovery-replay-2/replay_page.json
+- /tmp/browseros-proof/live-discovery-replay-2/replay.png
 
 ## Practical conclusion
 

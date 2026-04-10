@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-10] - Unified Agent Entrypoint
+
+### Changed
+- Replaced the separate agent guidance variants in `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` with one consolidated canonical document in `AGENTS.md` that combines the strongest repo-specific instructions from each.
+- Standardized compatibility behavior so `CLAUDE.md` and `GEMINI.md` are intended to exist only as symlinks back to `AGENTS.md`.
+- Refined `AGENTS.md` so it now leads with repository orientation, requires BrowserOS launch before BrowserOS-backed work, points code and documentation edits to `docs/standards/`, formalizes the issue-guide execution order, and records the git-cleanliness rule for agent work.
+- Fixed the `AGENTS.md` shared-routing reference to `src/automation/portals/routing.py` after doc-link validation exposed the old broken path.
+- Repaired active markdown references across `docs/`, `src/`, and `plan_docs/issues/`, converted local `/tmp` proof paths in BrowserOS reference docs into plain text, and narrowed `scripts/validate_doc_links.py` to active documentation instead of historical/spec/archive markdown.
+- Added explicit documentation-lifecycle rules to `AGENTS.md` covering `docs/superpowers/`, `plan_docs/archive/`, `future_docs/`, `session-ses_*.md`, and deletion of completed planning artifacts after implementation knowledge is absorbed.
+- Added issue-guide-compliant cleanup issues for rehoming `docs/superpowers/`, ingesting and pruning `plan_docs/archive/`, triaging `session-ses_*.md`, and deleting completed `plan_docs/` artifacts once their knowledge is fully absorbed.
+
 ## [2026-04-10] - BrowserOS Auto-Launch and Health Management
 
 ### Added

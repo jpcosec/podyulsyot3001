@@ -1,202 +1,198 @@
-# AGENTS.md — Agent Guidelines for Unified Automation
+# AGENTS.md — Unified Agent Context
 
-This file provides guidance for AI agents operating in this repository.
+This is the canonical agent entrypoint for this repository.
+`CLAUDE.md` and `GEMINI.md` should be compatibility symlinks to this file so all agents read the same project guidance.
 
----
+WARNING: if you opened `CLAUDE.md` or `GEMINI.md`, you are reading a symlinked compatibility path. The real source of truth is `AGENTS.md`. Edit `AGENTS.md` only.
 
-## 1. Build, Lint, and Test Commands
+## Project Orientation
 
-### Running Tests
+This repository is a browser-automation worktree built around the Ariadne semantic layer.
+Agents should orient first, then execute: understand the architecture, verify runtime prerequisites, follow the issue workflow, and only then make code or documentation changes.
 
-```bash
-# Run all unit tests (quiet mode)
-python -m pytest tests/unit/automation/ -q
+- Read `README.md` first for repository shape and purpose.
+- For code or documentation edits, follow `docs/standards/` instead of relying on local habits.
+- Treat `src/automation/main.py` as the main CLI entrypoint for automation flows.
+- Treat `plan_docs/issues/Index.md` as the execution queue once issue planning is active.
 
-# Run all tests with verbose output
-python -m pytest tests/unit/automation/ -v
+## Runtime Prerequisite
 
-# Run a specific test file
-python -m pytest tests/unit/automation/motors/crawl4ai/test_compiler.py -v
-
-# Run a specific test function
-python -m pytest tests/unit/automation/ariadne/test_normalizer.py::test_normalize_builds_canonical_states_and_observations -v
-```
-
-### Running the Application
+BrowserOS must be launched before using any BrowserOS-backed flow or validation.
+Do not assume the runtime is already available.
 
 ```bash
-# Scrape jobs from a portal
-python -m src.automation.main scrape --source <portal> --limit <count>
-
-# Apply to a job (dry-run)
-python -m src.automation.main apply --source <portal> --job-id <id> --cv <path> --dry-run
-
-# Apply via BrowserOS backend
-python -m src.automation.main apply --backend browseros --source <portal> --job-id <id> --cv <path>
-```
-
-### BrowserOS Runtime
-
-```bash
-# Launch BrowserOS runtime
 /home/jp/BrowserOS.AppImage --no-sandbox
-
-# Verify the stable local front door
 curl http://127.0.0.1:9000/mcp
 ```
 
-- BrowserOS is an external runtime, not a Python server in this repo
-- Prefer `http://127.0.0.1:9000` as the stable local BrowserOS base URL
-- If BrowserOS work is involved, start from `docs/reference/external_libs/browseros/readme.txt`
-- Setup workflow lives in `docs/automation/browseros_setup.md`
+- Launch BrowserOS before `apply`, BrowserOS-backed `scrape`, `browseros-check`, or BrowserOS recording/promotion work.
+- Prefer `http://127.0.0.1:9000` as the stable local front door.
+- Override with `BROWSEROS_BASE_URL`.
+- Start BrowserOS-related work from `docs/reference/external_libs/browseros/readme.txt`.
+- Setup workflow lives in `docs/automation/browseros_setup.md`.
 
-### Extraction Fallback Order
+## Common Commands
 
 ```bash
-# BrowserOS first, then Gemini rescue
+# Run all automation unit tests
+python -m pytest tests/unit/automation/ -q
+
+# Run a specific test file
+python -m pytest tests/unit/automation/ariadne/test_session.py -v
+
+# Run a focused module suite
+python -m pytest tests/unit/automation/motors/crawl4ai/test_compiler.py -v
+
+# Scrape jobs from a portal
+python -m src.automation.main scrape --source <stepstone|xing|tuberlin> --limit <n>
+
+# Scrape with visible collaborative recording
+python -m src.automation.main scrape --interactive --visible --record --backend browseros --source <portal> --limit <n>
+
+# Apply to a job (BrowserOS default motor)
+python -m src.automation.main apply --source <xing|stepstone|linkedin> --job-id <id> --cv <path>
+
+# Apply via Crawl4AI backend
+python -m src.automation.main apply --backend crawl4ai --source <portal> --job-id <id> --cv <path>
+
+# Dry-run apply (no submission)
+python -m src.automation.main apply --source <portal> --job-id <id> --cv <path> --dry-run
+
+# Set up a portal session (manual login in BrowserOS)
+python -m src.automation.main apply --source xing --setup-session
+
+# Verify BrowserOS runtime
+python -m src.automation.main browseros-check
+
+# Promote a recorded trace to a canonical map
+python -m src.automation.main promote --trace-id <id> --portal <name>
+```
+
+## BrowserOS Runtime
+
+BrowserOS is an external AppImage, not a Python service in this repo.
+
+| Endpoint | Default |
+| --- | --- |
+| Base | `http://127.0.0.1:9000` |
+| MCP | `http://127.0.0.1:9000/mcp` |
+| Chat | `http://127.0.0.1:9000/chat` |
+
+## Extraction Fallbacks
+
+```bash
 export AUTOMATION_EXTRACTION_FALLBACKS="browseros,llm"
 ```
 
-- Fallback definition point is `src/automation/motors/crawl4ai/scrape_engine.py`
-- `browseros` uses BrowserOS MCP rescue and does not require `GOOGLE_API_KEY`
-- `llm` uses Crawl4AI Gemini rescue and does require `GOOGLE_API_KEY`
+- Fallback definition point is `src/automation/motors/crawl4ai/scrape_engine.py`.
+- `browseros` uses BrowserOS rescue and does not require `GOOGLE_API_KEY`.
+- `llm` uses the Gemini rescue path and does require `GOOGLE_API_KEY`.
 
----
+## Architecture
 
-## 2. Project Architecture
+The system uses the Ariadne Semantic Layer to decouple portal logic from execution engines.
 
-The project uses the **Ariadne Semantic Layer** to unify all browser automation:
+### Data Flow
 
-- **`src/automation/ariadne/`**: Core "Brain" (Neutral Models & Logic)
-  - `models.py`: Unified models for States, Tasks, Paths
-  - `navigator.py`: State-aware replay logic
-  - `normalizer.py`: Trace normalization
-- **`src/automation/portals/`**: The "Map" of each portal
-  - `maps/`: JSON files defining portal flows (AriadnePortalMap)
-- **`src/automation/motors/`**: The "Engines" that execute actions
-  - `crawl4ai/compiler/`: Translates Ariadne Paths to motor scripts
-  - `browseros/`: Uses direct tool calls via MCP (Port 9200)
-
----
-
-## 3. Code Style Guidelines
-
-### Imports
-
-```python
-from __future__ import annotations
-
-import logging
-from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
-
-from pydantic import BaseModel, Field, field_validator
+```text
+Recording (OpenBrowser agent) -> AriadneSessionTrace
+                                -> AriadneNormalizer.normalize()
+                                -> AriadnePortalMap JSON
+                                -> AriadneSession.run(motor, ...)
+                                -> BrowserOSMotorProvider | C4AIMotorProvider
 ```
 
-- Always use `from __future__ import annotations` for forward references
-- Group imports: stdlib → third-party → local
-- Use type hints throughout
+### Key Layers
 
-### Naming Conventions
+**`src/automation/ariadne/`** — backend-neutral brain:
+- `models.py`: core types including `AriadnePortalMap`, `AriadneState`, `AriadnePath`, `AriadneStep`, `AriadneTarget`, `AriadneIntent`, `JobPosting`, and `ApplyMeta`.
+- `session.py`: top-level apply orchestrator.
+- `navigator.py`: state-aware path traversal with recovery.
+- `motor_protocol.py`: motor provider/session protocols.
+- `danger_detection.py` and `danger_contracts.py`: pre-submit safety guards.
+- `hitl.py`: pause/resume human-in-the-loop support.
+- `recorder.py` and `trace_models.py`: raw session capture under `data/ariadne/recordings/`.
+- `normalizer.py`: converts traces into canonical portal maps.
+- `job_normalization.py`: canonical cleanup for scraped job data.
 
-- **Classes**: `PascalCase` (e.g., `AriadneNavigator`, `JobPosting`)
-- **Functions/Methods**: `snake_case` (e.g., `find_current_state`, `get_next_step_index`)
-- **Constants**: `UPPER_SNAKE_CASE` (e.g., `DEFAULT_TIMEOUT`)
-- **Private methods**: Prefix with underscore (e.g., `_matches_predicate`)
-- **Files**: `snake_case.py`
+**`src/automation/portals/`** — portal maps and routing:
+- `<portal>/maps/easy_apply.json`: canonical apply flow map.
+- `<portal>/routing.py`: portal-specific routing wrapper.
+- `src/automation/portals/routing.py`: shared route resolution.
 
-### Types
+**`src/automation/motors/`** — execution backends:
+- `browseros/`: MCP-driven execution with fuzzy text targeting and HITL support.
+- `crawl4ai/`: compiles Ariadne paths into procedural scripts.
+- `vision/` and `os_native_tools/`: stub providers for alternative interaction modes.
 
-- Use Pydantic `BaseModel` for all data classes
-- Use `Optional[T]` instead of `T | None` for Python 3.9 compatibility
-- Use `List[T]`, `Dict[K, V]` from `typing` module
-- Add docstrings to all public methods:
+**`src/automation/`** root:
+- `main.py`: CLI dispatcher for `scrape`, `apply`, `browseros-check`, and `promote`.
+- `contracts.py`: shared execution payloads.
+- `storage.py`: artifact and trace persistence.
+- `credentials.py`: env-var-based credential resolution.
 
-```python
-def find_current_state(self, observation_results: Dict[str, bool]) -> Optional[str]:
-    """Identifies the current state based on presence of elements.
-    
-    Args:
-        observation_results: Mapping of selector/text to presence boolean.
-        
-    Returns:
-        The ID of the matched state, or None if no state matches.
-    """
-```
+## Development Principles
 
-### Pydantic Models
+1. Ariadne first: new portals and flows start as `AriadnePortalMap` JSON, not motor-specific code.
+2. Backend neutrality: actions use `AriadneIntent`; targets carry both `css` and `text` when possible.
+3. State-driven recovery: use `AriadneState` plus `presence_predicate` selectors so navigation can recover from drift.
+4. Recording to promotion: record with the OpenBrowser agent, normalize with Ariadne, then promote into canonical maps.
+5. Normalization ownership: semantic cleanup belongs in `src/automation/ariadne/job_normalization.py`, not in individual motors.
+6. Multi-stage artifacts: scrape outputs flow through `raw.json`, `cleaned.json`, and `extracted.json` under `data/jobs/<source>/<job_id>/`.
 
-```python
-class JobPosting(BaseModel):
-    job_title: str = Field(..., description="The official job title")
-    company_name: str = Field(..., description="Name of the company")
-    salary: Optional[str] = Field(default=None, description="Estimated salary")
+## Standards First
 
-    @field_validator("job_id_pattern")
-    @classmethod
-    def must_be_valid_regex(cls, v: str) -> str:
-        re.compile(v)
-        return v
-```
+When editing code or documentation, refer to `docs/standards/` before making changes.
 
-### Error Handling
+- Code standards start at `docs/standards/code/basic.md` and use narrower guides there when relevant.
+- Documentation and planning standards start at `docs/standards/docs/documentation_and_planning_guide.md`.
+- Issue planning and execution rules live in `docs/standards/issue_guide.md`.
+- `README.md` is the top-level human entrypoint; general docs belong under `docs/`; module-specific docs belong near the module they describe.
+- Record every major change in `changelog.md`.
 
-- Use custom exceptions in `ariadne/exceptions.py`
-- Raise specific exceptions with clear messages
-- Use logging for debugging:
+## Testing Guidelines
 
-```python
-logger = logging.getLogger(__name__)
+- Tests live in `tests/unit/automation/` mirroring `src/`.
+- Use `pytest` naming conventions: `test_*.py` and `test_*` functions.
+- Add regression coverage for behavior changes, especially portal maps, routing, normalization, and motor adapters.
+- Integration tests live under `tests/integration/` and should gracefully skip when external runtime dependencies are unavailable.
 
-logger.info("Semantic Recovery: Detected state '%s'", current_state_id)
-logger.debug("Step %d completed", step_index)
-```
+## Issue And Design Cycle
 
-### Enumerations
+- Every change is managed through `docs/standards/issue_guide.md`.
+- Planning artifacts live under `plan_docs/issues/`.
+- `plan_docs/issues/Index.md` is the issue entrypoint and active dependency index.
+- The correct order of execution is: atomization of issues, contradiction checking, then prioritization via dependencies.
+- During contradiction checking: if an issue is legacy, delete it; if issues contradict each other, resolve the contradiction or ask the user only when a real design decision is required.
+- Never ask the user which issue to solve next; there is no usefulness in that. Follow dependency order from `plan_docs/issues/Index.md`.
+- Once an issue is resolved, remove it from `plan_docs/issues/Index.md` and delete the issue file.
 
-```python
-class EventType(str, Enum):
-    NAVIGATE = "navigate"
-    CLICK = "click"
-    FILL = "fill"
-    UPLOAD = "upload"
-```
+## Documentation Lifecycle
 
----
+- `docs/superpowers/` is not a permanent home; move any still-relevant material there into `plan_docs/`.
+- `plan_docs/archive/` is transitional only: absorb any still-relevant content into canonical docs or code-adjacent documentation, then delete the archive file.
+- `future_docs/` is backlog space for ideas that may later be promoted into `plan_docs/` and implemented.
+- `session-ses_*.md` files are old conversation traces; absorb anything useful into canonical docs/issues and delete the trace when it no longer adds value.
+- When a feature tracked in `plan_docs/` is fully implemented, make sure the implementation and documentation have absorbed the needed knowledge, then delete the finished planning artifact.
 
-## 4. Development Principles
+## Git Hygiene
 
-1. **Ariadne First**: Every new portal/flow MUST start as an `AriadnePortalMap` in JSON. Never hardcode logic into motor-specific adapters.
+- Never edit anything while the git tree is dirty.
+- First make a commit with the existing untracked or unstaged work, then edit on top of that clean state.
+- Do not overwrite or discard user work to create cleanliness.
 
-2. **Backend Neutrality**: Define actions as `AriadneIntent` (CLICK, FILL, UPLOAD) rather than backend-specific tool calls.
+## Key References
 
-3. **States & Transitions**: Use `AriadneState` to define logical rooms (e.g., "Resume Modal") for state-aware recovery.
+- `README.md`
+- `docs/automation/ariadne_semantics.md`
+- `docs/automation/ariadne_capabilities.md`
+- `docs/automation/browseros_setup.md`
+- `docs/reference/external_libs/browseros/readme.txt`
+- `docs/superpowers/specs/2026-04-06-unified-automation-refactor-design.md`
 
-4. **Semantic Targets**: Every `AriadneTarget` should contain both `css` (for Crawl4AI) and `text` (for BrowserOS).
+## Troubleshooting
 
----
-
-## 5. Key Files
-
-- `src/automation/main.py` — CLI entry point
-- `src/automation/ariadne/models.py` — Core data models
-- `src/automation/ariadne/navigator.py` — State-aware navigation
-- `src/automation/portals/*/routing.py` — Portal-specific routing
-
----
-
-## 6. Testing Guidelines
-
-- Tests go in `tests/unit/automation/` mirroring the `src/` structure
-- Use pytest with type hints in test signatures
-- Test file naming: `test_*.py`
-- Test function naming: `test_*` with descriptive names
-
----
-
-## 7. Troubleshooting
-
-- **RuntimeError: already submitted**: Delete `apply_meta.json` in the job's artifact directory
-- **Compilation Errors**: Check `src/automation/motors/crawl4ai/compiler/` and portal map JSON
-- **Motor Failures**: Inspect logs under `logs/`
-- **BrowserOS unreachable**: launch `/home/jp/BrowserOS.AppImage --no-sandbox` and verify `http://127.0.0.1:9000/mcp`
+- `BrowserOS unreachable`: launch `/home/jp/BrowserOS.AppImage --no-sandbox` and verify `http://127.0.0.1:9000/mcp`.
+- `RuntimeError: already submitted`: inspect or remove the relevant `apply_meta.json` in the job artifact directory if you intentionally need a fresh run.
+- `Compilation errors`: inspect `src/automation/motors/crawl4ai/compiler/` and the relevant portal map JSON.
+- `Motor failures`: inspect logs under `logs/` and preserved job artifacts under `data/jobs/`.

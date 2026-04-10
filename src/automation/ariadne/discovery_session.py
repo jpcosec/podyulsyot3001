@@ -127,6 +127,8 @@ class AriadneDiscoverySession:
                 await ms.execute_step(
                     step=step,
                     context=context,
+                    cv_path=Path("."),  # Not used for search
+                    letter_path=None,
                     is_first=(step_index == 1),
                     url=search_map.base_url if step_index == 1 else None
                 )

@@ -50,13 +50,21 @@ class JobPosting(BaseModel):
         ..., description="Type of employment (e.g. Full-time, Part-time, Internship)"
     )
     responsibilities: List[str] = Field(
-        ...,
-        min_length=1,
+        default_factory=list,
         description="List of responsibilities or tasks. Extract as short action phrases.",
     )
     requirements: List[str] = Field(
-        ..., min_length=1, description="List of requirements, profile or skills."
+        default_factory=list, description="List of requirements, profile or skills."
     )
+
+    @field_validator("requirements")
+    @classmethod
+    def must_have_some_content(cls, v: List[str], info: Any) -> List[str]:
+        # 'info.data' contains other fields during validation
+        responsibilities = info.data.get("responsibilities", [])
+        if not v and not responsibilities:
+            raise ValueError("JobPosting must have at least one responsibility or requirement.")
+        return v
 
     # Optional
     salary: Optional[str] = Field(

@@ -10,7 +10,7 @@ The `src/automation/` package is the runtime home for all browser automation: jo
 ## Implementation references
 
 - `src/automation/README.md` — package layout, boundary rules, CLI usage, how to extend, troubleshooting
-- `src/automation/ariadne/portal_models.py` — Ariadne portal schema (canonical portal intent models)
+- `src/automation/ariadne/models.py` — Ariadne portal schema and canonical semantic models
 - `src/automation/portals/` — portal intent files (one per portal per operation)
 - `src/automation/motors/crawl4ai/` — Crawl4AI motor (scrape engine, apply engine, portal translators)
 - `src/automation/motors/browseros/cli/` — BrowserOS CLI motor (MCP client, executor, backend)

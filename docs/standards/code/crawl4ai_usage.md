@@ -1,13 +1,13 @@
 # Crawl4AI Usage Standard
 
-This document defines how this repository should use Crawl4AI in the scraper layer so we do not drift into ad-hoc extraction patterns again.
+This document defines how this repository should use Crawl4AI in the automation scrape layer so we do not drift into ad-hoc extraction patterns again.
 
 ## Scope
 
-Applies to `src/scraper/`, especially:
+Applies to `src/automation/motors/crawl4ai/`, especially:
 
-- `src/scraper/smart_adapter.py`
-- `src/scraper/providers/`
+- `src/automation/motors/crawl4ai/scrape_engine.py`
+- `src/automation/motors/crawl4ai/portals/`
 - `data/ariadne/assets/crawl4ai_schemas/`
 
 This is a project-level engineering standard, not a replacement for the upstream docs.
@@ -19,7 +19,7 @@ This is a project-level engineering standard, not a replacement for the upstream
 - LLM extraction strategies: <https://docs.crawl4ai.com/extraction/llm-strategies/>
 - C4A-Script and page interaction: <https://docs.crawl4ai.com/core/c4a-script/>
 
-Read those first when changing scraper architecture.
+Read those first when changing scrape architecture.
 
 ## Core Rule
 
@@ -127,7 +127,7 @@ For each source, the scraper should make these concerns explicit:
 - listing/discovery extraction contract
 - detail extraction contract
 - merge step
-- validation against `src/scraper/models.py`
+- validation against `src/automation/ariadne/models.py`
 - fallback policy
 - saved deterministic schema(s)
 
@@ -140,7 +140,7 @@ Before merging scraper changes, verify:
 - schema generation uses representative samples for unstable DOMs
 - listing-only fields are not being guessed from detail pages
 - interaction-heavy pages use Crawl4AI interaction features instead of prompt hacks
-- the module README in `src/scraper/README.md` still matches the implementation
+- the module README in `src/automation/README.md` still matches the implementation
 
 ## Current Design Direction
 

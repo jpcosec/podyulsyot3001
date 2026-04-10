@@ -278,7 +278,6 @@ class BrowserOSReplayer:
         raise BrowserOSObserveError(
             f"Target '{target}' not found in BrowserOS (Text search failed, CSS search failed or skipped)"
         )
-
     def _normalize_text(self, value: str) -> str:
         return " ".join(value.lower().split())
 

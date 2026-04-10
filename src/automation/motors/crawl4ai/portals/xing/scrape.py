@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import re
-from typing import Any
+from typing import Any, TYPE_CHECKING
 from urllib.parse import urljoin
+
+if TYPE_CHECKING:
+    from src.automation.ariadne.motor_protocol import MotorProvider
 
 from bs4 import BeautifulSoup
 

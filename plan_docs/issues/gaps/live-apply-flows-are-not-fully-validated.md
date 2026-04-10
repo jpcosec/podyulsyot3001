@@ -19,9 +19,9 @@ This matters because scrape success does not prove that:
 **What to fix:** Validate live apply behavior end-to-end on real supported portals and record which backend/portal combinations are confirmed working, dry-run only, or still unsupported. This parent issue is atomized into matrix-definition and backend-specific validation tasks.
 
 **How to do it:**
-1. Define the validation matrix in `plan_docs/issues/unimplemented/live-apply-validation-matrix-is-not-defined.md`.
-2. Validate the BrowserOS backend in `plan_docs/issues/gaps/browseros-live-apply-backend-is-not-validated.md`.
-3. Validate the Crawl4AI backend in `plan_docs/issues/gaps/crawl4ai-live-apply-backend-is-not-validated.md`.
+1. Validate the BrowserOS backend through the portal-specific child issues listed in `plan_docs/issues/Index.md`.
+2. Validate the Crawl4AI backend through the portal-specific child issues listed in `plan_docs/issues/Index.md`.
+3. Regenerate `plan_docs/issues/Index.md` if the child issue graph changes.
 4. Fold resulting evidence back into docs and routing assumptions.
 
-**Depends on:** `plan_docs/issues/gaps/browseros-live-apply-backend-is-not-validated.md`, `plan_docs/issues/gaps/crawl4ai-live-apply-backend-is-not-validated.md`
+**Depends on:** `plan_docs/issues/gaps/browseros-xing-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/browseros-stepstone-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/browseros-linkedin-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/crawl4ai-xing-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/crawl4ai-stepstone-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/crawl4ai-linkedin-live-apply-is-not-validated.md`

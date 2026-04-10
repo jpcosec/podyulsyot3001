@@ -15,29 +15,39 @@ Once an issue is solved:
 ## Legacy audit
 
 - No indexed issue is currently marked for deletion instead of repair.
-- The prior root-level `plan_docs/issues/index.md` and ad-hoc root issue file were replaced so the issue entrypoint now follows `docs/standards/issue_guide.md`.
+- The prior root-level issues entrypoint and ad-hoc root issue file were replaced so the issue entrypoint now follows `docs/standards/issue_guide.md`.
 - Extraction and normalization issues are resolved on the currently tested live scrape pages (XING, StepStone, TU Berlin).
 - Remaining issues now cover backend-specific live apply validation and evaluation of a possible LangGraph MCP-adapter path as an alternative to `/chat`-style agent orchestration.
 
 ## Roots
 
+- `plan_docs/issues/gaps/browseros-appimage-path-is-hardcoded.md`
 - `plan_docs/issues/gaps/browseros-xing-live-apply-is-not-validated.md`
 - `plan_docs/issues/gaps/browseros-stepstone-live-apply-is-not-validated.md`
 - `plan_docs/issues/gaps/browseros-linkedin-live-apply-is-not-validated.md`
 - `plan_docs/issues/gaps/crawl4ai-xing-live-apply-is-not-validated.md`
 - `plan_docs/issues/gaps/crawl4ai-stepstone-live-apply-is-not-validated.md`
 - `plan_docs/issues/gaps/crawl4ai-linkedin-live-apply-is-not-validated.md`
+- `plan_docs/issues/gaps/docs-superpowers-material-has-not-been-rehomed.md`
+- `plan_docs/issues/gaps/plan-docs-archive-material-has-not-been-ingested-and-pruned.md`
+- `plan_docs/issues/gaps/session-traces-have-not-been-triaged.md`
+- `plan_docs/issues/gaps/completed-plan-docs-artifacts-have-not-been-pruned.md`
 - `plan_docs/issues/unimplemented/langgraph-mcp-adapter-integration-is-not-evaluated.md`
 
 ## Parallelizable groups
 
 - Depth 0:
+  - `plan_docs/issues/gaps/browseros-appimage-path-is-hardcoded.md`
   - `plan_docs/issues/gaps/browseros-xing-live-apply-is-not-validated.md`
   - `plan_docs/issues/gaps/browseros-stepstone-live-apply-is-not-validated.md`
   - `plan_docs/issues/gaps/browseros-linkedin-live-apply-is-not-validated.md`
   - `plan_docs/issues/gaps/crawl4ai-xing-live-apply-is-not-validated.md`
   - `plan_docs/issues/gaps/crawl4ai-stepstone-live-apply-is-not-validated.md`
   - `plan_docs/issues/gaps/crawl4ai-linkedin-live-apply-is-not-validated.md`
+  - `plan_docs/issues/gaps/docs-superpowers-material-has-not-been-rehomed.md`
+  - `plan_docs/issues/gaps/plan-docs-archive-material-has-not-been-ingested-and-pruned.md`
+  - `plan_docs/issues/gaps/session-traces-have-not-been-triaged.md`
+  - `plan_docs/issues/gaps/completed-plan-docs-artifacts-have-not-been-pruned.md`
   - `plan_docs/issues/unimplemented/langgraph-mcp-adapter-integration-is-not-evaluated.md`
 - Depth 1: `plan_docs/issues/gaps/live-apply-flows-are-not-fully-validated.md`
 
@@ -48,12 +58,17 @@ Once an issue is solved:
 
 ## Dependency graph
 
+- `plan_docs/issues/gaps/browseros-appimage-path-is-hardcoded.md` -> no dependencies
 - `plan_docs/issues/gaps/browseros-xing-live-apply-is-not-validated.md` -> no dependencies
 - `plan_docs/issues/gaps/browseros-stepstone-live-apply-is-not-validated.md` -> no dependencies
 - `plan_docs/issues/gaps/browseros-linkedin-live-apply-is-not-validated.md` -> no dependencies
 - `plan_docs/issues/gaps/crawl4ai-xing-live-apply-is-not-validated.md` -> no dependencies
 - `plan_docs/issues/gaps/crawl4ai-stepstone-live-apply-is-not-validated.md` -> no dependencies
 - `plan_docs/issues/gaps/crawl4ai-linkedin-live-apply-is-not-validated.md` -> no dependencies
+- `plan_docs/issues/gaps/docs-superpowers-material-has-not-been-rehomed.md` -> no dependencies
+- `plan_docs/issues/gaps/plan-docs-archive-material-has-not-been-ingested-and-pruned.md` -> no dependencies
+- `plan_docs/issues/gaps/session-traces-have-not-been-triaged.md` -> no dependencies
+- `plan_docs/issues/gaps/completed-plan-docs-artifacts-have-not-been-pruned.md` -> no dependencies
 - `plan_docs/issues/gaps/live-apply-flows-are-not-fully-validated.md` -> `plan_docs/issues/gaps/browseros-xing-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/browseros-stepstone-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/browseros-linkedin-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/crawl4ai-xing-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/crawl4ai-stepstone-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/crawl4ai-linkedin-live-apply-is-not-validated.md`
 - `plan_docs/issues/unimplemented/langgraph-mcp-adapter-integration-is-not-evaluated.md` -> no dependencies
 
@@ -70,37 +85,57 @@ Once an issue is solved:
      - `plan_docs/issues/gaps/crawl4ai-linkedin-live-apply-is-not-validated.md`
    - Expected outputs: Working live apply matrix, backend-specific evidence, updated docs/routing assumptions
 
-2. `plan_docs/issues/gaps/browseros-xing-live-apply-is-not-validated.md`
+2. `plan_docs/issues/gaps/browseros-appimage-path-is-hardcoded.md`
+   - Scope: Remove hardcoded AppImage path from runtime resolution and move to env configuration.
+   - Depends on: none
+   - Expected outputs: Configurable AppImage path, updated docs.
+
+3. `plan_docs/issues/gaps/browseros-xing-live-apply-is-not-validated.md`
    - Scope: Validate BrowserOS-backed live apply flows for XING against the matrix
    - Depends on: none
    - Expected outputs: BrowserOS XING live apply evidence and support status
 
-3. `plan_docs/issues/gaps/browseros-stepstone-live-apply-is-not-validated.md`
+4. `plan_docs/issues/gaps/browseros-stepstone-live-apply-is-not-validated.md`
    - Scope: Validate BrowserOS-backed live apply flows for StepStone against the matrix
    - Depends on: none
    - Expected outputs: BrowserOS StepStone live apply evidence and support status
 
-4. `plan_docs/issues/gaps/browseros-linkedin-live-apply-is-not-validated.md`
+5. `plan_docs/issues/gaps/browseros-linkedin-live-apply-is-not-validated.md`
    - Scope: Validate BrowserOS-backed live apply flows for LinkedIn against the matrix
    - Depends on: none
    - Expected outputs: BrowserOS LinkedIn live apply evidence and support status
 
-5. `plan_docs/issues/gaps/crawl4ai-xing-live-apply-is-not-validated.md`
+6. `plan_docs/issues/gaps/crawl4ai-xing-live-apply-is-not-validated.md`
    - Scope: Validate Crawl4AI-backed live apply flows for XING against the matrix
    - Depends on: none
    - Expected outputs: Crawl4AI XING live apply evidence and support status
 
-6. `plan_docs/issues/gaps/crawl4ai-stepstone-live-apply-is-not-validated.md`
+7. `plan_docs/issues/gaps/crawl4ai-stepstone-live-apply-is-not-validated.md`
    - Scope: Validate Crawl4AI-backed live apply flows for StepStone against the matrix
    - Depends on: none
    - Expected outputs: Crawl4AI StepStone live apply evidence and support status
 
-7. `plan_docs/issues/gaps/crawl4ai-linkedin-live-apply-is-not-validated.md`
-   - Scope: Validate Crawl4AI-backed live apply flows for LinkedIn against the matrix
-   - Depends on: none
-   - Expected outputs: Crawl4AI LinkedIn live apply evidence and support status
-
 8. `plan_docs/issues/unimplemented/langgraph-mcp-adapter-integration-is-not-evaluated.md`
-   - Scope: Evaluate whether LangGraph MCP adapters should become the preferred graph/agent orchestration path for MCP-backed workflows in this repo
+    - Scope: Evaluate whether LangGraph MCP adapters should become the preferred graph/agent orchestration path for MCP-backed workflows in this repo
+    - Depends on: none
+    - Expected outputs: Architectural decision, scope analysis, and follow-up issue split if adoption is recommended
+
+9. `plan_docs/issues/gaps/docs-superpowers-material-has-not-been-rehomed.md`
+   - Scope: Move still-relevant `docs/superpowers/` material into `plan_docs/` and delete stale originals
    - Depends on: none
-   - Expected outputs: Architectural decision, scope analysis, and follow-up issue split if adoption is recommended
+   - Expected outputs: Rehomed planning/spec content and removal of stale `docs/superpowers/` files
+
+10. `plan_docs/issues/gaps/plan-docs-archive-material-has-not-been-ingested-and-pruned.md`
+    - Scope: Absorb useful archive content into canonical docs and delete transitional archive files
+    - Depends on: none
+    - Expected outputs: Canonicalized docs updates and pruned `plan_docs/archive/` files
+
+11. `plan_docs/issues/gaps/session-traces-have-not-been-triaged.md`
+    - Scope: Extract any durable knowledge from `session-ses_*.md` and delete traces that no longer add value
+    - Depends on: none
+    - Expected outputs: Canonicalized trace knowledge and deleted stale session traces
+
+12. `plan_docs/issues/gaps/completed-plan-docs-artifacts-have-not-been-pruned.md`
+    - Scope: Delete completed `plan_docs/` artifacts after their implementation and documentation knowledge is fully absorbed
+    - Depends on: none
+    - Expected outputs: Leaner `plan_docs/` tree with completed artifacts removed or reclassified

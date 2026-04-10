@@ -41,6 +41,24 @@ _FUTURE_PREFIXES = (
     "src/review_ui/README.md",
 )
 
+# Historical or generated markdown we do not keep link-clean as part of the
+# active documentation contract.
+_IGNORED_MD_DIR_PARTS = {
+    "future_docs",
+}
+
+_IGNORED_MD_PATH_FRAGMENTS = (
+    "docs/superpowers/plans/",
+    "docs/superpowers/specs/",
+    "docs/runtime/pipeline_overview.md",
+    "plan_docs/archive/",
+    "plan_docs/ariadne/",
+    "plan_docs/contracts/",
+    "plan_docs/motors/",
+    "plan_docs/planning/",
+    "plan_docs/automation/",
+)
+
 
 def _check_file(md_path: Path, repo_root: Path) -> list[str]:
     errors: list[str] = []
@@ -92,6 +110,13 @@ def main() -> int:
         f
         for f in md_files
         if not any(p in ignore_dirs for p in f.parts) and f.name not in ignore_files
+    ]
+    md_files = [
+        f
+        for f in md_files
+        if not any(part in _IGNORED_MD_DIR_PARTS for part in f.parts)
+        and not any(fragment in f.as_posix() for fragment in _IGNORED_MD_PATH_FRAGMENTS)
+        and not f.name.startswith("session-ses_")
     ]
 
     all_errors: list[str] = []

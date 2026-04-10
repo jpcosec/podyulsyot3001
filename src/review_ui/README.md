@@ -15,7 +15,7 @@ A multi-screen Textual application decoupled from the backend via an async bus.
 - **Review Screen**: `src/review_ui/screens/review_screen.py`
   - Focused HITL gate for approving/rejecting match proposals.
 - **Communication Bus (`MatchBus`)**: `src/review_ui/bus.py`
-  - Bridges TUI events to the `LangGraphAPIClient` and persisted review artifacts.
+  - Bridges TUI events to the review artifact store and the current control-plane client.
 
 ---
 
@@ -54,8 +54,8 @@ Keyboard bindings (Review):
 
 The review UI depends on typed contracts from the match skill module and API metadata from the control plane:
 
-- `ReviewSurface` and `ReviewPayload` live in `src/core/ai/match_skill/contracts.py`
-- thread/job metadata comes from `LangGraphAPIClient.list_jobs()` in `src/core/api_client.py`
+- review-specific contracts are consumed through `src/review_ui/bus.py` and `src/review_ui/screens/review_screen.py`
+- thread/job metadata is consumed by `src/review_ui/screens/explorer_screen.py`
 - persisted review artifacts live under `data/jobs/<source>/<job_id>/nodes/match_skill/review/`
 
 ---
@@ -63,7 +63,7 @@ The review UI depends on typed contracts from the match skill module and API met
 ## 🛠️ How to Add / Extend
 
 1. **New Screen**: Add it under `src/review_ui/screens/` and register it from `src/review_ui/app.py`.
-2. **New Explorer Metadata**: Extend `LangGraphAPIClient.list_jobs()` in `src/core/api_client.py`, then render it in `src/review_ui/screens/explorer_screen.py`.
+2. **New Explorer Metadata**: Extend the control-plane client consumed by `src/review_ui/bus.py`, then render it in `src/review_ui/screens/explorer_screen.py`.
 3. **New Review Actions**: Route them through `MatchBus` in `src/review_ui/bus.py`; do not mutate LangGraph state locally.
 
 ---
