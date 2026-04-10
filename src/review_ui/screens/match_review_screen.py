@@ -225,17 +225,27 @@ class MatchReviewScreen(Screen):
             list_view.index = 0
             self._update_detail(0)
 
-    def _create_list_item(self, req_id: str, score: float) -> ListItem:
+    def _get_item_label(self, req_id: str, score: float) -> str:
+        """Calculate the rich text label for a match item."""
         outcome = self._outcomes.get(req_id, "pending")
         icon = "○"
-        if outcome == "approve": icon = "✓"
-        elif outcome == "reject": icon = "✗"
-        
+        if outcome == "approve":
+            icon = "✓"
+        elif outcome == "reject":
+            icon = "✗"
+
         status_class = f"status-{outcome}"
-        score_class = "score-high" if score >= 0.8 else "score-medium" if score >= 0.5 else "score-low"
-        
-        label = f"[{status_class}]{icon}[/] {req_id} [{score_class}]{score:.0%}[/]"
-        return ListItem(Label(label), id=f"item-{req_id}", classes="match-item")
+        score_class = (
+            "score-high"
+            if score >= 0.8
+            else "score-medium" if score >= 0.5 else "score-low"
+        )
+
+        return f"[{status_class}]{icon}[/] {req_id} [{score_class}]{score:.0%}[/]"
+
+    def _create_list_item(self, req_id: str, score: float) -> ListItem:
+        label = self._get_item_label(req_id, score)
+        return ListItem(Label(label), classes="match-item")
 
     def _update_summary(self, job_title: str) -> None:
         total = len(self._matches)
@@ -300,18 +310,23 @@ class MatchReviewScreen(Screen):
     def _set_outcome(self, index: int, outcome: str) -> None:
         req_id = self._matches[index].get("requirement_id", "")
         self._outcomes[req_id] = outcome
-        
+
         # Refresh list item
         list_view = self.query_one("#match-list", ListView)
         score = self._matches[index].get("match_score", 0)
-        list_view[index].query_one(Label).update(self._create_list_item(req_id, score).query_one(Label).renderable)
-        
+        label_text = self._get_item_label(req_id, score)
+        list_view.children[index].query_one(Label).update(label_text)
+
         # Update summary
         job_kg = self._surface.payload.get("job_kg", {})
         job_delta = self._surface.payload.get("job_delta", {})
-        job_title = job_kg.get("job_title_english") or job_delta.get("job_title_english") or "Job"
+        job_title = (
+            job_kg.get("job_title_english")
+            or job_delta.get("job_title_english")
+            or "Job"
+        )
         self._update_summary(job_title)
-        
+
         # Auto-advance
         if index < len(self._matches) - 1:
             list_view.index += 1
@@ -331,7 +346,8 @@ class MatchReviewScreen(Screen):
         for i, match in enumerate(self._matches):
             req_id = match.get("requirement_id", "")
             score = match.get("match_score", 0)
-            list_view[i].query_one(Label).update(self._create_list_item(req_id, score).query_one(Label).renderable)
+            label_text = self._get_item_label(req_id, score)
+            list_view.children[i].query_one(Label).update(label_text)
         
         job_kg = self._surface.payload.get("job_kg", {})
         job_delta = self._surface.payload.get("job_delta", {})

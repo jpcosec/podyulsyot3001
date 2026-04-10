@@ -108,27 +108,38 @@ class DocEditor(Static, can_focus=True):
         for i, line in enumerate(self.doc.all_lines):
             prefix = "  "
             style = ""
-            
+
             # Selection range
             if self.mode == EditorMode.VISUAL and self.anchor_line is not None:
-                lo, hi = min(self.anchor_line, self.cursor_line), max(self.anchor_line, self.cursor_line)
+                lo, hi = (
+                    min(self.anchor_line, self.cursor_line),
+                    max(self.anchor_line, self.cursor_line),
+                )
                 if lo <= i <= hi:
                     style = "on blue"
-            
+
             # Cursor
             if i == self.cursor_line:
                 prefix = "> "
-                if not style: style = "reverse"
-            
+                if not style:
+                    style = "reverse"
+
             # Annotation marker
             seg = self.doc.segment_for_line(i)
             if seg and seg.segment_id in self.annotations:
                 ann = self.annotations[seg.segment_id]
-                marker = "✎" if ann.action == "replace" else "✗" if ann.action == "delete" else "💬"
+                marker = (
+                    "✎"
+                    if ann.action == "replace"
+                    else "✗" if ann.action == "delete" else "💬"
+                )
                 line = f"{line} [yellow]{marker}[/]"
 
-            lines.append(f"[{style}]{prefix}{line}[/]")
-        
+            if style:
+                lines.append(f"[{style}]{prefix}{line}[/]")
+            else:
+                lines.append(f"{prefix}{line}")
+
         return "\n".join(lines)
 
     def on_key(self, event: Any) -> None:

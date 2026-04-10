@@ -214,7 +214,7 @@ class BlueprintReviewScreen(Screen):
             label = sec_id
             if is_dropped:
                 label = f"[status-dropped]{sec_id} [DROPPED][/]"
-            list_view.append(ListItem(Label(label), id=f"item-{sec_id}", classes="section-item"))
+            list_view.append(ListItem(Label(label), classes="section-item"))
         list_view.index = curr_idx
 
     def _update_detail(self, index: int) -> None:

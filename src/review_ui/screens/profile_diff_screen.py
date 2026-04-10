@@ -95,15 +95,15 @@ class ProfileDiffScreen(Screen):
     def compose(self) -> ComposeResult:
         yield Header()
         yield Label("Loading profile updates ...", id="header-panel")
-        
+
         with ScrollableContainer(id="diff-container"):
             yield LoadingIndicator(id="loading", classes="visible")
-            yield Vertical(id="diff-list")
+            yield Static("", id="diff-content")
 
         with Horizontal(id="action-bar"):
             yield Button("Approve & Persist (a)", id="btn-approve", variant="primary")
             yield Button("Reject (r)", id="btn-reject", variant="error")
-            
+
         yield RichLog(id="status-log", markup=True)
         yield Footer()
 
@@ -116,30 +116,32 @@ class ProfileDiffScreen(Screen):
             surface = self._bus.load_current_review_surface(self._source, self._job_id)
             self.app.call_from_thread(self._render_surface, surface)
         except Exception as exc:
-            self.app.call_from_thread(self.notify, f"Load failed: {exc}", severity="error")
+            self.app.call_from_thread(
+                self.notify, f"Load failed: {exc}", severity="error"
+            )
 
     def _render_surface(self, surface: Any) -> None:
         self._surface = surface
         updates = surface.payload.get("updates", [])
-        
+
         self.query_one("#header-panel", Label).update(
             f"[bold]Profile Update Review[/]  ·  {self._source}/{self._job_id}\n"
             f"[dim]{len(updates)} proposed changes to profile JSON[/]"
         )
-        
-        diff_list = self.query_one("#diff-list", Vertical)
+
+        content = []
         for update in updates:
             path = update.get("field_path", "")
             old = update.get("old_value")
             new = update.get("new_value")
             stage = update.get("source_stage", "unknown")
-            
-            card = Vertical(classes="diff-card")
-            card.mount(Label(f"Field: [bold cyan]{path}[/] [dim](from {stage})[/]"))
-            card.mount(Label(f"[red]- WAS:[/] {old}"))
-            card.mount(Label(f"[green]+ NOW:[/] {new}"))
-            diff_list.mount(card)
 
+            content.append(f"[bold cyan]Field: {path}[/] [dim](from {stage})[/]")
+            content.append(f"[red]- WAS:[/] {old}")
+            content.append(f"[green]+ NOW:[/] {new}")
+            content.append("-" * 20)
+
+        self.query_one("#diff-content", Static).update("\n".join(content))
         self.query_one("#loading").remove_class("visible")
 
     def action_approve(self) -> None:

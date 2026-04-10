@@ -36,6 +36,7 @@ def _build_parser() -> argparse.ArgumentParser:
     _add_generate_parser(subparsers)
     _add_render_parser(subparsers)
     _add_review_parser(subparsers)
+    _add_demo_parser(subparsers)
     return parser
 
 
@@ -129,6 +130,10 @@ def _add_review_parser(subparsers: argparse._SubParsersAction) -> None:
     p = subparsers.add_parser("review", help="Launch the HITL review TUI")
     p.add_argument("--source", help="Source for direct review mode")
     p.add_argument("--job-id", dest="job_id", help="Job ID for direct review mode")
+
+
+def _add_demo_parser(subparsers: argparse._SubParsersAction) -> None:
+    subparsers.add_parser("demo", help="Launch the HITL review UI demo with mock data")
 
 
 def _load_json(path: str | None) -> Any:
@@ -577,6 +582,10 @@ def main(argv: list[str] | None = None) -> int:
             return _run_render(args)
         if args.command == "review":
             return _run_review(args)
+        if args.command == "demo":
+            from src.review_ui.demo import run_demo
+            run_demo()
+            return 0
         parser.print_help()
         return 1
     except LangGraphConnectionError as exc:
