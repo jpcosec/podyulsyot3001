@@ -30,7 +30,6 @@ Once an issue is solved:
 - `plan_docs/issues/gaps/crawl4ai-linkedin-live-apply-is-not-validated.md`
 - `plan_docs/issues/gaps/docs-superpowers-material-has-not-been-rehomed.md`
 - `plan_docs/issues/gaps/plan-docs-archive-material-has-not-been-ingested-and-pruned.md`
-- `plan_docs/issues/gaps/session-traces-have-not-been-triaged.md`
 - `plan_docs/issues/gaps/completed-plan-docs-artifacts-have-not-been-pruned.md`
 - `plan_docs/issues/unimplemented/langgraph-mcp-adapter-integration-is-not-evaluated.md`
 
@@ -46,7 +45,6 @@ Once an issue is solved:
   - `plan_docs/issues/gaps/crawl4ai-linkedin-live-apply-is-not-validated.md`
   - `plan_docs/issues/gaps/docs-superpowers-material-has-not-been-rehomed.md`
   - `plan_docs/issues/gaps/plan-docs-archive-material-has-not-been-ingested-and-pruned.md`
-  - `plan_docs/issues/gaps/session-traces-have-not-been-triaged.md`
   - `plan_docs/issues/gaps/completed-plan-docs-artifacts-have-not-been-pruned.md`
   - `plan_docs/issues/unimplemented/langgraph-mcp-adapter-integration-is-not-evaluated.md`
 - Depth 1: `plan_docs/issues/gaps/live-apply-flows-are-not-fully-validated.md`
@@ -67,7 +65,6 @@ Once an issue is solved:
 - `plan_docs/issues/gaps/crawl4ai-linkedin-live-apply-is-not-validated.md` -> no dependencies
 - `plan_docs/issues/gaps/docs-superpowers-material-has-not-been-rehomed.md` -> no dependencies
 - `plan_docs/issues/gaps/plan-docs-archive-material-has-not-been-ingested-and-pruned.md` -> no dependencies
-- `plan_docs/issues/gaps/session-traces-have-not-been-triaged.md` -> no dependencies
 - `plan_docs/issues/gaps/completed-plan-docs-artifacts-have-not-been-pruned.md` -> no dependencies
 - `plan_docs/issues/gaps/live-apply-flows-are-not-fully-validated.md` -> `plan_docs/issues/gaps/browseros-xing-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/browseros-stepstone-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/browseros-linkedin-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/crawl4ai-xing-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/crawl4ai-stepstone-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/crawl4ai-linkedin-live-apply-is-not-validated.md`
 - `plan_docs/issues/unimplemented/langgraph-mcp-adapter-integration-is-not-evaluated.md` -> no dependencies
@@ -130,12 +127,7 @@ Once an issue is solved:
     - Depends on: none
     - Expected outputs: Canonicalized docs updates and pruned `plan_docs/archive/` files
 
-11. `plan_docs/issues/gaps/session-traces-have-not-been-triaged.md`
-    - Scope: Extract any durable knowledge from `session-ses_*.md` and delete traces that no longer add value
-    - Depends on: none
-    - Expected outputs: Canonicalized trace knowledge and deleted stale session traces
-
-12. `plan_docs/issues/gaps/completed-plan-docs-artifacts-have-not-been-pruned.md`
+11. `plan_docs/issues/gaps/completed-plan-docs-artifacts-have-not-been-pruned.md`
     - Scope: Delete completed `plan_docs/` artifacts after their implementation and documentation knowledge is fully absorbed
     - Depends on: none
     - Expected outputs: Leaner `plan_docs/` tree with completed artifacts removed or reclassified
