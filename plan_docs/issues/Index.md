@@ -25,7 +25,7 @@ The active and full test suites are healthy and the current operator/runtime doc
 
 ## Priority Roadmap
 
-No open indexed issues at the moment.
+- [ ] **Refactor CLI `main.py`** — Split the large entry point into modular command handlers. See `plan_docs/issues/gaps/refactor_cli_main.md`.
 
 ---
 
