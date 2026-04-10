@@ -261,29 +261,27 @@ def test_app_snapshot(snap_compare):
 
 - **Plugin**: https://github.com/Textualize/pytest-textual-snapshot
 
-## Textual-Web Integration
+## Textual-Serve Integration
 
-Textual-web publishes Textual apps to the browser with public URLs:
+`textual-serve` runs a Textual app on your machine and exposes it in the browser over websocket:
 
 ```bash
-pip install textual-web
-textual-web --config config.toml
+pip install textual-serve
 ```
 
-**Configuration** (`config.toml`):
-```toml
-[app.MyApp]
-command = "python myapp.py"
-slug = "myapp"
+```python
+from textual_serve.server import Server
+
+server = Server("python -m textual", host="localhost", port=8000)
+server.serve()
 ```
 
-**Features:**
-- File downloads (browser Downloads folder)
-- Open URLs in browser
-- Serve actual terminals (`terminal = true`)
-- Session management
+**Common use:**
+- Local browser access for a Textual app
+- Self-hosted browser demo environment
+- Same app process, terminal or browser
 
-**Reference**: https://github.com/Textualize/textual-web
+**Reference**: https://github.com/Textualize/textual-serve
 
 ## API Reference
 

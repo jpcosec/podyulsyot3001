@@ -147,7 +147,7 @@ python -m src.cli.main translate --source xing
 
 ### Textual UI Testing
 
-Use `pytest-textual` for headless testing with the Pilot class:
+Use Textual's built-in Pilot for headless testing:
 
 ```bash
 # Run all review UI tests
@@ -159,11 +159,11 @@ python -m pytest tests/unit/review_ui/test_explorer_screen.py -v
 
 For E2E testing with browser:
 ```bash
-# Start textual-web server
-./scripts/run_textual_web.sh
+# Start textual-serve server
+python scripts/run_textual_serve.py
 
 # Then use TestSprite MCP tools pointing to:
-# http://localhost:8765/review-ui/
+# http://localhost:8765/
 ```
 
 ## Documentation Expectations

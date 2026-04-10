@@ -99,7 +99,7 @@ python -m src.cli.main api start
 
 ## 🧪 Testing
 
-### pytest-textual (Unit/Integration)
+### Textual Pilot (Unit/Integration)
 
 Run the test suite with Textual's headless Pilot:
 
@@ -120,22 +120,22 @@ python -m pytest tests/unit/review_ui/ --cov=src/review_ui --cov-report=term-mis
 - `tests/unit/review_ui/test_error_states.py` - Error handling tests
 - `tests/unit/review_ui/test_demo_interactions.py` - Demo launcher and HITL screen interactions
 
-### textual-web + TestSprite (E2E)
+### textual-serve + TestSprite (E2E)
 
 For browser-based testing with AI-generated Playwright tests:
 
 ```bash
-# Terminal 1: Start textual-web server
-./scripts/run_textual_web.sh
+# Terminal 1: Start textual-serve
+python scripts/run_textual_serve.py
 
-# URL: http://localhost:8765/review-ui/
+# URL: http://localhost:8765/
 
 # Use TestSprite MCP tools in your IDE:
 # testsprite_testsprite_generate_code_and_execute
 # pointing to: http://localhost:8765/review-ui/
 ```
 
-See `textual_web.toml` for configuration.
+The launcher lives at `scripts/run_textual_serve.py`.
 
 ---
 

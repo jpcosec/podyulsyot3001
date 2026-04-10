@@ -2,7 +2,8 @@
 
 ## 2026-04-10
 
-- Implemented comprehensive Textual UI testing infrastructure: added `pytest-textual` tests for all screens (`test_explorer_screen.py`, `test_navigation.py`, `test_error_states.py`), created `textual_web.toml` configuration for browser-based testing, added `scripts/run_textual_web.sh` startup helper, and documented TestSprite integration for AI-powered E2E testing. All 226 unit tests pass.
+- Replaced the deprecated browser-serving stack in the Review UI workflow with `textual-serve`: added `scripts/run_textual_serve.py`, updated browser-testing docs, removed legacy browser config files, and aligned dependency files with the supported serving path.
+- Implemented comprehensive Textual UI testing infrastructure: added Textual Pilot tests for all screens (`test_explorer_screen.py`, `test_navigation.py`, `test_error_states.py`), created browser-based testing helpers, and documented TestSprite integration for AI-powered E2E testing. All 226 unit tests pass.
 - Refactored CLI `main.py` into modular command handlers: created `src/cli/commands/` package with separate modules for each command (`api.py`, `pipeline.py`, `batch.py`, `translate.py`, `match.py`, `generate.py`, `render.py`, `review.py`, `demo.py`), extracted shared utilities to `_utils.py`, and simplified `main.py` to a thin parser and router (~70 lines). Closed `plan_docs/issues/gaps/refactor_cli_main.md`.
 - Implemented HITL Review UI redesign: replaced the single-stage `ReviewScreen` with four stage-specific screens: `MatchReviewScreen` (master-detail), `BlueprintReviewScreen` (intent/drop), `ContentReviewScreen` (Vim visual mode), and `ProfileDiffScreen` (read-only diff).
 - Fixed `JobExplorerScreen` threading and import bugs (#3, #4); resolved race conditions in `action_refresh` and added missing `Dict` import.

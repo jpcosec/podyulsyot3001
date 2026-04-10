@@ -22,15 +22,15 @@ Once an issue is solved:
 The active and full test suites are healthy (226 tests passing) and the current operator/runtime docs are aligned with the codebase.
 
 Textual UI testing infrastructure is now complete:
-- pytest-textual tests for all screens
-- textual-web configuration for browser-based testing
+- Textual Pilot tests for all screens
+- `textual-serve` browser launcher for local browser-based testing
 - TestSprite integration documented
 
 ---
 
 ## Priority Roadmap
 
-- No remaining indexed issues.
+- Issue 1: Replace the deprecated browser bridge with `textual-serve`
 
 ---
 
