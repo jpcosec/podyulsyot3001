@@ -9,7 +9,11 @@ import time
 import urllib.request
 from dataclasses import dataclass
 
+from dotenv import load_dotenv
+
 logger = logging.getLogger(__name__)
+
+load_dotenv()
 
 
 @dataclass(frozen=True)
