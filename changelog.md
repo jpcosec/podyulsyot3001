@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 - Added issue-guide-compliant cleanup issues for rehoming `docs/superpowers/`, ingesting and pruning `plan_docs/archive/`, triaging `session-ses_*.md`, and deleting completed `plan_docs/` artifacts once their knowledge is fully absorbed.
 - Clarified `AGENTS.md` git hygiene so agents should create the required snapshot commit automatically instead of asking the user whether to do it.
 - Resolved the session-trace triage cleanup issue by deleting `session-ses_28e6.md` after confirming it did not contain unique durable knowledge that was missing from canonical docs or active issues.
+- Resolved the `docs/superpowers/` rehoming cleanup issue by archiving the remaining migration plan under `plan_docs/archive/automation/`, deleting superseded superpowers specs/plans, and repointing `AGENTS.md` to current architecture docs.
 
 ## [2026-04-10] - BrowserOS Auto-Launch and Health Management
 

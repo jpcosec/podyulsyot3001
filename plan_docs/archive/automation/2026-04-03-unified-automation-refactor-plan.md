@@ -8,6 +8,8 @@ Replace the current split between `src/scraper/` and `src/apply/` with one unifi
 
 Worktree note: this plan predates the current narrowed branch. References to removed control-plane or non-automation modules should be read as historical context, not active dependencies.
 
+Superseded follow-up migration details from 2026-04-06 are preserved in `plan_docs/archive/automation/2026-04-06-unified-automation-migration.md`.
+
 The target concept is:
 
 ```text

@@ -189,7 +189,7 @@ When editing code or documentation, refer to `docs/standards/` before making cha
 - `docs/automation/ariadne_capabilities.md`
 - `docs/automation/browseros_setup.md`
 - `docs/reference/external_libs/browseros/readme.txt`
-- `docs/superpowers/specs/2026-04-06-unified-automation-refactor-design.md`
+- `docs/automation/architecture.md`
 
 ## Troubleshooting
 
