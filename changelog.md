@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 - Resolved the BrowserOS AppImage configuration issue by requiring `BROWSEROS_APPIMAGE_PATH` for auto-launch, updating BrowserOS startup docs and CLI help to use that env var, and removing the old hardcoded `/home/jp/BrowserOS.AppImage` fallback from runtime code.
 - Added dotenv loading to BrowserOS runtime resolution so `BROWSEROS_APPIMAGE_PATH` can be picked up from the local `.env` file.
 - Resolved the BrowserOS XING live dry-run validation issue by recording a real-run failure outcome for job `150077807`, capturing HITL evidence under `data/jobs/xing/150077807/nodes/apply/`, and updating the live validation matrix with the observed `open_modal` target mismatch.
+- Resolved the BrowserOS StepStone live dry-run validation issue by recording a real-run failure outcome for job `13314431`, capturing HITL evidence under `data/jobs/stepstone/13314431/nodes/apply/`, and updating the live validation matrix with the observed `open_modal` target mismatch.
 
 ## [2026-04-10] - BrowserOS Auto-Launch and Health Management
 

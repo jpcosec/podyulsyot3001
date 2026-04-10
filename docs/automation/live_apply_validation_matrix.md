@@ -67,3 +67,9 @@ portals and backends.
   - Evidence: `data/jobs/xing/150077807/nodes/apply/meta/hitl_interrupt.json`
   - Snapshot: `data/jobs/xing/150077807/nodes/apply/proposed/hitl/step-001/browseros_snapshot.txt`
   - Note: the captured snapshot shows XING navigation/home elements instead of an apply surface, so the current map or route assumptions do not yet prove a successful dry-run path for this live posting
+- `2026-04-11` - `stepstone` + `browseros` + `dry-run` on job `13314431`
+  - Runtime: BrowserOS MCP reachable at `http://127.0.0.1:9000/mcp`
+  - Observed outcome: HITL pause at `open_modal`; required target `css="[data-at='apply-button']"` was not found
+  - Evidence: `data/jobs/stepstone/13314431/nodes/apply/meta/hitl_interrupt.json`
+  - Snapshot: `data/jobs/stepstone/13314431/nodes/apply/proposed/hitl/step-001/browseros_snapshot.txt`
+  - Note: the live StepStone page exposed visible `Ich bin interessiert` buttons in the BrowserOS snapshot instead of the mapped selector, so the current apply map assumptions do not yet prove a successful dry-run path for this posting
