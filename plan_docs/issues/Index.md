@@ -28,7 +28,6 @@ Once an issue is solved:
 - `plan_docs/issues/gaps/crawl4ai-xing-live-apply-is-not-validated.md`
 - `plan_docs/issues/gaps/crawl4ai-stepstone-live-apply-is-not-validated.md`
 - `plan_docs/issues/gaps/crawl4ai-linkedin-live-apply-is-not-validated.md`
-- `plan_docs/issues/gaps/completed-plan-docs-artifacts-have-not-been-pruned.md`
 - `plan_docs/issues/unimplemented/langgraph-mcp-adapter-integration-is-not-evaluated.md`
 
 ## Parallelizable groups
@@ -41,7 +40,6 @@ Once an issue is solved:
   - `plan_docs/issues/gaps/crawl4ai-xing-live-apply-is-not-validated.md`
   - `plan_docs/issues/gaps/crawl4ai-stepstone-live-apply-is-not-validated.md`
   - `plan_docs/issues/gaps/crawl4ai-linkedin-live-apply-is-not-validated.md`
-  - `plan_docs/issues/gaps/completed-plan-docs-artifacts-have-not-been-pruned.md`
   - `plan_docs/issues/unimplemented/langgraph-mcp-adapter-integration-is-not-evaluated.md`
 - Depth 1: `plan_docs/issues/gaps/live-apply-flows-are-not-fully-validated.md`
 
@@ -59,7 +57,6 @@ Once an issue is solved:
 - `plan_docs/issues/gaps/crawl4ai-xing-live-apply-is-not-validated.md` -> no dependencies
 - `plan_docs/issues/gaps/crawl4ai-stepstone-live-apply-is-not-validated.md` -> no dependencies
 - `plan_docs/issues/gaps/crawl4ai-linkedin-live-apply-is-not-validated.md` -> no dependencies
-- `plan_docs/issues/gaps/completed-plan-docs-artifacts-have-not-been-pruned.md` -> no dependencies
 - `plan_docs/issues/gaps/live-apply-flows-are-not-fully-validated.md` -> `plan_docs/issues/gaps/browseros-xing-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/browseros-stepstone-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/browseros-linkedin-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/crawl4ai-xing-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/crawl4ai-stepstone-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/crawl4ai-linkedin-live-apply-is-not-validated.md`
 - `plan_docs/issues/unimplemented/langgraph-mcp-adapter-integration-is-not-evaluated.md` -> no dependencies
 
@@ -111,7 +108,3 @@ Once an issue is solved:
     - Depends on: none
     - Expected outputs: Architectural decision, scope analysis, and follow-up issue split if adoption is recommended
 
-9. `plan_docs/issues/gaps/completed-plan-docs-artifacts-have-not-been-pruned.md`
-    - Scope: Delete completed `plan_docs/` artifacts after their implementation and documentation knowledge is fully absorbed
-    - Depends on: none
-    - Expected outputs: Leaner `plan_docs/` tree with completed artifacts removed or reclassified
