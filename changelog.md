@@ -1,6 +1,16 @@
 # Changelog
 
-## 2026-04-09
+## 2026-04-10
+
+- Implemented HITL Review UI redesign: replaced the single-stage `ReviewScreen` with four stage-specific screens: `MatchReviewScreen` (master-detail), `BlueprintReviewScreen` (intent/drop), `ContentReviewScreen` (Vim visual mode), and `ProfileDiffScreen` (read-only diff).
+- Fixed `JobExplorerScreen` threading and import bugs (#3, #4); resolved race conditions in `action_refresh` and added missing `Dict` import.
+- Refactored `MatchBus` to reuse the `LangGraphAPIClient` and utilize `asyncio.run()` for stable execution in thread workers (#9).
+- Implemented `style_regen` routing in `generate_documents_v2` graph, allowing stylistic adjustments to loop back to macroplanning (#8).
+- Implemented `--full-sync` CLI flag and `Profile.refresh()` method to force candidate profile updates from remote sources via the API.
+- Verified and finalized translation failure logging and fallback logic; stack traces are now logged for chunk failures and pipeline resumes with raw text if translation fails completely.
+- Updated `src/review_ui/README.md` with new keyboard bindings and stage-specific screen references.
+- Cleaned up dead code and infinite retry loops in the `review_ui` module (#6).
+- Formalized Gemini CLI methodology in `gemini.md`.
 
 - Restored the documented default profile seed for `generate_documents_v2` by adding `data/reference_data/profile/base_profile/profile_base_data.json`; added a unit test in `tests/unit/core/ai/generate_documents_v2/test_profile_loader.py` to verify the checked-in default profile path loads successfully, so default pipeline startup no longer fails immediately on a fresh clone due to a missing base profile file.
 - Updated `generate_documents_v2` Gemini model selection so every LLM stage reads from environment configuration instead of hardcoding `gemini-2.5-flash`; stage-specific overrides now take precedence via variables such as `GEMINI_MODEL_INGESTION` and `GEMINI_MODEL_REQUIREMENT_FILTER`, with `GEMINI_MODEL=gemini-2.5-flash` as the shared default.

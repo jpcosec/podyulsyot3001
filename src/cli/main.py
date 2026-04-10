@@ -12,6 +12,7 @@ from typing import Any, Iterable
 
 from src.core import DataManager
 from src.core.api_client import LangGraphAPIClient, LangGraphConnectionError
+from src.core.profile import Profile
 from src.shared.log_tags import LogTag
 from src.shared.logging_config import configure_logging
 
@@ -255,9 +256,39 @@ async def _run_api(args: argparse.Namespace) -> int:
     return 1
 
 
+async def _sync_profile_if_needed(
+    args: argparse.Namespace, client: LangGraphAPIClient
+) -> None:
+    """Trigger a full profile synchronization if the --full-sync flag is present."""
+    if not getattr(args, "full_sync", False):
+        return
+
+    # Use the first source provided if multiple are given (for run-batch)
+    source = (
+        args.sources[0]
+        if hasattr(args, "sources") and args.sources
+        else getattr(args, "source", None)
+    )
+    if not source:
+        logger.warning("%s --full-sync requested but no source identified", LogTag.WARN)
+        return
+
+    profile_path = getattr(args, "profile", DEFAULT_PROFILE_PATH)
+    profile = Profile(profile_path)
+    try:
+        await profile.refresh(client, source)
+    except Exception as exc:
+        logger.error("%s Profile sync failed: %s", LogTag.FAIL, exc)
+        raise
+
+
 async def _run_pipeline(args: argparse.Namespace) -> int:
     url = LangGraphAPIClient.ensure_server()
     client = LangGraphAPIClient(url)
+
+    # Full sync if requested
+    await _sync_profile_if_needed(args, client)
+
     ready = _translate_jobs([(args.source, args.job_id)])
     if not ready:
         logger.error(
@@ -327,6 +358,10 @@ async def _run_pipeline(args: argparse.Namespace) -> int:
 async def _run_batch(args: argparse.Namespace) -> int:
     url = LangGraphAPIClient.ensure_server()
     client = LangGraphAPIClient(url)
+
+    # Full sync if requested
+    await _sync_profile_if_needed(args, client)
+
     data_manager = DataManager()
 
     jobs: list[tuple[str, str]] = []

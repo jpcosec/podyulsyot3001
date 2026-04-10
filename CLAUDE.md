@@ -158,7 +158,7 @@ Use the logging bootstrap from `src/shared/logging_config.py`. Never write emoji
 - LangGraph methodology: `docs/standards/code/llm_langgraph_methodology.md`
 - Documentation & planning guide: `docs/standards/docs/documentation_and_planning_guide.md`
 - Major changes: `changelog.md`
-- Deferred behavior: `future_docs/`
+- Deferred behavior: `future_docs/` (Check this folder when rationale for a design decision is not in READMEs)
 
 ## Environment
 

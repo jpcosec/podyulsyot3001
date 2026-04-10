@@ -17,12 +17,9 @@ Once an issue is solved, the next step is always:
 
 ┄┄ Priority roadmap
 
-┄┄┄ Phase 1 — Translation Debug
+┄┄┄ Phase 1 — [Solved]
 
-1. `future_docs/issues/translation_debugging/issue-translation-logging.md`
-2. `future_docs/issues/translation_debugging/issue-translation-failure.md`
-
-    • [Parallelization note if applicable]
+All translation debugging items have been resolved.
 
 ┄┄┄ Phase 2 — [Phase name]
 
@@ -33,9 +30,8 @@ Once an issue is solved, the next step is always:
 
 ┄┄ Dependency summary
 
-• `future_docs/issues/.../downstream.md`  ->  `future_docs/issues/.../upstream.md`
+• none
 
 ┄┄ Parallelization map
 
-Phase 1  [1][2]          ← [note]
-Phase 2     [3]          ← [note]
+None

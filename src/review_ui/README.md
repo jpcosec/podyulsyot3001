@@ -12,8 +12,11 @@ A multi-screen Textual application decoupled from the backend via an async bus.
 - **Job Explorer Screen**: `src/review_ui/screens/explorer_screen.py`
   - Lists all threads from the LangGraph API.
   - Displays dynamic status, source, and metadata.
-- **Review Screen**: `src/review_ui/screens/review_screen.py`
-  - Focused HITL gate for approving/rejecting match proposals.
+- **Review Screens**: `src/review_ui/screens/`
+  - `match_review_screen.py`: HITL gate for requirement-to-profile matches.
+  - `blueprint_review_screen.py`: HITL gate for section strategy.
+  - `content_review_screen.py`: HITL gate for final document content.
+  - `profile_diff_screen.py`: HITL gate for profile updates.
 - **Communication Bus (`MatchBus`)**: `src/review_ui/bus.py`
   - Bridges TUI events to the `LangGraphAPIClient` and persisted review artifacts.
 

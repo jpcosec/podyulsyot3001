@@ -2,8 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+import json
+from pathlib import Path
+from typing import Any, Dict, List, Optional, TYPE_CHECKING
 from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    from src.core.api_client import LangGraphAPIClient
 
 
 class ProfileOwner(BaseModel):
@@ -89,3 +94,58 @@ class ProfileBaseData(BaseModel):
 
     class Config:
         extra = "allow"
+
+
+class Profile:
+    """Manager for the candidate's canonical profile data.
+
+    Handles local persistence in 'data/reference_data' and synchronization
+    with remote sources via the LangGraph API.
+    """
+
+    def __init__(self, path: str | Path):
+        self.path = Path(path)
+        self._data: Optional[ProfileBaseData] = None
+
+    @property
+    def data(self) -> ProfileBaseData:
+        """Return the managed profile data, loading it if necessary."""
+        if self._data is None:
+            self.load()
+        return self._data
+
+    def load(self) -> ProfileBaseData:
+        """Load profile data from the configured filesystem path."""
+        if not self.path.exists():
+            raise FileNotFoundError(f"Profile file not found at {self.path}")
+
+        raw = json.loads(self.path.read_text(encoding="utf-8"))
+        self._data = ProfileBaseData.model_validate(raw)
+        return self._data
+
+    def save(self) -> None:
+        """Persist the current profile data back to disk."""
+        if self._data is None:
+            return
+
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.path.write_text(
+            self._data.model_dump_json(indent=2, by_alias=True),
+            encoding="utf-8",
+        )
+
+    async def refresh(self, client: LangGraphAPIClient, source: str) -> None:
+        """Sync profile data from a remote source and update local storage."""
+        from src.shared.log_tags import LogTag
+
+        import logging
+        logger = logging.getLogger(__name__)
+
+        logger.info(f"{LogTag.FAST} Refreshing profile from source: {source}")
+        raw_data = await client.get_profile(source)
+
+        # Validate before assigning
+        new_data = ProfileBaseData.model_validate(raw_data)
+        self._data = new_data
+        self.save()
+        logger.info(f"{LogTag.OK} Profile synced and saved to {self.path}")
