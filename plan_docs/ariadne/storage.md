@@ -166,7 +166,7 @@ When a motor needs a path for a specific job, resolution follows this order:
 
 The Crawl4AI extraction schema cache currently lives at
 `data/ariadne/assets/crawl4ai_schemas/`. This is a temporary location —
-target is a Crawl4AI motor-local `schemas/` folder (see `asset_placement.md`).
+target is a Crawl4AI motor-local `schemas/` folder.
 
 Ariadne storage should NOT manage Crawl4AI schemas. They are motor-specific
 assets, not Ariadne paths.
