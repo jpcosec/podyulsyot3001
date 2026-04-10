@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 - Repaired active markdown references across `docs/`, `src/`, and `plan_docs/issues/`, converted local `/tmp` proof paths in BrowserOS reference docs into plain text, and narrowed `scripts/validate_doc_links.py` to active documentation instead of historical/spec/archive markdown.
 - Added explicit documentation-lifecycle rules to `AGENTS.md` covering `docs/superpowers/`, `plan_docs/archive/`, `future_docs/`, `session-ses_*.md`, and deletion of completed planning artifacts after implementation knowledge is absorbed.
 - Added issue-guide-compliant cleanup issues for rehoming `docs/superpowers/`, ingesting and pruning `plan_docs/archive/`, triaging `session-ses_*.md`, and deleting completed `plan_docs/` artifacts once their knowledge is fully absorbed.
+- Clarified `AGENTS.md` git hygiene so agents should create the required snapshot commit automatically instead of asking the user whether to do it.
 
 ## [2026-04-10] - BrowserOS Auto-Launch and Health Management
 

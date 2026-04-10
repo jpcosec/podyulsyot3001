@@ -179,6 +179,7 @@ When editing code or documentation, refer to `docs/standards/` before making cha
 
 - Never edit anything while the git tree is dirty.
 - First make a commit with the existing untracked or unstaged work, then edit on top of that clean state.
+- Do this automatically; do not ask the user whether to make the snapshot commit just to satisfy git cleanliness.
 - Do not overwrite or discard user work to create cleanliness.
 
 ## Key References
