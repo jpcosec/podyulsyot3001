@@ -97,6 +97,48 @@ python -m src.cli.main api start
 
 ---
 
+## 🧪 Testing
+
+### pytest-textual (Unit/Integration)
+
+Run the test suite with Textual's headless Pilot:
+
+```bash
+# All review UI tests
+python -m pytest tests/unit/review_ui/ -v
+
+# Specific test file
+python -m pytest tests/unit/review_ui/test_explorer_screen.py -v
+
+# With coverage
+python -m pytest tests/unit/review_ui/ --cov=src/review_ui --cov-report=term-missing
+```
+
+**Test Structure:**
+- `tests/unit/review_ui/test_explorer_screen.py` - JobExplorerScreen tests
+- `tests/unit/review_ui/test_navigation.py` - Screen navigation flow tests
+- `tests/unit/review_ui/test_error_states.py` - Error handling tests
+- `tests/unit/review_ui/test_demo_interactions.py` - Demo launcher and HITL screen interactions
+
+### textual-web + TestSprite (E2E)
+
+For browser-based testing with AI-generated Playwright tests:
+
+```bash
+# Terminal 1: Start textual-web server
+./scripts/run_textual_web.sh
+
+# URL: http://localhost:8765/review-ui/
+
+# Use TestSprite MCP tools in your IDE:
+# testsprite_testsprite_generate_code_and_execute
+# pointing to: http://localhost:8765/review-ui/
+```
+
+See `textual_web.toml` for configuration.
+
+---
+
 ## 🚑 Troubleshooting
 
 - **Explorer shows no jobs** -> No API-backed runs exist yet. Start them with `python -m src.cli.main run-batch --sources xing --limit 5`, then reopen the TUI.

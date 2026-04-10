@@ -143,6 +143,28 @@ python -m src.cli.main translate --source xing
 - Prefer narrow test files under `tests/unit/...`.
 - Run affected test file plus `tests/unit/core/ai/generate_documents_v2` when changing generate_documents_v2.
 - Run `tests/unit/cli/test_main.py` when changing CLI behavior.
+- Run `tests/unit/review_ui/` when changing the Textual review UI.
+
+### Textual UI Testing
+
+Use `pytest-textual` for headless testing with the Pilot class:
+
+```bash
+# Run all review UI tests
+python -m pytest tests/unit/review_ui/ -v
+
+# Run specific screen tests
+python -m pytest tests/unit/review_ui/test_explorer_screen.py -v
+```
+
+For E2E testing with browser:
+```bash
+# Start textual-web server
+./scripts/run_textual_web.sh
+
+# Then use TestSprite MCP tools pointing to:
+# http://localhost:8765/review-ui/
+```
 
 ## Documentation Expectations
 

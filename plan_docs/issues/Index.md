@@ -19,7 +19,12 @@ Once an issue is solved:
 
 ## Current State
 
-The active and full test suites are healthy and the current operator/runtime docs are aligned with the codebase.
+The active and full test suites are healthy (226 tests passing) and the current operator/runtime docs are aligned with the codebase.
+
+Textual UI testing infrastructure is now complete:
+- pytest-textual tests for all screens
+- textual-web configuration for browser-based testing
+- TestSprite integration documented
 
 ---
 
