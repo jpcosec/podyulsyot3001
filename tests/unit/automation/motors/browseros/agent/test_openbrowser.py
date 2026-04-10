@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from unittest.mock import patch
 
 from src.automation.motors.browseros.agent.openbrowser import OpenBrowserClient
 
@@ -37,7 +38,8 @@ class _FakeSession:
         return self.response
 
 
-def test_communicate_captures_chat_trace_and_writes_artifact(tmp_path: Path):
+@patch("src.automation.motors.browseros.agent.openbrowser.ensure_browseros_running")
+def test_communicate_captures_chat_trace_and_writes_artifact(mock_ensure, tmp_path: Path):
     session = _FakeSession(
         _FakeResponse(
             200,
@@ -70,7 +72,8 @@ def test_communicate_captures_chat_trace_and_writes_artifact(tmp_path: Path):
     assert session.calls[0][1]["message"] == "Say only ready."
 
 
-def test_communicate_uses_explicit_runtime_base_url():
+@patch("src.automation.motors.browseros.agent.openbrowser.ensure_browseros_running")
+def test_communicate_uses_explicit_runtime_base_url(mock_ensure):
     session = _FakeSession(
         _FakeResponse(
             200,
@@ -87,7 +90,8 @@ def test_communicate_uses_explicit_runtime_base_url():
     assert session.calls[0][0] == "http://127.0.0.1:9201/chat"
 
 
-def test_communicate_captures_agent_tool_events():
+@patch("src.automation.motors.browseros.agent.openbrowser.ensure_browseros_running")
+def test_communicate_captures_agent_tool_events(mock_ensure):
     session = _FakeSession(
         _FakeResponse(
             200,
@@ -117,7 +121,8 @@ def test_communicate_captures_agent_tool_events():
     assert "tool-output-available" in event_types
 
 
-def test_communicate_marks_rate_limit_without_raising():
+@patch("src.automation.motors.browseros.agent.openbrowser.ensure_browseros_running")
+def test_communicate_marks_rate_limit_without_raising(mock_ensure):
     session = _FakeSession(_FakeResponse(429, []))
     client = OpenBrowserClient(session=session)
 
@@ -127,7 +132,8 @@ def test_communicate_marks_rate_limit_without_raising():
     assert result.error == "BrowserOS /chat rate limited the request."
 
 
-def test_run_agent_returns_trace_metadata_without_playbook():
+@patch("src.automation.motors.browseros.agent.openbrowser.ensure_browseros_running")
+def test_run_agent_returns_trace_metadata_without_playbook(mock_ensure):
     session = _FakeSession(
         _FakeResponse(
             200,
@@ -149,7 +155,8 @@ def test_run_agent_returns_trace_metadata_without_playbook():
     assert result.candidates == []
 
 
-def test_run_agent_includes_normalized_candidates_when_tool_events_exist():
+@patch("src.automation.motors.browseros.agent.openbrowser.ensure_browseros_running")
+def test_run_agent_includes_normalized_candidates_when_tool_events_exist(mock_ensure):
     session = _FakeSession(
         _FakeResponse(
             200,

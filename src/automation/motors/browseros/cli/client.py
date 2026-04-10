@@ -12,7 +12,10 @@ from typing import Any
 import requests
 
 from src.shared.log_tags import LogTag
-from src.automation.motors.browseros.runtime import resolve_browseros_runtime
+from src.automation.motors.browseros.runtime import (
+    resolve_browseros_runtime,
+    ensure_browseros_running,
+)
 from .recording import BrowserOSMcpRecorder
 
 logger = logging.getLogger(__name__)
@@ -66,6 +69,9 @@ class BrowserOSClient:
         """
         if self._initialized:
             return
+
+        ensure_browseros_running(self.runtime)
+
         response = self._post(
             method="initialize",
             params={

@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-10] - BrowserOS Auto-Launch and Health Management
+
+### Added
+- Added `ensure_browseros_running` and `is_runtime_ready` to `src/automation/motors/browseros/runtime.py` to proactively check BrowserOS health and auto-launch the AppImage if unreachable.
+- Added `--launch` flag to `python -m src.automation.main browseros-check` to attempt auto-launching from the CLI.
+- Added 9 unit tests for BrowserOS runtime health and launch logic in `tests/unit/automation/motors/browseros/test_runtime.py`.
+
+### Changed
+- Updated `BrowserOSClient.initialize` in `src/automation/motors/browseros/cli/client.py` to call `ensure_browseros_running` before initiating MCP sessions.
+- Updated `OpenBrowserClient.communicate` in `src/automation/motors/browseros/agent/openbrowser.py` to call `ensure_browseros_running` before starting Level 2 /chat sessions.
+- Updated existing `BrowserOSClient` and `OpenBrowserClient` unit tests to mock `ensure_browseros_running`, reducing test execution time from ~40s to <0.1s.
+
 ## [2026-04-09] - Portal Real-Life Validation Plan
 
 ### Added

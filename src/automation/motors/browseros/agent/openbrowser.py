@@ -16,7 +16,10 @@ from uuid import uuid4
 import requests
 from pydantic import BaseModel, Field
 
-from src.automation.motors.browseros.runtime import resolve_browseros_runtime
+from src.automation.motors.browseros.runtime import (
+    resolve_browseros_runtime,
+    ensure_browseros_running,
+)
 from .models import BrowserOSLevel2StreamEvent, BrowserOSLevel2Trace
 from .normalizer import BrowserOSLevel2TraceNormalizer
 from .promoter import BrowserOSLevel2Promoter
@@ -88,6 +91,8 @@ class OpenBrowserClient:
         timeout_seconds: float = 180.0,
     ) -> OpenBrowserConversationResult:
         """Run a Level 2 BrowserOS `/chat` session and capture its raw trace."""
+        ensure_browseros_running(self.runtime)
+
         conversation_id = str(uuid4())
         started_at = _utc_now()
         trace = BrowserOSLevel2Trace(

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from unittest.mock import patch
 from src.automation.motors.browseros.cli.client import BrowserOSClient
 
 
@@ -28,7 +29,8 @@ class _FakeSession:
         return self.responses.pop(0)
 
 
-def test_initialize_stores_mcp_session_header():
+@patch("src.automation.motors.browseros.cli.client.ensure_browseros_running")
+def test_initialize_stores_mcp_session_header(mock_ensure):
     session = _FakeSession(
         [
             _FakeResponse(
@@ -43,7 +45,8 @@ def test_initialize_stores_mcp_session_header():
     assert session.headers["Mcp-Session-Id"] == "abc123"
 
 
-def test_take_snapshot_parses_interactive_elements():
+@patch("src.automation.motors.browseros.cli.client.ensure_browseros_running")
+def test_take_snapshot_parses_interactive_elements(mock_ensure):
     session = _FakeSession(
         [
             _FakeResponse(
@@ -72,7 +75,8 @@ def test_take_snapshot_parses_interactive_elements():
     assert snapshot[1].text == "First name"
 
 
-def test_evaluate_script_react_uses_evaluate_script_tool():
+@patch("src.automation.motors.browseros.cli.client.ensure_browseros_running")
+def test_evaluate_script_react_uses_evaluate_script_tool(mock_ensure):
     session = _FakeSession(
         [
             _FakeResponse(

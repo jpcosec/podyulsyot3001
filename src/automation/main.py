@@ -101,6 +101,8 @@ def _add_apply_subcommand(sub: argparse._SubParsersAction) -> None:
     p.add_argument("--profile-json", dest="profile_json")
     p.add_argument("--credential-json", dest="credential_json")
     p.add_argument("--dry-run", dest="dry_run", action="store_true", default=False)
+    p.add_argument("--visible", action="store_true", help="Use a visible browser for the application flow")
+    p.add_argument("--use-agent", action="store_true", help="Force the use of an autonomous agent instead of a deterministic map")
     p.add_argument(
         "--setup-session", dest="setup_session", action="store_true", default=False
     )
@@ -116,6 +118,11 @@ def _add_browseros_check_subcommand(sub: argparse._SubParsersAction) -> None:
         "--base-url",
         dest="base_url",
         help="Optional BrowserOS base URL override (default: BROWSEROS_BASE_URL or http://127.0.0.1:9000)",
+    )
+    p.add_argument(
+        "--launch",
+        action="store_true",
+        help="Attempt to auto-launch BrowserOS if it is not running",
     )
 
 
@@ -158,10 +165,19 @@ def _check_url(url: str) -> tuple[bool, str]:
 
 def _run_browseros_check(args) -> None:
     """Verify the configured BrowserOS runtime endpoints."""
-    from src.automation.motors.browseros.runtime import resolve_browseros_runtime
+    from src.automation.motors.browseros.runtime import (
+        resolve_browseros_runtime,
+        ensure_browseros_running,
+        is_runtime_ready,
+    )
     from src.shared.log_tags import LogTag
 
     runtime = resolve_browseros_runtime(preferred_base_url=args.base_url)
+    
+    if args.launch and not is_runtime_ready(runtime.mcp_url):
+        print(f"{LogTag.WARN} BrowserOS MCP unreachable. Attempting auto-launch...")
+        ensure_browseros_running(runtime)
+
     checks = {
         runtime.mcp_url: _check_url(runtime.mcp_url),
         runtime.chat_url: _check_url(runtime.chat_url),
@@ -176,7 +192,7 @@ def _run_browseros_check(args) -> None:
     if not mcp_ok:
         print(
             "Launch BrowserOS with `/home/jp/BrowserOS.AppImage --no-sandbox` "
-            "or override the base URL with --base-url / BROWSEROS_BASE_URL."
+            "or use the --launch flag with this command."
         )
         sys.exit(1)
 
@@ -341,6 +357,8 @@ async def _run_apply(args) -> None:
         profile=profile_data,
         credentials=credential_data,
         dry_run=args.dry_run,
+        visible=args.visible,
+        use_agent=args.use_agent,
     )
     logger.info("%s Apply completed: status=%s", LogTag.OK, meta.status)
 
