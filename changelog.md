@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 - Resolved the session-trace triage cleanup issue by deleting `session-ses_28e6.md` after confirming it did not contain unique durable knowledge that was missing from canonical docs or active issues.
 - Resolved the `docs/superpowers/` rehoming cleanup issue by moving any remaining durable guidance into canonical docs or transitional planning space, deleting superseded superpowers specs/plans, and repointing `AGENTS.md` to current architecture docs.
 - Resolved the archive-ingestion cleanup issue by absorbing the remaining placement rules into `src/automation/README.md` and `plan_docs/ariadne/storage.md`, then deleting the obsolete `plan_docs/archive/automation/` files.
+- Pruned stale completed planning overviews in `plan_docs/planning/stage1_baseline.md`, `plan_docs/automation/README.md`, `plan_docs/ariadne/README.md`, and `plan_docs/contracts/README.md` after confirming their guidance is already covered by current docs and code-adjacent READMEs.
 
 ## [2026-04-10] - BrowserOS Auto-Launch and Health Management
 
