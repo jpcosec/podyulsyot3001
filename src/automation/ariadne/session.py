@@ -96,6 +96,8 @@ class AriadneSession:
         profile: dict[str, Any] | CandidateProfile | None = None,
         credentials: dict[str, Any] | CredentialStore | None = None,
         dry_run: bool = False,
+        visible: bool = False,
+        use_agent: bool = False,
         path_id: str | None = None,
     ) -> ApplyMeta:
         """Run an apply flow using the supplied motor.
@@ -108,6 +110,8 @@ class AriadneSession:
             profile: Candidate profile payload for placeholder resolution.
             credentials: Optional credential metadata for login-required flows.
             dry_run: If True, stop at the first step marked dry_run_stop.
+            visible: Whether to perform the application in a visible browser window.
+            use_agent: Whether to force an autonomous agent run.
             path_id: Optional explicit path override when the resolved route stays onsite.
 
         Returns:
@@ -149,17 +153,17 @@ class AriadneSession:
             )
 
             selected_path_id = path_id or route.path_id
-            if not selected_path_id:
+            if not selected_path_id and not use_agent:
                 raise ValueError(
                     f"No Ariadne path resolved for onsite route in {self.portal_name}"
                 )
 
-            path = portal_map.paths.get(selected_path_id)
+            path = None if use_agent else portal_map.paths.get(selected_path_id)
             if not path:
                 logger.info(
-                    "%s Path '%s' not found. Falling back to Level 2 OpenBrowser agent.",
+                    "%s %s. Falling back to Level 2 OpenBrowser agent.",
                     LogTag.FAST,
-                    selected_path_id,
+                    "Forcing agent run" if use_agent else f"Path '{selected_path_id}' not found",
                 )
                 agent_client = OpenBrowserClient()
                 agent_context = self._build_context(
@@ -235,6 +239,7 @@ class AriadneSession:
             async with motor.open_session(
                 session_id,
                 credentials=resolved_credentials,
+                visible=visible,
             ) as ms:
                 step_index = 1
                 while step_index <= len(path.steps):

@@ -6,6 +6,7 @@ Orchestration (map loading, navigation, run loop) is owned by AriadneSession.
 
 from __future__ import annotations
 
+import json
 import logging
 import re
 from contextlib import asynccontextmanager
@@ -71,14 +72,17 @@ class C4AIMotorSession:
             results = await page.evaluate(js_code)
             return page
 
-        await self._crawler.arun(
-            url="about:blank",
-            config=CrawlerRunConfig(
-                js_only=True,
-                session_id=self._session_id,
-                hooks={"before_retrieve_html": _check_hook},
-            ),
-        )
+        self._crawler.crawler_strategy.set_hook("before_retrieve_html", _check_hook)
+        try:
+            await self._crawler.arun(
+                url="raw:",
+                config=CrawlerRunConfig(
+                    js_only=True,
+                    session_id=self._session_id,
+                ),
+            )
+        finally:
+            self._crawler.crawler_strategy.set_hook("before_retrieve_html", None)
         if not results:
             raise ObservationFailed(
                 "observe() returned empty results — hook may not have fired"
@@ -126,14 +130,17 @@ class C4AIMotorSession:
             )
             return page
 
-        await self._crawler.arun(
-            url="about:blank",
-            config=CrawlerRunConfig(
-                js_only=True,
-                session_id=self._session_id,
-                hooks={"before_retrieve_html": _inspect_hook},
-            ),
-        )
+        self._crawler.crawler_strategy.set_hook("before_retrieve_html", _inspect_hook)
+        try:
+            await self._crawler.arun(
+                url="raw:",
+                config=CrawlerRunConfig(
+                    js_only=True,
+                    session_id=self._session_id,
+                ),
+            )
+        finally:
+            self._crawler.crawler_strategy.set_hook("before_retrieve_html", None)
         return self._danger_detector.detect(signals)
 
     async def highlight_element(self, selector: str, color: str = "red") -> None:
@@ -149,7 +156,7 @@ class C4AIMotorSession:
             }})();
         """
         await self._crawler.arun(
-            url="about:blank",
+            url="raw:",
             config=CrawlerRunConfig(
                 js_code=js_code,
                 session_id=self._session_id,
