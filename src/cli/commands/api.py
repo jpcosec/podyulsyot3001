@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 def add_parser(subparsers: argparse._SubParsersAction) -> None:
+    """Register the api subcommand parser."""
     p = subparsers.add_parser("api", help="Manage the LangGraph API control plane")
     p.add_argument("action", choices=["start", "status"], help="API action")
     p.add_argument("--port", type=int, default=8124, help="Preferred API port")

@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 def add_parser(subparsers: argparse._SubParsersAction) -> None:
+    """Register the review subcommand parser."""
     p = subparsers.add_parser("review", help="Launch the HITL review TUI")
     p.add_argument("--source", help="Source for direct review mode")
     p.add_argument("--job-id", dest="job_id", help="Job ID for direct review mode")

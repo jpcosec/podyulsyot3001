@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 
 def add_parser(subparsers: argparse._SubParsersAction) -> None:
+    """Register the pipeline subcommand parser."""
     p = subparsers.add_parser(
         "pipeline",
         help="Run the full pipeline via the LangGraph API",

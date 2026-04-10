@@ -11,6 +11,7 @@ from src.core.tools.render.main import main as render_main
 
 
 def add_parser(subparsers: argparse._SubParsersAction) -> None:
+    """Register the generate subcommand parser."""
     p = subparsers.add_parser("generate", help="Run document generation only")
     p.add_argument("--source", required=True)
     p.add_argument("--job-id", dest="job_id", required=True)

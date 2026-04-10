@@ -8,6 +8,7 @@ from src.core.tools.render.main import main as render_main
 
 
 def add_parser(subparsers: argparse._SubParsersAction) -> None:
+    """Register the render subcommand parser."""
     p = subparsers.add_parser("render", help="Run document rendering only")
     p.add_argument("document", choices=["cv", "letter"])
     p.add_argument("--source", required=True)

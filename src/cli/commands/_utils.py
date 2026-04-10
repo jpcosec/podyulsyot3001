@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import argparse
 import json
 import logging
 from pathlib import Path
@@ -90,8 +89,6 @@ def read_jobs_from_stdin(sources: list[str]) -> list[tuple[str, str]]:
 def newest_jobs_for_sources(
     data_manager: Any, sources: list[str], limit: int | None
 ) -> list[tuple[str, str]]:
-    from src.core import DataManager
-
     jobs: list[tuple[str, str, float]] = []
     for source in sources:
         root = data_manager.source_root(source)

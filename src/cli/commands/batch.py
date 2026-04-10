@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 
 def add_parser(subparsers: argparse._SubParsersAction) -> None:
+    """Register the run-batch subcommand parser."""
     p = subparsers.add_parser(
         "run-batch",
         help="Launch LangGraph pipeline runs for multiple ingested jobs",

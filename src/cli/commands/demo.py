@@ -6,6 +6,7 @@ import argparse
 
 
 def add_parser(subparsers: argparse._SubParsersAction) -> None:
+    """Register the demo subcommand parser."""
     subparsers.add_parser("demo", help="Launch the HITL review UI demo with mock data")
 
 

@@ -29,6 +29,7 @@ async def run(args: argparse.Namespace) -> int:
 
 
 def add_parser(subparsers: argparse._SubParsersAction) -> None:
+    """Register the match subcommand parser."""
     p = subparsers.add_parser("match", help="Run the match step via the LangGraph API")
     p.add_argument("--source", required=True)
     p.add_argument("--job-id", dest="job_id", required=True)
