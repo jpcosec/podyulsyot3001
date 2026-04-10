@@ -36,8 +36,9 @@ AUTOMATION_EXTRACTION_FALLBACKS="browseros,llm"
 BrowserOS is an external runtime, not a Python server shipped by this repo.
 
 ```bash
-# Launch the local BrowserOS runtime
-/home/jp/BrowserOS.AppImage --no-sandbox
+# Configure and launch the local BrowserOS runtime
+export BROWSEROS_APPIMAGE_PATH="/path/to/BrowserOS.AppImage"
+"$BROWSEROS_APPIMAGE_PATH" --no-sandbox
 
 # Verify the stable local front door
 curl http://127.0.0.1:9000/mcp

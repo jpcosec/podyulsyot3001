@@ -11,8 +11,6 @@ from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_APPIMAGE_PATH = "/home/jp/BrowserOS.AppImage"
-
 
 @dataclass(frozen=True)
 class BrowserOSRuntimeConfig:
@@ -21,6 +19,12 @@ class BrowserOSRuntimeConfig:
     base_http_url: str
     mcp_url: str
     chat_url: str
+
+
+def resolve_browseros_appimage_path() -> str | None:
+    """Return the configured BrowserOS AppImage path, if any."""
+    appimage_path = os.environ.get("BROWSEROS_APPIMAGE_PATH", "").strip()
+    return appimage_path or None
 
 
 def resolve_browseros_runtime(
@@ -62,13 +66,21 @@ def ensure_browseros_running(
     """Ensure the BrowserOS runtime is healthy; auto-launch if possible.
 
     If the MCP endpoint is unreachable, this function attempts to launch
-    the AppImage at `/home/jp/BrowserOS.AppImage` (or BROWSEROS_APPIMAGE_PATH)
-    in the background and polls for readiness.
+    the configured AppImage from `BROWSEROS_APPIMAGE_PATH` in the background
+    and polls for readiness.
     """
     if is_runtime_ready(runtime.mcp_url):
         return
 
-    app_path = os.environ.get("BROWSEROS_APPIMAGE_PATH") or DEFAULT_APPIMAGE_PATH
+    app_path = resolve_browseros_appimage_path()
+    if not app_path:
+        logger.warning(
+            "BrowserOS MCP unreachable at %s and BROWSEROS_APPIMAGE_PATH is not set. "
+            "Cannot auto-launch.",
+            runtime.mcp_url,
+        )
+        return
+
     if not os.path.exists(app_path):
         logger.warning(
             "BrowserOS MCP unreachable at %s and AppImage not found at %s. "

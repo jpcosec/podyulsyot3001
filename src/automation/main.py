@@ -21,18 +21,19 @@ from src.automation.storage import AutomationStorage
 
 
 _CLI_EPILOG = """Basic BrowserOS usage:
-  1. Launch BrowserOS: /home/jp/BrowserOS.AppImage --no-sandbox
-  2. Verify runtime: python -m src.automation.main browseros-check
-  3. BrowserOS reference index: docs/reference/external_libs/browseros/readme.txt
-  4. Extraction fallback order: AUTOMATION_EXTRACTION_FALLBACKS=browseros,llm
+  1. Set BROWSEROS_APPIMAGE_PATH=/path/to/BrowserOS.AppImage
+  2. Launch BrowserOS: "$BROWSEROS_APPIMAGE_PATH" --no-sandbox
+  3. Verify runtime: python -m src.automation.main browseros-check
+  4. BrowserOS reference index: docs/reference/external_libs/browseros/readme.txt
+  5. Extraction fallback order: AUTOMATION_EXTRACTION_FALLBACKS=browseros,llm
 """
 
 
 def _browseros_help_text() -> str:
     """Return the standard BrowserOS startup hint shown in CLI help."""
     return (
-        "Requires the external BrowserOS runtime. Launch with "
-        "`/home/jp/BrowserOS.AppImage --no-sandbox`, then verify with "
+        "Requires the external BrowserOS runtime. Set `BROWSEROS_APPIMAGE_PATH`, "
+        'launch with `"$BROWSEROS_APPIMAGE_PATH" --no-sandbox`, then verify with '
         "`python -m src.automation.main browseros-check`."
     )
 
@@ -76,9 +77,19 @@ def _add_scrape_subcommand(sub: argparse._SubParsersAction) -> None:
     p.add_argument("--max-days", dest="max_days", type=int)
     p.add_argument("--limit", type=int)
     p.add_argument("--save-html", action="store_true")
-    p.add_argument("--interactive", action="store_true", help="Perform search via UI interaction")
-    p.add_argument("--visible", action="store_true", help="Use a visible browser for interactive discovery")
-    p.add_argument("--record", action="store_true", help="Record the discovery session for promotion")
+    p.add_argument(
+        "--interactive", action="store_true", help="Perform search via UI interaction"
+    )
+    p.add_argument(
+        "--visible",
+        action="store_true",
+        help="Use a visible browser for interactive discovery",
+    )
+    p.add_argument(
+        "--record",
+        action="store_true",
+        help="Record the discovery session for promotion",
+    )
     p.add_argument(
         "--backend",
         choices=["crawl4ai", "browseros"],
@@ -101,8 +112,16 @@ def _add_apply_subcommand(sub: argparse._SubParsersAction) -> None:
     p.add_argument("--profile-json", dest="profile_json")
     p.add_argument("--credential-json", dest="credential_json")
     p.add_argument("--dry-run", dest="dry_run", action="store_true", default=False)
-    p.add_argument("--visible", action="store_true", help="Use a visible browser for the application flow")
-    p.add_argument("--use-agent", action="store_true", help="Force the use of an autonomous agent instead of a deterministic map")
+    p.add_argument(
+        "--visible",
+        action="store_true",
+        help="Use a visible browser for the application flow",
+    )
+    p.add_argument(
+        "--use-agent",
+        action="store_true",
+        help="Force the use of an autonomous agent instead of a deterministic map",
+    )
     p.add_argument(
         "--setup-session", dest="setup_session", action="store_true", default=False
     )
@@ -173,7 +192,7 @@ def _run_browseros_check(args) -> None:
     from src.shared.log_tags import LogTag
 
     runtime = resolve_browseros_runtime(preferred_base_url=args.base_url)
-    
+
     if args.launch and not is_runtime_ready(runtime.mcp_url):
         print(f"{LogTag.WARN} BrowserOS MCP unreachable. Attempting auto-launch...")
         ensure_browseros_running(runtime)
@@ -191,8 +210,9 @@ def _run_browseros_check(args) -> None:
             mcp_ok = ok
     if not mcp_ok:
         print(
-            "Launch BrowserOS with `/home/jp/BrowserOS.AppImage --no-sandbox` "
-            "or use the --launch flag with this command."
+            "Set `BROWSEROS_APPIMAGE_PATH`, launch BrowserOS with "
+            '`"$BROWSEROS_APPIMAGE_PATH" --no-sandbox`, or use the --launch '
+            "flag with this command."
         )
         sys.exit(1)
 
@@ -253,16 +273,18 @@ async def _run_scrape(args) -> None:
     motor = None
     if args.interactive:
         if args.backend == "browseros":
-            from src.automation.motors.browseros.cli.backend import BrowserOSMotorProvider
+            from src.automation.motors.browseros.cli.backend import (
+                BrowserOSMotorProvider,
+            )
+
             motor = BrowserOSMotorProvider()
         elif args.backend == "crawl4ai":
             from src.automation.motors.crawl4ai.apply_engine import C4AIMotorProvider
+
             motor = C4AIMotorProvider()
 
     ingested = await adapter.run(
-        already_scraped=already_scraped, 
-        motor=motor,
-        **vars(args)
+        already_scraped=already_scraped, motor=motor, **vars(args)
     )
     logger.info(
         "%s Ingested %s jobs for source '%s'", LogTag.OK, len(ingested), args.source

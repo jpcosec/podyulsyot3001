@@ -122,7 +122,7 @@ def test_browseros_check_parses_optional_base_url() -> None:
 def test_parser_epilog_mentions_browseros_usage() -> None:
     parser = build_parser()
     assert parser.epilog is not None
-    assert "BrowserOS.AppImage" in parser.epilog
+    assert "BROWSEROS_APPIMAGE_PATH" in parser.epilog
     assert "browseros-check" in parser.epilog
 
 

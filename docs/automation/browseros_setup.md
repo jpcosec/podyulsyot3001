@@ -5,8 +5,10 @@ BrowserOS provides the authenticated browser session needed for LinkedIn and XIN
 ## Starting BrowserOS
 
 ```bash
+export BROWSEROS_APPIMAGE_PATH="/path/to/BrowserOS.AppImage"
+
 # Launch the BrowserOS runtime
-/home/jp/BrowserOS.AppImage --no-sandbox
+"$BROWSEROS_APPIMAGE_PATH" --no-sandbox
 
 # Verify the stable local front door
 curl http://127.0.0.1:9000/mcp
@@ -18,6 +20,7 @@ stable local front door at `http://127.0.0.1:9000` by default.
 - MCP endpoint: `http://127.0.0.1:9000/mcp`
 - Agent chat endpoint: `http://127.0.0.1:9000/chat` (optional for scrape rescue)
 - Override base URL with `BROWSEROS_BASE_URL`
+- Auto-launch requires `BROWSEROS_APPIMAGE_PATH`
 
 The deeper BrowserOS reference index lives at
 `docs/reference/external_libs/browseros/readme.txt`.
@@ -112,7 +115,8 @@ python -m src.automation.main apply --source xing --backend browseros --setup-se
 BrowserOS runtime is not running. Start it with:
 
 ```bash
-/home/jp/BrowserOS.AppImage --no-sandbox
+export BROWSEROS_APPIMAGE_PATH="/path/to/BrowserOS.AppImage"
+"$BROWSEROS_APPIMAGE_PATH" --no-sandbox
 ```
 
 If BrowserOS is running on a different local front door, set:

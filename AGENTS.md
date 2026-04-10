@@ -21,7 +21,8 @@ BrowserOS must be launched before using any BrowserOS-backed flow or validation.
 Do not assume the runtime is already available.
 
 ```bash
-/home/jp/BrowserOS.AppImage --no-sandbox
+export BROWSEROS_APPIMAGE_PATH="/path/to/BrowserOS.AppImage"
+"$BROWSEROS_APPIMAGE_PATH" --no-sandbox
 curl http://127.0.0.1:9000/mcp
 ```
 
@@ -195,7 +196,7 @@ When editing code or documentation, refer to `docs/standards/` before making cha
 
 ## Troubleshooting
 
-- `BrowserOS unreachable`: launch `/home/jp/BrowserOS.AppImage --no-sandbox` and verify `http://127.0.0.1:9000/mcp`.
+- `BrowserOS unreachable`: set `BROWSEROS_APPIMAGE_PATH`, launch `"$BROWSEROS_APPIMAGE_PATH" --no-sandbox`, and verify `http://127.0.0.1:9000/mcp`.
 - `RuntimeError: already submitted`: inspect or remove the relevant `apply_meta.json` in the job artifact directory if you intentionally need a fresh run.
 - `Compilation errors`: inspect `src/automation/motors/crawl4ai/compiler/` and the relevant portal map JSON.
 - `Motor failures`: inspect logs under `logs/` and preserved job artifacts under `data/jobs/`.

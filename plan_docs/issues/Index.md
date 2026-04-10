@@ -21,7 +21,6 @@ Once an issue is solved:
 
 ## Roots
 
-- `plan_docs/issues/gaps/browseros-appimage-path-is-hardcoded.md`
 - `plan_docs/issues/gaps/browseros-xing-live-apply-is-not-validated.md`
 - `plan_docs/issues/gaps/browseros-stepstone-live-apply-is-not-validated.md`
 - `plan_docs/issues/gaps/browseros-linkedin-live-apply-is-not-validated.md`
@@ -33,7 +32,6 @@ Once an issue is solved:
 ## Parallelizable groups
 
 - Depth 0:
-  - `plan_docs/issues/gaps/browseros-appimage-path-is-hardcoded.md`
   - `plan_docs/issues/gaps/browseros-xing-live-apply-is-not-validated.md`
   - `plan_docs/issues/gaps/browseros-stepstone-live-apply-is-not-validated.md`
   - `plan_docs/issues/gaps/browseros-linkedin-live-apply-is-not-validated.md`
@@ -50,7 +48,6 @@ Once an issue is solved:
 
 ## Dependency graph
 
-- `plan_docs/issues/gaps/browseros-appimage-path-is-hardcoded.md` -> no dependencies
 - `plan_docs/issues/gaps/browseros-xing-live-apply-is-not-validated.md` -> no dependencies
 - `plan_docs/issues/gaps/browseros-stepstone-live-apply-is-not-validated.md` -> no dependencies
 - `plan_docs/issues/gaps/browseros-linkedin-live-apply-is-not-validated.md` -> no dependencies
@@ -73,38 +70,32 @@ Once an issue is solved:
      - `plan_docs/issues/gaps/crawl4ai-linkedin-live-apply-is-not-validated.md`
    - Expected outputs: Working live apply matrix, backend-specific evidence, updated docs/routing assumptions
 
-2. `plan_docs/issues/gaps/browseros-appimage-path-is-hardcoded.md`
-   - Scope: Remove hardcoded AppImage path from runtime resolution and move to env configuration.
-   - Depends on: none
-   - Expected outputs: Configurable AppImage path, updated docs.
-
-3. `plan_docs/issues/gaps/browseros-xing-live-apply-is-not-validated.md`
-   - Scope: Validate BrowserOS-backed live apply flows for XING against the matrix
-   - Depends on: none
-   - Expected outputs: BrowserOS XING live apply evidence and support status
-
-4. `plan_docs/issues/gaps/browseros-stepstone-live-apply-is-not-validated.md`
-   - Scope: Validate BrowserOS-backed live apply flows for StepStone against the matrix
-   - Depends on: none
-   - Expected outputs: BrowserOS StepStone live apply evidence and support status
-
-5. `plan_docs/issues/gaps/browseros-linkedin-live-apply-is-not-validated.md`
-   - Scope: Validate BrowserOS-backed live apply flows for LinkedIn against the matrix
-   - Depends on: none
-   - Expected outputs: BrowserOS LinkedIn live apply evidence and support status
-
-6. `plan_docs/issues/gaps/crawl4ai-xing-live-apply-is-not-validated.md`
-   - Scope: Validate Crawl4AI-backed live apply flows for XING against the matrix
-   - Depends on: none
-   - Expected outputs: Crawl4AI XING live apply evidence and support status
-
-7. `plan_docs/issues/gaps/crawl4ai-stepstone-live-apply-is-not-validated.md`
-   - Scope: Validate Crawl4AI-backed live apply flows for StepStone against the matrix
-   - Depends on: none
-   - Expected outputs: Crawl4AI StepStone live apply evidence and support status
-
-8. `plan_docs/issues/unimplemented/langgraph-mcp-adapter-integration-is-not-evaluated.md`
-    - Scope: Evaluate whether LangGraph MCP adapters should become the preferred graph/agent orchestration path for MCP-backed workflows in this repo
+2. `plan_docs/issues/gaps/browseros-xing-live-apply-is-not-validated.md`
+    - Scope: Validate BrowserOS-backed live apply flows for XING against the matrix
     - Depends on: none
-    - Expected outputs: Architectural decision, scope analysis, and follow-up issue split if adoption is recommended
+    - Expected outputs: BrowserOS XING live apply evidence and support status
 
+3. `plan_docs/issues/gaps/browseros-stepstone-live-apply-is-not-validated.md`
+    - Scope: Validate BrowserOS-backed live apply flows for StepStone against the matrix
+    - Depends on: none
+    - Expected outputs: BrowserOS StepStone live apply evidence and support status
+
+4. `plan_docs/issues/gaps/browseros-linkedin-live-apply-is-not-validated.md`
+    - Scope: Validate BrowserOS-backed live apply flows for LinkedIn against the matrix
+    - Depends on: none
+    - Expected outputs: BrowserOS LinkedIn live apply evidence and support status
+
+5. `plan_docs/issues/gaps/crawl4ai-xing-live-apply-is-not-validated.md`
+    - Scope: Validate Crawl4AI-backed live apply flows for XING against the matrix
+    - Depends on: none
+    - Expected outputs: Crawl4AI XING live apply evidence and support status
+
+6. `plan_docs/issues/gaps/crawl4ai-stepstone-live-apply-is-not-validated.md`
+    - Scope: Validate Crawl4AI-backed live apply flows for StepStone against the matrix
+    - Depends on: none
+    - Expected outputs: Crawl4AI StepStone live apply evidence and support status
+
+7. `plan_docs/issues/unimplemented/langgraph-mcp-adapter-integration-is-not-evaluated.md`
+     - Scope: Evaluate whether LangGraph MCP adapters should become the preferred graph/agent orchestration path for MCP-backed workflows in this repo
+     - Depends on: none
+     - Expected outputs: Architectural decision, scope analysis, and follow-up issue split if adoption is recommended

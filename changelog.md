@@ -20,6 +20,7 @@ All notable changes to this project will be documented in this file.
 - Pruned additional completed planning docs in `plan_docs/motors/browseros.md`, `plan_docs/motors/crawl4ai.md`, and `plan_docs/automation/2026-04-04-ariadne-common-language-issues.md` after confirming their guidance had been absorbed into current architecture docs, standards, and Ariadne models.
 - Resolved the completed-plan-doc pruning issue after removing the stale implemented planning artifacts and leaving only active issue docs plus still-relevant design docs for unimplemented areas.
 - Tightened `AGENTS.md` so agents do not ask permission for protocol-defined next steps or rhetorical progress questions when the workflow already determines the next action.
+- Resolved the BrowserOS AppImage configuration issue by requiring `BROWSEROS_APPIMAGE_PATH` for auto-launch, updating BrowserOS startup docs and CLI help to use that env var, and removing the old hardcoded `/home/jp/BrowserOS.AppImage` fallback from runtime code.
 
 ## [2026-04-10] - BrowserOS Auto-Launch and Health Management
 

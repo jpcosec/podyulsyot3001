@@ -1,7 +1,7 @@
 """Integration tests for live onsite apply dry-run.
 
 These tests require:
-1. BrowserOS running at `http://127.0.0.1:9000/mcp` (`/home/jp/BrowserOS.AppImage --no-sandbox`)
+1. BrowserOS running at `http://127.0.0.1:9000/mcp` after launching `"$BROWSEROS_APPIMAGE_PATH" --no-sandbox`
 2. Authenticated session for each portal (`--setup-session`)
 3. A real CV file and real job IDs
 
@@ -64,7 +64,8 @@ class TestLiveApplyRequiresBrowserOS:
     @pytest.mark.skipif(
         not BROWSEROS_AVAILABLE,
         reason="BrowserOS runtime not running at http://127.0.0.1:9000/mcp. "
-        "Start with: /home/jp/BrowserOS.AppImage --no-sandbox "
+        "Start with: export BROWSEROS_APPIMAGE_PATH=/path/to/BrowserOS.AppImage; "
+        '"$BROWSEROS_APPIMAGE_PATH" --no-sandbox '
         "Then authenticate with: python -m src.automation.main apply "
         "--source xing --backend browseros --setup-session",
     )
