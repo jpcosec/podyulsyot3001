@@ -1,0 +1,8 @@
+# textual-web configuration
+# Bridge Textual TUIs to the browser for testing and visualization
+
+[app.MatchReviewApp]
+command = "python -m src.cli.main demo"
+slug = "review-ui"
+port = 8765
+title = "Postulator HITL Review UI"
