@@ -53,6 +53,13 @@ All automation models are strictly typed via Pydantic:
 - **`CandidateProfile`** and **`ExecutionContext`**: Define the runtime apply context shared by the CLI, storage, and motors. See `src/automation/contracts.py`.
 - **`CredentialStore`** and **`ResolvedPortalCredentials`**: Define the metadata-only login contract for domain-bound secrets and persistent sessions. See `src/automation/credentials.py`.
 
+## 🗂️ Placement Rules
+
+- Runtime automation code belongs under `src/automation/`.
+- Packaged canonical Ariadne replay assets ship with code; exploratory evidence and per-job runtime state belong under `data/`.
+- Motor-specific runtime assets stay with the owning motor instead of moving into Ariadne.
+- Planning material belongs in `plan_docs/` only while it is still active; once implemented, the durable knowledge should live in code-adjacent docs or canonical docs.
+
 ## 🛠️ How to Add / Extend
 
 1. **Map the Portal**: Create a JSON map in `src/automation/portals/<portal>/maps/easy_apply.json` using the `AriadnePortalMap` schema.

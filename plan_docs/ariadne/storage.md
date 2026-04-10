@@ -74,6 +74,12 @@ data/ariadne/reference_data/applying_traces/
 
 This stays as-is. Ariadne storage manages packaged paths and runtime paths only.
 
+Classification rule:
+
+- exploratory screenshots and design traces stay in `data/ariadne/reference_data/`
+- packaged canonical replay assets ship with code
+- per-job and per-session runtime artifacts live under `data/ariadne/` or `data/jobs/.../nodes/ariadne/`
+
 ## Path naming convention
 
 Path IDs use dot notation: `<source>.<flow>.<variant>`
@@ -164,6 +170,10 @@ target is a Crawl4AI motor-local `schemas/` folder (see `asset_placement.md`).
 
 Ariadne storage should NOT manage Crawl4AI schemas. They are motor-specific
 assets, not Ariadne paths.
+
+If a schema is source-controlled runtime configuration, keep it with the Crawl4AI
+motor. If it is environment-generated cache data, keep it in runtime storage,
+not in Ariadne's packaged path area.
 
 ## Open questions
 
