@@ -7,7 +7,7 @@ allowing the user to filter by status and launch reviews.
 from __future__ import annotations
 
 import asyncio
-from typing import Any, List
+from typing import Any, Dict, List
 
 from textual import on, work
 from textual.app import ComposeResult
@@ -21,11 +21,9 @@ from textual.widgets import (
     Input,
     Label,
     LoadingIndicator,
-    Static,
 )
 
 from src.review_ui.bus import MatchBus
-from src.review_ui.screens.review_screen import ReviewScreen
 
 
 class JobExplorerScreen(Screen):
@@ -183,31 +181,38 @@ class JobExplorerScreen(Screen):
         )
 
     @work(thread=True)
-    async def action_refresh(self) -> None:
+    def action_refresh(self) -> None:
         """Fetch latest job list from LangGraph API.
 
         Runs in a background worker to keep the TUI responsive.
         """
-        self.query_one("#loading").display = True
-        self.query_one("#jobs-table").display = False
+        self.app.call_from_thread(setattr, self.query_one("#loading"), "display", True)
+        self.app.call_from_thread(setattr, self.query_one("#jobs-table"), "display", False)
 
         if not self._bus.client:
-            self.notify(
+            self.app.call_from_thread(
+                self.notify,
                 "No API client configured. Run with LangGraph API active.",
                 severity="error",
             )
             return
 
         try:
-            jobs_data = await self._bus.client.list_jobs(limit=100)
+            # list_jobs is async, so we need a loop since we are in a thread worker
+            loop = asyncio.new_event_loop()
+            try:
+                jobs_data = loop.run_until_complete(self._bus.client.list_jobs(limit=100))
+            finally:
+                loop.close()
+
             self._all_jobs = jobs_data
             self.app.call_from_thread(self._update_counts)
             self.app.call_from_thread(self._apply_filter)
         except Exception as e:
-            self.notify(f"Failed to refresh jobs: {e}", severity="error")
+            self.app.call_from_thread(self.notify, f"Failed to refresh jobs: {e}", severity="error")
         finally:
-            self.query_one("#loading").display = False
-            self.query_one("#jobs-table").display = True
+            self.app.call_from_thread(setattr, self.query_one("#loading"), "display", False)
+            self.app.call_from_thread(setattr, self.query_one("#jobs-table"), "display", True)
 
     def _apply_filter(self) -> None:
         """Apply the current filter to the table."""
@@ -318,9 +323,8 @@ class JobExplorerScreen(Screen):
         if job.get("has_review_pending"):
             self.notify(f"Launching review for {job['source']}/{job['job_id']}...")
             self._bus.config = {"configurable": {"thread_id": thread_id}}
-            self.app.push_screen(
-                ReviewScreen(bus=self._bus, source=job["source"], job_id=job["job_id"])
-            )
+            # Use the app's routing logic
+            self.app._push_stage_screen(job["source"], job["job_id"])
         else:
             self.notify(
                 f"Job {job['job_id']} is {job['status']}. No review needed.",

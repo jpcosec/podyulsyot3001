@@ -1,10 +1,9 @@
-"""Tests for the Review UI using Textual's testing framework."""
+"""Tests for the MatchReviewScreen using Textual's testing framework."""
 
 from __future__ import annotations
 
 import pytest
-
-from src.review_ui.screens.review_screen import ReviewScreen
+from src.review_ui.screens.match_review_screen import MatchReviewScreen
 
 
 def make_mock_bus(source: str = "xing", job_id: str = "150542106"):
@@ -47,28 +46,25 @@ def make_mock_bus(source: str = "xing", job_id: str = "150542106"):
     return mock_store
 
 
-def test_review_screen_initial_state() -> None:
-    """Test initial state of review screen."""
-    mock_store = make_mock_bus()
-    # Create with mock store but we'll just test initial state
-    screen = ReviewScreen.__new__(ReviewScreen)
+def test_match_review_screen_initial_state() -> None:
+    """Test initial state of match review screen."""
+    screen = MatchReviewScreen.__new__(MatchReviewScreen)
     screen._bus = None
     screen._source = "xing"
     screen._job_id = "150542106"
-    screen._match_outcomes = {}
-    screen._matches_data = []
-    screen._selected_idx = 0
+    screen._outcomes = {}
+    screen._matches = []
     screen._requirement_lookup = {}
 
-    assert screen._match_outcomes == {}
-    assert screen._matches_data == []
+    assert screen._outcomes == {}
+    assert screen._matches == []
     screen._requirement_lookup = {"R01": "Test requirement"}
     assert screen._requirement_lookup == {"R01": "Test requirement"}
 
 
-def test_review_screen_compose_has_bindings() -> None:
-    """Test that ReviewScreen has the expected key bindings."""
-    binding_keys = {b[0] for b in ReviewScreen.BINDINGS}
+def test_match_review_screen_compose_has_bindings() -> None:
+    """Test that MatchReviewScreen has the expected key bindings."""
+    binding_keys = {b[0] for b in MatchReviewScreen.BINDINGS}
     assert "a" in binding_keys
     assert "r" in binding_keys
     assert "s" in binding_keys
@@ -80,26 +76,27 @@ def test_review_screen_compose_has_bindings() -> None:
     assert "space" in binding_keys
 
     # Verify action names
-    binding_actions = {b[1] for b in ReviewScreen.BINDINGS}
+    binding_actions = {b[1] for b in MatchReviewScreen.BINDINGS}
     assert "approve_all" in binding_actions
     assert "reject_all" in binding_actions
     assert "submit" in binding_actions
-    assert "approve_current" in binding_actions
-    assert "reject_current" in binding_actions
-    assert "toggle_current" in binding_actions
+    assert "approve_selected" in binding_actions
+    assert "reject_selected" in binding_actions
+    assert "toggle_selected" in binding_actions
 
 
-def test_review_screen_css_has_match_card_styles() -> None:
-    """Test that CSS includes match card styling."""
-    css = ReviewScreen.DEFAULT_CSS
-    assert ".match-card" in css
-    assert ".match-score" in css
+def test_match_review_screen_css_has_list_styles() -> None:
+    """Test that CSS includes list and detail panel styling."""
+    css = MatchReviewScreen.DEFAULT_CSS
+    assert "#match-list" in css
+    assert "#detail-panel" in css
+    assert ".match-item" in css
     assert ".score-high" in css
     assert ".score-medium" in css
     assert ".score-low" in css
 
 
-def test_review_screen_has_review_buttons() -> None:
+def test_match_review_screen_has_review_buttons() -> None:
     """Test that compose yields review buttons."""
     from src.review_ui.bus import MatchBus
     from unittest.mock import MagicMock
@@ -108,7 +105,7 @@ def test_review_screen_has_review_buttons() -> None:
     mock_client = MagicMock()
     bus = MatchBus(store=mock_store, client=mock_client, config={})
 
-    screen = ReviewScreen(bus=bus, source="xing", job_id="150542106")
+    screen = MatchReviewScreen(bus=bus, source="xing", job_id="150542106")
 
     # Check initial state
     assert screen._bus is bus

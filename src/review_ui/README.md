@@ -41,12 +41,18 @@ python -m src.cli.main review
 Keyboard bindings (Explorer):
 - `ENTER`: Open the selected job for review.
 - `R`: Refresh the job list.
+- `F`: Focus search filter.
+- `1-4`: Quick filter by status (All, Pending, Completed, Failed).
 - `Q`: Quit.
 
 Keyboard bindings (Review):
-- `Ctrl+A`: Approve all rows.
+- `A`: Approve all matches.
+- `R`: Reject all matches.
+- `Y` / `N`: Approve / Reject currently selected match.
+- `SPACE`: Toggle current match status.
+- `J` / `K`: Move cursor up/down.
 - `S`: Submit and continue.
-- `ESC`: Return to Explorer.
+- `Q`: Return to Explorer.
 
 ---
 

@@ -128,6 +128,8 @@ def _route_after_stage5(state: GenerateDocumentsV2State) -> str:
         return "__end__"
     if outcome == "content_regen":
         return "stage_4_microplanning"
+    if outcome == "style_regen":
+        return "stage_3_macroplanning"
     if state.get("pending_profile_updates"):
         return "prepare_profile_review"
     if state.get("approved_profile_updates"):

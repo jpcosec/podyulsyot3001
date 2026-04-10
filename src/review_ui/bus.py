@@ -16,14 +16,19 @@ from src.shared.log_tags import LogTag
 
 logger = logging.getLogger(__name__)
 
+# Legacy aliases for backward compatibility with older threads
+_LEGACY_REVIEW_STAGES = {
+    "stage_2_semantic_bridge": ("match_edges", "Match Evidence Review"),
+    "stage_3_macroplanning": ("blueprint", "Blueprint Review"),
+    "stage_5_assembly_render": ("markdown_bundle", "Content And Style Review"),
+}
+
 _REVIEW_STAGE_MAP = {
     "hitl_1_match_evidence": ("match_edges", "Match Evidence Review"),
     "hitl_2_blueprint_logic": ("blueprint", "Blueprint Review"),
     "hitl_3_content_style": ("markdown_bundle", "Content And Style Review"),
-    "stage_2_semantic_bridge": ("match_edges", "Match Evidence Review"),
-    "stage_3_macroplanning": ("blueprint", "Blueprint Review"),
-    "stage_5_assembly_render": ("markdown_bundle", "Content And Style Review"),
     "hitl_4_profile_updates": ("profile_updater", "Profile Update Review"),
+    **_LEGACY_REVIEW_STAGES,
 }
 
 
@@ -115,17 +120,9 @@ class MatchBus:
 
         all_patches.append(GraphPatch(action=action, target_id="__review__"))
 
-        client = LangGraphAPIClient(self.client.url)
-
         logger.info(f"{LogTag.OK} Resuming remote thread {thread_id} via API")
-        loop = asyncio.new_event_loop()
-        try:
-            payload = {"pending_patches": [p.model_dump() for p in all_patches]}
-            return loop.run_until_complete(
-                client.resume_thread(thread_id, payload, node_name=stage)
-            )
-        finally:
-            loop.close()
+        payload = {"pending_patches": [p.model_dump() for p in all_patches]}
+        return asyncio.run(self.client.resume_thread(thread_id, payload, node_name=stage))
 
     def _pending_review_stage(self) -> str:
         """Return the currently pending HITL node for the configured thread."""
@@ -133,15 +130,7 @@ class MatchBus:
         if not thread_id:
             raise ValueError("thread_id missing in config for remote review")
 
-        client = LangGraphAPIClient(self.client.url)
-
-        loop = asyncio.new_event_loop()
-        try:
-            state = loop.run_until_complete(
-                client.client.threads.get_state(thread_id, subgraphs=True)
-            )
-        finally:
-            loop.close()
+        state = asyncio.run(self.client.client.threads.get_state(thread_id, subgraphs=True))
 
         next_nodes = state.get("next", [])
         for node in next_nodes:
