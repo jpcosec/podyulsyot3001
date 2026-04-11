@@ -4,7 +4,7 @@
   "states": {
     "job_details": {
       "id": "job_details",
-      "description": "XING job listing page",
+      "description": "XING job listing page with internal apply",
       "presence_predicate": {
         "required_elements": [
           { "css": "[data-testid='apply-button']" }
@@ -12,6 +12,18 @@
       },
       "components": {
         "apply_button": { "css": "[data-testid='apply-button']" }
+      }
+    },
+    "external_apply": {
+      "id": "external_apply",
+      "description": "XING job that routes to an external ATS via employer website button",
+      "presence_predicate": {
+        "required_elements": [
+          { "css": ".apply-button__Apply" }
+        ]
+      },
+      "components": {
+        "employer_website_button": { "css": ".apply-button__Apply" }
       }
     },
     "easy_apply_modal": {
@@ -47,7 +59,7 @@
       "goal": "submit_job_application",
       "entry_state": "job_details",
       "success_states": ["apply_success"],
-      "failure_states": [],
+      "failure_states": ["external_apply"],
       "success_criteria": { "text_match": "Bewerbung" }
     }
   },
@@ -59,11 +71,17 @@
         {
           "step_index": 1,
           "name": "open_modal",
-          "description": "Open apply modal",
+          "description": "Open apply modal or detect external apply route",
           "state_id": "job_details",
-          "observe": { "required_elements": [{ "css": "[data-testid='apply-button']" }] },
+          "observe": {
+            "logical_op": "OR",
+            "required_elements": [
+              { "css": "[data-testid='apply-button']" },
+              { "css": ".apply-button__Apply" }
+            ]
+          },
           "actions": [
-            { "intent": "click", "target": { "css": "[data-testid='apply-button']" } }
+            { "intent": "click", "target": { "css": "[data-testid='apply-button']" }, "fallback": { "intent": "click", "target": { "css": ".apply-button__Apply" } } }
           ]
         },
         {

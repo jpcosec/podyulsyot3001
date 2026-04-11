@@ -48,6 +48,7 @@ class ReplayObserve(BaseModel):
     """Observation contract motors use before executing a step."""
 
     required_elements: list[ReplayTarget] = Field(default_factory=list)
+    logical_op: Literal["AND", "OR"] | None = None
 
 
 class ReplayStep(BaseModel):

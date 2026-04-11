@@ -242,6 +242,22 @@ class BrowserOSReplayer:
         page_id: int,
     ) -> None:
         """Verify that required elements are present in the snapshot."""
+        if observe.logical_op == "OR":
+            for target in observe.required_elements:
+                try:
+                    self._resolve_element_id(snapshot, target, page_id=page_id)
+                    logger.info(
+                        "%s Step '%s' matched expected snapshot (OR: %s found)",
+                        LogTag.OK,
+                        step_name,
+                        target,
+                    )
+                    return
+                except BrowserOSObserveError:
+                    continue
+            raise BrowserOSObserveError(
+                f"Step '{step_name}': none of the required elements found for OR observation"
+            )
         for target in observe.required_elements:
             self._resolve_element_id(snapshot, target, page_id=page_id)
         logger.info("%s Step '%s' matched expected snapshot", LogTag.OK, step_name)
@@ -278,6 +294,7 @@ class BrowserOSReplayer:
         raise BrowserOSObserveError(
             f"Target '{target}' not found in BrowserOS (Text search failed, CSS search failed or skipped)"
         )
+
     def _normalize_text(self, value: str) -> str:
         return " ".join(value.lower().split())
 

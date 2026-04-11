@@ -19,6 +19,7 @@ from src.automation.storage import AutomationStorage
 from src.core.data_manager import DataManager
 
 XING_SELECTORS = (
+    ".apply-button__Apply",
     "[data-testid='application-success']",
     "[data-testid='apply-button']",
     "[data-testid='apply-modal']",
@@ -121,7 +122,9 @@ class _RecordingMotorProvider:
         self.session_ids: list[str] = []
 
     @asynccontextmanager
-    async def open_session(self, session_id: str, credentials=None, visible: bool = False):
+    async def open_session(
+        self, session_id: str, credentials=None, visible: bool = False
+    ):
         self.session_ids.append(session_id)
         yield self.session
 
