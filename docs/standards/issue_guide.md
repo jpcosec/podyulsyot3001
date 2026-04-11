@@ -85,3 +85,12 @@ Issue files are ephemeral (plan_docs/ lifespan rules apply). Once an issue is so
 
  1. Delete the issue file.
  2. Remove it from Index.md.
+
+### Validation-type issues
+
+When resolving a validation-type issue (e.g. "is X working on live portal Y?"), the outcome may be positive or negative. Both cases require follow-up:
+
+- **Positive outcome** — the validation passed. Close the issue normally.
+- **Negative or mixed outcome** — the validation failed or exposed unexpected behavior. Do not close silently. Before deleting the validation issue, atomize every uncovered real problem into one or more new gap issues under `plan_docs/issues/gaps/`, then close the validation issue. Each new gap issue must include the observed behavior, evidence paths, likely owning area, and what needs to be fixed.
+
+This ensures validation issues never mask underlying implementation problems.
