@@ -16,19 +16,58 @@ from src.automation.ariadne.graph.nodes.agent import LangGraphBrowserOSAgent
 from src.automation.ariadne.contracts.base import (
     CrawlCommand,
     ExecutionResult,
+    SnapshotResult,
 )
 from src.automation.ariadne.models import (
     AriadneEdge,
     AriadneIntent,
     AriadneMap,
+    AriadneObserve,
     AriadneState,
     AriadneTarget,
 )
 from src.automation.ariadne.repository import MapRepository
 from src.automation.ariadne.translators.registry import TranslatorRegistry
+from src.automation.ariadne.modes.registry import ModeRegistry
+from src.automation.ariadne.danger_contracts import ApplyDangerSignals
 
 
 # --- Node Functions ---
+
+
+def _evaluate_presence(predicate: AriadneObserve, snapshot: SnapshotResult) -> bool:
+    """Evaluates if a state is present based on the snapshot (URL and DOM)."""
+
+    def is_target_present(target: AriadneTarget) -> bool:
+        # For a target to be present, ALL specified criteria (text, css) 
+        # must match at least one DOM element.
+        for el in snapshot.dom_elements:
+            match = True
+            if target.text and target.text.lower() not in el.get("text", "").lower():
+                match = False
+            if target.css and el.get("css") != target.css and el.get("selector") != target.css:
+                match = False
+            
+            # If at least one criteria was specified and it matched
+            if match and (target.text or target.css):
+                return True
+        return False
+
+    # 1. URL Matching
+    if predicate.url_contains and predicate.url_contains not in snapshot.url:
+        return False
+
+    # 2. Element Matching
+    req_results = [is_target_present(t) for t in predicate.required_elements]
+    forb_results = [not is_target_present(t) for t in predicate.forbidden_elements]
+
+    all_results = req_results + forb_results
+    if not all_results:
+        return True
+
+    if predicate.logical_op == "AND":
+        return all(all_results)
+    return any(all_results)
 
 
 async def observe_node(state: AriadneState, config: RunnableConfig) -> Dict[str, Any]:
@@ -43,11 +82,60 @@ async def observe_node(state: AriadneState, config: RunnableConfig) -> Dict[str,
 
     try:
         snapshot = await executor.take_snapshot()
-        return {
+        
+        updates = {
             "current_url": snapshot.url,
             "dom_elements": snapshot.dom_elements,
             "screenshot_b64": snapshot.screenshot_b64,
         }
+
+        # 1. State Identification
+        repo = MapRepository()
+        ariadne_map = None
+        identified_state_id = None
+        try:
+            ariadne_map = repo.get_map(state["portal_name"])
+            for state_id, state_def in ariadne_map.states.items():
+                if _evaluate_presence(state_def.presence_predicate, snapshot):
+                    identified_state_id = state_id
+                    break
+            
+            if identified_state_id:
+                updates["current_state_id"] = identified_state_id
+                print(f"--- OBSERVE: Identified state '{identified_state_id}' ---")
+            else:
+                print("--- OBSERVE: Could not identify any state from map ---")
+        except Exception as e:
+            print(f"--- OBSERVE: Map matching skipped: {str(e)} ---")
+
+        # 2. Danger Detection (CAPTCHAs, Security Blocks)
+        mode = ModeRegistry.get_mode_for_url(snapshot.url)
+        all_text = " ".join([el.get("text", "") for el in snapshot.dom_elements if el.get("text")])
+        
+        danger_signals = ApplyDangerSignals(
+            dom_text=all_text,
+            current_url=snapshot.url,
+        )
+        
+        danger_report = mode.inspect_danger(danger_signals)
+        if danger_report.findings:
+            primary = danger_report.primary
+            print(f"--- OBSERVE: Danger detected [{primary.code}]: {primary.message} ---")
+            
+            new_memory = state.get("session_memory", {}).copy()
+            new_memory["danger_detected"] = True
+            new_memory["danger_findings"] = [f.model_dump() for f in danger_report.findings]
+            updates["session_memory"] = new_memory
+        
+        # 3. Goal Achievement Check
+        if identified_state_id and ariadne_map and identified_state_id in ariadne_map.success_states:
+            print(f"--- OBSERVE: Goal achieved (state: {identified_state_id}) ---")
+            new_memory = updates.get("session_memory", state.get("session_memory", {})).copy()
+            new_memory["goal_achieved"] = True
+            updates["session_memory"] = new_memory
+
+        return updates
+
     except Exception as e:
         return {
             "errors": [f"ObservationError: {str(e)}"]

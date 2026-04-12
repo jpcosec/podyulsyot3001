@@ -29,6 +29,9 @@ class AriadneObserve(BaseModel):
 
     required_elements: List[AriadneTarget] = Field(default_factory=list)
     forbidden_elements: List[AriadneTarget] = Field(default_factory=list)
+    url_contains: Optional[str] = Field(
+        default=None, description="Current URL must contain this substring."
+    )
     logical_op: Literal["AND", "OR"] = "AND"
 
 

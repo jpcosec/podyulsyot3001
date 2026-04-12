@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+from src.automation.ariadne.danger_contracts import ApplyDangerReport, ApplyDangerSignals
 from src.automation.ariadne.models import AriadneStateDefinition
 from src.automation.ariadne.modes.base import AriadneMode
 from src.scraper.models import JobPosting
@@ -27,10 +28,9 @@ class JsonConfigMode(AriadneMode):
         # Default implementation: pass-through
         return payload
 
-    def inspect_danger(self, snapshot: Any) -> Any:
+    def inspect_danger(self, snapshot: Any) -> ApplyDangerReport:
         # Default implementation: no findings
-        from src.automation.ariadne.exceptions import AriadneError
-        return None
+        return ApplyDangerReport(findings=[])
 
     def apply_local_heuristics(
         self, state: AriadneStateDefinition
