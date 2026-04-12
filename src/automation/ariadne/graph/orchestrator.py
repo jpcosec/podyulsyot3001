@@ -5,6 +5,7 @@ browser navigation using a cyclic graph with a 4-level fallback cascade.
 """
 
 import asyncio
+import copy
 from typing import Any, Dict, List, Literal, Optional, Union
 
 from langgraph.checkpoint.memory import MemorySaver
@@ -51,6 +52,36 @@ async def observe_node(state: AriadneState, config: RunnableConfig) -> Dict[str,
         return {
             "errors": [f"ObservationError: {str(e)}"]
         }
+
+
+def _resolve_target(
+    target: Union[str, AriadneTarget],
+    from_state_id: str,
+    ariadne_map: AriadneMap,
+    state: AriadneState,
+) -> AriadneTarget:
+    """Resolves a target (component name or explicit target) to an AriadneTarget.
+
+    Checks:
+    1. JIT Patches in state['patched_components']
+    2. Map components in definition for from_state_id
+    """
+    if isinstance(target, AriadneTarget):
+        return target
+
+    # 1. Check JIT Patches in State
+    patched_components = state.get("patched_components", {})
+    if target in patched_components:
+        return patched_components[target]
+
+    # 2. Check Map components
+    definition = ariadne_map.states.get(from_state_id)
+    if definition and target in definition.components:
+        return definition.components[target]
+
+    raise ValueError(
+        f"Target component '{target}' not found in state patches or map definition for state '{from_state_id}'."
+    )
 
 
 def _find_safe_sequence(
@@ -101,14 +132,21 @@ async def execute_deterministic_node(state: AriadneState, config: RunnableConfig
     motor_name = config.get("configurable", {}).get("motor_name", "crawl4ai")
     translator = TranslatorRegistry.get_translator_by_name(motor_name)
 
-    # 5. Translate JIT (Atomic or Batch)
-    if len(batch) > 1:
-        print(f"--- JIT Batching {len(batch)} intents ---")
-        batch_tuples = [(e.intent, e.target, e.value) for e in batch]
-        command = translator.translate_batch(batch_tuples, state)
-    else:
-        edge = batch[0]
-        command = translator.translate_intent(edge.intent, edge.target, state, edge.value)
+    # 5. Resolve Targets & Translate JIT
+    try:
+        if len(batch) > 1:
+            print(f"--- JIT Batching {len(batch)} intents ---")
+            resolved_batch = []
+            for e in batch:
+                res_target = _resolve_target(e.target, e.from_state, ariadne_map, state)
+                resolved_batch.append((e.intent, res_target, e.value))
+            command = translator.translate_batch(resolved_batch, state)
+        else:
+            edge = batch[0]
+            res_target = _resolve_target(edge.target, edge.from_state, ariadne_map, state)
+            command = translator.translate_intent(edge.intent, res_target, state, edge.value)
+    except Exception as e:
+        return {"errors": [f"TranslationError: {str(e)}"]}
 
     # 6. Dispatch to Executor
     print(f"--- Dispatching Command: {command} ---")
@@ -131,8 +169,43 @@ async def execute_deterministic_node(state: AriadneState, config: RunnableConfig
 
 async def apply_local_heuristics_node(state: AriadneState, config: RunnableConfig) -> Dict[str, Any]:
     """Applies local rules from the active portal_mode (e.g. 'easy_apply')."""
-    # TODO: Implement mode-based patching
     print("--- NODE: Apply Local Heuristics ---")
+    
+    # 1. Resolve PortalMode
+    from src.automation.ariadne.modes.registry import ModeRegistry
+    mode_id = state.get("portal_mode") or state.get("current_url")
+    mode = ModeRegistry.get_mode_for_url(mode_id)
+    
+    # 2. Load Map to get current state definition
+    repo = MapRepository()
+    try:
+        ariadne_map = repo.get_map(state["portal_name"])
+    except Exception as e:
+        return {"errors": [f"MapLoadError: {str(e)}"]}
+    
+    current_state_id = state.get("current_state_id")
+    definition = ariadne_map.states.get(current_state_id)
+    if not definition:
+        return {"errors": [f"StateDefinitionNotFoundError: {current_state_id}"]}
+
+    # 3. Apply heuristics (using a deep copy to be safe)
+    patched_definition = mode.apply_local_heuristics(copy.deepcopy(definition))
+    
+    # 4. Extract new patches (components that differ from the original map)
+    new_patches = {}
+    for key, target in patched_definition.components.items():
+        if key not in definition.components or definition.components[key] != target:
+            new_patches[key] = target
+            
+    if new_patches:
+        print(f"--- HEURISTICS: Patched {len(new_patches)} components for state '{current_state_id}' ---")
+        # Clear errors if we found patches to attempt retry
+        return {
+            "patched_components": new_patches,
+            "errors": []
+        }
+    
+    print(f"--- HEURISTICS: No local patches found for state '{current_state_id}' ---")
     return {}
 
 

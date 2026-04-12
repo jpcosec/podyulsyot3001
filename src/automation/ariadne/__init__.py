@@ -1,3 +1,5 @@
 """Ariadne — Programmable Semantic Browser."""
 
-__all__ = []
+from . import modes
+
+__all__ = ["modes"]

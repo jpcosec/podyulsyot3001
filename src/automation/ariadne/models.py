@@ -83,11 +83,14 @@ class AriadneState(TypedDict):
     session_memory: Dict[str, Any]
 
     # Memory & Reducers
-    errors: Annotated[List[str], operator.add]
+    errors: List[str]
     history: Annotated[List[AnyMessage], add_messages]
 
     # Active Strategy (Injected via URL context)
     portal_mode: str
+
+    # JIT Patches
+    patched_components: Annotated[Dict[str, AriadneTarget], operator.ior]
 
 
 class AriadneMapMeta(BaseModel):

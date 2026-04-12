@@ -16,10 +16,8 @@ Ariadne 2.0 has its **Architecture Core** and **Skeleton** implemented. We are n
 ### Phase 1: Closing the Loop (Node Logic)
 - [x] **[Implement: Observe Node Logic](gaps/implement-observe-node-logic.md)**
   - *Status*: Finished
-  - *Scope*: Replace stub in `orchestrator.py` with actual calls to fetch URL, DOM, and Screenshot.
-- [ ] **[Implement: Deterministic Dispatch Logic](gaps/implement-deterministic-dispatch-logic.md)**
-  - *Status*: Ready
-  - *Scope*: Connect `execute_deterministic_node` to `MotorRegistry` and handle `ExecutionResult`.
+- [x] **[Implement: Deterministic Dispatch Logic](gaps/implement-deterministic-dispatch-logic.md)**
+  - *Status*: Finished
 - [ ] **[Implement: Local Heuristics Logic](gaps/implement-local-heuristics-logic.md)**
   - *Status*: Ready
   - *Scope*: Implement the patching rules in `ApplyLocalHeuristicsNode` using `portal_mode`.
