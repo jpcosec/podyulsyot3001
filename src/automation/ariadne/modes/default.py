@@ -5,9 +5,8 @@ is available or identified. It relies on generalized heuristics and LLMs.
 """
 
 from src.automation.ariadne.danger_contracts import ApplyDangerReport, ApplyDangerSignals
-from src.automation.ariadne.models import AriadneStateDefinition
+from src.automation.ariadne.models import AriadneStateDefinition, JobPosting
 from src.automation.ariadne.modes.base import AriadneMode
-from src.scraper.models import JobPosting
 
 
 class DefaultMode(AriadneMode):

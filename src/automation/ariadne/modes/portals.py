@@ -5,9 +5,8 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from src.automation.ariadne.danger_contracts import ApplyDangerReport, ApplyDangerSignals
-from src.automation.ariadne.models import AriadneStateDefinition
+from src.automation.ariadne.models import AriadneStateDefinition, JobPosting
 from src.automation.ariadne.modes.base import AriadneMode
-from src.scraper.models import JobPosting
 
 
 class JsonConfigMode(AriadneMode):

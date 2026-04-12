@@ -8,8 +8,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict
 
 from src.automation.ariadne.danger_contracts import ApplyDangerReport, ApplyDangerSignals
-from src.automation.ariadne.models import AriadneStateDefinition
-from src.scraper.models import JobPosting
+from src.automation.ariadne.models import AriadneStateDefinition, JobPosting
 
 
 class AriadneMode(ABC):
