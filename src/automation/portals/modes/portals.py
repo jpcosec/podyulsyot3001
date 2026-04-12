@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any, ClassVar, Dict, Optional
 
@@ -70,7 +71,7 @@ class JsonConfigMode(AriadneMode):
         findings = []
         for rule in text_rules:
             rule_text = rule.strip().lower()
-            if not rule_text or rule_text not in evidence:
+            if not rule_text or not re.search(rf"\b{re.escape(rule_text)}\b", evidence):
                 continue
 
             findings.append(

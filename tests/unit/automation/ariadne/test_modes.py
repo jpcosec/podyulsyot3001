@@ -30,6 +30,40 @@ def _sample_job() -> JobPosting:
 
 
 @pytest.mark.asyncio
+async def test_json_config_mode_word_boundary_no_false_positive():
+    """Word boundary matching should prevent false positives like 'human' inside other words."""
+    JsonConfigMode._config_cache = {"danger_detection": {"text_rules": ["human"]}}
+    JsonConfigMode._configs_loaded = True
+
+    mode = JsonConfigMode("linkedin")
+
+    # "human" appears inside "inhuman" - should NOT match (no word boundary)
+    # This was the original false positive: "inhuman" triggered security block
+    report = await mode.inspect_danger(
+        ApplyDangerSignals(dom_text="This is an inhuman treatment")
+    )
+
+    assert report.findings == []
+
+
+@pytest.mark.asyncio
+async def test_json_config_mode_word_boundary_matches_standalone():
+    """Word boundary matching should correctly match standalone 'human'."""
+    JsonConfigMode._config_cache = {"danger_detection": {"text_rules": ["human"]}}
+    JsonConfigMode._configs_loaded = True
+
+    mode = JsonConfigMode("linkedin")
+
+    # "human" as standalone word - should match
+    report = await mode.inspect_danger(
+        ApplyDangerSignals(dom_text="Please verify you are human to continue")
+    )
+
+    assert report.findings
+    assert report.findings[0].matched_text == "human"
+
+
+@pytest.mark.asyncio
 async def test_json_config_mode_detects_security_text():
     """Portal modes should restore keyword-based security detection."""
     JsonConfigMode._config_cache = {
