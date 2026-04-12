@@ -111,7 +111,7 @@ async def observe_node(state: AriadneState, config: RunnableConfig) -> Dict[str,
         ariadne_map = None
         identified_state_id = None
         try:
-            ariadne_map = repo.get_map(state["portal_name"])
+            ariadne_map = await repo.get_map_async(state["portal_name"])
             for state_id, state_def in ariadne_map.states.items():
                 if _evaluate_presence(state_def.presence_predicate, snapshot):
                     identified_state_id = state_id
@@ -386,7 +386,7 @@ async def execute_deterministic_node(
 
     repo = MapRepository()
     try:
-        ariadne_map = repo.get_map(state["portal_name"])
+        ariadne_map = await repo.get_map_async(state["portal_name"])
     except Exception as e:
         return {"errors": [f"MapLoadError: {str(e)}"]}
 
@@ -493,7 +493,7 @@ async def apply_local_heuristics_node(
     # 2. Load Map to get current state definition
     repo = MapRepository()
     try:
-        ariadne_map = repo.get_map(state["portal_name"])
+        ariadne_map = await repo.get_map_async(state["portal_name"])
     except Exception as e:
         return {"errors": [f"MapLoadError: {str(e)}"]}
 
