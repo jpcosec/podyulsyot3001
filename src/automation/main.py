@@ -35,11 +35,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Ariadne 2.0 CLI - Semantic Browser Automation"
     )
-    parser.add_argument(
-        "--auto-start-browseros",
-        action="store_true",
-        help="Auto-launch BrowserOS if not running",
-    )
+
     subparsers = parser.add_subparsers(dest="command", help="Subcommand to execute")
 
     apply_parser = subparsers.add_parser("apply", help="Execute an Ariadne apply flow")
@@ -363,22 +359,26 @@ def _launch_browseros(appimage_path: str) -> subprocess.Popen:
     )
 
 
-def _ensure_browseros(
-    auto_start: bool, base_url: str = "http://127.0.0.1:9000"
-) -> None:
-    """Ensure BrowserOS is running, optionally auto-launching if enabled."""
+def _ensure_browseros(base_url: str = "http://127.0.0.1:9000") -> None:
+    """Ensure BrowserOS is running. Auto-start if BROWSEROS_APPIMAGE_PATH is set."""
     if _check_browseros_running(base_url):
-        print(f"[✅] BrowserOS already running at {base_url}")
         return
 
-    if not auto_start:
-        print(f"[❌] BrowserOS not running at {base_url}")
-        print(
-            "    Use --auto-start-browseros to auto-launch, or set BROWSEROS_APPIMAGE_PATH"
-        )
-        raise CliExecutionError("BrowserOS unreachable")
-
     appimage_path = os.environ.get("BROWSEROS_APPIMAGE_PATH")
+    if not appimage_path:
+        raise CliExecutionError(f"BrowserOS not running at {base_url}")
+
+    print(f"[⚡] Launching BrowserOS from {appimage_path}...")
+    proc = _launch_browseros(appimage_path)
+
+    for _ in range(30):
+        time.sleep(1)
+        if _check_browseros_running(base_url):
+            print(f"[✅] BrowserOS running at {base_url}")
+            return
+
+    proc.kill()
+    raise CliExecutionError("BrowserOS failed to start within 30s")
     if not appimage_path:
         print("[❌] BROWSEROS_APPIMAGE_PATH not set")
         raise CliExecutionError("Cannot auto-start: BROWSEROS_APPIMAGE_PATH not set")
@@ -404,8 +404,8 @@ def main(argv: list[str] | None = None) -> int:
     base_url = os.environ.get("BROWSEROS_BASE_URL", "http://127.0.0.1:9000")
 
     try:
-        if args.auto_start_browseros:
-            _ensure_browseros(auto_start=True, base_url=base_url)
+        if args.command in ("apply", "scrape", "crawl"):
+            _ensure_browseros(base_url=base_url)
 
         if args.command == "apply":
             if args.resume and not args.thread_id:
