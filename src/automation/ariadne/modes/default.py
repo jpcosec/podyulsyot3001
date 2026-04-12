@@ -22,6 +22,7 @@ from src.automation.ariadne.models import (
     AriadneTarget,
 )
 from src.automation.ariadne.modes.base import AriadneMode
+from src.automation.ariadne.config import get_gemini_model
 
 
 class DefaultMode(AriadneMode):
@@ -43,7 +44,7 @@ class DefaultMode(AriadneMode):
     def _get_llm(self) -> ChatGoogleGenerativeAI:
         """Create the shared LLM client lazily to avoid eager runtime setup."""
         if self._llm is None:
-            self._llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash")
+            self._llm = ChatGoogleGenerativeAI(model=get_gemini_model())
         return self._llm
 
     async def normalize_job(self, payload: JobPosting) -> JobPosting:

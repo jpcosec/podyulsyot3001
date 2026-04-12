@@ -2,30 +2,14 @@
 """
 Test Corneta: Verifies Ariadne 2.0 fallback cascade.
 
-Flow: Observe -> LLM (no map exists) -> HITL
-
-Purpose: Verify that when no map exists for a page:
-1. LLM auto-traces to discover the path
-2. If LLM fails, HITL breakpoint triggers
-3. Trace saved as draft map
-
 Usage:
-    source .env && python scripts/test_corneta.py
+    python scripts/test_corneta.py
 
-Requires:
-    - GEMINI_API_KEY or GOOGLE_API_KEY
-    - BrowserOS running
+Auto-loads: .env via src.automation.ariadne.config
 """
 
 import asyncio
 import uuid
-
-try:
-    from dotenv import load_dotenv
-
-    load_dotenv()
-except ImportError:
-    pass
 
 from src.automation.ariadne.graph.orchestrator import create_ariadne_graph
 from src.automation.motors.crawl4ai.executor import Crawl4AIExecutor
