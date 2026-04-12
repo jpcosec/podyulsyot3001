@@ -4,11 +4,21 @@
 
 **Reference:** `tests/unit/automation/fitness/test_graph_depth.py`
 
-**What to fix:** Test that circuit breaker triggers within max steps (10) when executor returns status="failed" every time.
+**Status:** Test exists but needs fixing.
 
-**How to do it:**
-1. Create AlwaysFailingExecutor
-2. Run graph with memory
-3. Assert step_count <= max_steps
+**Why it fails:**
+1. Test uses AlwaysFailingExecutor but graph exits early (map found → goal_achieved)
+2. LLM node requires API key (needs mocking)
+3. Event handling assumes dict but gets tuples
 
-**Depends on:** none
+**What to fix:**
+1. Add LLM node mock fixture (patches `llm_rescue_agent_node`)
+2. Update test to use portal with failing map (`fitness_test` exists)
+3. Fix event handling for both dict/tuple types
+
+**Steps:**
+1. Mock `llm_rescue_agent_node` to increment `agent_failures` counter
+2. Use `fitness_test` portal map that has no valid targets
+3. Assert step_count <= 10 when executor always fails
+
+**Test standard:** Must pass without GOOGLE_API_KEY

@@ -4,11 +4,21 @@
 
 **Reference:** `tests/unit/automation/fitness/test_sync_io_detector.py`
 
-**What to fix:** Fixture that monkeypatches builtins.open and tracks calls during graph execution. Fails if any sync I/O detected in hot loop.
+**Status:** Test exists but broken.
 
-**How to do it:**
-1. Patch `builtins.open` in test fixture
-2. Execute LangGraph flow
-3. Assert no sync calls during execution (only at boot)
+**Why it fails:**
+1. Detector catches Crawl4AI boot-time I/O (not hot loop)
+2. Too sensitive - fails on any sync I/O anywhere
+3. LLM node needs API key
 
-**Depends on:** none
+**What to fix:**
+1. Filter sync calls to only detect during node execution (not setup)
+2. Mock LLM node (patches `llm_rescue_agent_node`)
+3. Only fail if sync I/O in hot path nodes (observe/execute/heurlistics)
+
+**Steps:**
+1. Add markers to distinguish boot vs hot loop
+2. Mock LLM node (see fitness-graph-depth)
+3. Assert sync calls only in setup phase, not node execution
+
+**Test standard:** Must pass without GOOGLE_API_KEY
