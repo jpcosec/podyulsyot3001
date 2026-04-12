@@ -93,6 +93,9 @@ class ExecutionResult(BaseModel):
     extracted_data: Dict[str, Any] = Field(default_factory=dict)
     error: Optional[str] = None
     screenshot_path: Optional[str] = None
+    failed_at_index: Optional[int] = Field(
+        default=None, description="For batched commands, the index of the action that failed."
+    )
 
 
 # --- Segregated Protocols ---

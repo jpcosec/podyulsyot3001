@@ -243,15 +243,13 @@ def _find_safe_sequence(
 
 
 async def execute_deterministic_node(state: AriadneState, config: RunnableConfig) -> Dict[str, Any]:
-    """Replays the AriadneMap for the current node state with Micro-Batching."""
+    """Replays the AriadneMap for the current node state with Micro-Batching and atomic fallback."""
     print("--- NODE: Execute Deterministic ---")
     
-    # 1. Resolve Executor
     executor = config.get("configurable", {}).get("executor")
     if not executor:
         return {"errors": ["ExecutorNotFoundError: No executor instance provided in config."]}
 
-    # 2. Load Map
     repo = MapRepository()
     try:
         ariadne_map = repo.get_map(state["portal_name"])
@@ -259,25 +257,22 @@ async def execute_deterministic_node(state: AriadneState, config: RunnableConfig
         return {"errors": [f"MapLoadError: {str(e)}"]}
 
     current_state_id = state.get("current_state_id")
-    
-    # 3. Identify Safe Sequence using the current state's snapshot
     batch = _find_safe_sequence(current_state_id, ariadne_map, state)
     if not batch:
         return {"errors": [f"NoTransitionError: No valid, live edge found from state '{current_state_id}'"]}
 
-    # 4. Resolve Translator based on a provided hint or default
     motor_name = config.get("configurable", {}).get("motor_name", "crawl4ai")
     translator = TranslatorRegistry.get_translator_by_name(motor_name)
 
-    # 5. Resolve Targets & Translate JIT
     try:
         if len(batch) > 1:
             print(f"--- JIT Batching {len(batch)} intents ---")
-            resolved_batch = []
-            for e in batch:
-                res_target = _resolve_target(e.target, e.from_state, ariadne_map, state)
-                resolved_batch.append((e.intent, res_target, e.value))
-            command = translator.translate_batch(resolved_batch, state)
+            resolved_batch = [
+                (_resolve_target(e.target, e.from_state, ariadne_map, state), e) for e in batch
+            ]
+            command = translator.translate_batch(
+                [(e.intent, target, e.value) for target, e in resolved_batch], state
+            )
         else:
             edge = batch[0]
             res_target = _resolve_target(edge.target, edge.from_state, ariadne_map, state)
@@ -285,23 +280,40 @@ async def execute_deterministic_node(state: AriadneState, config: RunnableConfig
     except Exception as e:
         return {"errors": [f"TranslationError: {str(e)}"]}
 
-    # 6. Dispatch to Executor
     print(f"--- Dispatching Command: {command} ---")
     try:
         result = await executor.execute(command)
-        if result.status == "failed":
-            return {
-                "errors": [f"ExecutionFailed: {result.error or 'Unknown error'}"]
-            }
-    except Exception as e:
-        return {
-            "errors": [f"ExecutionError: {str(e)}"]
-        }
 
-    return {
-        "current_state_id": batch[-1].to_state,
-        "errors": []
-    }
+        if result.status == "failed":
+            # Micro-batch failure detection
+            if result.failed_at_index is not None and result.failed_at_index >= 0 and len(batch) > 1:
+                fail_idx = result.failed_at_index
+                print(f"--- Batch failed at index {fail_idx}. Retrying remaining actions atomically. ---")
+                
+                # Retry remaining actions one-by-one
+                remaining_batch = batch[fail_idx + 1:]
+                for i, edge in enumerate(remaining_batch):
+                    print(f"--- Retrying action {fail_idx + 1 + i}: {edge.intent} ---")
+                    try:
+                        res_target = _resolve_target(edge.target, edge.from_state, ariadne_map, state)
+                        atomic_cmd = translator.translate_intent(edge.intent, res_target, state, edge.value)
+                        atomic_result = await executor.execute(atomic_cmd)
+                        
+                        if atomic_result.status == "failed":
+                            error_msg = f"Atomic retry failed for action {fail_idx + 1 + i}: {atomic_result.error}"
+                            return {"errors": [f"ExecutionFailed: {error_msg}"]}
+                    except Exception as e:
+                         return {"errors": [f"ExecutionError on retry: {str(e)}"]}
+                
+                # If all retries succeed, the state is the one from the last successful action of the *original* batch
+                return {"current_state_id": batch[-1].to_state, "errors": []}
+            else:
+                 return {"errors": [f"ExecutionFailed: {result.error or 'Unknown error'}"]}
+
+    except Exception as e:
+        return {"errors": [f"ExecutionError: {str(e)}"]}
+
+    return {"current_state_id": batch[-1].to_state, "errors": []}
 
 
 async def apply_local_heuristics_node(state: AriadneState, config: RunnableConfig) -> Dict[str, Any]:

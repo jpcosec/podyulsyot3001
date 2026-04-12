@@ -17,8 +17,8 @@ Once an issue is solved, the next step is always:
 
 ### Phase 1 — Execution & State Integrity (Hotfixes)
 
- 1. plan_docs/issues/gaps/implement-mission-driven-pathfinding.md
-    • [Prevents wrong turns in the graph]
+ 1. plan_docs/issues/gaps/isolate-translators-from-core.md
+    • [Restores Ariadne core as a pure, infrastructure-agnostic engine]
 
  2. plan_docs/issues/gaps/atomic-micro-batching-with-failure-index.md
     • [Guarantees DOM state consistency]
@@ -57,7 +57,6 @@ Once an issue is solved, the next step is always:
 
  11. plan_docs/issues/gaps/implement-promotion-engine.md
     • [Converts recordings into canonical AriadneMap candidates]
-
 
 ## Dependency summary
 

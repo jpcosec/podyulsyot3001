@@ -47,7 +47,7 @@ class Crawl4AIExecutor(Executor):
         """Runs a JIT command or batch via Crawl4AI."""
         if not isinstance(command, CrawlCommand):
             return ExecutionResult(
-                status="failed", 
+                status="failed",
                 error=f"Invalid command type: {type(command)}"
             )
 
@@ -56,17 +56,30 @@ class Crawl4AIExecutor(Executor):
                 config = CrawlerRunConfig(
                     c4a_script=command.c4a_script,
                     cache_mode=CacheMode.BYPASS,
-                    screenshot=True
+                    screenshot=True,
+                    return_js_script_result=True, # Important to get script return value
                 )
-                
+
                 result = await crawler.arun(url=self.current_url, config=config)
-                
+
                 if result.success:
-                    self.current_url = result.url
+                    self.current_url = result.url or self.current_url
+                    script_result = result.js_script_result
+                    
+                    # If the script returns a dict, it's a failure index
+                    if isinstance(script_result, dict) and 'failed_at' in script_result:
+                        return ExecutionResult(
+                            status="failed",
+                            failed_at_index=script_result.get('failed_at'),
+                            error=script_result.get('error', 'Action failed in batch')
+                        )
+
+                    # If script result is None or not a dict, it's full success
                     return ExecutionResult(status="success")
                 else:
+                    # This means the entire batch failed to even start or run
                     return ExecutionResult(
-                        status="failed", 
+                        status="failed",
                         error=getattr(result, 'error_message', 'Unknown Crawl4AI error')
                     )
         except Exception as e:

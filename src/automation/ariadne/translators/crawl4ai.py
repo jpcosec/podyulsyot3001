@@ -84,15 +84,27 @@ class Crawl4AITranslator(AriadneTranslator):
         state: AriadneState,
     ) -> MotorCommand:
         """
-        Translates a batch of intents into a single CrawlCommand.
+        Translates a batch of intents into a single, atomic CrawlCommand script
+        with error handling for each step.
         """
         scripts = []
         combined_hooks = []
+        final_js_script = ["try {"]
 
-        for intent, target, value in batch:
+        for i, (intent, target, value) in enumerate(batch):
             cmd = self.translate_intent(intent, target, state, value)
             if isinstance(cmd, CrawlCommand):
-                scripts.append(cmd.c4a_script)
+                # Wrap each command in a try-catch block within the script
+                final_js_script.append(f"  // Action {i}")
+                final_js_script.append(f"  try {{")
+                final_js_script.append(f"    {cmd.c4a_script};")
+                final_js_script.append(f"  }} catch (e) {{")
+                final_js_script.append(f"    return {{ 'failed_at': {i}, 'error': e.message }};")
+                final_js_script.append(f"  }}")
                 combined_hooks.extend(cmd.hooks)
 
-        return CrawlCommand(c4a_script="\n".join(scripts), hooks=combined_hooks)
+        final_js_script.append("} catch (e) {")
+        final_js_script.append("  return { 'failed_at': -1, 'error': `Unexpected batch error: ${e.message}` };")
+        final_js_script.append("}")
+
+        return CrawlCommand(c4a_script="\n".join(final_js_script), hooks=combined_hooks)
