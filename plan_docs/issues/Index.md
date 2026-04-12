@@ -17,25 +17,29 @@ Once an issue is solved, the next step is always:
 
 ## Priority roadmap
 
-### Phase 1 — Intelligence & Data Polish
+### Phase 1 — Intelligence & Logic Polish
 
  1. plan_docs/issues/gaps/implement-llm-fallback-in-default-mode.md
-
     • [Critical for unmapped portal support]
 
-### Phase 2 — Persistence & Self-Healing
+### Phase 2 — Infrastructure & Persistence
 
  2. plan_docs/issues/gaps/implement-persistent-sqlite-checkpointer.md
+    • [Enables production-grade HITL and session recovery]
 
- 3. plan_docs/issues/gaps/implement-graph-recording-pipeline.md
+### Phase 3 — The Lifecycle (Learning)
 
-    • [2 and 3 enable production-grade HITL and Map Promotion]
+ 3. plan_docs/issues/gaps/implement-graph-recorder-capability.md
+    • [Captures JIT transitions for map promotion]
+
+ 4. plan_docs/issues/gaps/implement-promotion-engine.md
+    • [Converts recordings into canonical AriadneMap candidates]
 
 ## Dependency summary
 
-• plan_docs/issues/gaps/implement-graph-recording-pipeline.md  ->  none
-• plan_docs/issues/gaps/implement-persistent-sqlite-checkpointer.md  ->  none
+• plan_docs/issues/gaps/implement-graph-recorder-capability.md  ->  plan_docs/issues/gaps/implement-persistent-sqlite-checkpointer.md
+• plan_docs/issues/gaps/implement-promotion-engine.md  ->  plan_docs/issues/gaps/implement-graph-recorder-capability.md
 
 ## Parallelization map
 
-Phase 1  [1]          ← [Intelligence] Phase 2     [2][3]          ← [Infrastructure]
+Phase 1  [1]          ← [Intelligence] Phase 2     [2]          ← [Persistence] Phase 3     [3][4]       ← [Learning]
