@@ -1,0 +1,9 @@
+{
+  "selectors": {
+    "apply_button": "[data-at='apply-button']",
+    "external_apply_text": "Ich bin interessiert"
+  },
+  "heuristics": {
+    "onsite_keywords": ["online-bewerbung", "sofort-bewerben"]
+  }
+}

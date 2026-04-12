@@ -1,49 +1,43 @@
 # Ariadne 2.0 Implementation Index
 
-Ariadne 2.0 has its **Architecture Core** implemented. We are now in the **Functional Restoration** phase to restore portal support, executors, and the CLI.
+Ariadne 2.0 has its **Architecture Core** and **Skeleton** implemented. We are now in the **Logic Implementation** phase to turn stubs into functional code.
 
-## Core Accomplishments (Architectural skeleton)
-- [x] **Fitness Functions**: Enforced DIP, I/O isolation, and mode blindness.
-- [x] **Graph Models**: Defined `AriadneMap`, `AriadneStateDefinition`, `AriadneEdge`.
-- [x] **Mode Registry**: Built the Nyxt-inspired contextual mode system.
-- [x] **Segregated Protocols**: Defined `Executor`, `Planner`, and `Capability` interfaces.
-- [x] **StateGraph Controller**: Implemented the LangGraph JIT orchestrator.
-- [x] **Link Hinting**: Implemented the "Set-of-Mark" DOM injection.
-- [x] **JIT Translators**: Built atomic compilers for BrowserOS and Crawl4AI.
-- [x] **Micro-Batching**: Implemented sequence grouping for C4A performance.
-- [x] **Rescue Agent**: Built the direct MCP VLM rescue agent.
+## Core Accomplishments (Skeleton)
+- [x] **Fitness Functions**: DIP/Isolation guardrails passing.
+- [x] **Graph Models**: 2.0 models defined.
+- [x] **Mode Registry**: Contextual mode classes created.
+- [x] **StateGraph Topology**: 5-node graph structure compiled.
+- [x] **JIT Translators**: Atomic intent compilers implemented.
 
 ---
 
-## Execution Queue (Functional Restoration)
+## Execution Queue (Logic Implementation)
 
-### Phase 1: Portal Mode Implementations (Heuristics)
-- [ ] **[Implement: LinkedIn Portal Mode Logic](gaps/implement-linkedin-portal-mode-logic.md)**
+### Phase 1: Closing the Loop (Node Logic)
+- [ ] **[Implement: Observe Node Logic](gaps/implement-observe-node-logic.md)**
   - *Status*: Ready
-  - *Expected*: Rules for LinkedIn-specific cleanup and recovery.
-- [ ] **[Implement: StepStone Portal Mode Logic](gaps/implement-stepstone-portal-mode-logic.md)**
+  - *Scope*: Replace stub in `orchestrator.py` with actual calls to fetch URL, DOM, and Screenshot.
+- [ ] **[Implement: Deterministic Dispatch Logic](gaps/implement-deterministic-dispatch-logic.md)**
   - *Status*: Ready
-  - *Expected*: German keyword rules and StepStone-specific recovery.
+  - *Scope*: Connect `execute_deterministic_node` to `MotorRegistry` and handle `ExecutionResult`.
+- [ ] **[Implement: Local Heuristics Logic](gaps/implement-local-heuristics-logic.md)**
+  - *Status*: Ready
+  - *Scope*: Implement the patching rules in `ApplyLocalHeuristicsNode` using `portal_mode`.
 
-### Phase 2: Executor Restoration (The Hands)
-- [ ] **[Rebuild: BrowserOS CLI Executor](unimplemented/rebuild-browseros-cli-executor.md)**
+### Phase 2: Executor De-Mocking (The Hands)
+- [ ] **[Implement: Crawl4AI Live Execution](gaps/implement-crawl4ai-live-execution.md)**
   - *Status*: Ready
-  - *Expected*: JIT-compliant dumb worker for MCP calls.
-- [ ] **[Rebuild: Crawl4AI JIT Executor](unimplemented/rebuild-crawl4ai-jit-executor.md)**
+  - *Scope*: Replace mocks in `Crawl4AIExecutor` with `AsyncWebCrawler.arun()` calls.
+- [ ] **[Verify: BrowserOS MCP Parameters](gaps/verify-browseros-mcp-parameters.md)**
   - *Status*: Ready
-  - *Expected*: JIT-compliant worker for C4A-Scripts.
+  - *Scope*: Ensure `BrowserOSCliExecutor` tool calls match the live port 9000 schema exactly.
 
-### Phase 3: Map Migration (The Knowledge)
-- [ ] **[Migrate: Portal Maps to AriadneMap Graph](unimplemented/migrate-portal-maps-to-graph.md)**
-  - *Status*: Ready (Architecture-ready)
-  - *Expected*: `easy_apply.json` graphs for StepStone and LinkedIn.
-
-### Phase 4: CLI & Entrypoint (The Interface)
-- [ ] **[Rebuild: CLI Entrypoint for Ariadne 2.0](unimplemented/rebuild-cli-entrypoint.md)**
+### Phase 3: CLI & Lifecycle
+- [ ] **[Refine: CLI Apply Lifecycle](gaps/refine-cli-apply-lifecycle.md)**
   - *Status*: Ready
-  - *Expected*: Functional `python -m src.automation.main apply` invoking the 2.0 graph.
+  - *Scope*: Handle streaming updates, state persistence, and end-to-end success/failure reporting.
 
 ---
 
 ## QA & Validation
-Portal-specific bugs and validation tracking are managed in [QA_BACKLOG.md](../../QA_BACKLOG.md).
+Portal-specific bugs and map validation are managed in [QA_BACKLOG.md](../../QA_BACKLOG.md).

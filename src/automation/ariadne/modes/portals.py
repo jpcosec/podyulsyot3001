@@ -1,51 +1,77 @@
 """Portal-specific Ariadne Mode implementations."""
 
-from src.automation.ariadne.danger_contracts import ApplyDangerReport, ApplyDangerSignals
+import json
+from pathlib import Path
+from typing import Any, Dict, Optional
+
 from src.automation.ariadne.models import AriadneStateDefinition
 from src.automation.ariadne.modes.base import AriadneMode
 from src.scraper.models import JobPosting
 
 
-class LinkedInMode(AriadneMode):
-    """Placeholder for LinkedIn-specific heuristics and cleanup."""
+class JsonConfigMode(AriadneMode):
+    """Base class for modes that load rules from JSON configs."""
+
+    def __init__(self, portal_name: str):
+        self.portal_name = portal_name
+        self.config = self._load_config()
+
+    def _load_config(self) -> Dict[str, Any]:
+        config_path = Path(__file__).parent / "configs" / f"{self.portal_name}.json"
+        if config_path.exists():
+            with open(config_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        return {}
 
     def normalize_job(self, payload: JobPosting) -> JobPosting:
+        # Default implementation: pass-through
         return payload
 
-    def inspect_danger(self, snapshot: ApplyDangerSignals) -> ApplyDangerReport:
-        return ApplyDangerReport(findings=[])
+    def inspect_danger(self, snapshot: Any) -> Any:
+        # Default implementation: no findings
+        from src.automation.ariadne.exceptions import AriadneError
+        return None
 
     def apply_local_heuristics(
         self, state: AriadneStateDefinition
     ) -> AriadneStateDefinition:
+        # Inject selectors from config into the state components
+        selectors = self.config.get("selectors", {})
+        for key, css in selectors.items():
+            if key not in state.components:
+                from src.automation.ariadne.models import AriadneTarget
+                state.components[key] = AriadneTarget(css=css)
         return state
 
 
-class StepStoneMode(AriadneMode):
-    """Placeholder for StepStone-specific heuristics and cleanup."""
+class LinkedInMode(JsonConfigMode):
+    """LinkedIn-specific heuristics and cleanup."""
+
+    def __init__(self):
+        super().__init__("linkedin")
 
     def normalize_job(self, payload: JobPosting) -> JobPosting:
+        # Cleanup LinkedIn-specific location suffixes
+        if payload.location:
+            payload.location = payload.location.split("·")[0].strip()
         return payload
 
-    def inspect_danger(self, snapshot: ApplyDangerSignals) -> ApplyDangerReport:
-        return ApplyDangerReport(findings=[])
 
-    def apply_local_heuristics(
-        self, state: AriadneStateDefinition
-    ) -> AriadneStateDefinition:
-        return state
+class StepStoneMode(JsonConfigMode):
+    """StepStone-specific heuristics and cleanup."""
 
-
-class XingMode(AriadneMode):
-    """Placeholder for Xing-specific heuristics and cleanup."""
+    def __init__(self):
+        super().__init__("stepstone")
 
     def normalize_job(self, payload: JobPosting) -> JobPosting:
+        # Cleanup StepStone markers
+        if payload.company_name:
+            payload.company_name = payload.company_name.replace(" (m/w/d)", "").strip()
         return payload
 
-    def inspect_danger(self, snapshot: ApplyDangerSignals) -> ApplyDangerReport:
-        return ApplyDangerReport(findings=[])
 
-    def apply_local_heuristics(
-        self, state: AriadneStateDefinition
-    ) -> AriadneStateDefinition:
-        return state
+class XingMode(JsonConfigMode):
+    """Xing-specific heuristics and cleanup."""
+
+    def __init__(self):
+        super().__init__("xing")

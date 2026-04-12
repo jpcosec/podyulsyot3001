@@ -1,0 +1,231 @@
+{
+  "meta": {
+    "source": "linkedin",
+    "flow": "easy_apply",
+    "version": "v1",
+    "status": "verified"
+  },
+  "states": {
+    "job_details": {
+      "id": "job_details",
+      "description": "The main job description page with apply buttons",
+      "presence_predicate": {
+        "required_elements": [
+          {
+            "hint": null,
+            "css": ".jobs-description",
+            "text": "Job description",
+            "vision": null
+          }
+        ],
+        "forbidden_elements": [],
+        "logical_op": "AND"
+      },
+      "components": {
+        "easy_apply_button": {
+          "hint": null,
+          "css": "button.jobs-apply-button",
+          "text": "Easy Apply",
+          "vision": null
+        },
+        "external_apply_button": {
+          "hint": null,
+          "css": "a.jobs-apply-button",
+          "text": "Apply",
+          "vision": null
+        }
+      }
+    },
+    "easy_apply_modal_contact": {
+      "id": "easy_apply_modal_contact",
+      "description": "First step of Easy Apply modal: Contact info",
+      "presence_predicate": {
+        "required_elements": [
+          {
+            "hint": null,
+            "css": "[data-test-modal-id='apply-modal']",
+            "text": "Contact info",
+            "vision": null
+          }
+        ],
+        "forbidden_elements": [],
+        "logical_op": "AND"
+      },
+      "components": {
+        "first_name": {
+          "hint": null,
+          "css": "input[name='firstName']",
+          "text": null,
+          "vision": null
+        },
+        "last_name": {
+          "hint": null,
+          "css": "input[name='lastName']",
+          "text": null,
+          "vision": null
+        },
+        "next_button": {
+          "hint": null,
+          "css": "button[aria-label='Continue to next step']",
+          "text": "Next",
+          "vision": null
+        }
+      }
+    },
+    "easy_apply_modal_resume": {
+      "id": "easy_apply_modal_resume",
+      "description": "Resume upload step of Easy Apply modal",
+      "presence_predicate": {
+        "required_elements": [
+          {
+            "hint": null,
+            "css": "[data-test-modal-id='apply-modal']",
+            "text": "Resume",
+            "vision": null
+          }
+        ],
+        "forbidden_elements": [],
+        "logical_op": "AND"
+      },
+      "components": {
+        "upload_input": {
+          "hint": null,
+          "css": "input[type='file'][accept*='pdf']",
+          "text": null,
+          "vision": null
+        },
+        "next_button": {
+          "hint": null,
+          "css": "button[aria-label='Continue to next step']",
+          "text": "Next",
+          "vision": null
+        }
+      }
+    },
+    "easy_apply_modal_review": {
+      "id": "easy_apply_modal_review",
+      "description": "Final review step before submission",
+      "presence_predicate": {
+        "required_elements": [
+          {
+            "hint": null,
+            "css": "[data-test-modal-id='apply-modal']",
+            "text": "Review your application",
+            "vision": null
+          }
+        ],
+        "forbidden_elements": [],
+        "logical_op": "AND"
+      },
+      "components": {
+        "submit_button": {
+          "hint": null,
+          "css": "button[aria-label='Submit application']",
+          "text": "Submit application",
+          "vision": null
+        }
+      }
+    },
+    "apply_success": {
+      "id": "apply_success",
+      "description": "Post-apply success state",
+      "presence_predicate": {
+        "required_elements": [
+          {
+            "hint": null,
+            "css": "[data-test-modal-id='post-apply-modal']",
+            "text": "Application sent",
+            "vision": null
+          }
+        ],
+        "forbidden_elements": [],
+        "logical_op": "AND"
+      },
+      "components": {}
+    }
+  },
+  "edges": [
+    {
+      "from_state": "job_details",
+      "to_state": "easy_apply_modal_contact",
+      "intent": "click",
+      "target": {
+        "hint": null,
+        "css": "button.jobs-apply-button",
+        "text": "Easy Apply",
+        "vision": null
+      },
+      "value": null,
+      "extract": null
+    },
+    {
+      "from_state": "easy_apply_modal_contact",
+      "to_state": "easy_apply_modal_contact",
+      "intent": "fill",
+      "target": {
+        "hint": null,
+        "css": "input[name='firstName']",
+        "text": null,
+        "vision": null
+      },
+      "value": "{{profile.first_name}}",
+      "extract": null
+    },
+    {
+      "from_state": "easy_apply_modal_contact",
+      "to_state": "easy_apply_modal_resume",
+      "intent": "click",
+      "target": {
+        "hint": null,
+        "css": "button[aria-label='Continue to next step']",
+        "text": null,
+        "vision": null
+      },
+      "value": null,
+      "extract": null
+    },
+    {
+      "from_state": "easy_apply_modal_resume",
+      "to_state": "easy_apply_modal_resume",
+      "intent": "upload",
+      "target": {
+        "hint": null,
+        "css": "input[type='file']",
+        "text": null,
+        "vision": null
+      },
+      "value": "{{cv_path}}",
+      "extract": null
+    },
+    {
+      "from_state": "easy_apply_modal_resume",
+      "to_state": "easy_apply_modal_review",
+      "intent": "click",
+      "target": {
+        "hint": null,
+        "css": "button[aria-label='Continue to next step']",
+        "text": null,
+        "vision": null
+      },
+      "value": null,
+      "extract": null
+    },
+    {
+      "from_state": "easy_apply_modal_review",
+      "to_state": "apply_success",
+      "intent": "click",
+      "target": {
+        "hint": null,
+        "css": "button[aria-label='Submit application']",
+        "text": null,
+        "vision": null
+      },
+      "value": null,
+      "extract": null
+    }
+  ],
+  "success_states": [
+    "apply_success"
+  ],
+  "failure_states": []
+}
