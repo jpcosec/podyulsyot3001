@@ -1,19 +1,20 @@
 # Documentation
 
+## Ariadne references
+
+- `ariadne/architecture_and_graph.md` — graph topology, state model, and execution flow
+- `ariadne/execution_interfaces.md` — command, executor, and translator boundaries
+- `ariadne/fitness_functions.md` — architectural guardrails and error taxonomy
+- `ariadne/portals_and_modes.md` — mode system and portal configuration model
+- `ariadne/recording_and_promotion.md` — recording, storage, and draft-map promotion lifecycle
+
 ## Automation system
 
 - `automation/README.md` — index: implementation references and applicable standards
 - `automation/architecture.md` — design rationale, Ariadne boundary, motor separation, scrape and apply data flows
+- `../src/automation/README.md` — module-local runtime README for the `src/automation/` package
 
 ## Standards
 
-### docs/
-Documentation, planning, and navigation conventions for this scoped worktree.
-- `standards/docs/documentation_and_planning_guide.md` — how to write READMEs, plan, and mark deferred work
-- `standards/docs/documentation_quality_checklist.md` — evaluation checklist
-
-### code/
-Code quality standards by component type.
-- `standards/code/basic.md` — universal: error contracts, LogTag, docstrings, CLI structure
-- `standards/code/crawl4ai_usage.md` — how scraper code must use Crawl4AI, including bootstrap-via-LLM then converge-to-saved-schema
-- `standards/code/ingestion_layer.md` — boundary ingestion rules for scraper-facing inputs in this worktree
+- `../STANDARDS.md` — canonical workflow, documentation, and code standards for this worktree
+- `../AGENTS.md` — runtime orientation and execution rules for agents

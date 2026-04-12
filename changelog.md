@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-12] - Documentation Compliance Cleanup
+
+### Changed
+- Added `src/automation/README.md` so the runtime module now has a local README with the required architecture, configuration, CLI, and data-contract sections from `STANDARDS.md`.
+- Updated `README.md`, `docs/README.md`, `docs/automation/README.md`, `docs/automation/architecture.md`, and `docs/reference/README.md` to remove stale references to deleted paths and point documentation back to the active `docs/ariadne/`, `src/automation/README.md`, `AGENTS.md`, and `STANDARDS.md` sources.
+
 ## [2026-04-12] - Ariadne Core Hotfixes
 
 ### Changed

@@ -12,19 +12,19 @@ The `src/automation/` package is the runtime home for all browser automation: jo
 - `src/automation/README.md` — package layout, boundary rules, CLI usage, how to extend, troubleshooting
 - `src/automation/ariadne/models.py` — Ariadne portal schema and canonical semantic models
 - `src/automation/portals/` — portal intent files (one per portal per operation)
-- `src/automation/motors/crawl4ai/` — Crawl4AI motor (scrape engine, apply engine, portal translators)
-- `src/automation/motors/browseros/cli/` — BrowserOS CLI motor (MCP client, executor, backend)
+- `src/automation/motors/crawl4ai/` — Crawl4AI motor executor
+- `src/automation/motors/browseros/` — BrowserOS executor
 - `src/automation/main.py` — unified CLI (`scrape` / `apply` subcommands)
 
-## External library references
+## Authoritative architecture references
 
-- `docs/reference/external_libs/browseros/readme.txt` — BrowserOS reference intro and index
-- `docs/reference/external_libs/crawl4ai/readme.txt` — Crawl4AI reference intro and index
+- `docs/ariadne/architecture_and_graph.md`
+- `docs/ariadne/execution_interfaces.md`
+- `docs/ariadne/recording_and_promotion.md`
 
 Discovery runs may expand beyond the aggregator portal itself: when a posting resolves to an external ATS or careers `application_url`, the Crawl4AI scrape engine can launch a company-domain discovery pass and ingest additional openings under a dedicated `company-<domain>` source namespace.
 
 ## Standards that apply
 
-- `docs/standards/code/basic.md` — error contracts, LogTag, docstrings
-- `docs/standards/code/crawl4ai_usage.md` — Crawl4AI bootstrap and schema convergence rules
-- `docs/standards/code/ingestion_layer.md` — boundary validation rules for scrape-time inputs
+- `STANDARDS.md` — canonical workflow, documentation, and code standards
+- `AGENTS.md` — repository execution context and architecture pointers
