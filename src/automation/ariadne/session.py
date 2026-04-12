@@ -25,6 +25,7 @@ from src.automation.ariadne.hitl import ApplyHitlController
 from src.automation.ariadne.models import ApplyMeta, AriadnePath, AriadnePortalMap
 from src.automation.ariadne.motor_protocol import MotorProvider
 from src.automation.ariadne.navigator import AriadneNavigator
+from src.automation.ariadne.repository import MapRepository
 from src.automation.storage import AutomationStorage
 from src.shared.log_tags import LogTag
 
@@ -34,13 +35,6 @@ logger = logging.getLogger(__name__)
 def resolve_portal_routing(portal_name: str, ingest_data: dict[str, Any]) -> Any:
     routing_module = import_module("src.automation.portals.routing")
     return routing_module.resolve_portal_routing(portal_name, ingest_data)
-
-
-def OpenBrowserClient() -> Any:
-    openbrowser_module = import_module(
-        "src.automation.motors.browseros.agent.openbrowser"
-    )
-    return openbrowser_module.OpenBrowserClient()
 
 
 class UnsupportedRoutingDecisionError(Exception):
@@ -58,32 +52,22 @@ class AriadneSession:
         self,
         portal_name: str,
         storage: AutomationStorage | None = None,
+        repository: MapRepository | None = None,
         *,
         input_func=input,
     ) -> None:
         self.portal_name = portal_name
         self.storage = storage or AutomationStorage()
+        self.repository = repository or MapRepository()
         self._map: AriadnePortalMap | None = None
         self._hitl = ApplyHitlController(self.storage, input_func=input_func)
         self._danger_detector = ApplyDangerDetector()
 
     @property
     def portal_map(self) -> AriadnePortalMap:
-        """Load the portal map lazily from `src/automation/portals/<name>/maps/easy_apply.json`."""
+        """Load the portal map lazily from the repository."""
         if not self._map:
-            map_path = (
-                Path(__file__).parent.parent
-                / "portals"
-                / self.portal_name
-                / "maps"
-                / "easy_apply.json"
-            )
-            if not map_path.exists():
-                raise FileNotFoundError(
-                    f"Ariadne Map not found for '{self.portal_name}' at {map_path}"
-                )
-            with open(map_path) as f:
-                self._map = AriadnePortalMap.model_validate(json.load(f))
+            self._map = self.repository.get_map(self.portal_name)
         return self._map
 
     async def run(
@@ -161,11 +145,10 @@ class AriadneSession:
             path = None if use_agent else portal_map.paths.get(selected_path_id)
             if not path:
                 logger.info(
-                    "%s %s. Falling back to Level 2 OpenBrowser agent.",
+                    "%s %s. Falling back to Level 2 discovery agent.",
                     LogTag.FAST,
                     "Forcing agent run" if use_agent else f"Path '{selected_path_id}' not found",
                 )
-                agent_client = OpenBrowserClient()
                 agent_context = self._build_context(
                     ingest_data=ingest_data,
                     profile=self.storage.load_candidate_profile(profile),
@@ -173,7 +156,7 @@ class AriadneSession:
                     letter_path=letter_path,
                     application_url=route.application_url,
                 )
-                agent_result = agent_client.run_agent(
+                agent_result = await motor.run_agent(
                     portal=self.portal_name,
                     url=route.application_url or "",
                     context=agent_context,
@@ -197,7 +180,7 @@ class AriadneSession:
                     )
                 if agent_result.status != "success" or not agent_result.playbook:
                     raise ValueError(
-                        f"Level 2 OpenBrowser agent failed to produce a valid path for '{selected_path_id}': {agent_result.error}"
+                        f"Level 2 discovery agent failed to produce a valid path for '{selected_path_id}': {agent_result.error}"
                     )
 
                 # Hand successful playbook into the promotion/storage flow

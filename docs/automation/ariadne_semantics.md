@@ -1,55 +1,64 @@
-# Ariadne Semantic Layer — Documentation
+# Ariadne 2.0: LangGraph Flight Controller
 
-## Overview
-The **Ariadne Semantic Layer** is the backend-neutral source of truth for automation. It separates **what** the automation is trying to do (the mission and the states) from **how** it is done (the motors and tool calls).
+## 1. The Graph State (AriadneState)
+The state is the immutable, serializable working memory that passes between nodes. It uses reducers for error accumulation and history.
 
-## Key Concepts
+```python
+class AriadneState(TypedDict):
+    # Identity
+    job_id: str
+    portal_name: str
+    
+    # Context (Static)
+    profile_data: dict[str, Any]
+    
+    # Deterministic Navigation
+    path_id: str | None
+    current_step_index: int
+    
+    # JIT Browser Snapshot
+    dom_elements: list[dict]
+    current_url: str
+    screenshot_b64: str | None
+    
+    # Memory & Reducers
+    errors: Annotated[list[str], operator.add]
+    history: Annotated[list[AnyMessage], add_messages]
+    
+    # Active Strategy
+    portal_mode: str  # e.g., "stepstone_default"
+```
 
-### 1. Semantic State (`AriadneState`)
-A "State" represents a logical room or phase in a portal (e.g., "Login Page", "Resume Upload Modal").
-- **Presence Predicate**: Rules for how to identify this state (e.g., "Look for X, ensure Y is NOT there").
-- **Components**: The semantic elements belonging to this state (e.g., "The 'Next' button").
+## 2. Component Taxonomy (SOLID Segregation)
 
-### 2. The Mission (`AriadneTask`)
-A "Task" defines the goal of the automation.
-- **Goal**: The high-level objective (e.g., `submit_job_application`).
-- **Boundaries**: Explicit definitions of Success States and Terminal Failure States.
-- **Recovery**: Predicates for identifying blockers (e.g., Captchas) and their associated recovery plans.
+- **Executors (Slaves)**: Purely deterministic primitives (Crawl4AI, Playwright). They receive an exact target/coordinate and execute. If the target is missing, they throw an immediate error.
+- **Tools (Resolvers)**: Stateless utilities. `VisionTool` (screenshot -> coordinates), `HintingTool` (injects alphanumeric markers).
+- **Planners (Agents)**: `BrowserOSAgent`. Receives the `AriadneState` and decides the next semantic action.
 
-### 3. Multi-Strategy Target (`AriadneTarget`)
-A single object that holds all possible ways to find an element:
-- **`css`**: Used by Crawl4AI and BrowserOS (Playwright).
-- **`text`**: Used by BrowserOS (Fuzzy matching).
-- **`image_template` / `ocr_text`**: Used by the Vision motor.
+## 3. Graph Topology (Cost-Optimized Cascade)
 
-### 4. Deterministic Path (`AriadnePath`)
-A linear "tape" through a task. It is a sequence of `AriadneSteps` that reference the semantic states. This is the primary input for replayers.
+Ariadne is a cyclic `StateGraph` with 4 levels of fallback:
+
+1.  **Node: Observe**: Captures the JIT state (URL, Accessibility Tree, Screenshot).
+2.  **Node: ExecuteDeterministic**: Replays the `AriadneMap` for the current index. Calls the Executor.
+3.  **Node: ApplyLocalHeuristics**: If the deterministic node fails, applies local rules from the `portal_mode`.
+4.  **Node: LLMRescueAgent**: If heuristics fail, the VLM Agent infers the next action using Hints + DOM.
+5.  **Node: HumanInTheLoop**: Native LangGraph breakpoint (`interrupt_before`).
+
+### Conditional Routing Logic:
+- **After Observe**: `goal_achieved` -> `END`; `danger_detected` -> `HITL`; else -> `ExecuteDeterministic`.
+- **After Deterministic**: `errors` -> `ApplyLocalHeuristics`; else -> `Observe` (Next step).
+- **After Heuristics**: `errors` -> `LLMRescueAgent`; else -> `ExecuteDeterministic` (Retry with patch).
+- **After Agent**: `errors` or `give_up` -> `HITL`; else -> `Observe` (Progress check).
+
+## 4. Native Persistence & Time-Travel
+Using LangGraph's `Checkpointer` (Memory/Postgres), every execution is versioned. If the `LLMRescueAgent` makes a mistake, the system can perform an "Architectural Undo" and resume from the last valid `Observe` state.
 
 ---
 
-## The Unified Map
-Every portal flow (e.g., LinkedIn Easy Apply) is defined in a single JSON map at `src/automation/portals/<portal>/maps/<flow>.json`.
+## Ariadne Modes (Contextual Injection)
 
-This map contains:
-1.  A registry of all possible **States**.
-2.  The definition of the **Task**.
-3.  The **Paths** (the sequences of steps).
+Ariadne uses a **Mode Pattern** inspired by Nyxt to manage portal-specific behavior without polluting the core. A "Mode" is a set of rules and heuristics injected based on the current URL.
 
----
-
-## Motor Implementation
-
-### OpenBrowser (The Explorer / Level 2 Agent)
-OpenBrowser is the LLM agent framework built on top of BrowserOS. It acts as the **author** of the semantic `AriadnePath`. 
-When the system encounters a new or broken flow, it runs an OpenBrowser agent to intelligently explore the page. As the agent clicks and types its way through the portal, the system acts as a recording proxy, intercepting its actions and normalizing them into the **Ariadne Common Language**. 
-This *produces* a new, deterministic `AriadnePath` (the "semantic path" layer) that the deterministic motors (like Crawl4AI or BrowserOS CLI) can consume for all future runs.
-
-### BrowserOS CLI (The Mapper)
-The BrowserOS motor iterates through the steps of an `AriadnePath` and executes them one-by-one as direct tool calls. It uses the `text` field of the `AriadneTarget` for high resilience to DOM changes.
-
-### Crawl4AI (The Compiler)
-The Crawl4AI motor uses a motor-specific **Compiler** (located in `src/automation/motors/crawl4ai/compiler/`) to turn the backend-neutral `AriadnePath` into a robust, procedural **C4A-Script**.
-
-
-The compilation pipeline:
-`Ariadne Path` → `C4AI Intermediate Representation (IR)` → `C4A-Script String`
+- **`DefaultMode`**: Uses LLMs for all normalization and extraction.
+- **`PortalMode` (e.g., `StepStoneMode`)**: Overrides defaults with high-speed, local rules for that specific domain (cleaning locations, detecting employment types).

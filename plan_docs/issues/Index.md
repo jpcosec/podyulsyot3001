@@ -1,97 +1,47 @@
-# Automation Issues Index
+# Ariadne 2.0: Master Implementation Index
 
-This file is the entrypoint for subagents deployed to solve issues in this repository.
+This index tracks the 6 core Epics required to transition Ariadne to a **"Programmable Semantic Browser"** based on LangGraph.
 
-## Working rule for every issue
+## Execution Queue (Priority Order)
 
+### [EPIC 0: Demolition & Recycling (Cleanup)](epic-0-cleanup.md)
+- **Status**: Ready
+- **Scope**: Isolate legacy code, purge contradictory specs, and setup QA Backlog.
+- **Depends on**: none
+
+### [EPIC 1: Architectural Fitness Functions (The Armor)](epic-1-fitness-functions.md)
+- **Status**: Locked (Blocked by Epic 0)
+- **Scope**: Implement `pytest-archon` and `pyfakefs` guardrails to enforce design boundaries.
+- **Depends on**: Epic 0
+
+### [EPIC 2: Data Layer & Portal Modes (The Stupid Brain)](epic-2-data-layer-modes.md)
+- **Status**: Blocked
+- **Scope**: Migrate to State Graphs and implement the Contextual Mode Pattern.
+- **Depends on**: Epic 1
+
+### [EPIC 3: Interface Taxonomy & Capabilities (The Segregation)](epic-3-interface-taxonomy.md)
+- **Status**: Blocked
+- **Scope**: Refactor Motor protocols into primitive JIT interfaces and implement Hinting.
+- **Depends on**: Epic 2
+
+### [EPIC 4: LangGraph JIT Orchestrator (The Controller)](epic-4-jit-graph.md)
+- **Status**: Blocked
+- **Scope**: Implement the 5-node StateGraph topology and JIT translation loop.
+- **Depends on**: Epic 3
+
+### [EPIC 5: LangGraph MCP Rescue Agent (The Planner)](epic-5-mcp-rescue-agent.md)
+- **Status**: Blocked
+- **Scope**: Implement the Level 3 LLM Rescue Agent with direct MCP tools.
+- **Depends on**: Epic 4
+
+---
+
+## Working Rules
 Once an issue is solved:
-1. Check whether any existing test is no longer valid.
-2. Add new tests where necessary.
-3. Run the relevant tests.
-4. Update `changelog.md`.
-5. Delete the solved issue from both this index and the corresponding file in `plan_docs/issues/`.
-6. Make a commit that clearly states what was fixed.
+1.  Run the **Fitness Functions** to ensure no architectural drift.
+2.  Update `changelog.md`.
+3.  Delete the solved issue from this index and its file.
+4.  Commit the change.
 
-## Legacy audit
-
-- No indexed issue is currently marked for deletion instead of repair.
-- The prior root-level issues entrypoint and ad-hoc root issue file were replaced so the issue entrypoint now follows `docs/standards/issue_guide.md`.
-- Extraction and normalization issues are resolved on the currently tested live scrape pages (XING, StepStone, TU Berlin).
-- BrowserOS XING external apply detection is fixed (OR logic + external_apply state).
-- Remaining gap issues cover BrowserOS StepStone selector mismatch, all portal live apply validation, and LangGraph MCP adapter evaluation.
-
-## Roots
-
-- `plan_docs/issues/gaps/browseros-stepstone-apply-button-target-not-found.md`
-- `plan_docs/issues/gaps/browseros-linkedin-live-apply-is-not-validated.md`
-- `plan_docs/issues/gaps/crawl4ai-xing-live-apply-is-not-validated.md`
-- `plan_docs/issues/gaps/crawl4ai-stepstone-live-apply-is-not-validated.md`
-- `plan_docs/issues/gaps/crawl4ai-linkedin-live-apply-is-not-validated.md`
-- `plan_docs/issues/unimplemented/langgraph-mcp-adapter-integration-is-not-evaluated.md`
-
-## Parallelizable groups
-
-- Depth 0:
-  - `plan_docs/issues/gaps/browseros-stepstone-apply-button-target-not-found.md`
-  - `plan_docs/issues/gaps/browseros-linkedin-live-apply-is-not-validated.md`
-  - `plan_docs/issues/gaps/crawl4ai-xing-live-apply-is-not-validated.md`
-  - `plan_docs/issues/gaps/crawl4ai-stepstone-live-apply-is-not-validated.md`
-  - `plan_docs/issues/gaps/crawl4ai-linkedin-live-apply-is-not-validated.md`
-  - `plan_docs/issues/unimplemented/langgraph-mcp-adapter-integration-is-not-evaluated.md`
-- Depth 1: `plan_docs/issues/gaps/live-apply-flows-are-not-fully-validated.md`
-
-## Blockers
-
-- `plan_docs/issues/gaps/live-apply-flows-are-not-fully-validated.md` blocks confidence in real end-to-end application behavior because scrape validation does not prove live apply correctness.
-- `plan_docs/issues/unimplemented/langgraph-mcp-adapter-integration-is-not-evaluated.md` blocks architectural clarity on whether future agent orchestration should keep leaning on `/chat`-style flows or move toward a stronger MCP-adapter path.
-
-## Dependency graph
-
-- `plan_docs/issues/gaps/browseros-stepstone-apply-button-target-not-found.md` -> no dependencies
-- `plan_docs/issues/gaps/browseros-linkedin-live-apply-is-not-validated.md` -> no dependencies
-- `plan_docs/issues/gaps/crawl4ai-xing-live-apply-is-not-validated.md` -> no dependencies
-- `plan_docs/issues/gaps/crawl4ai-stepstone-live-apply-is-not-validated.md` -> no dependencies
-- `plan_docs/issues/gaps/crawl4ai-linkedin-live-apply-is-not-validated.md` -> no dependencies
-- `plan_docs/issues/gaps/live-apply-flows-are-not-fully-validated.md` -> `plan_docs/issues/gaps/browseros-linkedin-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/crawl4ai-xing-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/crawl4ai-stepstone-live-apply-is-not-validated.md`, `plan_docs/issues/gaps/crawl4ai-linkedin-live-apply-is-not-validated.md`
-- `plan_docs/issues/unimplemented/langgraph-mcp-adapter-integration-is-not-evaluated.md` -> no dependencies
-
-## Current indexed issues
-
- 1. `plan_docs/issues/gaps/browseros-stepstone-apply-button-target-not-found.md`
-    - Scope: Fix the StepStone BrowserOS apply portal map so the `open_modal` step uses a correct element target matching the live StepStone apply surface
-    - Depends on: none
-    - Expected outputs: Updated StepStone portal map, corrected apply-button selector, re-run dry-run validation passing
-
- 2. `plan_docs/issues/gaps/live-apply-flows-are-not-fully-validated.md`
-    - Scope: Parent issue for live apply validation after child tasks define the matrix and validate each backend
-    - Depends on:
-      - `plan_docs/issues/gaps/browseros-linkedin-live-apply-is-not-validated.md`
-      - `plan_docs/issues/gaps/crawl4ai-xing-live-apply-is-not-validated.md`
-      - `plan_docs/issues/gaps/crawl4ai-stepstone-live-apply-is-not-validated.md`
-      - `plan_docs/issues/gaps/crawl4ai-linkedin-live-apply-is-not-validated.md`
-    - Expected outputs: Working live apply matrix, backend-specific evidence, updated docs/routing assumptions
-
- 3. `plan_docs/issues/gaps/browseros-linkedin-live-apply-is-not-validated.md`
-    - Scope: Validate BrowserOS-backed live apply flows for LinkedIn against the matrix
-    - Depends on: none
-    - Expected outputs: BrowserOS LinkedIn live apply evidence and support status
-
- 4. `plan_docs/issues/gaps/crawl4ai-xing-live-apply-is-not-validated.md`
-    - Scope: Validate Crawl4AI-backed live apply flows for XING against the matrix
-    - Depends on: none
-    - Expected outputs: Crawl4AI XING live apply evidence and support status
-
- 5. `plan_docs/issues/gaps/crawl4ai-stepstone-live-apply-is-not-validated.md`
-    - Scope: Validate Crawl4AI-backed live apply flows for StepStone against the matrix
-    - Depends on: none
-    - Expected outputs: Crawl4AI StepStone live apply evidence and support status
-
- 6. `plan_docs/issues/gaps/crawl4ai-linkedin-live-apply-is-not-validated.md`
-    - Scope: Validate Crawl4AI-backed live apply flows for LinkedIn against the matrix
-    - Depends on: none
-    - Expected outputs: Crawl4AI LinkedIn live apply evidence and support status
-
- 7. `plan_docs/issues/unimplemented/langgraph-mcp-adapter-integration-is-not-evaluated.md`
-    - Scope: Evaluate whether LangGraph MCP adapters should become the preferred graph/agent orchestration path for MCP-backed workflows in this repo
-    - Depends on: none
-    - Expected outputs: Architectural decision, scope analysis, and follow-up issue split if adoption is recommended
+## Bug & Validation Tracking
+All portal-specific bugs and dry-run validation tasks are tracked in [QA_BACKLOG.md](../../QA_BACKLOG.md).

@@ -366,153 +366,41 @@ def normalize_job_payload(
     rescue_source: Optional[str] = None,
     existing_diagnostics: Optional[Dict[str, Any]] = None,
 ) -> JobNormalizationResult:
-    diagnostics = _init_normalization_diagnostics(existing_diagnostics)
+    """Standardizes a job payload using a pipeline of transformers."""
     if not payload:
+        diagnostics = _init_normalization_diagnostics(existing_diagnostics)
         return JobNormalizationResult(payload={}, diagnostics=diagnostics)
 
-    normalized = dict(payload)
-    for field, value in normalized.items():
-        if (
-            field != "listing_case"
-            and value not in (None, "", [], {})
-            and field not in diagnostics.get("field_sources", {})
-        ):
-            _record_field_source(
-                diagnostics, field=field, source=rescue_source or "raw"
-            )
+    from .transformers import (
+        CleanupTransformer,
+        FieldFlatteningTransformer,
+        ListingCaseTransformer,
+        MarkdownMiningTransformer,
+        NormalizationContext,
+        NormalizationPipeline,
+        SwapGuardTransformer,
+        UnwrapDataTransformer,
+    )
 
-    data = normalized.get("data")
-    if data is not None:
-        del normalized["data"]
-        _record_operation(diagnostics, "unwrap_data")
-        if isinstance(data, dict):
-            normalized = {**data, **normalized}
-        elif isinstance(data, list):
-            normalized = {
-                **normalized,
-                **{
-                    k: v
-                    for item in data
-                    if isinstance(item, dict)
-                    for k, v in item.items()
-                },
-            }
-        for field, value in normalized.items():
-            if (
-                field != "listing_case"
-                and value not in (None, "", [], {})
-                and field not in diagnostics.get("field_sources", {})
-            ):
-                _record_field_source(
-                    diagnostics, field=field, source=rescue_source or "raw"
-                )
+    context = NormalizationContext(
+        payload=dict(payload),
+        markdown_text=markdown_text,
+        listing_case=listing_case,
+        rescue_source=rescue_source,
+        diagnostics=_init_normalization_diagnostics(existing_diagnostics),
+    )
 
-    for key in ("responsibilities", "requirements", "benefits"):
-        if isinstance(normalized.get(key), list):
-            flattened = [
-                v["item"] if isinstance(v, dict) and "item" in v else v
-                for v in normalized[key]
-            ]
-            if flattened != normalized.get(key):
-                _record_operation(diagnostics, f"flatten_{key}")
-            normalized[key] = flattened
+    pipeline = NormalizationPipeline(
+        [
+            UnwrapDataTransformer(),
+            FieldFlatteningTransformer(),
+            CleanupTransformer(),
+            ListingCaseTransformer(),
+            MarkdownMiningTransformer(),
+            SwapGuardTransformer(),
+        ]
+    )
 
-    for key in ("company_name", "location", "employment_type", "posted_date"):
-        if normalized.get(key) == "":
-            normalized[key] = None
-            _record_operation(diagnostics, f"empty_to_none:{key}")
+    pipeline.execute(context)
 
-    if normalized.get("location"):
-        cleaned_location = clean_location_text(normalized["location"])
-        if cleaned_location != normalized["location"]:
-            _record_operation(diagnostics, "clean_location_suffix")
-            _record_field_source(diagnostics, field="location", source="normalized")
-        normalized["location"] = cleaned_location
-
-    if listing_case:
-        if not normalized.get("company_name") and listing_case.get("teaser_company"):
-            normalized["company_name"] = listing_case.get("teaser_company", "")
-            _record_field_source(
-                diagnostics, field="company_name", source="listing_case"
-            )
-        if not normalized.get("location") and listing_case.get("teaser_location"):
-            normalized["location"] = listing_case.get("teaser_location", "")
-            _record_field_source(diagnostics, field="location", source="listing_case")
-        if not normalized.get("employment_type") and listing_case.get(
-            "teaser_employment_type"
-        ):
-            normalized["employment_type"] = listing_case.get(
-                "teaser_employment_type", ""
-            )
-            _record_field_source(
-                diagnostics, field="employment_type", source="listing_case"
-            )
-
-        invalid_company_values = {"be an early applicant", "save job"}
-        company_value = str(normalized.get("company_name") or "").strip().lower()
-        if (
-            not normalized.get("company_name")
-            or company_value in invalid_company_values
-        ):
-            company_name = listing_case_metadata_value(
-                listing_case, field="company_name"
-            )
-            if company_name:
-                normalized["company_name"] = company_name
-                _record_field_source(
-                    diagnostics, field="company_name", source="listing_metadata"
-                )
-
-        if not normalized.get("location"):
-            location = listing_case_metadata_value(listing_case, field="location")
-            if location:
-                normalized["location"] = location
-                _record_field_source(
-                    diagnostics, field="location", source="listing_metadata"
-                )
-
-    if markdown_text:
-        if not normalized.get("company_name"):
-            company_name = hero_markdown_value(markdown_text, field="company_name")
-            if company_name:
-                normalized["company_name"] = company_name
-                _record_field_source(
-                    diagnostics, field="company_name", source="hero_markdown"
-                )
-        if not normalized.get("location"):
-            location = hero_markdown_value(markdown_text, field="location")
-            if location:
-                normalized["location"] = location
-                _record_field_source(
-                    diagnostics, field="location", source="hero_markdown"
-                )
-        if not normalized.get("employment_type"):
-            employment_type = detect_employment_type_from_text(markdown_text)
-            if employment_type:
-                normalized["employment_type"] = employment_type
-                _record_field_source(
-                    diagnostics, field="employment_type", source="hero_markdown"
-                )
-
-    if not normalized.get("responsibilities") or not normalized.get("requirements"):
-        bullets = mine_bullets_from_markdown(markdown_text)
-        if not normalized.get("responsibilities") and bullets.get("responsibilities"):
-            normalized["responsibilities"] = bullets["responsibilities"]
-            _record_field_source(
-                diagnostics, field="responsibilities", source="text_mining"
-            )
-        if not normalized.get("requirements") and bullets.get("requirements"):
-            normalized["requirements"] = bullets["requirements"]
-            _record_field_source(
-                diagnostics, field="requirements", source="text_mining"
-            )
-
-    # Final swap guard: if company is null but location contains obvious company markers
-    company_markers = r"\bgmbh\b|\bag\b|\bse\b|\bgroup\b|\bconsulting\b|\bservices\b|\bdata\b|\breply\b|\bntt\b"
-    if not normalized.get("company_name") and normalized.get("location"):
-        if re.search(company_markers, normalized["location"].lower()):
-            normalized["company_name"] = normalized["location"]
-            normalized["location"] = None
-            _record_operation(diagnostics, "swap_location_to_company")
-
-    return JobNormalizationResult(payload=normalized, diagnostics=diagnostics)
+    return JobNormalizationResult(payload=context.payload, diagnostics=context.diagnostics)

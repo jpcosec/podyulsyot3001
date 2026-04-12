@@ -188,6 +188,7 @@ When editing code or documentation, refer to `docs/standards/` before making cha
 ## Key References
 
 - `README.md`
+- `docs/standards/issue_guide.md`
 - `docs/automation/ariadne_semantics.md`
 - `docs/automation/ariadne_capabilities.md`
 - `docs/automation/browseros_setup.md`

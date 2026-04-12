@@ -56,8 +56,19 @@ class MotorSession(Protocol):
 
 
 @runtime_checkable
+class AgentResult(Protocol):
+    """Result of an agentic discovery or apply session."""
+
+    status: str
+    playbook: Any | None
+    trace: dict[str, Any] | None
+    candidates: list[dict[str, Any]]
+    error: str | None
+
+
+@runtime_checkable
 class MotorProvider(Protocol):
-    """Factory for opening motor sessions."""
+    """Factory for opening motor sessions and delegating agentic discovery."""
 
     def open_session(
         self,
@@ -65,14 +76,25 @@ class MotorProvider(Protocol):
         credentials: ResolvedPortalCredentials | None = None,
         visible: bool = False,
     ) -> AsyncContextManager[MotorSession]:
-        """Open a browser session scoped to one apply run.
+        """Open a browser session scoped to one apply run."""
+        ...
+
+    async def run_agent(
+        self,
+        portal: str,
+        url: str,
+        context: dict[str, Any],
+        session_id: str | None = None,
+    ) -> AgentResult:
+        """Delegate to an autonomous agent to perform discovery or execution.
 
         Args:
-            session_id: Unique identifier for this session (used for browser tab/session reuse).
-            credentials: Optional runtime credential metadata for the session.
-            visible: Whether to open a visible browser page (default: False).
+            portal: Portal name (e.g., 'linkedin').
+            url: Entrypoint URL for the agent.
+            context: Runtime execution context (profile, CV, etc.).
+            session_id: Optional existing session to attach to.
 
         Returns:
-            Async context manager yielding a MotorSession.
+            Normalized AgentResult with status and optional playbook/trace.
         """
         ...

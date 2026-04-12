@@ -367,3 +367,13 @@ class C4AIMotorProvider:
                 credentials.portal_name,
                 result.error_message,
             )
+
+    async def run_agent(
+        self,
+        portal: str,
+        url: str,
+        context: dict[str, Any],
+        session_id: str | None = None,
+    ) -> Any:
+        """Crawl4AI does not yet support Level 2 agentic discovery."""
+        raise NotImplementedError("Crawl4AI does not yet support Level 2 discovery.")

@@ -14,31 +14,29 @@ That separation means an existing portal map can be replayed through a different
 
 ## Runtime flow
 
-The apply stack now follows this path:
+The apply stack follows this **LangGraph Flight Controller** orchestration:
 
-1. CLI parses the request in `src/automation/main.py`.
-2. `AriadneSession` loads the portal map and ingest state, then asks `src/automation/portals/*/routing.py` which apply branch is valid.
-3. If the route stays onsite, a `MotorProvider` opens a backend-specific `MotorSession`.
-4. `AriadneNavigator` evaluates the observed state and decides the next step.
-5. The motor session observes the live page and executes the requested step.
-6. If execution hits a human gate or blocker, `src/automation/ariadne/hitl.py` persists interrupt artifacts and terminal resume decisions before the session continues.
-7. `AutomationStorage` persists `ApplyMeta` and related artifacts.
+1.  **Map Selection**: `AriadneSession` loads the `AriadneMap` (State Graph) for the portal.
+2.  **State Observation**: At the current node, the Orchestrator uses a **Capability (Tool)** to identify the UI state.
+3.  **Blackboard Initialization**: The `AriadneBlackboard` is initialized with profile and job data.
+4.  **JIT Translation**: The Orchestrator selects the next **AriadneEdge** and calls the **JIT Translator** to produce a command for the current action.
+5.  **Executor Dispatch**: The **Executor (Motor)** runs the command and returns the outcome.
+6.  **Blackboard Update**: If the action extracts data (e.g., Application ID), it is written to the Blackboard.
+7.  **Transition**: The Orchestrator moves to the next node in the graph based on the executor's result.
+8.  **Recovery**: If the observed state is unexpected, the Orchestrator routes to a **Planner (Agent)** or a **Breakpoint (HITL)** node to recover the flow and update the Blackboard.
 
 ## Component map
 
 | Component | Responsibility | Authoritative File |
 | :--- | :--- | :--- |
-| **Ariadne Map** | Portal knowledge, semantic states, and replay paths | `src/automation/portals/*/maps/` |
-| **Common Language** | Backend-neutral Pydantic models for states, paths, steps, and artifacts | `src/automation/ariadne/models.py` |
-| **AriadneSession** | Apply orchestrator: map loading, context building, run loop, and persistence wiring | `src/automation/ariadne/session.py` |
-| **Apply HITL** | Persisted interrupt payloads and terminal resume controls for active apply sessions | `src/automation/ariadne/hitl.py` |
-| **Portal Routing** | Portal-specific apply branch resolution from enriched ingest state | `src/automation/portals/*/routing.py` |
-| **Motor Protocol** | Contracts between Ariadne and each backend (`MotorProvider`, `MotorSession`) | `src/automation/ariadne/motor_protocol.py` |
-| **Navigator** | State-aware replay and mission status transitions | `src/automation/ariadne/navigator.py` |
-| **Recorder** | Session capture and raw trace persistence for promotion workflows | `src/automation/ariadne/recorder.py` |
-| **Normalizer** | Draft trace normalization into canonical Ariadne maps | `src/automation/ariadne/normalizer.py` |
-| **Motors** | Backend adapters for Crawl4AI and BrowserOS | `src/automation/motors/` |
-| **Persistence** | Artifact and metadata management across scrape/apply flows | `src/automation/storage.py` |
+| **Ariadne Map** | Portal State Graph (Nodes & Edges) | `src/automation/portals/*/maps/` |
+| **Common Language**| Graph models (Map, State, Edge, Intent) | `src/automation/ariadne/models.py` |
+| **State Blackboard**| Read-Write session memory (Memory Layer) | `src/automation/ariadne/blackboard.py` |
+| **LangGraph Controller**| Orchestration of the Graph and Cascade | `src/automation/ariadne/graph.py` |
+| **JIT Translator** | Compiles single intents into `MotorCommand` | `src/automation/ariadne/translators.py` |
+| **Executors** | "Dumb" motors that run commands (Crawl4AI, BrowserOS CLI) | `src/automation/motors/` |
+| **Planners** | Autonomous agents for self-healing (LangGraph Agent) | `src/automation/motors/browseros/agent/` |
+| **Capabilities** | Tools used by others (Vision, Danger Detection) | `src/automation/ariadne/capabilities/` |
 
 ## Where to read more
 

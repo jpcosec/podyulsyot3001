@@ -189,6 +189,19 @@ class BrowserOSMotorProvider:
                     "%s Failed to close BrowserOS page %s", LogTag.WARN, page_id
                 )
 
+    async def run_agent(
+        self,
+        portal: str,
+        url: str,
+        context: dict[str, Any],
+        session_id: str | None = None,
+    ) -> Any:
+        """Delegate to OpenBrowserClient for Level 2 agentic discovery."""
+        from src.automation.motors.browseros.agent.openbrowser import OpenBrowserClient
+
+        agent = OpenBrowserClient()
+        return agent.run_agent(portal=portal, url=url, context=context)
+
 
 def build_browseros_providers(
     portals: list[str] | None = None,

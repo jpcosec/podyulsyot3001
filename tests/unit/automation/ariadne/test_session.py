@@ -114,9 +114,13 @@ def _make_session(map_: AriadnePortalMap) -> tuple[AriadneSession, MagicMock]:
     )
     storage.write_apply_meta = MagicMock()
 
+    repository = MagicMock()
+    repository.get_map.return_value = map_
+
     sess = AriadneSession.__new__(AriadneSession)
     sess.portal_name = "xing"
     sess.storage = storage
+    sess.repository = repository
     sess._map = map_
     sess._hitl = MagicMock()
     sess._danger_detector = ApplyDangerDetector()
@@ -128,59 +132,56 @@ async def test_already_submitted_raises():
     sess, storage = _make_session(_minimal_map())
     storage.check_already_submitted.return_value = True
     motor = _FakeProvider(_FakeSession())
+    motor.run_agent = AsyncMock()
 
     with pytest.raises(RuntimeError, match="already submitted"):
         await sess.run(motor, job_id="job1", cv_path=Path("cv.pdf"))
 
 
 @pytest.mark.asyncio
-@patch("src.automation.ariadne.session.OpenBrowserClient")
-async def test_invalid_path_id_raises(mock_client_class):
-    mock_client = MagicMock()
-    mock_client.run_agent.return_value = MagicMock(
-        status="error",
-        error="not found",
-        trace=None,
-        candidates=[],
-    )
-    mock_client_class.return_value = mock_client
-
+async def test_invalid_path_id_raises():
     sess, _ = _make_session(_minimal_map())
     motor = _FakeProvider(_FakeSession())
+    motor.run_agent = AsyncMock(
+        return_value=MagicMock(
+            status="error",
+            error="not found",
+            trace=None,
+            candidates=[],
+        )
+    )
 
-    with pytest.raises(ValueError, match="Level 2 OpenBrowser agent failed"):
+    with pytest.raises(ValueError, match="discovery agent failed"):
         await sess.run(motor, job_id="job1", cv_path=Path("cv.pdf"), path_id="missing")
 
 
 @pytest.mark.asyncio
-@patch("src.automation.ariadne.session.OpenBrowserClient")
-async def test_invalid_path_id_persists_level2_trace_when_available(mock_client_class):
-    mock_client = MagicMock()
-    mock_client.run_agent.return_value = MagicMock(
-        status="error",
-        error="not normalized",
-        trace={"conversation_id": "conv-1", "stream_events": []},
-        candidates=[
-            {
-                "step_index": 1,
-                "source": "level2",
-                "actions": [
-                    {
-                        "source": "level2",
-                        "origin": "navigate_page",
-                        "candidate_intent": "navigate",
-                    }
-                ],
-            }
-        ],
-        playbook=None,
-    )
-    mock_client_class.return_value = mock_client
-
+async def test_invalid_path_id_persists_level2_trace_when_available():
     sess, storage = _make_session(_minimal_map())
     motor = _FakeProvider(_FakeSession())
+    motor.run_agent = AsyncMock(
+        return_value=MagicMock(
+            status="error",
+            error="not normalized",
+            trace={"conversation_id": "conv-1", "stream_events": []},
+            candidates=[
+                {
+                    "step_index": 1,
+                    "source": "level2",
+                    "actions": [
+                        {
+                            "source": "level2",
+                            "origin": "navigate_page",
+                            "candidate_intent": "navigate",
+                        }
+                    ],
+                }
+            ],
+            playbook=None,
+        )
+    )
 
-    with pytest.raises(ValueError, match="Level 2 OpenBrowser agent failed"):
+    with pytest.raises(ValueError, match="discovery agent failed"):
         await sess.run(motor, job_id="job1", cv_path=Path("cv.pdf"), path_id="missing")
 
     storage.write_artifact.assert_any_call(
@@ -198,9 +199,7 @@ async def test_invalid_path_id_persists_level2_trace_when_available(mock_client_
 
 
 @pytest.mark.asyncio
-@patch("src.automation.ariadne.session.OpenBrowserClient")
-async def test_missing_path_uses_promoted_level2_playbook(mock_client_class):
-    mock_client = MagicMock()
+async def test_missing_path_uses_promoted_level2_playbook():
     promoted = AriadnePath(
         id="draft",
         task_id="browseros_level2_discovery",
@@ -214,30 +213,30 @@ async def test_missing_path_uses_promoted_level2_playbook(mock_client_class):
             )
         ],
     )
-    mock_client.run_agent.return_value = MagicMock(
-        status="success",
-        error=None,
-        trace={"conversation_id": "conv-2", "stream_events": []},
-        candidates=[
-            {
-                "step_index": 1,
-                "source": "level2",
-                "actions": [
-                    {
-                        "source": "level2",
-                        "origin": "navigate_page",
-                        "candidate_intent": "navigate",
-                    }
-                ],
-            }
-        ],
-        playbook=promoted,
-    )
-    mock_client_class.return_value = mock_client
-
     sess, storage = _make_session(_minimal_map())
     fake_session = _FakeSession()
     motor = _FakeProvider(fake_session)
+    motor.run_agent = AsyncMock(
+        return_value=MagicMock(
+            status="success",
+            error=None,
+            trace={"conversation_id": "conv-2", "stream_events": []},
+            candidates=[
+                {
+                    "step_index": 1,
+                    "source": "level2",
+                    "actions": [
+                        {
+                            "source": "level2",
+                            "origin": "navigate_page",
+                            "candidate_intent": "navigate",
+                        }
+                    ],
+                }
+            ],
+            playbook=promoted,
+        )
+    )
 
     await sess.run(motor, job_id="job1", cv_path=Path("cv.pdf"), path_id="missing")
 
