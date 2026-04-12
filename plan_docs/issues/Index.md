@@ -1,4 +1,4 @@
-# unified-automation Issues Index
+# Ariadne 2.0 Issues Index
 
 This file is the entrypoint for subagents deployed to solve issues in this repository.
 
@@ -17,25 +17,25 @@ Once an issue is solved, the next step is always:
 
 ## Priority roadmap
 
-### Phase 1 — Content Restoration & Polish
+### Phase 1 — Intelligence & Data Polish
 
  1. plan_docs/issues/gaps/implement-llm-fallback-in-default-mode.md
 
- 2. plan_docs/issues/gaps/integrate-german-rules-in-stepstone-mode.md
+    • [Critical for unmapped portal support]
 
- 3. plan_docs/issues/gaps/fix-stepstone-apply-button-selector.md
+### Phase 2 — Persistence & Self-Healing
 
-    • [1, 2, 3 are parallelizable]
+ 2. plan_docs/issues/gaps/implement-persistent-sqlite-checkpointer.md
 
-### Phase 2 — Live Validation
+ 3. plan_docs/issues/gaps/implement-graph-recording-pipeline.md
 
- 4. plan_docs/issues/gaps/validate-live-apply-on-portals.md • depends on plan_docs/issues/gaps/fix-stepstone-apply-button-selector.md, plan_docs/issues/gaps/integrate-german-rules-in-stepstone-mode.md
+    • [2 and 3 enable production-grade HITL and Map Promotion]
 
 ## Dependency summary
 
-• plan_docs/issues/gaps/validate-live-apply-on-portals.md  ->  plan_docs/issues/gaps/fix-stepstone-apply-button-selector.md
-• plan_docs/issues/gaps/validate-live-apply-on-portals.md  ->  plan_docs/issues/gaps/integrate-german-rules-in-stepstone-mode.md
+• plan_docs/issues/gaps/implement-graph-recording-pipeline.md  ->  none
+• plan_docs/issues/gaps/implement-persistent-sqlite-checkpointer.md  ->  none
 
 ## Parallelization map
 
-Phase 1  [1][2][3]          ← [Content & Polish] Phase 2     [4]          ← [Validation]
+Phase 1  [1]          ← [Intelligence] Phase 2     [2][3]          ← [Infrastructure]
