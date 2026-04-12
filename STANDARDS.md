@@ -35,6 +35,9 @@ Once an issue is solved, the subagent MUST follow these steps:
 5. Delete the solved issue from `plan_docs/issues/` and remove it from `Index.md`.
 6. Make a commit stating exactly what was fixed.
 
+### QA & Validation Issues
+- **Validation-Type Issues:** If a validation fails, do not close silently. Atomize every uncovered real problem into new gap issues before closing the validation issue.
+
 ### Phase Completion (Level-up Ritual)
 When all parallelizable issues in a given Phase/Level are completed:
 - Run all architectural fitness functions (`pytest-archon`, `pyfakefs`) and full test suites to ensure no regressions were introduced before moving to the next Phase.
@@ -47,8 +50,10 @@ When all parallelizable issues in a given Phase/Level are completed:
 Every module is self-contained. The rule: **no file does two things.**
 - `models.py` or `contracts.py`: Owns all Pydantic schemas.
 - `storage.py` or `repository.py`: Owns all file I/O and persistence. No business logic.
-- `main.py`: CLI entry point only. Delegates to the orchestrator.
+- `main.py`: CLI entry point only. Delegates to the orchestrator. Must accept an optional `argv: list[str] | None = None` parameter for testing, and must return an integer exit code. CLI arguments must be defined in a `_build_parser()` function. READMEs should never duplicate argument tables, but rather point to this function.
 - **Dependency Inversion (DIP)**: Domain layers (`ariadne`) must NEVER import from infrastructure layers (`motors`). Infrastructure must be injected or resolved via dynamic registries.
+- **Docstring Rigor**: Module-level docstrings must exist at the top of every file. ABCs must list all abstract methods in their class docstring as a developer contract.
+- **Operational Limits**: Expose operational limits (chunk sizes, retry budgets, rate limits) as `@property` on ABCs — not buried in loops or config dicts.
 
 ### Error Contracts
 - Define domain-specific exceptions at the top of the file (e.g., `TranslationError`, `TargetNotFound`).
@@ -63,6 +68,8 @@ Logs are real-time execution documentation. Import `LogTag` from `src/shared/log
 - `[✅]` Success / validation passed.
 - `[⚠️]` Expected / handled error.
 - `[❌]` Hard failure — pipeline breaks.
+- `[⏭️]` `LogTag.SKIP` (idempotency).
+- `[📦]` `LogTag.CACHE` (loaded existing artifact).
 
 ---
 
@@ -82,6 +89,10 @@ Every module must have a `README.md` containing these sections:
 
 ### Ephemeral Planning
 Active plans live in `plan_docs/`. Once a feature is built, tested, and documented in the module README, the planning document MUST be deleted. There is no archive folder.
+
+### Documentation Philosophy
+- **Core Principle**: Clean, well-structured code beats documentation. Documentation that duplicates code always drifts; documentation that points to code stays honest.
+- **Inline TODOs**: Use small inline TODOs only when they are tightly local to the code. For anything larger, add the follow-up to the relevant `plan_docs` file.
 
 ---
 
