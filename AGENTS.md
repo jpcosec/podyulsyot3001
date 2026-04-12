@@ -143,11 +143,11 @@ Recording (OpenBrowser agent) -> AriadneSessionTrace
 
 ## Standards First
 
-When editing code or documentation, refer to `docs/standards/` before making changes.
+When editing code or documentation, refer to `STANDARDS.md` before making changes.
 
-- Code standards start at `docs/standards/code/basic.md` and use narrower guides there when relevant.
-- Documentation and planning standards start at `docs/standards/docs/documentation_and_planning_guide.md`.
-- Issue planning and execution rules live in `docs/standards/issue_guide.md`.
+- Code standards start at `STANDARDS.md`.
+- Documentation and planning standards start at `STANDARDS.md`.
+- Issue planning and execution rules live in `STANDARDS.md`.
 - `README.md` is the top-level human entrypoint; general docs belong under `docs/`; module-specific docs belong near the module they describe.
 - Record every major change in `changelog.md`.
 
@@ -160,7 +160,7 @@ When editing code or documentation, refer to `docs/standards/` before making cha
 
 ## Issue And Design Cycle
 
-- Every change is managed through `docs/standards/issue_guide.md`.
+- Every change is managed through `STANDARDS.md`.
 - Planning artifacts live under `plan_docs/issues/`.
 - `plan_docs/issues/Index.md` is the issue entrypoint and active dependency index.
 - The correct order of execution is: atomization of issues, contradiction checking, then prioritization via dependencies.
@@ -196,11 +196,8 @@ To ensure system integrity and agent efficiency, follow the **Commit -> Delete -
 ## Key References
 
 - `README.md`
-- `docs/standards/issue_guide.md`
+- `STANDARDS.md`
 - `docs/automation/ariadne_semantics.md`
-- `docs/automation/ariadne_capabilities.md`
-- `docs/automation/browseros_setup.md`
-- `docs/reference/external_libs/browseros/readme.txt`
 - `docs/automation/architecture.md`
 
 ## Troubleshooting

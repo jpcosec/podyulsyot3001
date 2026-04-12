@@ -2,7 +2,7 @@
 
 This file is the entrypoint for subagents deployed to solve issues in this repository.
 
-All issue-fixing work must stay aligned with the rest of plan_docs/ and wiki/, with special care for docs/standards/ so implementation, tests, and documentation remain consistent with the project's rules.
+All issue-fixing work must stay aligned with the rest of plan_docs/ and docs/, with special care for STANDARDS.md so implementation, tests, and documentation remain consistent with the project's rules.
 
 ## Initialization Procedure (Before Execution)
 
