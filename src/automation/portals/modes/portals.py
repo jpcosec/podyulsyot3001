@@ -17,7 +17,7 @@ class JsonConfigMode(AriadneMode):
         self.config = self._load_config()
 
     def _load_config(self) -> Dict[str, Any]:
-        config_path = Path(__file__).parent / "configs" / f"{self.portal_name}.json"
+        config_path = Path(__file__).parent.parent / "configs" / f"{self.portal_name}.json"
         if config_path.exists():
             with open(config_path, "r", encoding="utf-8") as f:
                 return json.load(f)
@@ -45,6 +45,7 @@ class JsonConfigMode(AriadneMode):
 
 class LinkedInMode(JsonConfigMode):
     """LinkedIn-specific heuristics and cleanup."""
+    url_patterns = ["linkedin.com"]
 
     def __init__(self):
         super().__init__("linkedin")
@@ -58,6 +59,7 @@ class LinkedInMode(JsonConfigMode):
 
 class StepStoneMode(JsonConfigMode):
     """StepStone-specific heuristics and cleanup."""
+    url_patterns = ["stepstone"]
 
     def __init__(self):
         super().__init__("stepstone")
@@ -71,6 +73,7 @@ class StepStoneMode(JsonConfigMode):
 
 class XingMode(JsonConfigMode):
     """Xing-specific heuristics and cleanup."""
+    url_patterns = ["xing.com"]
 
     def __init__(self):
         super().__init__("xing")

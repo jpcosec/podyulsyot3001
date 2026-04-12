@@ -19,10 +19,7 @@ Once an issue is solved, the next step is always:
 
 ### Phase 0 — Core Isolation Cleanup
 
- 1. plan_docs/issues/gaps/cleanup-redundant-scraper-package.md
-    • [Removes orphaned code and merges models]
-
- 2. plan_docs/issues/gaps/isolate-portal-specific-modes.md
+ 1. plan_docs/issues/gaps/isolate-portal-specific-modes.md
     • [Restores Ariadne core as a pure, portal-agnostic engine]
 
 ### Phase 1 — Intelligence & Data Polish
