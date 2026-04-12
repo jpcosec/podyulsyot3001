@@ -34,11 +34,12 @@ class Crawl4AITranslator(AriadneTranslator):
             elif target.hint:
                 selector = f"[data-ariadne-hint='{target.hint}']"
 
-        if not selector:
+        # PRESS doesn't require a selector
+        if not selector and intent != AriadneIntent.PRESS:
             raise ValueError(f"Target {target} has no css, text, or hint selector.")
 
         resolved_value = self.resolve_placeholders(value, state) if value else ""
-        script = self._build_c4a_script(intent, selector, resolved_value)
+        script = self._build_c4a_script(intent, selector or "", resolved_value)
         return CrawlCommand(c4a_script=script, hooks=[])
 
     def _build_c4a_script(
@@ -59,12 +60,16 @@ class Crawl4AITranslator(AriadneTranslator):
             escaped_value = value.replace('"', '\\"')
             return f'SET `{selector}` "{escaped_value}"'
         elif intent == AriadneIntent.WAIT:
-            if value.isdigit():
-                seconds = int(value) / 1000
-                return f"WAIT {seconds}"
+            if value and value.lstrip("-").isdigit():
+                if int(value) < 100:
+                    return f"WAIT {value}"
+                else:
+                    seconds = int(value) / 1000
+                    return f"WAIT {seconds}"
+            elif selector:
+                return f"WAIT `{selector}` 5"
             else:
-                timeout = int(value) if value.isdigit() else 5
-                return f"WAIT `{selector}` {timeout}"
+                return "WAIT 2"
         elif intent == AriadneIntent.EXTRACT:
             return f"EVAL `await page.innerText(`{selector}`)`"
         else:
