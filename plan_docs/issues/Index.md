@@ -1,30 +1,41 @@
-# Ariadne 2.0 Implementation Index
+# unified-automation Issues Index
 
-Ariadne 2.0 has been successfully implemented and verified. All core architectural components, functional restoration, and intelligence layers are complete.
+This file is the entrypoint for subagents deployed to solve issues in this repository.
 
-## Core Accomplishments
-- [x] **Fitness Functions**: Enforced DIP, I/O isolation, and mode blindness.
-- [x] **Graph Models**: Defined `AriadneMap`, `AriadneState`, and `AriadneEdge`.
-- [x] **Mode Registry**: Built the Nyxt-inspired contextual mode system.
-- [x] **Segregated Protocols**: Defined `Executor`, `Planner`, and `Capability` interfaces.
-- [x] **StateGraph Controller**: Implemented the LangGraph JIT orchestrator.
-- [x] **JIT Translators**: Built atomic compilers for BrowserOS and Crawl4AI.
-- [x] **Micro-Batching**: Optimized Crawl4AI performance.
-- [x] **Rescue Agent**: Built the direct MCP VLM rescue agent.
-- [x] **Portal Migration**: Migrated StepStone and LinkedIn linear maps to directed graphs.
-- [x] **CLI Entrypoint**: Restored functional `apply` command invoking the 2.0 graph.
+All issue-fixing work must stay aligned with the rest of plan_docs/ and wiki/, with special care for wiki/standards/ so implementation, tests, and documentation remain consistent with the project's rules.
 
-## Execution Queue (Final Logic Polish)
+## Working rule for every issue
 
-### Phase 1: Sight & Awareness (Sight)
-- [ ] **[Implement: State Identification in Observe Node](gaps/implement-state-identification-in-observe-node.md)**
-  - *Status*: Ready
-  - *Scope*: Match live snapshot against map predicates and detect security dangers.
+Once an issue is solved, the next step is always:
 
----
+ 1. Check whether any existing test is no longer valid and delete it if needed.
+ 2. Add new tests where necessary.
+ 3. Run the relevant tests.
+ 4. Update changelog.md.
+ 5. Delete the solved issue from both this index and the corresponding file in plan_docs/issues/.
+ 6. Make a commit that clearly states what was fixed, making sure all required files are staged.
 
-## Post-Implementation Status
-The system is now fully operational under the Ariadne 2.0 paradigm.
+## Priority roadmap
 
-## QA & Validation
-Ongoing portal-specific bugs and live validation tasks are managed in [QA_BACKLOG.md](../../QA_BACKLOG.md).
+### Phase 1 — Content Restoration & Polish
+
+ 1. plan_docs/issues/gaps/implement-llm-fallback-in-default-mode.md
+
+ 2. plan_docs/issues/gaps/integrate-german-rules-in-stepstone-mode.md
+
+ 3. plan_docs/issues/gaps/fix-stepstone-apply-button-selector.md
+
+    • [1, 2, 3 are parallelizable]
+
+### Phase 2 — Live Validation
+
+ 4. plan_docs/issues/gaps/validate-live-apply-on-portals.md • depends on plan_docs/issues/gaps/fix-stepstone-apply-button-selector.md, plan_docs/issues/gaps/integrate-german-rules-in-stepstone-mode.md
+
+## Dependency summary
+
+• plan_docs/issues/gaps/validate-live-apply-on-portals.md  ->  plan_docs/issues/gaps/fix-stepstone-apply-button-selector.md
+• plan_docs/issues/gaps/validate-live-apply-on-portals.md  ->  plan_docs/issues/gaps/integrate-german-rules-in-stepstone-mode.md
+
+## Parallelization map
+
+Phase 1  [1][2][3]          ← [Content & Polish] Phase 2     [4]          ← [Validation]
