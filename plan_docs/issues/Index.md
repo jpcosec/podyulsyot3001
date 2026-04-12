@@ -40,37 +40,33 @@ When all parallelizable issues in a given Phase/Level are completed, you MUST pe
 
 ### Phase 2 — Performance & UI Polish
 
-  1. plan_docs/issues/gaps/async-mode-config-loading.md
-     • [Removes blocking I/O from the hot loop]
-
-  2. plan_docs/issues/gaps/robust-hint-anchoring.md
-     • [Ensures LLM hints work in scrollable containers]
+- Completed on 2026-04-12: async-safe mode config loading and scroll-stable hint anchoring.
 
 ### Phase 3 — Intelligence & Data Polish
 
-  3. plan_docs/issues/gaps/implement-llm-fallback-in-default-mode.md
+  1. plan_docs/issues/gaps/implement-llm-fallback-in-default-mode.md
      • [Critical for unmapped portal support]
 
-  4. plan_docs/issues/gaps/restore-danger-detection-capability.md
+  2. plan_docs/issues/gaps/restore-danger-detection-capability.md
      • [Re-integrates CAPTCHA and security block detection]
 
 ### Phase 4 — Scraper & Discovery
 
-  5. plan_docs/issues/gaps/implement-mission-driven-pathfinding.md
+  3. plan_docs/issues/gaps/implement-mission-driven-pathfinding.md
      • [Prevents mixed-flow edge selection in multi-mission maps]
 
-  6. plan_docs/issues/gaps/restore-discovery-graph-mission.md
+  4. plan_docs/issues/gaps/restore-discovery-graph-mission.md
      • [Restores the 'scrape' command using the Ariadne 2.0 graph]
 
 ### Phase 5 — The Lifecycle (Learning)
 
-  7. plan_docs/issues/gaps/implement-persistent-sqlite-checkpointer.md
+  5. plan_docs/issues/gaps/implement-persistent-sqlite-checkpointer.md
      • [Enables production-grade HITL and session recovery]
 
-  8. plan_docs/issues/gaps/implement-graph-recorder-capability.md
+  6. plan_docs/issues/gaps/implement-graph-recorder-capability.md
      • [Captures JIT transitions for map promotion]
 
-  9. plan_docs/issues/gaps/implement-promotion-engine.md
+  7. plan_docs/issues/gaps/implement-promotion-engine.md
      • [Converts recordings into canonical AriadneMap candidates]
 
 ## Dependency summary
@@ -82,7 +78,7 @@ When all parallelizable issues in a given Phase/Level are completed, you MUST pe
 ## Parallelization map
 
 Phase 1  [done]          ← [Hotfixes]
-Phase 2  [1][2]          ← [Polish]
-Phase 3  [3][4]          ← [Functional]
-Phase 4  [5][6]          ← [Discovery]
-Phase 5  [7][8][9]       ← [Lifecycle]
+Phase 2  [done]          ← [Polish]
+Phase 3  [1][2]          ← [Functional]
+Phase 4  [3][4]          ← [Discovery]
+Phase 5  [5][6][7]       ← [Lifecycle]

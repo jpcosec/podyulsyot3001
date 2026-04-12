@@ -1,10 +1,15 @@
 """Portal-specific Ariadne Mode implementations."""
 
+from __future__ import annotations
+
 import json
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, ClassVar, Dict, Optional
 
-from src.automation.ariadne.danger_contracts import ApplyDangerReport, ApplyDangerSignals
+from src.automation.ariadne.danger_contracts import (
+    ApplyDangerReport,
+    ApplyDangerSignals,
+)
 from src.automation.ariadne.models import AriadneStateDefinition, JobPosting
 from src.automation.ariadne.modes.base import AriadneMode
 
@@ -12,16 +17,34 @@ from src.automation.ariadne.modes.base import AriadneMode
 class JsonConfigMode(AriadneMode):
     """Base class for modes that load rules from JSON configs."""
 
+    _config_cache: ClassVar[Dict[str, Dict[str, Any]]] = {}
+    _configs_loaded: ClassVar[bool] = False
+
     def __init__(self, portal_name: str):
         self.portal_name = portal_name
-        self.config = self._load_config()
+        self.config = self.get_config(portal_name)
 
-    def _load_config(self) -> Dict[str, Any]:
-        config_path = Path(__file__).parent.parent / "configs" / f"{self.portal_name}.json"
-        if config_path.exists():
-            with open(config_path, "r", encoding="utf-8") as f:
-                return json.load(f)
-        return {}
+    @classmethod
+    def preload_configs(cls) -> None:
+        """Load all portal configs once before graph execution begins."""
+        if cls._configs_loaded:
+            return
+
+        config_dir = Path(__file__).parent.parent / "configs"
+        loaded_configs: Dict[str, Dict[str, Any]] = {}
+        for config_path in config_dir.glob("*.json"):
+            with config_path.open("r", encoding="utf-8") as handle:
+                loaded_configs[config_path.stem] = json.load(handle)
+
+        cls._config_cache = loaded_configs
+        cls._configs_loaded = True
+
+    @classmethod
+    def get_config(cls, portal_name: str) -> Dict[str, Any]:
+        """Return a cached config for the requested portal."""
+        if not cls._configs_loaded:
+            cls.preload_configs()
+        return dict(cls._config_cache.get(portal_name, {}))
 
     def normalize_job(self, payload: JobPosting) -> JobPosting:
         # Default implementation: pass-through
@@ -32,19 +55,23 @@ class JsonConfigMode(AriadneMode):
         return ApplyDangerReport(findings=[])
 
     def apply_local_heuristics(
-        self, state_definition: AriadneStateDefinition, runtime_state: Optional[Dict[str, Any]] = None
+        self,
+        state_definition: AriadneStateDefinition,
+        runtime_state: Optional[Dict[str, Any]] = None,
     ) -> AriadneStateDefinition:
         # Inject selectors from config into the state components
         selectors = self.config.get("selectors", {})
         for key, css in selectors.items():
             if key not in state_definition.components:
                 from src.automation.ariadne.models import AriadneTarget
+
                 state_definition.components[key] = AriadneTarget(css=css)
         return state_definition
 
 
 class LinkedInMode(JsonConfigMode):
     """LinkedIn-specific heuristics and cleanup."""
+
     url_patterns = ["linkedin.com"]
 
     def __init__(self):
@@ -59,6 +86,7 @@ class LinkedInMode(JsonConfigMode):
 
 class StepStoneMode(JsonConfigMode):
     """StepStone-specific heuristics and cleanup."""
+
     url_patterns = ["stepstone"]
 
     def __init__(self):
@@ -73,6 +101,7 @@ class StepStoneMode(JsonConfigMode):
 
 class XingMode(JsonConfigMode):
     """Xing-specific heuristics and cleanup."""
+
     url_patterns = ["xing.com"]
 
     def __init__(self):

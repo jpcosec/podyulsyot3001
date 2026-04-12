@@ -4,22 +4,11 @@
  * Returns a mapping of Hint ID -> Element Metadata.
  */
 (function() {
-    const HINT_CONTAINER_ID = 'ariadne-hint-container';
-    let container = document.getElementById(HINT_CONTAINER_ID);
-    if (container) {
-        container.remove();
-    }
+    const LABEL_ATTRIBUTE = 'data-ariadne-hint-label';
+    const HINT_ATTRIBUTE = 'data-ariadne-hint';
 
-    container = document.createElement('div');
-    container.id = HINT_CONTAINER_ID;
-    container.style.position = 'absolute';
-    container.style.top = '0';
-    container.style.left = '0';
-    container.style.width = '100%';
-    container.style.height = '100%';
-    container.style.pointerEvents = 'none';
-    container.style.zIndex = '2147483647'; // Max z-index
-    document.body.appendChild(container);
+    document.querySelectorAll('[' + LABEL_ATTRIBUTE + ']').forEach(label => label.remove());
+    document.querySelectorAll('[' + HINT_ATTRIBUTE + ']').forEach(el => el.removeAttribute(HINT_ATTRIBUTE));
 
     const interactiveSelectors = [
         'a', 'button', 'input', 'select', 'textarea',
@@ -51,12 +40,19 @@
     elements.forEach((el, index) => {
         const hint = generateHint(index);
         const rect = el.getBoundingClientRect();
-        
-        const label = document.createElement('div');
+
+        const computedStyle = window.getComputedStyle(el);
+        if (computedStyle.position === 'static') {
+            el.style.position = 'relative';
+        }
+
+        const label = document.createElement('span');
+        label.setAttribute(LABEL_ATTRIBUTE, hint);
         label.textContent = hint;
         label.style.position = 'absolute';
-        label.style.left = (rect.left + window.scrollX) + 'px';
-        label.style.top = (rect.top + window.scrollY) + 'px';
+        label.style.top = '0';
+        label.style.left = '0';
+        label.style.transform = 'translate(-20%, -45%)';
         label.style.backgroundColor = 'yellow';
         label.style.color = 'black';
         label.style.border = '1px solid black';
@@ -66,12 +62,12 @@
         label.style.borderRadius = '3px';
         label.style.lineHeight = '1';
         label.style.zIndex = '2147483647';
-        label.style.pointerEvents = 'auto'; // Optional: allow clicking the hint itself? Usually none is safer.
-        
-        container.appendChild(label);
+        label.style.pointerEvents = 'none';
+        label.style.whiteSpace = 'nowrap';
 
         // Generate a simple unique-ish selector or use a custom attribute
-        el.setAttribute('data-ariadne-hint', hint);
+        el.setAttribute(HINT_ATTRIBUTE, hint);
+        el.appendChild(label);
         
         hintMap[hint] = {
             tagName: el.tagName,

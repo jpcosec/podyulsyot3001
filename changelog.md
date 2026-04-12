@@ -13,6 +13,13 @@ All notable changes to this project will be documented in this file.
 - Fixed Crawl4AI batch scripts to return both `failed_at` and `completed_count`, and wired `ExecutionResult` plus the Crawl4AI executor to preserve that recovery metadata.
 - Fixed deterministic batch recovery so Ariadne retries from the failed sub-step instead of skipping it after a partial batch failure.
 
+## [2026-04-12] - Ariadne Mode Runtime Polish
+
+### Changed
+- Preloaded portal JSON configs in `src/automation/portals/modes/portals.py` and updated `src/automation/ariadne/modes/registry.py` to reuse cached mode instances, so graph-time mode resolution no longer performs per-instantiation config I/O.
+- Anchored hint labels directly onto interactive elements in `src/automation/ariadne/capabilities/hinting.js`, which keeps overlays aligned inside scrollable containers and modals.
+- Added dedicated mode-registry regression coverage in `tests/unit/automation/ariadne/test_mode_registry.py` and updated hinting tests to assert the new inline label strategy.
+
 ### Added
 - Implemented **JIT Intent Translators** for Ariadne 2.0.
   - Added `AriadneTranslator` abstract base class in `src/automation/ariadne/translators/base.py`.
