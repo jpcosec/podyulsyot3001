@@ -24,7 +24,7 @@ from src.automation.ariadne.models import (
     AriadneTarget,
 )
 from src.automation.ariadne.repository import MapRepository
-from src.automation.ariadne.translators.crawl4ai import Crawl4AITranslator
+from src.automation.ariadne.translators.registry import TranslatorRegistry
 
 
 # --- Node Functions ---
@@ -34,9 +34,10 @@ async def observe_node(state: AriadneState, config: RunnableConfig) -> Dict[str,
     """Captures the JIT state (URL, Accessibility Tree, Screenshot) via the active Executor."""
     print("--- NODE: Observe ---")
     executor = config.get("configurable", {}).get("executor")
+    
     if not executor:
         return {
-            "errors": ["ExecutorNotFoundError: No executor provided in config['configurable']['executor']"]
+            "errors": ["ExecutorNotFoundError: No executor instance provided in config['configurable']['executor']"]
         }
 
     try:
@@ -61,9 +62,6 @@ def _find_safe_sequence(
     batch = []
     cursor = current_state_id
     
-    # Simple look-ahead: find consecutive edges that don't transition to a new state
-    # or follow a linear chain within the same task.
-    # For now, we limit batching to multiple actions on the SAME state (e.g. form fill).
     for edge in ariadne_map.edges:
         if edge.from_state == cursor:
             # Only batch deterministic, non-waiting intents
@@ -80,7 +78,12 @@ async def execute_deterministic_node(state: AriadneState, config: RunnableConfig
     """Replays the AriadneMap for the current node state with Micro-Batching."""
     print("--- NODE: Execute Deterministic ---")
     
-    # 1. Load Map (In a real run, this would be injected or cached)
+    # 1. Resolve Executor
+    executor = config.get("configurable", {}).get("executor")
+    if not executor:
+        return {"errors": ["ExecutorNotFoundError: No executor instance provided in config."]}
+
+    # 2. Load Map
     repo = MapRepository()
     try:
         ariadne_map = repo.get_map(state["portal_name"])
@@ -89,13 +92,16 @@ async def execute_deterministic_node(state: AriadneState, config: RunnableConfig
 
     current_state_id = state.get("current_state_id")
     
-    # 2. Identify Safe Sequence
+    # 3. Identify Safe Sequence
     batch = _find_safe_sequence(current_state_id, ariadne_map)
     if not batch:
         return {"errors": [f"NoTransitionError: No edge found from {current_state_id}"]}
 
-    # 3. Translate JIT (Atomic or Batch)
-    translator = Crawl4AITranslator()
+    # 4. Resolve Translator based on a provided hint or default
+    motor_name = config.get("configurable", {}).get("motor_name", "crawl4ai")
+    translator = TranslatorRegistry.get_translator_by_name(motor_name)
+
+    # 5. Translate JIT (Atomic or Batch)
     if len(batch) > 1:
         print(f"--- JIT Batching {len(batch)} intents ---")
         batch_tuples = [(e.intent, e.target, e.value) for e in batch]
@@ -104,11 +110,19 @@ async def execute_deterministic_node(state: AriadneState, config: RunnableConfig
         edge = batch[0]
         command = translator.translate_intent(edge.intent, edge.target, state, edge.value)
 
-    # 4. Dispatch to Executor (Mocked for now)
-    # TODO: Injected Executor call
+    # 6. Dispatch to Executor
     print(f"--- Dispatching Command: {command} ---")
-    
-    # Simulate Success
+    try:
+        result = await executor.execute(command)
+        if result.status == "failed":
+            return {
+                "errors": [f"ExecutionFailed: {result.error or 'Unknown error'}"]
+            }
+    except Exception as e:
+        return {
+            "errors": [f"ExecutionError: {str(e)}"]
+        }
+
     return {
         "current_state_id": batch[-1].to_state,
         "errors": []
@@ -130,13 +144,8 @@ async def llm_rescue_agent_node(state: AriadneState, config: RunnableConfig) -> 
 
 
 async def human_in_the_loop_node(state: AriadneState, config: RunnableConfig) -> Dict[str, Any]:
-    """Native LangGraph breakpoint (interrupt_before).
-    
-    This node serves as a placeholder for manual intervention.
-    The graph will pause before entering this node if configured.
-    """
+    """Native LangGraph breakpoint (interrupt_before)."""
     print("--- NODE: Human In The Loop ---")
-    # Mark that we've seen the human node to allow routing back to observe
     new_memory = state.get("session_memory", {}).copy()
     new_memory["human_intervention"] = True
     return {"session_memory": new_memory}
@@ -146,12 +155,7 @@ async def human_in_the_loop_node(state: AriadneState, config: RunnableConfig) ->
 
 
 def route_after_observe(state: AriadneState) -> str:
-    """Routing logic after observation.
-    
-    - goal_achieved -> END
-    - danger_detected -> human_in_the_loop
-    - else -> execute_deterministic
-    """
+    """Routing logic after observation."""
     session_memory = state.get("session_memory", {})
     if session_memory.get("goal_achieved"):
         return END
@@ -163,13 +167,7 @@ def route_after_observe(state: AriadneState) -> str:
 
 
 def route_after_deterministic(state: AriadneState) -> str:
-    """Routing logic after deterministic execution.
-    
-    - errors -> apply_local_heuristics
-    - else -> observe (Progress check)
-    """
-    # In a real implementation, we might want to check if the LAST node added an error.
-    # For now, we follow the spec which checks the 'errors' accumulator.
+    """Routing logic after deterministic execution."""
     if state.get("errors"):
         return "apply_local_heuristics"
     
@@ -177,11 +175,7 @@ def route_after_deterministic(state: AriadneState) -> str:
 
 
 def route_after_heuristics(state: AriadneState) -> str:
-    """Routing logic after heuristics application.
-    
-    - errors -> llm_rescue_agent
-    - else -> execute_deterministic (Retry with patch)
-    """
+    """Routing logic after heuristics application."""
     if state.get("errors"):
         return "llm_rescue_agent"
     
@@ -193,7 +187,6 @@ def route_after_agent(state: AriadneState) -> str:
     session_memory = state.get("session_memory", {})
     agent_failures = session_memory.get("agent_failures", 0)
     
-    # Circuit Breaker: Route to HITL after 3 failures
     if state.get("errors") or session_memory.get("give_up") or agent_failures >= 3:
         print(f"--- CIRCUIT BREAKER: {agent_failures} agent failures. Routing to HITL. ---")
         return "human_in_the_loop"
@@ -208,17 +201,14 @@ def create_ariadne_graph():
     """Compiles the Ariadne 2.0 StateGraph with memory and HITL."""
     workflow = StateGraph(AriadneState)
 
-    # Register Nodes
     workflow.add_node("observe", observe_node)
     workflow.add_node("execute_deterministic", execute_deterministic_node)
     workflow.add_node("apply_local_heuristics", apply_local_heuristics_node)
     workflow.add_node("llm_rescue_agent", llm_rescue_agent_node)
     workflow.add_node("human_in_the_loop", human_in_the_loop_node)
 
-    # Set Entry Point
     workflow.set_entry_point("observe")
 
-    # Connect Nodes with Conditional Edges (Fallback Cascade)
     workflow.add_conditional_edges(
         "observe",
         route_after_observe,
@@ -256,10 +246,8 @@ def create_ariadne_graph():
         }
     )
 
-    # Terminal edge from HITL back to Observe for re-evaluation after human fix
     workflow.add_edge("human_in_the_loop", "observe")
 
-    # Compile with persistence and native breakpoint
     memory = MemorySaver()
     return workflow.compile(
         checkpointer=memory,

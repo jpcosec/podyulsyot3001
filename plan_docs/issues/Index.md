@@ -14,8 +14,8 @@ Ariadne 2.0 has its **Architecture Core** and **Skeleton** implemented. We are n
 ## Execution Queue (Logic Implementation)
 
 ### Phase 1: Closing the Loop (Node Logic)
-- [ ] **[Implement: Observe Node Logic](gaps/implement-observe-node-logic.md)**
-  - *Status*: Ready
+- [x] **[Implement: Observe Node Logic](gaps/implement-observe-node-logic.md)**
+  - *Status*: Finished
   - *Scope*: Replace stub in `orchestrator.py` with actual calls to fetch URL, DOM, and Screenshot.
 - [ ] **[Implement: Deterministic Dispatch Logic](gaps/implement-deterministic-dispatch-logic.md)**
   - *Status*: Ready
