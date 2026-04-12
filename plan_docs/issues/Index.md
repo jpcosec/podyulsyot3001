@@ -1,6 +1,19 @@
-# Ariadne 2.0 Issues Index
+# unified-automation Issues Index
 
 This file is the entrypoint for subagents deployed to solve issues in this repository.
+
+All issue-fixing work must stay aligned with the rest of plan_docs/ and wiki/, with special care for docs/standards/ so implementation, tests, and documentation remain consistent with the project's rules.
+
+## Initialization Procedure (Before Execution)
+
+Before executing any issue or assigning work to a subagent, you MUST perform this ritual:
+ 1. Atomize: break down work into the smallest possible units.
+ 2. See what's redundant > merge.
+ 3. Legacy > delete.
+ 4. Contradictory > resolve.
+ 5. Iterate until the plan is clean and straightforward.
+ 6. Update `plan_docs/issues/Index.md`.
+ 7. Execute using the smallest possible/available subagent for each step and review.
 
 ## Working rule for every issue
 

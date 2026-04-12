@@ -32,9 +32,17 @@ Each issue file follows this format:
 
 ═══════════════════════════════════════════════════════════════════════════════════════════════
 
-┄┄Stage 2 — Indexing
+┄┄Stage 2 — Initialization Procedure (Indexing)
 
-After mapping, run the indexing step before assigning any work. Five operations in order:
+Before executing any issue or assigning work to a subagent, you MUST perform this ritual. After mapping, run the indexing step before assigning any work. Five operations in order:
+
+ 1. Atomize: Break down work into the smallest possible units (see 2.2).
+ 2. See what's redundant > merge: Scan all issues for overlap (see 2.3).
+ 3. Legacy > delete: Review each issue for content that should be deleted (see 2.1).
+ 4. Contradictory > resolve: Produce compatible end states (see 2.3).
+ 5. Iterate: Repeat these steps until the plan is clean and straightforward.
+ 6. Update Index.md: Generate the dependency graph (see 2.4, 2.5).
+ 7. Execute: Execute the plan using the smallest possible/available subagent for each step and review their work.
 
 ┄┄┄2.1 — Legacy Audit
 
@@ -79,12 +87,16 @@ regenerated whenever issues are added, split, or resolved.
 
 ═══════════════════════════════════════════════════════════════════════════════════════════════
 
-┄┄Lifecycle
+┄┄Lifecycle (Execution Ritual)
 
-Issue files are ephemeral (plan_docs/ lifespan rules apply). Once an issue is solved:
+Issue files are ephemeral (plan_docs/ lifespan rules apply). Once an issue is solved, the next step is always:
 
- 1. Delete the issue file.
- 2. Remove it from Index.md.
+ 1. Check whether any existing test is no longer valid and delete it if needed.
+ 2. Add new tests where necessary.
+ 3. Run the relevant tests.
+ 4. Update changelog.md.
+ 5. Delete the solved issue from both this index and the corresponding file in plan_docs/issues/.
+ 6. Make a commit that clearly states what was fixed, making sure all required files are staged.
 
 ### Validation-type issues
 
