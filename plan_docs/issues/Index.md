@@ -34,40 +34,8 @@ When all parallelizable issues in a given Phase/Level are completed, you MUST pe
 
 ## Priority roadmap
 
-### Phase 7 — Critical Performance & Correctness Bombs
-
-- Completed on 2026-04-12: Persistent Crawl4AI browser, map caching, overlay hinting, no JIT bypass, word boundary danger detection.
-
-### Phase 6 — Runtime Hardening
-
-- Completed on 2026-04-12: Test structure mirror, async-safe modes (already done), lazy danger detection (already done), edge priority selection, and native C4A-Script output.
-
-### Phase 1 — Execution & State Integrity (Hotfixes)
-
-- Completed on 2026-04-12: translator isolation, atomic micro-batching failure recovery, and state-scoped patching.
-
-### Phase 2 — Performance & UI Polish
-
-- Completed on 2026-04-12: async-safe mode config loading and scroll-stable hint anchoring.
-
-### Phase 3 — Intelligence & Data Polish
-
-- Completed on 2026-04-12: LLM-backed default-mode fallback and restored danger detection.
-
-### Phase 4 — Scraper & Discovery
-
-- Completed on 2026-04-12: discovery mission maps and graph-backed scrape flow restored.
-
-### Phase 5 — The Lifecycle (Learning)
-
-- Completed on 2026-04-12: persistent checkpoints, graph trace recording, and draft-map promotion are implemented.
+*No active issues. Index cleared after each phase completion.*
 
 ## Parallelization map
 
-Phase 1  [done]          ← [Hotfixes]
-Phase 2  [done]          ← [Polish]
-Phase 3  [done]          ← [Functional]
-Phase 4  [done]          ← [Discovery]
-Phase 5  [done]          ← [Lifecycle]
-Phase 6  [done]          ← [Hardening]
-Phase 7  [done]          ← [Critical Bombs]
+*Empty - ready for new issues.*
