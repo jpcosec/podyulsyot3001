@@ -4,21 +4,24 @@
 
 **Reference:** `tests/unit/automation/fitness/test_graph_depth.py`
 
-**Status:** Test exists but needs fixing.
+**Status:** Test design is wrong - needs redesign.
 
-**Why it fails:**
-1. Test uses AlwaysFailingExecutor but graph exits early (map found → goal_achieved)
-2. LLM node requires API key (needs mocking)
-3. Event handling assumes dict but gets tuples
+**Why it fails:** Test tries to mock LLM - but LLM is part of cascade. Wrong approach.
 
-**What to fix:**
-1. Add LLM node mock fixture (patches `llm_rescue_agent_node`)
-2. Update test to use portal with failing map (`fitness_test` exists)
-3. Fix event handling for both dict/tuple types
+**Real fix:** Test should use real flow:
+1. Use `fitness_test` portal with targets that always fail
+2. Let cascade run: Observe → Deterministic(FAIL) → Heuristics(FAIL) → LLM(FAIL) → repeat
+3. Circuit breaker triggers at 3 LLM failures
+4. Assert HITL reached within N steps
+
+**Don't:** Mock LLM node - it breaks the test's purpose.
 
 **Steps:**
-1. Mock `llm_rescue_agent_node` to increment `agent_failures` counter
-2. Use `fitness_test` portal map that has no valid targets
-3. Assert step_count <= 10 when executor always fails
+1. Create `fitness_test` portal with 3 states that target non-existent elements
+2. Real executor tries to click missing elements → fails
+3. Real heuristics try → fail
+4. Real LLM fails (no API key or returns error) → increment counter
+5. After 3 failures → circuit breaker → HITL
+6. Assert: step_count <= 10
 
-**Test standard:** Must pass without GOOGLE_API_KEY
+**API Key:** Tests need GOOGLE_API_KEY or mock at integration level (env var)

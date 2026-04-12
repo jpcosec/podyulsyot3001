@@ -4,21 +4,25 @@
 
 **Reference:** `tests/unit/automation/fitness/test_sync_io_detector.py`
 
-**Status:** Test exists but broken.
+**Status:** Test design needs refinement.
 
-**Why it fails:**
-1. Detector catches Crawl4AI boot-time I/O (not hot loop)
-2. Too sensitive - fails on any sync I/O anywhere
-3. LLM node needs API key
+**Why it fails:** Catches ALL sync I/O including boot-time (Crawl4AI init), not just hot loop.
 
-**What to fix:**
-1. Filter sync calls to only detect during node execution (not setup)
-2. Mock LLM node (patches `llm_rescue_agent_node`)
-3. Only fail if sync I/O in hot path nodes (observe/execute/heurlistics)
+**Real fix:** Test should detect only during node execution:
+1. Instrument sync I/O detection at node entry/exit
+2. Track calls between node_start → node_end markers
+3. Fail only if sync I/O in hot path (during node execution)
+4. Allow boot-time I/O (before first node)
+
+**Don't:** Fail on any sync I/O anywhere - too strict.
 
 **Steps:**
-1. Add markers to distinguish boot vs hot loop
-2. Mock LLM node (see fitness-graph-depth)
-3. Assert sync calls only in setup phase, not node execution
+1. Add time/context markers to distinguish boot vs execution
+2. Track only calls during active node execution
+3. Use `fitness_test` portal to force multiple nodes
+4. Assert no sync I/O during execution (boot OK)
 
-**Test standard:** Must pass without GOOGLE_API_KEY
+**Note:** Current test technically works - it catches real sync I/O in Crawl4AI.
+The question is: is this a bug or expected? 
+- If sync I/O in Crawl4AI during crawl → report to motor team
+- If only at boot → exclude with markers
