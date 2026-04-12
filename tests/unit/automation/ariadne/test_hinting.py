@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock
 from pathlib import Path
 
 from src.automation.ariadne.capabilities.hinting import HintingToolImpl
-from src.automation.ariadne.models import ExecutionResult, AriadneTarget, ScriptCommand
+from src.automation.ariadne.contracts.base import ExecutionResult, AriadneTarget, ScriptCommand
 
 
 @pytest.mark.asyncio

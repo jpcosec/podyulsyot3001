@@ -1,13 +1,13 @@
 import json
 from typing import List, Optional
 
-from src.automation.ariadne.models import (
+from src.automation.ariadne.contracts.base import (
     AriadneIntent,
-    AriadneState,
     AriadneTarget,
     CrawlCommand,
     MotorCommand,
 )
+from src.automation.ariadne.models import AriadneState
 from src.automation.ariadne.translators.base import AriadneTranslator
 
 

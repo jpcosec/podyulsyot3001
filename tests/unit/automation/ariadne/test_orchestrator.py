@@ -25,7 +25,8 @@ def test_graph_compilation():
     assert "human_in_the_loop" in graph.nodes
 
 
-def test_graph_success_path():
+@pytest.mark.asyncio
+async def test_graph_success_path():
     """Verify the success path (goal_achieved) terminates immediately after observe."""
     graph = create_ariadne_graph()
     
@@ -47,15 +48,19 @@ def test_graph_success_path():
     
     config = {"configurable": {"thread_id": "test-success-thread"}}
     
-    events = list(graph.stream(initial_state, config))
+    events = []
+    async for event in graph.astream(initial_state, config):
+        events.append(event)
+        
     assert len(events) == 1
     assert "observe" in events[0]
 
 
-def test_graph_fallback_cascade_to_hitl():
+@pytest.mark.asyncio
+async def test_graph_fallback_cascade_to_hitl():
     """Verify the 4-level fallback cascade reaches HITL when all levels fail."""
     # We need to reconstruct a failing graph for this test
-    def fail_node(state):
+    async def fail_node(state, config=None):
         return {"errors": ["Simulated failure"]}
 
     workflow = StateGraph(AriadneState)
@@ -93,7 +98,9 @@ def test_graph_fallback_cascade_to_hitl():
     }
     config = {"configurable": {"thread_id": "test-fallback-thread"}}
     
-    events = list(compiled_graph.stream(initial_state, config))
+    events = []
+    async for event in compiled_graph.astream(initial_state, config):
+        events.append(event)
     
     # Observe -> ExecuteDeterministic -> Heuristics -> Agent -> Interrupt
     node_names = [list(event.keys())[0] for event in events]
@@ -102,5 +109,5 @@ def test_graph_fallback_cascade_to_hitl():
     assert "apply_local_heuristics" in node_names
     assert "llm_rescue_agent" in node_names
     
-    snapshot = compiled_graph.get_state(config)
+    snapshot = await compiled_graph.aget_state(config)
     assert "human_in_the_loop" in snapshot.next

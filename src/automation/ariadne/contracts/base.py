@@ -1,72 +1,126 @@
-"""Segregated Motor Protocols for Ariadne 2.0.
+"""Ariadne 2.0 Base Contracts — Primitive JIT Interfaces.
 
-This module defines the Just-In-Time (JIT) interfaces for navigation and execution,
-satisfying the Interface Segregation Principle (ISP) and Dependency Inversion Principle (DIP).
+This module defines the backend-neutral protocols and primitive data models
+for the Ariadne 2.0 architecture. These are the ONLY models that Executors
+are allowed to import to maintain Dependency Inversion.
 """
 
 from __future__ import annotations
 
-import operator
-from typing import (
-    Annotated,
-    Any,
-    Dict,
-    List,
-    Optional,
-    Protocol,
-    TypedDict,
-    Union,
-    runtime_checkable,
-)
+from enum import Enum
+from typing import Any, Dict, List, Literal, Optional, Protocol, Union
 
-from langgraph.graph.message import AnyMessage, add_messages
-
-from src.automation.ariadne.models import (
-    AriadneEdge,
-    AriadneState,
-    AriadneTarget,
-    ExecutionResult,
-    MotorCommand,
-)
+from pydantic import BaseModel, Field
 
 
-@runtime_checkable
+# --- Target Layer ---
+
+
+class AriadneTarget(BaseModel):
+    """Multi-strategy element descriptor with Priority for Hinting."""
+
+    hint: Optional[str] = Field(
+        default=None, description="Alphanumeric marker (e.g. 'AA', 'AB') injected JIT."
+    )
+    css: Optional[str] = Field(
+        default=None, description="Fallback CSS selector."
+    )
+    text: Optional[str] = Field(
+        default=None, description="Fuzzy text match."
+    )
+    vision: Optional[Dict[str, int]] = Field(
+        default=None, description="Coordinates {x, y, w, h} from VisionTool."
+    )
+
+
+# --- Intent Layer ---
+
+
+class AriadneIntent(str, Enum):
+    """Semantic 'What to do' vocabulary."""
+
+    CLICK = "click"
+    FILL = "fill"
+    SELECT = "select"
+    UPLOAD = "upload"
+    WAIT = "wait"
+    PRESS = "press"
+    EXTRACT = "extract"
+
+
+# --- Execution Interfaces (JIT Payloads) ---
+
+
+class MotorCommand(BaseModel):
+    """Base class for JIT motor instructions."""
+
+    pass
+
+
+class BrowserOSCommand(MotorCommand):
+    """Single MCP tool call for BrowserOS CLI."""
+
+    tool: Literal["click", "fill", "upload", "press"]
+    selector_text: str
+    value: Optional[str] = None
+
+
+class CrawlCommand(MotorCommand):
+    """One or more C4A-Script actions for Crawl4AI."""
+
+    c4a_script: str
+    hooks: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+class ScriptCommand(MotorCommand):
+    """Command to execute arbitrary JavaScript and extract results."""
+
+    script: str
+
+
+class SnapshotResult(BaseModel):
+    """JIT Browser State (URL, DOM, Screenshot)."""
+
+    url: str
+    dom_elements: List[Dict[str, Any]] = Field(default_factory=list)
+    screenshot_b64: Optional[str] = None
+
+
+class ExecutionResult(BaseModel):
+    """Outcome of a JIT execution."""
+
+    status: Literal["success", "failed", "aborted"]
+    extracted_data: Dict[str, Any] = Field(default_factory=dict)
+    error: Optional[str] = None
+    screenshot_path: Optional[str] = None
+
+
+# --- Segregated Protocols ---
+
+
 class Executor(Protocol):
-    """Protocol for 'dumb slave' execution units."""
+    """Factory for executing JIT commands."""
 
     async def execute(self, command: MotorCommand) -> ExecutionResult:
-        """Execute a JIT motor instruction."""
+        """Runs a JIT command or batch and returns the outcome."""
+        ...
+
+    async def take_snapshot(self) -> SnapshotResult:
+        """Captures the current browser state."""
         ...
 
 
-@runtime_checkable
 class Planner(Protocol):
-    """Protocol for intelligence units that interpret state and decide actions."""
+    """Autonomous agent that proposes recovery actions."""
 
-    async def plan_action(self, state: AriadneState) -> List[AriadneEdge]:
-        """Infer the next semantic action(s) based on current state."""
+    async def plan_action(self, state: Any) -> Any:
+        """Decides the next semantic action when the graph path is lost."""
         ...
 
 
-@runtime_checkable
-class VisionTool(Protocol):
-    """Protocol for coordinate-based element identification."""
-
-    async def locate(
-        self, target: AriadneTarget, screenshot_b64: str
-    ) -> Optional[Dict[str, int]]:
-        """Identify coordinates {x, y, w, h} for a target using Vision."""
-        ...
-
-
-@runtime_checkable
 class HintingTool(Protocol):
-    """Protocol for alphanumeric marker injection and resolution."""
+    """Capability to inject alphanumeric overlays on the DOM."""
 
-    async def inject_hints(self) -> Dict[str, str]:
-        """Inject alphanumeric markers into the DOM and return marker -> ID map."""
-        ...
-
-    async def resolve_hint(self, hint: str) -> Optional[AriadneTarget]:
-        """Translate a marker (e.g. 'AA') back into a semantic target."""
+    async def inject_hints(self, executor: Executor) -> Dict[str, Any]:
+        """Injects hints and returns the ID-to-metadata mapping."""
         ...

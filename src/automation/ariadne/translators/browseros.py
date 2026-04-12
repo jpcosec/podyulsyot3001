@@ -1,12 +1,12 @@
-from typing import Optional
+from typing import List, Optional
 
-from src.automation.ariadne.models import (
+from src.automation.ariadne.contracts.base import (
     AriadneIntent,
-    AriadneState,
     AriadneTarget,
     BrowserOSCommand,
     MotorCommand,
 )
+from src.automation.ariadne.models import AriadneState
 from src.automation.ariadne.translators.base import AriadneTranslator
 
 
@@ -62,3 +62,18 @@ class BrowserOSTranslator(AriadneTranslator):
             )
         else:
             raise ValueError(f"Unsupported intent for BrowserOS: {intent}")
+
+    def translate_batch(
+        self, 
+        intents: List[tuple[AriadneIntent, AriadneTarget, Optional[str]]], 
+        state: AriadneState
+    ) -> MotorCommand:
+        """BrowserOS does not natively support multi-action batching yet.
+        
+        It returns the first intent as a fallback.
+        """
+        if not intents:
+            raise ValueError("No intents provided for translation.")
+        
+        intent, target, value = intents[0]
+        return self.translate_intent(intent, target, state, value)

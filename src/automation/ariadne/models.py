@@ -4,54 +4,21 @@ This module defines the models for the Programmable Semantic Browser:
 1. AriadneMap (The directed state graph)
 2. AriadneStateDefinition (The state nodes)
 3. AriadneEdge (The transitions)
-4. AriadneTarget (Multi-strategy element identification)
-5. AriadneState (The immutable working memory/LangGraph state)
-6. Execution Contracts (Executors and Results)
+4. AriadneState (The immutable working memory/LangGraph state)
 """
 
 from __future__ import annotations
 
 import operator
-from enum import Enum
 from typing import Annotated, Any, Dict, List, Literal, Optional, TypedDict, Union
 
 from langgraph.graph.message import AnyMessage, add_messages
 from pydantic import BaseModel, Field
 
-
-# --- Target Layer ---
-
-
-class AriadneTarget(BaseModel):
-    """Multi-strategy element descriptor with Priority for Hinting."""
-
-    hint: Optional[str] = Field(
-        default=None, description="Alphanumeric marker (e.g. 'AA', 'AB') injected JIT."
-    )
-    css: Optional[str] = Field(
-        default=None, description="Fallback CSS selector."
-    )
-    text: Optional[str] = Field(
-        default=None, description="Fuzzy text match."
-    )
-    vision: Optional[Dict[str, int]] = Field(
-        default=None, description="Coordinates {x, y, w, h} from VisionTool."
-    )
-
-
-# --- Intent Layer ---
-
-
-class AriadneIntent(str, Enum):
-    """Semantic 'What to do' vocabulary."""
-
-    CLICK = "click"
-    FILL = "fill"
-    SELECT = "select"
-    UPLOAD = "upload"
-    WAIT = "wait"
-    PRESS = "press"
-    EXTRACT = "extract"
+from src.automation.ariadne.contracts.base import (
+    AriadneIntent,
+    AriadneTarget,
+)
 
 
 # --- Observation Layer ---
@@ -148,45 +115,6 @@ class AriadneMap(BaseModel):
     failure_states: List[str] = Field(
         description="State IDs that signal terminal failure."
     )
-
-
-# --- Execution Interfaces (JIT Payloads) ---
-
-
-class MotorCommand(BaseModel):
-    """Base class for JIT motor instructions."""
-
-    pass
-
-
-class BrowserOSCommand(MotorCommand):
-    """Single MCP tool call for BrowserOS CLI."""
-
-    tool: Literal["click", "fill", "upload", "press"]
-    selector_text: str
-    value: Optional[str] = None
-
-
-class CrawlCommand(MotorCommand):
-    """One or more C4A-Script actions for Crawl4AI."""
-
-    c4a_script: str
-    hooks: List[Dict[str, Any]] = Field(default_factory=list)
-
-
-class ScriptCommand(MotorCommand):
-    """Command to execute arbitrary JavaScript and extract results."""
-
-    script: str
-
-
-class ExecutionResult(BaseModel):
-    """Outcome of a JIT execution."""
-
-    status: Literal["success", "failed", "aborted"]
-    extracted_data: Dict[str, Any] = Field(default_factory=dict)
-    error: Optional[str] = None
-    screenshot_path: Optional[str] = None
 
 
 # Rebuild models to resolve forward references

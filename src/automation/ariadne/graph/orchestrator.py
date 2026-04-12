@@ -9,16 +9,19 @@ from typing import Any, Dict, List, Literal, Optional, Union
 
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
+from langchain_core.runnables import RunnableConfig
 
 from src.automation.ariadne.graph.nodes.agent import LangGraphBrowserOSAgent
+from src.automation.ariadne.contracts.base import (
+    CrawlCommand,
+    ExecutionResult,
+)
 from src.automation.ariadne.models import (
     AriadneEdge,
     AriadneIntent,
     AriadneMap,
     AriadneState,
     AriadneTarget,
-    CrawlCommand,
-    ExecutionResult
 )
 from src.automation.ariadne.repository import MapRepository
 from src.automation.ariadne.translators.crawl4ai import Crawl4AITranslator
@@ -27,15 +30,26 @@ from src.automation.ariadne.translators.crawl4ai import Crawl4AITranslator
 # --- Node Functions ---
 
 
-def observe_node(state: AriadneState) -> Dict[str, Any]:
-    """Captures the JIT state (URL, Accessibility Tree, Screenshot)."""
-    # TODO: Implement JIT snapshot logic via BrowserOS or C4A
+async def observe_node(state: AriadneState, config: RunnableConfig) -> Dict[str, Any]:
+    """Captures the JIT state (URL, Accessibility Tree, Screenshot) via the active Executor."""
     print("--- NODE: Observe ---")
-    return {
-        "current_url": "https://example.com/mock",
-        "dom_elements": [],
-        "screenshot_b64": None,
-    }
+    executor = config.get("configurable", {}).get("executor")
+    if not executor:
+        return {
+            "errors": ["ExecutorNotFoundError: No executor provided in config['configurable']['executor']"]
+        }
+
+    try:
+        snapshot = await executor.take_snapshot()
+        return {
+            "current_url": snapshot.url,
+            "dom_elements": snapshot.dom_elements,
+            "screenshot_b64": snapshot.screenshot_b64,
+        }
+    except Exception as e:
+        return {
+            "errors": [f"ObservationError: {str(e)}"]
+        }
 
 
 def _find_safe_sequence(
@@ -62,7 +76,7 @@ def _find_safe_sequence(
     return batch
 
 
-def execute_deterministic_node(state: AriadneState) -> Dict[str, Any]:
+async def execute_deterministic_node(state: AriadneState, config: RunnableConfig) -> Dict[str, Any]:
     """Replays the AriadneMap for the current node state with Micro-Batching."""
     print("--- NODE: Execute Deterministic ---")
     
@@ -101,21 +115,21 @@ def execute_deterministic_node(state: AriadneState) -> Dict[str, Any]:
     }
 
 
-def apply_local_heuristics_node(state: AriadneState) -> Dict[str, Any]:
+async def apply_local_heuristics_node(state: AriadneState, config: RunnableConfig) -> Dict[str, Any]:
     """Applies local rules from the active portal_mode (e.g. 'easy_apply')."""
     # TODO: Implement mode-based patching
     print("--- NODE: Apply Local Heuristics ---")
     return {}
 
 
-async def llm_rescue_agent_node(state: AriadneState) -> Dict[str, Any]:
+async def llm_rescue_agent_node(state: AriadneState, config: RunnableConfig) -> Dict[str, Any]:
     """Infers the next action using Link Hints + DOM via VLM Agent (Direct MCP)."""
     print("--- NODE: LLM Rescue Agent (Direct MCP) ---")
     agent = LangGraphBrowserOSAgent()
     return await agent.run(state)
 
 
-def human_in_the_loop_node(state: AriadneState) -> Dict[str, Any]:
+async def human_in_the_loop_node(state: AriadneState, config: RunnableConfig) -> Dict[str, Any]:
     """Native LangGraph breakpoint (interrupt_before).
     
     This node serves as a placeholder for manual intervention.

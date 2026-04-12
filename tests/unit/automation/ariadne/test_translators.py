@@ -1,11 +1,11 @@
 import pytest
-from src.automation.ariadne.models import (
+from src.automation.ariadne.contracts.base import (
     AriadneIntent,
-    AriadneState,
     AriadneTarget,
     BrowserOSCommand,
     CrawlCommand,
 )
+from src.automation.ariadne.models import AriadneState
 from src.automation.ariadne.translators.browseros import BrowserOSTranslator
 from src.automation.ariadne.translators.crawl4ai import Crawl4AITranslator
 

@@ -12,6 +12,9 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 
+from src.automation.ariadne.models import AriadneState
+
+
 class LangGraphBrowserOSAgent:
     """Rescue Agent that talks directly to BrowserOS MCP."""
 
