@@ -42,7 +42,7 @@ Before executing any issue or assigning work to a subagent, you MUST perform thi
  4. Contradictory > resolve: Produce compatible end states (see 2.3).
  5. Iterate: Repeat these steps until the plan is clean and straightforward.
  6. Update Index.md: Generate the dependency graph (see 2.4, 2.5).
- 7. Execute: Execute the plan using the smallest possible/available subagent for each step and review their work.
+ 7. Execute: Execute the plan using the smallest possible/available subagent for each step. Provide the subagent with explicit context (e.g., architectural boundaries, limits, or relevant reference files) to prevent them from making wrong choices. Review their work.
 
 ┄┄┄2.1 — Legacy Audit
 
@@ -94,9 +94,10 @@ Issue files are ephemeral (plan_docs/ lifespan rules apply). Once an issue is so
  1. Check whether any existing test is no longer valid and delete it if needed.
  2. Add new tests where necessary.
  3. Run the relevant tests.
- 4. Update changelog.md.
- 5. Delete the solved issue from both this index and the corresponding file in plan_docs/issues/.
- 6. Make a commit that clearly states what was fixed, making sure all required files are staged.
+ 4. Verify compliance: Check that the implementation complies with all project standards and architectural boundaries.
+ 5. Update changelog.md.
+ 6. Delete the solved issue from both this index and the corresponding file in plan_docs/issues/.
+ 7. Make a commit that clearly states what was fixed, making sure all required files are staged.
 
 ### Validation-type issues
 
