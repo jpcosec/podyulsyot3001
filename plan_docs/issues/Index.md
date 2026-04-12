@@ -18,9 +18,8 @@ Ariadne 2.0 has its **Architecture Core** and **Skeleton** implemented. We are n
   - *Status*: Finished
 - [x] **[Implement: Deterministic Dispatch Logic](gaps/implement-deterministic-dispatch-logic.md)**
   - *Status*: Finished
-- [ ] **[Implement: Local Heuristics Logic](gaps/implement-local-heuristics-logic.md)**
-  - *Status*: Ready
-  - *Scope*: Implement the patching rules in `ApplyLocalHeuristicsNode` using `portal_mode`.
+- [x] **[Implement: Local Heuristics Logic](gaps/implement-local-heuristics-logic.md)**
+  - *Status*: Finished
 
 ### Phase 2: Executor De-Mocking (The Hands)
 - [ ] **[Implement: Crawl4AI Live Execution](gaps/implement-crawl4ai-live-execution.md)**

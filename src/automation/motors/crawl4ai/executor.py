@@ -1,6 +1,9 @@
 """Crawl4AI JIT Executor Implementation."""
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
+import base64
+
+from crawl4ai import AsyncWebCrawler, CrawlerRunConfig, CacheMode
 
 from src.automation.ariadne.contracts.base import (
     CrawlCommand,
@@ -17,14 +20,28 @@ class Crawl4AIExecutor(Executor):
     Executes atomic or batched C4A-Scripts.
     """
 
+    def __init__(self):
+        self.current_url = "about:blank"
+
     async def take_snapshot(self) -> SnapshotResult:
-        """C4A Snapshot (Mocked for JIT)."""
-        # In a real environment, we'd use AsyncWebCrawler for current state.
-        return SnapshotResult(
-            url="https://c4a-mocked.com",
-            dom_elements=[],
-            screenshot_b64=None
-        )
+        """Captures the current browser state via Crawl4AI."""
+        async with AsyncWebCrawler() as crawler:
+            config = CrawlerRunConfig(
+                cache_mode=CacheMode.BYPASS,
+                screenshot=True,
+                process_iframes=True
+            )
+            result = await crawler.arun(url=self.current_url, config=config)
+            
+            screenshot_b64 = None
+            if result.success and hasattr(result, 'screenshot') and result.screenshot:
+                screenshot_b64 = result.screenshot
+
+            return SnapshotResult(
+                url=result.url or self.current_url,
+                dom_elements=[], # DOM elements mapping would go here
+                screenshot_b64=screenshot_b64
+            )
 
     async def execute(self, command: MotorCommand) -> ExecutionResult:
         """Runs a JIT command or batch via Crawl4AI."""
@@ -34,11 +51,23 @@ class Crawl4AIExecutor(Executor):
                 error=f"Invalid command type: {type(command)}"
             )
 
-        print(f"--- Crawl4AI Executing Script ---\n{command.c4a_script}\n----------------------------------")
-        
         try:
-            # Note: In a live environment, this would use AsyncWebCrawler.arun()
-            # For now, we mock the success of the script execution.
-            return ExecutionResult(status="success")
+            async with AsyncWebCrawler() as crawler:
+                config = CrawlerRunConfig(
+                    c4a_script=command.c4a_script,
+                    cache_mode=CacheMode.BYPASS,
+                    screenshot=True
+                )
+                
+                result = await crawler.arun(url=self.current_url, config=config)
+                
+                if result.success:
+                    self.current_url = result.url
+                    return ExecutionResult(status="success")
+                else:
+                    return ExecutionResult(
+                        status="failed", 
+                        error=getattr(result, 'error_message', 'Unknown Crawl4AI error')
+                    )
         except Exception as e:
             return ExecutionResult(status="failed", error=str(e))
