@@ -2,7 +2,7 @@
 
 **Explanation:** After massive refactors, need a quick dirty E2E test to validate LangGraph cascade works: Observe -> Determinista -> Heurísticas -> LLM Rescue -> Circuit Breaker -> HITL.
 
-**Reference:** See user's detailed spec for test_corneta.py and test_cascade.json
+**Reference:** See detailed spec in the conversation
 
 **What to fix:**
 1. Create `src/automation/portals/example/maps/test_cascade.json` - trap map pointing to non-existent button

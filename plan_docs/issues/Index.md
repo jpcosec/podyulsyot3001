@@ -34,27 +34,8 @@ When all parallelizable issues in a given Phase/Level are completed, you MUST pe
 
 ## Priority roadmap
 
-### Fitness Functions — Architectural Protection
-
-   1. plan_docs/issues/gaps/fitness-sync-io.md
-      • [1. Synchronous I/O Detector - protect event loop]
-
-   2. plan_docs/issues/gaps/fitness-single-browser.md
-      • [2. Single Browser Lifecycle - protect session persistence]
-
-   3. plan_docs/issues/gaps/fitness-hostile-dom.md
-      • [3. Hostile DOM Sandbox - protect against void element crash]
-
-   4. plan_docs/issues/gaps/fitness-graph-depth.md
-      • [4. Graph Depth Limit - protect against infinite loops]
-
-### Test Corneta — E2E Validation
-
-   1. plan_docs/issues/gaps/test-corneta-setup.md
-      • [Setup test_cascade.json + test_corneta.py to validate full LangGraph cascade]
+*All active issues listed above - execute in parallel where possible.*
 
 ## Parallelization map
 
-Phase 7  [done]          ← [Critical Bombs]
-Phase 8  [1][2][3][4]    ← [Fitness Functions]
-Phase 8  [5]            ← [Test Corneta E2E]
+*Ready for new work.*
