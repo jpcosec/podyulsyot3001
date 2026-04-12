@@ -48,10 +48,7 @@ When all parallelizable issues in a given Phase/Level are completed, you MUST pe
 
 ### Phase 4 — Scraper & Discovery
 
-  1. plan_docs/issues/gaps/implement-mission-driven-pathfinding.md
-     • [Prevents mixed-flow edge selection in multi-mission maps]
-
-  2. plan_docs/issues/gaps/restore-discovery-graph-mission.md
+  1. plan_docs/issues/gaps/restore-discovery-graph-mission.md
      • [Restores the 'scrape' command using the Ariadne 2.0 graph]
 
 ### Phase 5 — The Lifecycle (Learning)
@@ -76,5 +73,5 @@ When all parallelizable issues in a given Phase/Level are completed, you MUST pe
 Phase 1  [done]          ← [Hotfixes]
 Phase 2  [done]          ← [Polish]
 Phase 3  [done]          ← [Functional]
-Phase 4  [1][2]          ← [Discovery]
-Phase 5  [3][4][5]       ← [Lifecycle]
+Phase 4  [1]             ← [Discovery]
+Phase 5  [2][3][4]       ← [Lifecycle]

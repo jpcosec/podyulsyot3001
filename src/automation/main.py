@@ -18,17 +18,18 @@ from src.automation.motors.registry import MotorRegistry
 
 
 async def run_apply(
-    source: str, 
-    job_id: str, 
-    cv_path: str, 
+    source: str,
+    job_id: str,
+    cv_path: str,
     motor_name: str = "browseros",
     profile_path: Optional[str] = None,
     dry_run: bool = False,
-    portal_mode: str = "easy_apply"
+    portal_mode: str = "easy_apply",
+    mission_id: Optional[str] = None,
 ):
     """
     Executes the apply flow for a given source and job.
-    
+
     This fulfills the requirements for the 'apply' command:
     - Accepts --source, --job-id, --cv, --motor, and --dry-run.
     - Uses MapRepository to load the AriadneMap.
@@ -48,7 +49,9 @@ async def run_apply(
     repo = MapRepository()
     try:
         ariadne_map = repo.get_map(source, map_type=portal_mode)
-        print(f"✅ Loaded Map: {ariadne_map.meta.source} {ariadne_map.meta.flow} (v{ariadne_map.meta.version})")
+        print(
+            f"✅ Loaded Map: {ariadne_map.meta.source} {ariadne_map.meta.flow} (v{ariadne_map.meta.version})"
+        )
     except FileNotFoundError as e:
         print(f"❌ Error: {e}")
         sys.exit(1)
@@ -72,17 +75,21 @@ async def run_apply(
             phone="+49 176 00000000",
             address="Semantic Way 1",
             city="Berlin",
-            zip="10115"
+            zip="10115",
         )
         print(f"ℹ️  Using default mock profile context.")
 
     # 3. Initialize AriadneState
-    entry_state = "job_details" if "job_details" in ariadne_map.states else next(iter(ariadne_map.states))
-    
+    entry_state = (
+        "job_details"
+        if "job_details" in ariadne_map.states
+        else next(iter(ariadne_map.states))
+    )
+
     job_data = {
         "job_id": job_id,
         "cv_path": os.path.abspath(cv_path),
-        "dry_run": dry_run
+        "dry_run": dry_run,
     }
 
     initial_state: AriadneState = {
@@ -91,6 +98,7 @@ async def run_apply(
         "profile_data": profile.model_dump(),
         "job_data": job_data,
         "path_id": str(uuid.uuid4()),
+        "current_mission_id": mission_id or portal_mode,
         "current_state_id": entry_state,
         "dom_elements": [],
         "current_url": "",
@@ -99,7 +107,7 @@ async def run_apply(
         "errors": [],
         "history": [],
         "portal_mode": portal_mode,
-        "patched_components": {}
+        "patched_components": {},
     }
 
     # 4. Instantiate Executor and Compile Graph
@@ -118,41 +126,45 @@ async def run_apply(
         "configurable": {
             "thread_id": thread_id,
             "executor": executor,
-            "motor_name": motor_name
+            "motor_name": motor_name,
         }
     }
-    
+
     print("🎬 Beginning JIT Execution...\n")
-    
+
     try:
         # We use stream_mode="updates" to track node execution
         async for chunk in app.astream(initial_state, config, stream_mode="updates"):
             for node_name, state_update in chunk.items():
                 print(f"[⚡] Node: {node_name}")
-                
+
                 # Report errors if any
                 if "errors" in state_update and state_update["errors"]:
                     for err in state_update["errors"]:
                         print(f"    ⚠️ ERROR: {err}")
-                
+
                 # Report navigation state changes
                 if "current_state_id" in state_update:
                     print(f"    ➡️ Map State: {state_update['current_state_id']}")
 
         # 6. Post-execution status check (HITL & Final Results)
         final_state = await app.aget_state(config)
-        
+
         if final_state.next:
             next_node = final_state.next[0]
             if next_node == "human_in_the_loop":
                 print(f"\n⏸️  Apply Paused: Human-In-The-Loop required.")
-                print(f"    Instructions: The graph has reached a safety breakpoint or an unknown state.")
-                print(f"    To resume, run: python -m src.automation.main apply --resume --thread-id {thread_id}")
+                print(
+                    f"    Instructions: The graph has reached a safety breakpoint or an unknown state."
+                )
+                print(
+                    f"    To resume, run: python -m src.automation.main apply --resume --thread-id {thread_id}"
+                )
                 return
 
         state_values = final_state.values
         current_map_state = state_values.get("current_state_id")
-        
+
         if current_map_state in ariadne_map.success_states:
             print("\n✅ Apply Success: Mission Completed.")
         elif state_values.get("errors"):
@@ -165,33 +177,52 @@ async def run_apply(
     except Exception as e:
         print(f"\n💥 Fatal Execution Error: {str(e)}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Ariadne 2.0 CLI — Semantic Browser Automation")
+    parser = argparse.ArgumentParser(
+        description="Ariadne 2.0 CLI — Semantic Browser Automation"
+    )
     subparsers = parser.add_subparsers(dest="command", help="Subcommand to execute")
 
     # Apply Subcommand
     apply_parser = subparsers.add_parser("apply", help="Execute an Ariadne apply flow")
-    apply_parser.add_argument("--source", required=True, help="Portal source (e.g., linkedin, stepstone)")
+    apply_parser.add_argument(
+        "--source", required=True, help="Portal source (e.g., linkedin, stepstone)"
+    )
     apply_parser.add_argument("--job-id", required=True, help="Job ID to apply to")
     apply_parser.add_argument("--cv", required=True, help="Path to CV file")
-    apply_parser.add_argument("--motor", default="browseros", help="Execution motor (browseros, crawl4ai)")
+    apply_parser.add_argument(
+        "--motor", default="browseros", help="Execution motor (browseros, crawl4ai)"
+    )
     apply_parser.add_argument("--profile", help="Path to profile JSON file")
-    apply_parser.add_argument("--dry-run", action="store_true", help="Run without final submission")
-    apply_parser.add_argument("--mode", default="easy_apply", help="Portal mode to use (default: easy_apply)")
-    apply_parser.add_argument("--resume", action="store_true", help="Resume a paused session")
+    apply_parser.add_argument(
+        "--dry-run", action="store_true", help="Run without final submission"
+    )
+    apply_parser.add_argument(
+        "--mode", default="easy_apply", help="Portal mode to use (default: easy_apply)"
+    )
+    apply_parser.add_argument("--mission", help="Mission id to filter eligible edges")
+    apply_parser.add_argument(
+        "--resume", action="store_true", help="Resume a paused session"
+    )
     apply_parser.add_argument("--thread-id", help="Thread ID to resume")
 
     # BrowserOS-Check Subcommand
-    subparsers.add_parser("browseros-check", help="Verify BrowserOS runtime connectivity")
+    subparsers.add_parser(
+        "browseros-check", help="Verify BrowserOS runtime connectivity"
+    )
 
     # Scrape Subcommand (Stub)
-    scrape_parser = subparsers.add_parser("scrape", help="Scrape jobs from a portal (Stub)")
+    scrape_parser = subparsers.add_parser(
+        "scrape", help="Scrape jobs from a portal (Stub)"
+    )
     scrape_parser.add_argument("--source", required=True)
     scrape_parser.add_argument("--limit", type=int, default=10)
+    scrape_parser.add_argument("--mission", default="discovery")
 
     args = parser.parse_args()
 
@@ -199,17 +230,20 @@ def main():
         if args.resume and not args.thread_id:
             print("❌ Error: --resume requires --thread-id")
             sys.exit(1)
-            
+
         try:
-            asyncio.run(run_apply(
-                source=args.source,
-                job_id=args.job_id,
-                cv_path=args.cv,
-                motor_name=args.motor,
-                profile_path=args.profile,
-                dry_run=args.dry_run,
-                portal_mode=args.mode
-            ))
+            asyncio.run(
+                run_apply(
+                    source=args.source,
+                    job_id=args.job_id,
+                    cv_path=args.cv,
+                    motor_name=args.motor,
+                    profile_path=args.profile,
+                    dry_run=args.dry_run,
+                    portal_mode=args.mode,
+                    mission_id=args.mission,
+                )
+            )
         except KeyboardInterrupt:
             print("\n🛑 Execution interrupted by user.")
             sys.exit(0)

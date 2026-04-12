@@ -221,9 +221,15 @@ def _find_safe_sequence(
     An edge is valid if its target exists in the current snapshot.
     """
     dom_elements = state.get("dom_elements", [])
+    current_mission_id = state.get("current_mission_id")
 
     # Find all possible outgoing edges
-    candidate_edges = [e for e in ariadne_map.edges if e.from_state == current_state_id]
+    candidate_edges = [
+        edge
+        for edge in ariadne_map.edges
+        if edge.from_state == current_state_id
+        and (edge.mission_id is None or edge.mission_id == current_mission_id)
+    ]
 
     # Evaluate which edges are currently "live" based on the snapshot
     valid_edges = []

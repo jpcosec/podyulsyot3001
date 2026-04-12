@@ -26,6 +26,13 @@ All notable changes to this project will be documented in this file.
 - Made `DefaultMode` lazy-initialize its Gemini client in `src/automation/ariadne/modes/default.py` and added regression coverage for normalization, danger inspection, and heuristic patch prompts in `tests/unit/automation/ariadne/test_modes.py`.
 - Restored keyword-based security detection in `src/automation/portals/modes/portals.py` by loading `danger_detection.json` through the shared config cache and turning matched rules into structured `ApplyDangerFinding` results.
 
+## [2026-04-12] - Ariadne Mission Filtering
+
+### Changed
+- Added `mission_id` support to `AriadneEdge`, tracked `current_mission_id` in `AriadneState`, and filtered deterministic edge selection in `src/automation/ariadne/graph/orchestrator.py` so multi-flow maps stay on the active mission branch.
+- Extended `src/automation/main.py` to accept `--mission` for apply flows and propagate the mission into graph state initialization.
+- Added mission-pathfinding regression coverage in `tests/unit/automation/ariadne/test_mission_pathfinding.py`.
+
 ### Added
 - Implemented **JIT Intent Translators** for Ariadne 2.0.
   - Added `AriadneTranslator` abstract base class in `src/automation/ariadne/translators/base.py`.

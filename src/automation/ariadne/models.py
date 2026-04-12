@@ -104,6 +104,10 @@ class AriadneEdge(BaseModel):
 
     from_state: str
     to_state: str
+    mission_id: Optional[str] = Field(
+        default=None,
+        description="Optional mission gate for this edge, such as 'easy_apply' or 'discovery'.",
+    )
     intent: AriadneIntent
     target: Union[str, AriadneTarget]  # Component name or explicit target
     value: Optional[str] = Field(
@@ -127,6 +131,7 @@ class AriadneState(TypedDict):
 
     # Navigation Pointer
     path_id: Optional[str]
+    current_mission_id: Optional[str]
     current_state_id: str
 
     # JIT Browser Snapshot
