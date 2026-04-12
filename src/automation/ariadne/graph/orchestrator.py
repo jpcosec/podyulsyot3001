@@ -136,7 +136,7 @@ async def observe_node(state: AriadneState, config: RunnableConfig) -> Dict[str,
             current_url=snapshot.url,
         )
 
-        danger_report = mode.inspect_danger(danger_signals)
+        danger_report = await mode.inspect_danger(danger_signals)
         if danger_report.findings:
             primary = danger_report.primary
             print(
@@ -321,9 +321,31 @@ def _find_safe_sequence(
     if not valid_edges:
         return []
 
-    # TODO: Add mission-based priority logic here if multiple edges are valid.
-    # For now, we take the first valid edge.
-    first_edge = valid_edges[0]
+    def _score_edge(edge: AriadneEdge) -> tuple:
+        """Returns a tuple: (mission_match, specificity_score, edge_order).
+
+        - mission_match: 1 if mission_id matches current_mission_id, 0 otherwise
+        - specificity_score: higher is better (css=3, hint=2, text=1, fallback=0)
+        """
+        mission_match = 1 if edge.mission_id == current_mission_id else 0
+
+        specificity = 0
+        try:
+            resolved = _resolve_target(edge.target, edge.from_state, ariadne_map, state)
+            if resolved.css:
+                specificity = 3
+            elif resolved.hint:
+                specificity = 2
+            elif resolved.text:
+                specificity = 1
+        except ValueError:
+            pass
+
+        return (mission_match, specificity)
+
+    # Sort by mission match first, then specificity
+    valid_edges_sorted = sorted(valid_edges, key=_score_edge, reverse=True)
+    first_edge = valid_edges_sorted[0]
 
     # Try to build a micro-batch starting with the first valid edge
     batch = [first_edge]

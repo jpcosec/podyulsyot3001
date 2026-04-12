@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-12] - Edge Priority Selection Fix
+
+### Changed
+- Fixed blind edge selection in `_find_safe_sequence()` in `src/automation/ariadne/graph/orchestrator.py` by adding specificity-based scoring: mission match > CSS selectors > hints > text-only fallbacks.
+- Added regression tests in `tests/unit/automation/ariadne/test_orchestrator.py` for CSS vs text, mission matching, and hint vs text edge selection.
+
 ## [2026-04-12] - Heuristic Retry Circuit Breaker
 
 ### Changed

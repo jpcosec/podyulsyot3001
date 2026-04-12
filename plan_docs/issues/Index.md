@@ -36,17 +36,17 @@ When all parallelizable issues in a given Phase/Level are completed, you MUST pe
 
 ### Phase 6 — Runtime Hardening
 
-  1. plan_docs/issues/gaps/async-mode-io.md
-     • [Removes blocking LLM calls from the async graph loop]
+   1. plan_docs/issues/gaps/missing-test-structure.md
+      • [Ensures unit tests mirror src/automation/ structure per STANDARDS]
 
-  2. plan_docs/issues/gaps/lazy-danger-detection.md
-     • [Avoids unconditional LLM danger checks in observe hot loops]
+   2. plan_docs/issues/gaps/async-mode-io.md
+      • [Removes blocking LLM calls from the async graph loop]
 
-  3. plan_docs/issues/gaps/edge-priority-selection.md
-     • [Prevents blind routing when multiple outgoing edges are live]
+   3. plan_docs/issues/gaps/lazy-danger-detection.md
+      • [Avoids unconditional LLM danger checks in observe hot loops]
 
-  4. plan_docs/issues/gaps/rewrite-crawl4ai-translator.md
-     • [Replaces invalid hybrid batch code with native Crawl4AI scripts]
+   5. plan_docs/issues/gaps/rewrite-crawl4ai-translator.md
+      • [Replaces invalid hybrid batch code with native Crawl4AI scripts]
 
 ### Phase 1 — Execution & State Integrity (Hotfixes)
 
@@ -79,4 +79,4 @@ Phase 2  [done]          ← [Polish]
 Phase 3  [done]          ← [Functional]
 Phase 4  [done]          ← [Discovery]
 Phase 5  [done]          ← [Lifecycle]
-Phase 6  [1][3][4]       ← [Hardening], then [2]
+Phase 6  [1][2][4][5]     ← [Hardening], then [3]
