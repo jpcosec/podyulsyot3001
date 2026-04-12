@@ -56,9 +56,7 @@ When all parallelizable issues in a given Phase/Level are completed, you MUST pe
 
 ## Dependency summary
 
-• plan_docs/issues/gaps/restore-discovery-graph-mission.md  ->  plan_docs/issues/gaps/implement-mission-driven-pathfinding.md
-• plan_docs/issues/gaps/implement-graph-recorder-capability.md  ->  plan_docs/issues/gaps/implement-persistent-sqlite-checkpointer.md
-• plan_docs/issues/gaps/implement-promotion-engine.md  ->  plan_docs/issues/gaps/implement-graph-recorder-capability.md
+- No open issue dependencies remain.
 
 ## Parallelization map
 
