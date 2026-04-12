@@ -11,23 +11,13 @@
       "description": "StepStone job listing page with internal apply",
       "presence_predicate": {
         "required_elements": [
-          {
-            "hint": null,
-            "css": "[data-at='apply-button']",
-            "text": null,
-            "vision": null
-          }
+          { "css": "[data-at='apply-button']" }
         ],
-        "forbidden_elements": [],
         "logical_op": "AND"
       },
       "components": {
-        "apply_button": {
-          "hint": null,
-          "css": "[data-at='apply-button']",
-          "text": "Apply Now",
-          "vision": null
-        }
+        "apply_button": { "css": "[data-at='apply-button']", "text": "Apply Now" },
+        "employer_website_button": { "text": "Ich bin interessiert" }
       }
     },
     "external_apply": {
@@ -35,23 +25,12 @@
       "description": "StepStone job that routes to external ATS via employer website button",
       "presence_predicate": {
         "required_elements": [
-          {
-            "hint": null,
-            "css": null,
-            "text": "Ich bin interessiert",
-            "vision": null
-          }
+          { "text": "Ich bin interessiert" }
         ],
-        "forbidden_elements": [],
         "logical_op": "AND"
       },
       "components": {
-        "employer_website_button": {
-          "hint": null,
-          "css": null,
-          "text": "Ich bin interessiert",
-          "vision": null
-        }
+        "employer_website_button": { "text": "Ich bin interessiert" }
       }
     },
     "easy_apply_modal": {
@@ -59,53 +38,17 @@
       "description": "StepStone Easy Apply modal",
       "presence_predicate": {
         "required_elements": [
-          {
-            "hint": null,
-            "css": "[data-at='apply-modal']",
-            "text": null,
-            "vision": null
-          }
+          { "css": "[data-at='apply-modal']" }
         ],
-        "forbidden_elements": [],
         "logical_op": "AND"
       },
       "components": {
-        "first_name": {
-          "hint": null,
-          "css": "input[name='firstName']",
-          "text": null,
-          "vision": null
-        },
-        "last_name": {
-          "hint": null,
-          "css": "input[name='lastName']",
-          "text": null,
-          "vision": null
-        },
-        "email": {
-          "hint": null,
-          "css": "input[type='email']",
-          "text": null,
-          "vision": null
-        },
-        "phone": {
-          "hint": null,
-          "css": "input[name='phone']",
-          "text": null,
-          "vision": null
-        },
-        "cv_upload": {
-          "hint": null,
-          "css": "input[type='file']",
-          "text": null,
-          "vision": null
-        },
-        "submit_button": {
-          "hint": null,
-          "css": "[data-at='submit-button']",
-          "text": null,
-          "vision": null
-        }
+        "first_name": { "css": "input[name='firstName']" },
+        "last_name": { "css": "input[name='lastName']" },
+        "email": { "css": "input[type='email']" },
+        "phone": { "css": "input[name='phone']" },
+        "cv_upload": { "css": "input[type='file']" },
+        "submit_button": { "css": "[data-at='submit-button']" }
       }
     },
     "apply_success": {
@@ -113,14 +56,8 @@
       "description": "StepStone success page",
       "presence_predicate": {
         "required_elements": [
-          {
-            "hint": null,
-            "css": "[data-at='application-success']",
-            "text": null,
-            "vision": null
-          }
+          { "css": "[data-at='application-success']" }
         ],
-        "forbidden_elements": [],
         "logical_op": "AND"
       },
       "components": {}
@@ -131,98 +68,56 @@
       "from_state": "job_details",
       "to_state": "easy_apply_modal",
       "intent": "click",
-      "target": {
-        "hint": null,
-        "css": "[data-at='apply-button']",
-        "text": null,
-        "vision": null
-      },
-      "value": null,
-      "extract": null
+      "target": "apply_button"
+    },
+    {
+      "from_state": "job_details",
+      "to_state": "external_apply",
+      "intent": "click",
+      "target": "employer_website_button"
     },
     {
       "from_state": "easy_apply_modal",
       "to_state": "easy_apply_modal",
       "intent": "fill",
-      "target": {
-        "hint": null,
-        "css": "input[name='firstName']",
-        "text": null,
-        "vision": null
-      },
-      "value": "{{profile.first_name}}",
-      "extract": null
+      "target": "first_name",
+      "value": "{{profile.first_name}}"
     },
     {
       "from_state": "easy_apply_modal",
       "to_state": "easy_apply_modal",
       "intent": "fill",
-      "target": {
-        "hint": null,
-        "css": "input[name='lastName']",
-        "text": null,
-        "vision": null
-      },
-      "value": "{{profile.last_name}}",
-      "extract": null
+      "target": "last_name",
+      "value": "{{profile.last_name}}"
     },
     {
       "from_state": "easy_apply_modal",
       "to_state": "easy_apply_modal",
       "intent": "fill",
-      "target": {
-        "hint": null,
-        "css": "input[type='email']",
-        "text": null,
-        "vision": null
-      },
-      "value": "{{profile.email}}",
-      "extract": null
+      "target": "email",
+      "value": "{{profile.email}}"
     },
     {
       "from_state": "easy_apply_modal",
       "to_state": "easy_apply_modal",
       "intent": "fill",
-      "target": {
-        "hint": null,
-        "css": "input[name='phone']",
-        "text": null,
-        "vision": null
-      },
-      "value": "{{profile.phone}}",
-      "extract": null
+      "target": "phone",
+      "value": "{{profile.phone}}"
     },
     {
       "from_state": "easy_apply_modal",
       "to_state": "easy_apply_modal",
       "intent": "upload",
-      "target": {
-        "hint": null,
-        "css": "input[type='file']",
-        "text": null,
-        "vision": null
-      },
-      "value": "{{cv_path}}",
-      "extract": null
+      "target": "cv_upload",
+      "value": "{{cv_path}}"
     },
     {
       "from_state": "easy_apply_modal",
       "to_state": "apply_success",
       "intent": "click",
-      "target": {
-        "hint": null,
-        "css": "[data-at='submit-button']",
-        "text": null,
-        "vision": null
-      },
-      "value": null,
-      "extract": null
+      "target": "submit_button"
     }
   ],
-  "success_states": [
-    "apply_success"
-  ],
-  "failure_states": [
-    "external_apply"
-  ]
+  "success_states": ["apply_success"],
+  "failure_states": ["external_apply"]
 }

@@ -28,9 +28,8 @@ Ariadne 2.0 has its **Architecture Core** and **Skeleton** implemented. We are n
   - *Status*: Finished
 
 ### Phase 3: CLI & Lifecycle
-- [ ] **[Refine: CLI Apply Lifecycle](gaps/refine-cli-apply-lifecycle.md)**
-  - *Status*: Ready
-  - *Scope*: Handle streaming updates, state persistence, and end-to-end success/failure reporting.
+- [x] **[Refine: CLI Apply Lifecycle](gaps/refine-cli-apply-lifecycle.md)**
+  - *Status*: Finished
 
 ---
 
