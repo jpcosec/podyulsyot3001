@@ -72,8 +72,9 @@ async def test_run_scrape_uses_search_map_and_discovery_mission(capsys):
         patch("src.automation.main.create_ariadne_graph", fake_graph_context),
     ):
         mock_repo_class.return_value.get_map.return_value = ariadne_map
-        await run_scrape(source="linkedin", limit=3)
+        exit_code = await run_scrape(source="linkedin", limit=3)
 
     output = capsys.readouterr().out
+    assert exit_code == 0
     assert "Discovery Success" in output
     assert '"jobs_text": "Job A"' in output

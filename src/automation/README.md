@@ -25,6 +25,7 @@ Runtime behavior is configured through environment variables and local runtime s
 Use `python -m src.automation.main ...` as the canonical entrypoint.
 
 - CLI argument definitions live in `src/automation/main.py`.
+- `_build_parser()` in `src/automation/main.py` is the authoritative CLI schema.
 - The current command parser implementation is the authoritative source for supported flags and defaults.
 - Typical flows are `apply`, `scrape`, and `browseros-check`.
 

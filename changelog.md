@@ -8,6 +8,13 @@ All notable changes to this project will be documented in this file.
 - Added `src/automation/README.md` so the runtime module now has a local README with the required architecture, configuration, CLI, and data-contract sections from `STANDARDS.md`.
 - Updated `README.md`, `docs/README.md`, `docs/automation/README.md`, `docs/automation/architecture.md`, and `docs/reference/README.md` to remove stale references to deleted paths and point documentation back to the active `docs/ariadne/`, `src/automation/README.md`, `AGENTS.md`, and `STANDARDS.md` sources.
 
+## [2026-04-12] - CLI Standards Compliance
+
+### Changed
+- Refactored `src/automation/main.py` to comply with the current CLI standards by introducing `_build_parser()`, making `main(argv: list[str] | None = None)` return integer exit codes, and centralizing apply/scrape state construction plus graph execution helpers.
+- Added CLI regression coverage in `tests/unit/automation/test_main_cli.py` and updated `tests/unit/automation/test_main_scrape.py` to assert exit codes instead of relying on process termination behavior.
+- Updated `src/automation/README.md` so it explicitly points to `_build_parser()` as the authoritative command schema.
+
 ## [2026-04-12] - Ariadne Core Hotfixes
 
 ### Changed
