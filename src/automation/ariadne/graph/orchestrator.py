@@ -428,42 +428,14 @@ async def execute_deterministic_node(
         result = await executor.execute(command)
 
         if result.status == "failed":
-            # Micro-batch failure detection
-            if (
-                result.failed_at_index is not None
-                and result.failed_at_index >= 0
-                and len(batch) > 1
-            ):
-                fail_idx = result.failed_at_index
-                print(
-                    f"--- Batch failed at index {fail_idx}. Retrying remaining actions atomically. ---"
+            # Micro-batch failure - return error so route_after_deterministic handles it
+            if result.failed_at_index is not None:
+                error_msg = (
+                    f"Batch failed at index {result.failed_at_index}: {result.error}"
                 )
-
-                # Retry remaining actions one-by-one
-                remaining_batch = batch[fail_idx:]
-                for i, edge in enumerate(remaining_batch):
-                    print(f"--- Retrying action {fail_idx + i}: {edge.intent} ---")
-                    try:
-                        res_target = _resolve_target(
-                            edge.target, edge.from_state, ariadne_map, state
-                        )
-                        atomic_cmd = translator.translate_intent(
-                            edge.intent, res_target, state, edge.value
-                        )
-                        atomic_result = await executor.execute(atomic_cmd)
-
-                        if atomic_result.status == "failed":
-                            error_msg = f"Atomic retry failed for action {fail_idx + i}: {atomic_result.error}"
-                            return {"errors": [f"ExecutionFailed: {error_msg}"]}
-                    except Exception as e:
-                        return {"errors": [f"ExecutionError on retry: {str(e)}"]}
-
-                # If all retries succeed, the state is the one from the last successful action of the *original* batch
-                return {"current_state_id": batch[-1].to_state, "errors": []}
             else:
-                return {
-                    "errors": [f"ExecutionFailed: {result.error or 'Unknown error'}"]
-                }
+                error_msg = result.error or "Unknown error"
+            return {"errors": [f"ExecutionFailed: {error_msg}"]}
 
     except Exception as e:
         return {"errors": [f"ExecutionError: {str(e)}"]}

@@ -34,6 +34,10 @@ When all parallelizable issues in a given Phase/Level are completed, you MUST pe
 
 ## Priority roadmap
 
+### Phase 7 — Critical Performance & Correctness Bombs
+
+- Completed on 2026-04-12: Persistent Crawl4AI browser, map caching, overlay hinting, no JIT bypass, word boundary danger detection.
+
 ### Phase 6 — Runtime Hardening
 
 - Completed on 2026-04-12: Test structure mirror, async-safe modes (already done), lazy danger detection (already done), edge priority selection, and native C4A-Script output.
@@ -66,3 +70,4 @@ Phase 3  [done]          ← [Functional]
 Phase 4  [done]          ← [Discovery]
 Phase 5  [done]          ← [Lifecycle]
 Phase 6  [done]          ← [Hardening]
+Phase 7  [done]          ← [Critical Bombs]

@@ -79,29 +79,86 @@ def executor():
     return Crawl4AIExecutor()
 
 
-class TestCrawl4AIExecutor:
-    """Tests for Crawl4AIExecutor."""
+class TestCrawl4AIExecutorContextManager:
+    """Tests for Crawl4AIExecutor async context manager."""
 
     @pytest.mark.asyncio
-    async def test_take_snapshot_returns_snapshot_result(
-        self, executor, mock_crawler_result
-    ):
-        """Test that take_snapshot returns a valid SnapshotResult."""
-        with (
-            patch(
-                "src.automation.motors.crawl4ai.executor.AsyncWebCrawler"
-            ) as mock_crawler_class,
-            patch(
-                "src.automation.motors.crawl4ai.executor.CrawlerRunConfig",
-                MockCrawlerRunConfig,
-            ),
-        ):
+    async def test_context_manager_enters_and_creates_crawler(self):
+        """Test that __aenter__ creates the persistent crawler."""
+        executor = Crawl4AIExecutor()
+
+        with patch(
+            "src.automation.motors.crawl4ai.executor.AsyncWebCrawler"
+        ) as mock_crawler_class:
             mock_crawler = AsyncMock()
-            mock_crawler.arun = AsyncMock(return_value=mock_crawler_result)
             mock_crawler.__aenter__ = AsyncMock(return_value=mock_crawler)
             mock_crawler.__aexit__ = AsyncMock(return_value=None)
             mock_crawler_class.return_value = mock_crawler
 
+            async with executor as entered_executor:
+                assert entered_executor is executor
+                assert executor._crawler is mock_crawler
+                mock_crawler.__aenter__.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_context_manager_exits_and_destroys_crawler(self):
+        """Test that __aexit__ properly closes the crawler."""
+        executor = Crawl4AIExecutor()
+
+        with patch(
+            "src.automation.motors.crawl4ai.executor.AsyncWebCrawler"
+        ) as mock_crawler_class:
+            mock_crawler = AsyncMock()
+            mock_crawler.__aenter__ = AsyncMock(return_value=mock_crawler)
+            mock_crawler.__aexit__ = AsyncMock(return_value=None)
+            mock_crawler_class.return_value = mock_crawler
+
+            async with executor as entered_executor:
+                await executor.__aexit__(None, None, None)
+                mock_crawler.__aexit__.assert_called_once()
+                assert executor._crawler is None
+
+    @pytest.mark.asyncio
+    async def test_context_manager_session_id_set(self):
+        """Test that session_id is set correctly."""
+        executor = Crawl4AIExecutor()
+
+        with patch(
+            "src.automation.motors.crawl4ai.executor.AsyncWebCrawler"
+        ) as mock_crawler_class:
+            mock_crawler = AsyncMock()
+            mock_crawler.__aenter__ = AsyncMock(return_value=mock_crawler)
+            mock_crawler.__aexit__ = AsyncMock(return_value=None)
+            mock_crawler_class.return_value = mock_crawler
+
+            async with executor as entered_executor:
+                assert executor._session_id == "ariadne-session"
+
+
+class TestCrawl4AIExecutor:
+    """Tests for Crawl4AIExecutor."""
+
+    @pytest.fixture
+    def setup_mocked_executor(self, executor):
+        """Create executor with mocked crawler for tests."""
+        mock_crawler = AsyncMock()
+        mock_crawler.__aenter__ = AsyncMock(return_value=mock_crawler)
+        mock_crawler.__aexit__ = AsyncMock(return_value=None)
+        executor._crawler = mock_crawler
+        return executor
+
+    @pytest.mark.asyncio
+    async def test_take_snapshot_returns_snapshot_result(
+        self, mock_crawler_result, setup_mocked_executor
+    ):
+        """Test that take_snapshot returns a valid SnapshotResult."""
+        executor = setup_mocked_executor
+        executor._crawler.arun = AsyncMock(return_value=mock_crawler_result)
+
+        with patch(
+            "src.automation.motors.crawl4ai.executor.CrawlerRunConfig",
+            MockCrawlerRunConfig,
+        ):
             result = await executor.take_snapshot()
 
             assert isinstance(result, SnapshotResult)
@@ -110,24 +167,16 @@ class TestCrawl4AIExecutor:
 
     @pytest.mark.asyncio
     async def test_take_snapshot_handles_failed_crawl(
-        self, executor, mock_crawler_result_failed
+        self, mock_crawler_result_failed, setup_mocked_executor
     ):
         """Test that take_snapshot handles failed crawl gracefully."""
-        with (
-            patch(
-                "src.automation.motors.crawl4ai.executor.AsyncWebCrawler"
-            ) as mock_crawler_class,
-            patch(
-                "src.automation.motors.crawl4ai.executor.CrawlerRunConfig",
-                MockCrawlerRunConfig,
-            ),
-        ):
-            mock_crawler = AsyncMock()
-            mock_crawler.arun = AsyncMock(return_value=mock_crawler_result_failed)
-            mock_crawler.__aenter__ = AsyncMock(return_value=mock_crawler)
-            mock_crawler.__aexit__ = AsyncMock(return_value=None)
-            mock_crawler_class.return_value = mock_crawler
+        executor = setup_mocked_executor
+        executor._crawler.arun = AsyncMock(return_value=mock_crawler_result_failed)
 
+        with patch(
+            "src.automation.motors.crawl4ai.executor.CrawlerRunConfig",
+            MockCrawlerRunConfig,
+        ):
             result = await executor.take_snapshot()
 
             # Returns the result URL even on failure (the URL is still known)
@@ -135,24 +184,16 @@ class TestCrawl4AIExecutor:
 
     @pytest.mark.asyncio
     async def test_execute_crawl_command_success(
-        self, executor, mock_crawler_result_with_script
+        self, mock_crawler_result_with_script, setup_mocked_executor
     ):
         """Test executing a CrawlCommand successfully."""
-        with (
-            patch(
-                "src.automation.motors.crawl4ai.executor.AsyncWebCrawler"
-            ) as mock_crawler_class,
-            patch(
-                "src.automation.motors.crawl4ai.executor.CrawlerRunConfig",
-                MockCrawlerRunConfig,
-            ),
-        ):
-            mock_crawler = AsyncMock()
-            mock_crawler.arun = AsyncMock(return_value=mock_crawler_result_with_script)
-            mock_crawler.__aenter__ = AsyncMock(return_value=mock_crawler)
-            mock_crawler.__aexit__ = AsyncMock(return_value=None)
-            mock_crawler_class.return_value = mock_crawler
+        executor = setup_mocked_executor
+        executor._crawler.arun = AsyncMock(return_value=mock_crawler_result_with_script)
 
+        with patch(
+            "src.automation.motors.crawl4ai.executor.CrawlerRunConfig",
+            MockCrawlerRunConfig,
+        ):
             command = CrawlCommand(c4a_script="await page.click('button')")
             result = await executor.execute(command)
 
@@ -161,24 +202,18 @@ class TestCrawl4AIExecutor:
 
     @pytest.mark.asyncio
     async def test_execute_crawl_command_batch_failure(
-        self, executor, mock_crawler_result_with_failure
+        self, mock_crawler_result_with_failure, setup_mocked_executor
     ):
         """Test executing a CrawlCommand with batch failure."""
-        with (
-            patch(
-                "src.automation.motors.crawl4ai.executor.AsyncWebCrawler"
-            ) as mock_crawler_class,
-            patch(
-                "src.automation.motors.crawl4ai.executor.CrawlerRunConfig",
-                MockCrawlerRunConfig,
-            ),
-        ):
-            mock_crawler = AsyncMock()
-            mock_crawler.arun = AsyncMock(return_value=mock_crawler_result_with_failure)
-            mock_crawler.__aenter__ = AsyncMock(return_value=mock_crawler)
-            mock_crawler.__aexit__ = AsyncMock(return_value=None)
-            mock_crawler_class.return_value = mock_crawler
+        executor = setup_mocked_executor
+        executor._crawler.arun = AsyncMock(
+            return_value=mock_crawler_result_with_failure
+        )
 
+        with patch(
+            "src.automation.motors.crawl4ai.executor.CrawlerRunConfig",
+            MockCrawlerRunConfig,
+        ):
             command = CrawlCommand(c4a_script="await page.click('button')")
             result = await executor.execute(command)
 
@@ -188,24 +223,16 @@ class TestCrawl4AIExecutor:
 
     @pytest.mark.asyncio
     async def test_execute_crawl_command_full_success(
-        self, executor, mock_crawler_result
+        self, mock_crawler_result, setup_mocked_executor
     ):
         """Test executing a CrawlCommand with full success (no script result)."""
-        with (
-            patch(
-                "src.automation.motors.crawl4ai.executor.AsyncWebCrawler"
-            ) as mock_crawler_class,
-            patch(
-                "src.automation.motors.crawl4ai.executor.CrawlerRunConfig",
-                MockCrawlerRunConfig,
-            ),
-        ):
-            mock_crawler = AsyncMock()
-            mock_crawler.arun = AsyncMock(return_value=mock_crawler_result)
-            mock_crawler.__aenter__ = AsyncMock(return_value=mock_crawler)
-            mock_crawler.__aexit__ = AsyncMock(return_value=None)
-            mock_crawler_class.return_value = mock_crawler
+        executor = setup_mocked_executor
+        executor._crawler.arun = AsyncMock(return_value=mock_crawler_result)
 
+        with patch(
+            "src.automation.motors.crawl4ai.executor.CrawlerRunConfig",
+            MockCrawlerRunConfig,
+        ):
             command = CrawlCommand(c4a_script="await page.click('button')")
             result = await executor.execute(command)
 
@@ -223,24 +250,16 @@ class TestCrawl4AIExecutor:
 
     @pytest.mark.asyncio
     async def test_execute_crawl_failure_returns_error(
-        self, executor, mock_crawler_result_failed
+        self, mock_crawler_result_failed, setup_mocked_executor
     ):
         """Test that crawl failure is properly reported."""
-        with (
-            patch(
-                "src.automation.motors.crawl4ai.executor.AsyncWebCrawler"
-            ) as mock_crawler_class,
-            patch(
-                "src.automation.motors.crawl4ai.executor.CrawlerRunConfig",
-                MockCrawlerRunConfig,
-            ),
-        ):
-            mock_crawler = AsyncMock()
-            mock_crawler.arun = AsyncMock(return_value=mock_crawler_result_failed)
-            mock_crawler.__aenter__ = AsyncMock(return_value=mock_crawler)
-            mock_crawler.__aexit__ = AsyncMock(return_value=None)
-            mock_crawler_class.return_value = mock_crawler
+        executor = setup_mocked_executor
+        executor._crawler.arun = AsyncMock(return_value=mock_crawler_result_failed)
 
+        with patch(
+            "src.automation.motors.crawl4ai.executor.CrawlerRunConfig",
+            MockCrawlerRunConfig,
+        ):
             command = CrawlCommand(c4a_script="await page.click('button')")
             result = await executor.execute(command)
 
@@ -248,25 +267,17 @@ class TestCrawl4AIExecutor:
             assert "Network error" in result.error
 
     @pytest.mark.asyncio
-    async def test_execute_exception_returns_failed_result(self, executor):
+    async def test_execute_exception_returns_failed_result(self, setup_mocked_executor):
         """Test that exceptions are caught and returned as failed results."""
-        with (
-            patch(
-                "src.automation.motors.crawl4ai.executor.AsyncWebCrawler"
-            ) as mock_crawler_class,
-            patch(
-                "src.automation.motors.crawl4ai.executor.CrawlerRunConfig",
-                MockCrawlerRunConfig,
-            ),
-        ):
-            mock_crawler = AsyncMock()
-            mock_crawler.arun = AsyncMock(
-                side_effect=Exception("Crawl4AI connection error")
-            )
-            mock_crawler.__aenter__ = AsyncMock(return_value=mock_crawler)
-            mock_crawler.__aexit__ = AsyncMock(return_value=None)
-            mock_crawler_class.return_value = mock_crawler
+        executor = setup_mocked_executor
+        executor._crawler.arun = AsyncMock(
+            side_effect=Exception("Crawl4AI connection error")
+        )
 
+        with patch(
+            "src.automation.motors.crawl4ai.executor.CrawlerRunConfig",
+            MockCrawlerRunConfig,
+        ):
             command = CrawlCommand(c4a_script="await page.click('button')")
             result = await executor.execute(command)
 
@@ -275,24 +286,16 @@ class TestCrawl4AIExecutor:
 
     @pytest.mark.asyncio
     async def test_execute_updates_current_url_on_success(
-        self, executor, mock_crawler_result_with_script
+        self, mock_crawler_result_with_script, setup_mocked_executor
     ):
         """Test that current_url is updated on successful crawl."""
-        with (
-            patch(
-                "src.automation.motors.crawl4ai.executor.AsyncWebCrawler"
-            ) as mock_crawler_class,
-            patch(
-                "src.automation.motors.crawl4ai.executor.CrawlerRunConfig",
-                MockCrawlerRunConfig,
-            ),
-        ):
-            mock_crawler = AsyncMock()
-            mock_crawler.arun = AsyncMock(return_value=mock_crawler_result_with_script)
-            mock_crawler.__aenter__ = AsyncMock(return_value=mock_crawler)
-            mock_crawler.__aexit__ = AsyncMock(return_value=None)
-            mock_crawler_class.return_value = mock_crawler
+        executor = setup_mocked_executor
+        executor._crawler.arun = AsyncMock(return_value=mock_crawler_result_with_script)
 
+        with patch(
+            "src.automation.motors.crawl4ai.executor.CrawlerRunConfig",
+            MockCrawlerRunConfig,
+        ):
             executor.current_url = "about:blank"
             command = CrawlCommand(c4a_script="await page.click('button')")
             result = await executor.execute(command)

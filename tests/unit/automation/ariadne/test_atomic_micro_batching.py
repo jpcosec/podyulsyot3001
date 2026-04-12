@@ -110,27 +110,21 @@ def mock_map_repo(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_atomic_fallback_on_batch_failure(mock_state, mock_map_repo):
+async def test_batch_failure_returns_error(mock_state, mock_map_repo):
     """
     Verify that if a batch execution fails at a specific index, the orchestrator
-    retries the remaining actions atomically.
+    returns an error and lets route_after_deterministic handle it (no heroic retry).
     """
     # 1. Setup Mock Executor
     mock_executor = AsyncMock()
 
-    # Simulate a 3-action batch. First execution fails at index 1.
-    # The orchestrator should retry the failed action and the remaining action.
-    mock_executor.execute.side_effect = [
-        # First call (the batch) -> fails at index 1
-        ExecutionResult(
-            status="failed",
-            failed_at_index=1,
-            completed_count=1,
-            error="Element #input2 not found",
-        ),
-        # Second call (atomic retry of the 2nd action) -> succeeds
-        ExecutionResult(status="success"),
-    ]
+    # Simulate a 3-action batch that fails at index 1
+    mock_executor.execute.return_value = ExecutionResult(
+        status="failed",
+        failed_at_index=1,
+        completed_count=1,
+        error="Element #input2 not found",
+    )
 
     # 2. Setup Config
     config = {"configurable": {"executor": mock_executor, "motor_name": "crawl4ai"}}
@@ -138,66 +132,43 @@ async def test_atomic_fallback_on_batch_failure(mock_state, mock_map_repo):
     # 3. Run the node
     result = await execute_deterministic_node(mock_state, config)
 
-    # 4. Assertions
-    assert not result.get("errors"), (
-        "Node should not report an error if atomic retry succeeds"
-    )
-    assert result["current_state_id"] == "state1", (
-        "Should stay in the same state when retrying a same-state fill batch"
-    )
+    # 4. Assertions - batch failure should return error, not retry
+    assert result.get("errors"), "Node should report an error when batch fails"
+    assert "Batch failed at index" in result["errors"][0]
+    assert "ExecutionFailed" in result["errors"][0]
 
-    # Verify the executor was called correctly
-    assert mock_executor.execute.call_count == 2
-
-    # First call should be the batch script
-    first_call_cmd = mock_executor.execute.call_args_list[0].args[0]
-    assert isinstance(first_call_cmd, CrawlCommand)
-    # Check that it's a batch script with native C4A-Script
-    assert "SET" in first_call_cmd.c4a_script
-    assert 'SET `#input2` "val2"' in first_call_cmd.c4a_script
-
-    # Second call should be the atomic retry of the failed action
-    second_call_cmd = mock_executor.execute.call_args_list[1].args[0]
-    assert isinstance(second_call_cmd, CrawlCommand)
-    assert 'SET `#input2` "val2"' in second_call_cmd.c4a_script
-    assert "# Action" not in second_call_cmd.c4a_script
-
-    print("Test passed: Orchestrator correctly fell back to atomic execution.")
+    # Verify executor was called only once (no heroic retry)
+    assert mock_executor.execute.call_count == 1
+    print("Test passed: Batch failure returns error without heroic retry.")
 
 
 @pytest.mark.asyncio
-async def test_full_batch_failure_stops_execution(mock_state, mock_map_repo):
+async def test_single_action_failure_returns_error(mock_state, mock_map_repo):
     """
-    Verify that if the atomic retry fails, the whole execution is marked as failed.
+    Verify that if a single action execution fails, the orchestrator returns an error.
     """
     # 1. Setup Mock Executor
     mock_executor = AsyncMock()
 
-    # Simulate failure at index 1 for the batch, and then failure on the atomic retry
-    mock_executor.execute.side_effect = [
-        ExecutionResult(
-            status="failed",
-            failed_at_index=1,
-            completed_count=1,
-            error="Element #input2 not found",
-        ),
-        ExecutionResult(status="failed", error="Could not click submit button"),
-    ]
+    # Simulate single action failure
+    mock_executor.execute.return_value = ExecutionResult(
+        status="failed",
+        error="Element #input1 not found",
+    )
 
-    # 2. Setup Config
-    config = {"configurable": {"executor": mock_executor}}
+    # 2. Setup Config - use single action (not batch)
+    config = {"configurable": {"executor": mock_executor, "motor_name": "crawl4ai"}}
 
     # 3. Run the node
     result = await execute_deterministic_node(mock_state, config)
 
     # 4. Assertions
-    assert result.get("errors") is not None, "Node should report an error"
-    assert "Atomic retry failed" in result["errors"][0]
+    assert result.get("errors"), "Node should report an error when single action fails"
+    assert "ExecutionFailed" in result["errors"][0]
 
-    assert mock_executor.execute.call_count == 2
-    print(
-        "Test passed: Orchestrator correctly reported failure after atomic retry failed."
-    )
+    # Verify executor was called once
+    assert mock_executor.execute.call_count == 1
+    print("Test passed: Single action failure returns error.")
 
 
 def test_crawl4ai_translator_generates_correct_atomic_batch_script(mock_state):

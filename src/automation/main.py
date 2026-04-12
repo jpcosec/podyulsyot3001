@@ -317,7 +317,14 @@ async def run_scrape(
     config = _build_config(executor, motor_name, thread_id)
 
     print("[⚡] Compiling Ariadne Graph...")
-    final_state = await _run_graph(initial_state, config)
+
+    # Handle async context manager for crawl4ai motor
+    if motor_name == "crawl4ai":
+        async with executor as active_executor:
+            config["configurable"]["executor"] = active_executor
+            final_state = await _run_graph(initial_state, config)
+    else:
+        final_state = await _run_graph(initial_state, config)
     state_values = final_state.values
     extracted_payload = state_values.get("session_memory", {})
 

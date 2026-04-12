@@ -7,8 +7,10 @@
     const LABEL_ATTRIBUTE = 'data-ariadne-hint-label';
     const HINT_ATTRIBUTE = 'data-ariadne-hint';
 
+    // Clean up any existing hints and overlay
     document.querySelectorAll('[' + LABEL_ATTRIBUTE + ']').forEach(label => label.remove());
     document.querySelectorAll('[' + HINT_ATTRIBUTE + ']').forEach(el => el.removeAttribute(HINT_ATTRIBUTE));
+    document.querySelectorAll('[data-ariadne-hint-overlay]').forEach(el => el.remove());
 
     const interactiveSelectors = [
         'a', 'button', 'input', 'select', 'textarea',
@@ -35,23 +37,30 @@
         return hint;
     }
 
+    // Create a single overlay container for all labels
+    const overlay = document.createElement('div');
+    overlay.setAttribute('data-ariadne-hint-overlay', 'true');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.pointerEvents = 'none';
+    overlay.style.zIndex = '2147483647';
+    document.body.appendChild(overlay);
+
     const hintMap = {};
 
     elements.forEach((el, index) => {
         const hint = generateHint(index);
         const rect = el.getBoundingClientRect();
 
-        const computedStyle = window.getComputedStyle(el);
-        if (computedStyle.position === 'static') {
-            el.style.position = 'relative';
-        }
-
         const label = document.createElement('span');
         label.setAttribute(LABEL_ATTRIBUTE, hint);
         label.textContent = hint;
         label.style.position = 'absolute';
-        label.style.top = '0';
-        label.style.left = '0';
+        label.style.left = rect.left + 'px';
+        label.style.top = rect.top + 'px';
         label.style.transform = 'translate(-20%, -45%)';
         label.style.backgroundColor = 'yellow';
         label.style.color = 'black';
@@ -61,13 +70,12 @@
         label.style.padding = '2px';
         label.style.borderRadius = '3px';
         label.style.lineHeight = '1';
-        label.style.zIndex = '2147483647';
         label.style.pointerEvents = 'none';
         label.style.whiteSpace = 'nowrap';
 
         // Generate a simple unique-ish selector or use a custom attribute
         el.setAttribute(HINT_ATTRIBUTE, hint);
-        el.appendChild(label);
+        overlay.appendChild(label);
         
         hintMap[hint] = {
             tagName: el.tagName,

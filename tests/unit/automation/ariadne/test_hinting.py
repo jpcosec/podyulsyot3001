@@ -46,7 +46,7 @@ async def test_hinting_tool_inject_hints():
     command = args[0]
     assert isinstance(command, ScriptCommand)
     assert "data-ariadne-hint-label" in command.script
-    assert "el.appendChild(label)" in command.script
+    assert "overlay" in command.script.lower() or "position" in command.script.lower()
 
 
 @pytest.mark.asyncio

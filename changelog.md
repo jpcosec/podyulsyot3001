@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-12] - Phase 7 Critical Bombs Fixed
+
+### Fixed
+- Crawl4AI executor: Now maintains persistent browser session via `__aenter__`/`__aexit__` (no recreating per step).
+- MapRepository: Added in-memory cache to avoid blocking event loop with sync disk I/O.
+- Hinting: Changed from `appendChild` to overlay approach (no crash on void elements).
+- Atomic retry: Removed blind retry loop that bypassed LangGraph JIT observation.
+- JsonConfigMode danger: Now uses word boundaries with `re.search(rf"\b{rule_text}\b")` to avoid false positives.
+
 ## [2026-04-12] - Crawl4AI Translator Bug Fixes
 
 ### Fixed
