@@ -46,6 +46,13 @@ All notable changes to this project will be documented in this file.
 - Switched `src/automation/ariadne/graph/orchestrator.py` from in-memory checkpoints to SQLite-backed checkpoints via `AsyncSqliteSaver`, using `data/ariadne/checkpoints.db` by default and an async context-managed graph factory for clean lifecycle management.
 - Updated `src/automation/main.py` to execute apply and scrape flows inside the new async graph context and added persistence regression coverage in `tests/unit/automation/ariadne/test_orchestrator.py`.
 
+## [2026-04-12] - Ariadne Recording And Promotion
+
+### Changed
+- Added `GraphRecorder` in `src/automation/ariadne/capabilities/recording.py` and hooked `observe` plus deterministic execution into JSONL trace capture under `data/ariadne/recordings/<thread_id>/raw_timeline.jsonl`.
+- Added `AriadnePromoter` in `src/automation/ariadne/promotion.py` to turn recorded deterministic traces into draft `AriadneMap` candidates and persist `normalized_map.json` beside each recording.
+- Added regression coverage in `tests/unit/automation/ariadne/test_recording_and_promotion.py` for raw timeline recording and draft-map promotion with placeholder substitution.
+
 ### Added
 - Implemented **JIT Intent Translators** for Ariadne 2.0.
   - Added `AriadneTranslator` abstract base class in `src/automation/ariadne/translators/base.py`.

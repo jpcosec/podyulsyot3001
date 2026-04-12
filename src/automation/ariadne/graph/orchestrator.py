@@ -17,6 +17,7 @@ from langgraph.graph import END, StateGraph
 from langchain_core.runnables import RunnableConfig
 
 from src.automation.adapters.translators.registry import TranslatorRegistry
+from src.automation.ariadne.capabilities.recording import GraphRecorder
 from src.automation.ariadne.graph.nodes.agent import LangGraphBrowserOSAgent
 from src.automation.ariadne.contracts.base import (
     SnapshotResult,
@@ -159,6 +160,22 @@ async def observe_node(state: AriadneState, config: RunnableConfig) -> Dict[str,
             new_memory["goal_achieved"] = True
             updates["session_memory"] = new_memory
 
+        _record_graph_event(
+            config,
+            "observe",
+            {
+                "portal_name": state.get("portal_name"),
+                "current_mission_id": state.get("current_mission_id"),
+                "current_state_id": updates.get(
+                    "current_state_id", state.get("current_state_id")
+                ),
+                "current_url": snapshot.url,
+                "session_memory": updates.get(
+                    "session_memory", state.get("session_memory", {})
+                ),
+            },
+        )
+
         return updates
 
     except Exception as e:
@@ -245,6 +262,22 @@ def _collect_extracted_memory(
             extracted_memory[key] = extracted_value
 
     return extracted_memory
+
+
+def _record_graph_event(
+    config: RunnableConfig,
+    event_type: str,
+    payload: Dict[str, Any],
+) -> None:
+    """Persist one graph event when recording context is available."""
+    configurable = config.get("configurable", {})
+    thread_id = configurable.get("thread_id")
+    if not thread_id or not configurable.get("record_graph", False):
+        return
+
+    recording_dir = configurable.get("recording_dir", "data/ariadne/recordings")
+    recorder = GraphRecorder(recording_dir)
+    recorder.record_event(thread_id, event_type, payload)
 
 
 def _find_safe_sequence(
@@ -416,6 +449,29 @@ async def execute_deterministic_node(
         new_memory = state.get("session_memory", {}).copy()
         new_memory.update(extracted_memory)
         updates["session_memory"] = new_memory
+
+    _record_graph_event(
+        config,
+        "execute_deterministic",
+        {
+            "portal_name": state.get("portal_name"),
+            "current_mission_id": state.get("current_mission_id"),
+            "state_before": {
+                "current_state_id": state.get("current_state_id"),
+                "profile_data": state.get("profile_data", {}),
+                "job_data": state.get("job_data", {}),
+            },
+            "selected_edges": [edge.model_dump(mode="json") for edge in batch],
+            "result": {
+                "status": result.status,
+                "error": result.error,
+                "failed_at_index": result.failed_at_index,
+                "completed_count": result.completed_count,
+                "extracted_data": result.extracted_data,
+            },
+            "state_after": updates,
+        },
+    )
 
     return updates
 

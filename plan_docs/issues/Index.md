@@ -52,11 +52,7 @@ When all parallelizable issues in a given Phase/Level are completed, you MUST pe
 
 ### Phase 5 — The Lifecycle (Learning)
 
-  1. plan_docs/issues/gaps/implement-graph-recorder-capability.md
-     • [Captures JIT transitions for map promotion]
-
-  2. plan_docs/issues/gaps/implement-promotion-engine.md
-     • [Converts recordings into canonical AriadneMap candidates]
+- Completed on 2026-04-12: persistent checkpoints, graph trace recording, and draft-map promotion are implemented.
 
 ## Dependency summary
 
@@ -70,4 +66,4 @@ Phase 1  [done]          ← [Hotfixes]
 Phase 2  [done]          ← [Polish]
 Phase 3  [done]          ← [Functional]
 Phase 4  [done]          ← [Discovery]
-Phase 5  [1][2]          ← [Lifecycle]
+Phase 5  [done]          ← [Lifecycle]

@@ -126,6 +126,7 @@ async def run_apply(
             "thread_id": thread_id,
             "executor": executor,
             "motor_name": motor_name,
+            "record_graph": True,
         }
     }
 
@@ -246,6 +247,7 @@ async def run_scrape(
             "thread_id": thread_id,
             "executor": executor,
             "motor_name": motor_name,
+            "record_graph": True,
         }
     }
 
