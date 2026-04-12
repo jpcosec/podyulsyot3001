@@ -22,9 +22,8 @@ Ariadne 2.0 has its **Architecture Core** and **Skeleton** implemented. We are n
   - *Status*: Finished
 
 ### Phase 2: Executor De-Mocking (The Hands)
-- [ ] **[Verify: BrowserOS MCP Parameters](gaps/verify-browseros-mcp-parameters.md)**
-  - *Status*: Ready
-  - *Scope*: Ensure `BrowserOSCliExecutor` tool calls match the live port 9000 schema exactly.
+- [x] **[Verify: BrowserOS MCP Parameters](gaps/verify-browseros-mcp-parameters.md)**
+  - *Status*: Finished
 - [x] **[Implement: Crawl4AI Live Execution](gaps/implement-crawl4ai-live-execution.md)**
   - *Status*: Finished
 
