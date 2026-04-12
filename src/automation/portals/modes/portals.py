@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, ClassVar, Dict, Optional
 
 from src.automation.ariadne.danger_contracts import (
+    ApplyDangerFinding,
     ApplyDangerReport,
     ApplyDangerSignals,
 )
@@ -51,8 +52,38 @@ class JsonConfigMode(AriadneMode):
         return payload
 
     def inspect_danger(self, snapshot: Any) -> ApplyDangerReport:
-        # Default implementation: no findings
-        return ApplyDangerReport(findings=[])
+        if not isinstance(snapshot, ApplyDangerSignals):
+            return ApplyDangerReport(findings=[])
+
+        danger_config = self.get_config("danger_detection")
+        text_rules = danger_config.get("text_rules", [])
+        evidence = " ".join(
+            part.lower()
+            for part in [
+                snapshot.dom_text,
+                snapshot.screenshot_text,
+                snapshot.current_url,
+            ]
+            if part
+        )
+
+        findings = []
+        for rule in text_rules:
+            rule_text = rule.strip().lower()
+            if not rule_text or rule_text not in evidence:
+                continue
+
+            findings.append(
+                ApplyDangerFinding(
+                    code="SECURITY_CHECK_DETECTED",
+                    source="dom_text",
+                    recommended_action="pause",
+                    message=f"Detected security-blocking text matching '{rule}'.",
+                    matched_text=rule,
+                )
+            )
+
+        return ApplyDangerReport(findings=findings)
 
     def apply_local_heuristics(
         self,

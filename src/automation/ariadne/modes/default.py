@@ -4,13 +4,22 @@ The DefaultMode provides a fallback behavior when no portal-specific mode
 is available or identified. It relies on generalized heuristics and LLMs.
 """
 
+from __future__ import annotations
+
 from typing import Any, Dict, Optional
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import BaseModel, Field
 
-from src.automation.ariadne.danger_contracts import ApplyDangerReport, ApplyDangerSignals
-from src.automation.ariadne.models import AriadneStateDefinition, JobPosting, AriadneTarget
+from src.automation.ariadne.danger_contracts import (
+    ApplyDangerReport,
+    ApplyDangerSignals,
+)
+from src.automation.ariadne.models import (
+    AriadneStateDefinition,
+    JobPosting,
+    AriadneTarget,
+)
 from src.automation.ariadne.modes.base import AriadneMode
 
 
@@ -18,13 +27,18 @@ class DefaultMode(AriadneMode):
     """Fallback mode for generalized interpretation using LLMs."""
 
     def __init__(self):
-        # Use gemini-1.5-flash for cost-effective and fast structured extraction
-        self.llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash")
+        self._llm: ChatGoogleGenerativeAI | None = None
+
+    def _get_llm(self) -> ChatGoogleGenerativeAI:
+        """Create the shared LLM client lazily to avoid eager runtime setup."""
+        if self._llm is None:
+            self._llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash")
+        return self._llm
 
     def normalize_job(self, payload: JobPosting) -> JobPosting:
         """Clean up and normalize job posting data using LLM cleanup."""
         try:
-            structured_llm = self.llm.with_structured_output(JobPosting)
+            structured_llm = self._get_llm().with_structured_output(JobPosting)
             prompt = (
                 "You are an expert at normalizing job posting data. Your goal is to clean up, "
                 "fix typos, and standardize the following job data into the provided structure. "
@@ -43,7 +57,7 @@ class DefaultMode(AriadneMode):
     def inspect_danger(self, snapshot: ApplyDangerSignals) -> ApplyDangerReport:
         """Evaluate security blocks, CAPTCHAs, or login walls via LLM analysis."""
         try:
-            structured_llm = self.llm.with_structured_output(ApplyDangerReport)
+            structured_llm = self._get_llm().with_structured_output(ApplyDangerReport)
             prompt = (
                 "You are a security-focused automation guardian. Analyze the provided DOM and "
                 "OCR text from a web page to determine if there is a security block (CAPTCHA), "
@@ -67,7 +81,9 @@ class DefaultMode(AriadneMode):
             return ApplyDangerReport(findings=[])
 
     def apply_local_heuristics(
-        self, state_definition: AriadneStateDefinition, runtime_state: Optional[Dict[str, Any]] = None
+        self,
+        state_definition: AriadneStateDefinition,
+        runtime_state: Optional[Dict[str, Any]] = None,
     ) -> AriadneStateDefinition:
         """Propose selector patches if an error is present in the runtime state."""
         if not runtime_state or not runtime_state.get("errors"):
@@ -80,14 +96,14 @@ class DefaultMode(AriadneMode):
                     description="Map of component names to their corrected selectors."
                 )
 
-            structured_llm = self.llm.with_structured_output(PatchResponse)
-            
+            structured_llm = self._get_llm().with_structured_output(PatchResponse)
+
             errors = runtime_state.get("errors", [])
             dom_summary = ""
             if "dom_elements" in runtime_state:
                 # Serialize and truncate dom_elements to avoid context window blowup
                 dom_summary = str(runtime_state["dom_elements"])[:15000]
-            
+
             prompt = (
                 "You are a web automation expert. The current navigation state failed to execute "
                 "because some elements were not found or not interactable. Given the state description, "
@@ -99,12 +115,13 @@ class DefaultMode(AriadneMode):
                 f"Errors encountered: {errors}\n\n"
                 f"Current Page DOM (truncated):\n{dom_summary}"
             )
-            
+
             response = structured_llm.invoke(prompt)
-            if isinstance(response, PatchResponse):
-                print(f"--- DEFAULT MODE: LLM proposed {len(response.components)} patches ---")
-                state_definition.components.update(response.components)
-            
+            components = getattr(response, "components", None)
+            if components:
+                print(f"--- DEFAULT MODE: LLM proposed {len(components)} patches ---")
+                state_definition.components.update(components)
+
             return state_definition
         except Exception as e:
             print(f"--- DEFAULT MODE: apply_local_heuristics failed: {e} ---")

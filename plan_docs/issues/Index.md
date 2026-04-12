@@ -44,29 +44,25 @@ When all parallelizable issues in a given Phase/Level are completed, you MUST pe
 
 ### Phase 3 — Intelligence & Data Polish
 
-  1. plan_docs/issues/gaps/implement-llm-fallback-in-default-mode.md
-     • [Critical for unmapped portal support]
-
-  2. plan_docs/issues/gaps/restore-danger-detection-capability.md
-     • [Re-integrates CAPTCHA and security block detection]
+- Completed on 2026-04-12: LLM-backed default-mode fallback and restored danger detection.
 
 ### Phase 4 — Scraper & Discovery
 
-  3. plan_docs/issues/gaps/implement-mission-driven-pathfinding.md
+  1. plan_docs/issues/gaps/implement-mission-driven-pathfinding.md
      • [Prevents mixed-flow edge selection in multi-mission maps]
 
-  4. plan_docs/issues/gaps/restore-discovery-graph-mission.md
+  2. plan_docs/issues/gaps/restore-discovery-graph-mission.md
      • [Restores the 'scrape' command using the Ariadne 2.0 graph]
 
 ### Phase 5 — The Lifecycle (Learning)
 
-  5. plan_docs/issues/gaps/implement-persistent-sqlite-checkpointer.md
+  3. plan_docs/issues/gaps/implement-persistent-sqlite-checkpointer.md
      • [Enables production-grade HITL and session recovery]
 
-  6. plan_docs/issues/gaps/implement-graph-recorder-capability.md
+  4. plan_docs/issues/gaps/implement-graph-recorder-capability.md
      • [Captures JIT transitions for map promotion]
 
-  7. plan_docs/issues/gaps/implement-promotion-engine.md
+  5. plan_docs/issues/gaps/implement-promotion-engine.md
      • [Converts recordings into canonical AriadneMap candidates]
 
 ## Dependency summary
@@ -79,6 +75,6 @@ When all parallelizable issues in a given Phase/Level are completed, you MUST pe
 
 Phase 1  [done]          ← [Hotfixes]
 Phase 2  [done]          ← [Polish]
-Phase 3  [1][2]          ← [Functional]
-Phase 4  [3][4]          ← [Discovery]
-Phase 5  [5][6][7]       ← [Lifecycle]
+Phase 3  [done]          ← [Functional]
+Phase 4  [1][2]          ← [Discovery]
+Phase 5  [3][4][5]       ← [Lifecycle]
