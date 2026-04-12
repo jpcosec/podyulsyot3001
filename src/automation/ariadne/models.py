@@ -144,7 +144,7 @@ class AriadneState(TypedDict):
     # Active Strategy (Injected via URL context)
     portal_mode: str
 
-    # JIT Patches
+    # JIT Patches (keyed as "state_id:component_name")
     patched_components: Annotated[Dict[str, AriadneTarget], operator.ior]
 
 

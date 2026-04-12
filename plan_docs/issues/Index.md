@@ -36,46 +36,42 @@ When all parallelizable issues in a given Phase/Level are completed, you MUST pe
 
 ### Phase 1 — Execution & State Integrity (Hotfixes)
 
- 1. plan_docs/issues/gaps/isolate-translators-from-core.md
-    • [Restores Ariadne core as a pure, infrastructure-agnostic engine]
-
- 2. plan_docs/issues/gaps/atomic-micro-batching-with-failure-index.md
-    • [Guarantees DOM state consistency]
-
- 3. plan_docs/issues/gaps/state-patch-leak-prevention.md
-    • [Avoids "ghost clicks" from stale patches]
+- Completed on 2026-04-12: translator isolation, atomic micro-batching failure recovery, and state-scoped patching.
 
 ### Phase 2 — Performance & UI Polish
 
- 4. plan_docs/issues/gaps/async-mode-config-loading.md
-    • [Removes blocking I/O from the hot loop]
+  1. plan_docs/issues/gaps/async-mode-config-loading.md
+     • [Removes blocking I/O from the hot loop]
 
- 5. plan_docs/issues/gaps/robust-hint-anchoring.md
-    • [Ensures LLM hints work in scrollable containers]
+  2. plan_docs/issues/gaps/robust-hint-anchoring.md
+     • [Ensures LLM hints work in scrollable containers]
 
 ### Phase 3 — Intelligence & Data Polish
 
- 6. plan_docs/issues/gaps/implement-llm-fallback-in-default-mode.md
-    • [Critical for unmapped portal support]
+  3. plan_docs/issues/gaps/implement-llm-fallback-in-default-mode.md
+     • [Critical for unmapped portal support]
 
- 7. plan_docs/issues/gaps/restore-danger-detection-capability.md
-    • [Re-integrates CAPTCHA and security block detection]
+  4. plan_docs/issues/gaps/restore-danger-detection-capability.md
+     • [Re-integrates CAPTCHA and security block detection]
 
 ### Phase 4 — Scraper & Discovery
 
- 8. plan_docs/issues/gaps/restore-discovery-graph-mission.md
-    • [Restores the 'scrape' command using the Ariadne 2.0 graph]
+  5. plan_docs/issues/gaps/implement-mission-driven-pathfinding.md
+     • [Prevents mixed-flow edge selection in multi-mission maps]
+
+  6. plan_docs/issues/gaps/restore-discovery-graph-mission.md
+     • [Restores the 'scrape' command using the Ariadne 2.0 graph]
 
 ### Phase 5 — The Lifecycle (Learning)
 
- 9. plan_docs/issues/gaps/implement-persistent-sqlite-checkpointer.md
-    • [Enables production-grade HITL and session recovery]
+  7. plan_docs/issues/gaps/implement-persistent-sqlite-checkpointer.md
+     • [Enables production-grade HITL and session recovery]
 
- 10. plan_docs/issues/gaps/implement-graph-recorder-capability.md
-    • [Captures JIT transitions for map promotion]
+  8. plan_docs/issues/gaps/implement-graph-recorder-capability.md
+     • [Captures JIT transitions for map promotion]
 
- 11. plan_docs/issues/gaps/implement-promotion-engine.md
-    • [Converts recordings into canonical AriadneMap candidates]
+  9. plan_docs/issues/gaps/implement-promotion-engine.md
+     • [Converts recordings into canonical AriadneMap candidates]
 
 ## Dependency summary
 
@@ -85,7 +81,8 @@ When all parallelizable issues in a given Phase/Level are completed, you MUST pe
 
 ## Parallelization map
 
-Phase 1  [1][2][3]       ← [Hotfixes]
-Phase 2  [4][5]          ← [Polish]
-Phase 3  [6][7][8]       ← [Functional]
-Phase 4  [9][10][11]     ← [Lifecycle]
+Phase 1  [done]          ← [Hotfixes]
+Phase 2  [1][2]          ← [Polish]
+Phase 3  [3][4]          ← [Functional]
+Phase 4  [5][6]          ← [Discovery]
+Phase 5  [7][8][9]       ← [Lifecycle]

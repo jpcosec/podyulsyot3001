@@ -52,13 +52,16 @@ async def test_apply_local_heuristics_node_success():
     )
 
     # Mock Repository and Registry
-    with patch(
-        "src.automation.ariadne.repository.MapRepository.get_map", return_value=mock_map
-    ), patch(
-        "src.automation.ariadne.modes.registry.ModeRegistry.get_mode_for_url",
-        return_value=mock_mode,
+    with (
+        patch(
+            "src.automation.ariadne.repository.MapRepository.get_map",
+            return_value=mock_map,
+        ),
+        patch(
+            "src.automation.ariadne.modes.registry.ModeRegistry.get_mode_for_url",
+            return_value=mock_mode,
+        ),
     ):
-
         state = {
             "portal_name": "test-portal",
             "current_state_id": "state1",
@@ -72,8 +75,8 @@ async def test_apply_local_heuristics_node_success():
         result = await apply_local_heuristics_node(state, config)
 
         assert result["errors"] == []  # Errors cleared
-        assert "btn" in result["patched_components"]
-        assert result["patched_components"]["btn"].css == "#new"
+        assert "state1:btn" in result["patched_components"]
+        assert result["patched_components"]["state1:btn"].css == "#new"
 
 
 @pytest.mark.asyncio
@@ -100,13 +103,16 @@ async def test_apply_local_heuristics_node_no_patch():
         failure_states=[],
     )
 
-    with patch(
-        "src.automation.ariadne.repository.MapRepository.get_map", return_value=mock_map
-    ), patch(
-        "src.automation.ariadne.modes.registry.ModeRegistry.get_mode_for_url",
-        return_value=mock_mode,
+    with (
+        patch(
+            "src.automation.ariadne.repository.MapRepository.get_map",
+            return_value=mock_map,
+        ),
+        patch(
+            "src.automation.ariadne.modes.registry.ModeRegistry.get_mode_for_url",
+            return_value=mock_mode,
+        ),
     ):
-
         state = {
             "portal_name": "test-portal",
             "current_state_id": "state1",
@@ -162,13 +168,14 @@ async def test_execute_deterministic_uses_patches():
         state = {
             "portal_name": "test-portal",
             "current_state_id": "state1",
-            "patched_components": {"btn": patched_target},
+            "dom_elements": [{"selector": "#patched"}, {"selector": "#old"}],
+            "patched_components": {"state1:btn": patched_target},
             "errors": [],
         }
 
         # Mock translator to verify it gets the right target
         with patch(
-            "src.automation.ariadne.translators.registry.TranslatorRegistry.get_translator_by_name"
+            "src.automation.adapters.translators.registry.TranslatorRegistry.get_translator_by_name"
         ) as mock_get_translator:
             mock_translator = MagicMock()
             mock_get_translator.return_value = mock_translator
@@ -184,3 +191,61 @@ async def test_execute_deterministic_uses_patches():
             # args are (intent, target, state, value)
             assert args[1] == patched_target
             assert args[1].css == "#patched"
+
+
+@pytest.mark.asyncio
+async def test_execute_deterministic_ignores_patches_from_other_states():
+    """Verify that stale patches do not leak across states."""
+    mock_executor = MagicMock()
+
+    async def mock_execute(cmd):
+        from src.automation.ariadne.contracts.base import ExecutionResult
+
+        return ExecutionResult(status="success")
+
+    mock_executor.execute = mock_execute
+
+    edge = AriadneEdge(
+        from_state="state1", to_state="state2", intent=AriadneIntent.CLICK, target="btn"
+    )
+
+    definition = AriadneStateDefinition(
+        id="state1",
+        description="test",
+        presence_predicate=AriadneObserve(required_elements=[]),
+        components={"btn": AriadneTarget(css="#live")},
+    )
+
+    mock_map = AriadneMap(
+        meta=AriadneMapMeta(source="test", flow="test"),
+        states={"state1": definition, "state2": definition},
+        edges=[edge],
+        success_states=[],
+        failure_states=[],
+    )
+
+    with patch(
+        "src.automation.ariadne.repository.MapRepository.get_map", return_value=mock_map
+    ):
+        state = {
+            "portal_name": "test-portal",
+            "current_state_id": "state1",
+            "dom_elements": [{"selector": "#live"}, {"selector": "#old"}],
+            "patched_components": {"other-state:btn": AriadneTarget(css="#stale")},
+            "errors": [],
+        }
+
+        with patch(
+            "src.automation.adapters.translators.registry.TranslatorRegistry.get_translator_by_name"
+        ) as mock_get_translator:
+            mock_translator = MagicMock()
+            mock_get_translator.return_value = mock_translator
+
+            config = {
+                "configurable": {"executor": mock_executor, "motor_name": "crawl4ai"}
+            }
+
+            await execute_deterministic_node(state, config)
+
+            args, _ = mock_translator.translate_intent.call_args
+            assert args[1].css == "#live"

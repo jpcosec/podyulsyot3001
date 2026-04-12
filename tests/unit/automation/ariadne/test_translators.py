@@ -6,8 +6,8 @@ from src.automation.ariadne.contracts.base import (
     CrawlCommand,
 )
 from src.automation.ariadne.models import AriadneState
-from src.automation.ariadne.translators.browseros import BrowserOSTranslator
-from src.automation.ariadne.translators.crawl4ai import Crawl4AITranslator
+from src.automation.adapters.translators.browseros import BrowserOSTranslator
+from src.automation.adapters.translators.crawl4ai import Crawl4AITranslator
 
 
 @pytest.fixture
@@ -39,9 +39,7 @@ def test_placeholder_resolution(mock_state):
 def test_browseros_translator_click(mock_state):
     translator = BrowserOSTranslator()
     target = AriadneTarget(text="Login")
-    command = translator.translate_intent(
-        AriadneIntent.CLICK, target, mock_state
-    )
+    command = translator.translate_intent(AriadneIntent.CLICK, target, mock_state)
     assert isinstance(command, BrowserOSCommand)
     assert command.tool == "click"
     assert command.selector_text == "Login"
@@ -62,9 +60,7 @@ def test_browseros_translator_fill(mock_state):
 def test_crawl4ai_translator_click(mock_state):
     translator = Crawl4AITranslator()
     target = AriadneTarget(css="button.submit")
-    command = translator.translate_intent(
-        AriadneIntent.CLICK, target, mock_state
-    )
+    command = translator.translate_intent(AriadneIntent.CLICK, target, mock_state)
     assert isinstance(command, CrawlCommand)
     assert 'await page.click("button.submit")' in command.c4a_script
 

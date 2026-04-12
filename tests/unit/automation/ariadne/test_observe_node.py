@@ -1,10 +1,14 @@
 """Unit tests for Ariadne 2.0 Observe Node."""
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 from src.automation.ariadne.graph.orchestrator import observe_node
 from src.automation.ariadne.contracts.base import SnapshotResult
-from src.automation.ariadne.models import AriadneState
+from src.automation.ariadne.models import (
+    AriadneObserve,
+    AriadneState,
+    AriadneStateDefinition,
+)
 
 
 @pytest.mark.asyncio
@@ -15,7 +19,7 @@ async def test_observe_node_success():
     mock_snapshot = SnapshotResult(
         url="https://real-site.com",
         dom_elements=[{"tag": "button", "text": "Apply"}],
-        screenshot_b64="base64-data"
+        screenshot_b64="base64-data",
     )
     mock_executor.take_snapshot.return_value = mock_snapshot
 
@@ -33,13 +37,36 @@ async def test_observe_node_success():
         "session_memory": {},
         "errors": [],
         "history": [],
-        "portal_mode": "default"
+        "portal_mode": "default",
     }
-    
+
     config = {"configurable": {"executor": mock_executor}}
 
-    # 3. Run Node
-    result = await observe_node(state, config)
+    mock_mode = MagicMock()
+    mock_mode.inspect_danger.return_value = MagicMock(findings=[])
+    mock_map = MagicMock()
+    mock_map.states = {
+        "start": AriadneStateDefinition(
+            id="start",
+            description="start",
+            presence_predicate=AriadneObserve(required_elements=[]),
+        )
+    }
+    mock_map.success_states = []
+
+    with (
+        patch(
+            "src.automation.ariadne.graph.orchestrator.MapRepository"
+        ) as mock_repo_class,
+        patch(
+            "src.automation.ariadne.graph.orchestrator.ModeRegistry.get_mode_for_url",
+            return_value=mock_mode,
+        ),
+    ):
+        mock_repo_class.return_value.get_map.return_value = mock_map
+
+        # 3. Run Node
+        result = await observe_node(state, config)
 
     # 4. Verify
     assert result["current_url"] == "https://real-site.com"
@@ -64,9 +91,9 @@ async def test_observe_node_missing_executor():
         "session_memory": {},
         "errors": [],
         "history": [],
-        "portal_mode": "default"
+        "portal_mode": "default",
     }
-    
+
     config = {"configurable": {}}  # No executor
 
     result = await observe_node(state, config)
@@ -94,9 +121,9 @@ async def test_observe_node_executor_error():
         "session_memory": {},
         "errors": [],
         "history": [],
-        "portal_mode": "default"
+        "portal_mode": "default",
     }
-    
+
     config = {"configurable": {"executor": mock_executor}}
 
     result = await observe_node(state, config)

@@ -27,28 +27,25 @@ class Crawl4AIExecutor(Executor):
         """Captures the current browser state via Crawl4AI."""
         async with AsyncWebCrawler() as crawler:
             config = CrawlerRunConfig(
-                cache_mode=CacheMode.BYPASS,
-                screenshot=True,
-                process_iframes=True
+                cache_mode=CacheMode.BYPASS, screenshot=True, process_iframes=True
             )
             result = await crawler.arun(url=self.current_url, config=config)
-            
+
             screenshot_b64 = None
-            if result.success and hasattr(result, 'screenshot') and result.screenshot:
+            if result.success and hasattr(result, "screenshot") and result.screenshot:
                 screenshot_b64 = result.screenshot
 
             return SnapshotResult(
                 url=result.url or self.current_url,
-                dom_elements=[], # DOM elements mapping would go here
-                screenshot_b64=screenshot_b64
+                dom_elements=[],  # DOM elements mapping would go here
+                screenshot_b64=screenshot_b64,
             )
 
     async def execute(self, command: MotorCommand) -> ExecutionResult:
         """Runs a JIT command or batch via Crawl4AI."""
         if not isinstance(command, CrawlCommand):
             return ExecutionResult(
-                status="failed",
-                error=f"Invalid command type: {type(command)}"
+                status="failed", error=f"Invalid command type: {type(command)}"
             )
 
         try:
@@ -57,7 +54,7 @@ class Crawl4AIExecutor(Executor):
                     c4a_script=command.c4a_script,
                     cache_mode=CacheMode.BYPASS,
                     screenshot=True,
-                    return_js_script_result=True, # Important to get script return value
+                    return_js_script_result=True,  # Important to get script return value
                 )
 
                 result = await crawler.arun(url=self.current_url, config=config)
@@ -65,13 +62,23 @@ class Crawl4AIExecutor(Executor):
                 if result.success:
                     self.current_url = result.url or self.current_url
                     script_result = result.js_script_result
-                    
+
                     # If the script returns a dict, it's a failure index
-                    if isinstance(script_result, dict) and 'failed_at' in script_result:
+                    if isinstance(script_result, dict) and "failed_at" in script_result:
                         return ExecutionResult(
                             status="failed",
-                            failed_at_index=script_result.get('failed_at'),
-                            error=script_result.get('error', 'Action failed in batch')
+                            failed_at_index=script_result.get("failed_at"),
+                            completed_count=script_result.get("completed_count"),
+                            error=script_result.get("error", "Action failed in batch"),
+                        )
+
+                    if (
+                        isinstance(script_result, dict)
+                        and "completed_count" in script_result
+                    ):
+                        return ExecutionResult(
+                            status="success",
+                            completed_count=script_result.get("completed_count"),
                         )
 
                     # If script result is None or not a dict, it's full success
@@ -80,7 +87,9 @@ class Crawl4AIExecutor(Executor):
                     # This means the entire batch failed to even start or run
                     return ExecutionResult(
                         status="failed",
-                        error=getattr(result, 'error_message', 'Unknown Crawl4AI error')
+                        error=getattr(
+                            result, "error_message", "Unknown Crawl4AI error"
+                        ),
                     )
         except Exception as e:
             return ExecutionResult(status="failed", error=str(e))

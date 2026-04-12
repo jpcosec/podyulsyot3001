@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-12] - Ariadne Core Hotfixes
+
+### Changed
+- Moved the BrowserOS and Crawl4AI translators into `src/automation/adapters/translators/` and switched translator lookup to dynamic adapter discovery so `src/automation/ariadne/translators/` is back to contract-only ownership.
+- Scoped heuristic patch keys as `state_id:component_name` inside `src/automation/ariadne/graph/orchestrator.py` and `src/automation/ariadne/models.py` so stale component patches no longer leak across unrelated states.
+- Updated Ariadne translator, batching, heuristic, observe, and deterministic-dispatch tests to match the migrated graph behavior and current model contracts.
+
+### Fixed
+- Fixed Crawl4AI batch scripts to return both `failed_at` and `completed_count`, and wired `ExecutionResult` plus the Crawl4AI executor to preserve that recovery metadata.
+- Fixed deterministic batch recovery so Ariadne retries from the failed sub-step instead of skipping it after a partial batch failure.
+
 ### Added
 - Implemented **JIT Intent Translators** for Ariadne 2.0.
   - Added `AriadneTranslator` abstract base class in `src/automation/ariadne/translators/base.py`.

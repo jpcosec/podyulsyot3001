@@ -1,5 +1,9 @@
+"""Crawl4AI Ariadne translator."""
+
+from __future__ import annotations
+
 import json
-from typing import List, Optional
+from typing import Optional
 
 from src.automation.ariadne.contracts.base import (
     AriadneIntent,
@@ -12,10 +16,10 @@ from src.automation.ariadne.translators.base import AriadneTranslator
 
 
 class Crawl4AITranslator(AriadneTranslator):
-    """
-    JIT Translator for Crawl4AI.
-    Produces CrawlCommand (Playwright-style script fragments).
-    """
+    """Translate Ariadne intents into Crawl4AI scripts."""
+
+    command_types = (CrawlCommand,)
+    motor_names = ("crawl4ai",)
 
     def translate_intent(
         self,
@@ -24,14 +28,9 @@ class Crawl4AITranslator(AriadneTranslator):
         state: AriadneState,
         value: Optional[str] = None,
     ) -> MotorCommand:
-        """
-        Translates AriadneIntent to CrawlCommand script.
-        """
-        # 1. Resolve selector (Prefer CSS for Crawl4AI/Playwright)
         selector = target.css
         if not selector:
             if target.text:
-                # Playwright text selector
                 selector = f"text={target.text}"
             elif target.hint:
                 selector = f"[data-ariadne-hint='{target.hint}']"
@@ -39,17 +38,10 @@ class Crawl4AITranslator(AriadneTranslator):
         if not selector:
             raise ValueError(f"Target {target} has no css, text, or hint selector.")
 
-        # 2. Resolve value placeholders
         resolved_value = self.resolve_placeholders(value, state) if value else ""
-
-        # 3. Escape strings for use in JS/Python script fragment
-        # Using json.dumps to ensure proper escaping of quotes/newlines
         safe_selector = json.dumps(selector)
         safe_value = json.dumps(resolved_value)
-
-        # 4. Map Intent to Script Fragment
-        script = ""
-        hooks = []
+        hooks: list[dict[str, object]] = []
 
         if intent == AriadneIntent.CLICK:
             script = f"await page.click({safe_selector})"
@@ -58,20 +50,15 @@ class Crawl4AITranslator(AriadneTranslator):
         elif intent == AriadneIntent.SELECT:
             script = f"await page.select_option({safe_selector}, {safe_value})"
         elif intent == AriadneIntent.PRESS:
-            # For press, resolved_value is the key name
             script = f"await page.press({safe_selector}, {safe_value})"
         elif intent == AriadneIntent.UPLOAD:
-            # Upload usually requires a file chooser or set_input_files
-            # We can use a hook for this or a multi-line script if we know it's an input
             script = f"await page.set_input_files({safe_selector}, {safe_value})"
         elif intent == AriadneIntent.WAIT:
-            # If value is numeric, wait for milliseconds, otherwise wait for selector
             if resolved_value.isdigit():
                 script = f"await page.wait_for_timeout({resolved_value})"
             else:
                 script = f"await page.wait_for_selector({safe_selector})"
         elif intent == AriadneIntent.EXTRACT:
-            # Extraction is usually handled by the executor, but if we need a script:
             script = f"await page.inner_text({safe_selector})"
         else:
             raise ValueError(f"Unsupported intent for Crawl4AI: {intent}")
@@ -80,31 +67,32 @@ class Crawl4AITranslator(AriadneTranslator):
 
     def translate_batch(
         self,
-        batch: List[tuple[AriadneIntent, AriadneTarget, Optional[str]]],
+        batch: list[tuple[AriadneIntent, AriadneTarget, Optional[str]]],
         state: AriadneState,
     ) -> MotorCommand:
-        """
-        Translates a batch of intents into a single, atomic CrawlCommand script
-        with error handling for each step.
-        """
-        scripts = []
-        combined_hooks = []
         final_js_script = ["try {"]
+        combined_hooks: list[dict[str, object]] = []
 
-        for i, (intent, target, value) in enumerate(batch):
-            cmd = self.translate_intent(intent, target, state, value)
-            if isinstance(cmd, CrawlCommand):
-                # Wrap each command in a try-catch block within the script
-                final_js_script.append(f"  // Action {i}")
-                final_js_script.append(f"  try {{")
-                final_js_script.append(f"    {cmd.c4a_script};")
-                final_js_script.append(f"  }} catch (e) {{")
-                final_js_script.append(f"    return {{ 'failed_at': {i}, 'error': e.message }};")
-                final_js_script.append(f"  }}")
-                combined_hooks.extend(cmd.hooks)
+        for index, (intent, target, value) in enumerate(batch):
+            command = self.translate_intent(intent, target, state, value)
+            if not isinstance(command, CrawlCommand):
+                continue
 
+            final_js_script.append(f"  // Action {index}")
+            final_js_script.append("  try {")
+            final_js_script.append(f"    {command.c4a_script};")
+            final_js_script.append("  } catch (e) {")
+            final_js_script.append(
+                f"    return {{ 'failed_at': {index}, 'completed_count': {index}, 'error': e.message }};"
+            )
+            final_js_script.append("  }")
+            combined_hooks.extend(command.hooks)
+
+        final_js_script.append(f"  return {{ 'completed_count': {len(batch)} }};")
         final_js_script.append("} catch (e) {")
-        final_js_script.append("  return { 'failed_at': -1, 'error': `Unexpected batch error: ${e.message}` };")
+        final_js_script.append(
+            "  return { 'failed_at': -1, 'completed_count': 0, 'error': `Unexpected batch error: ${e.message}` };"
+        )
         final_js_script.append("}")
 
         return CrawlCommand(c4a_script="\n".join(final_js_script), hooks=combined_hooks)

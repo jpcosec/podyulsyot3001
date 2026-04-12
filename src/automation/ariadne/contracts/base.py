@@ -22,12 +22,8 @@ class AriadneTarget(BaseModel):
     hint: Optional[str] = Field(
         default=None, description="Alphanumeric marker (e.g. 'AA', 'AB') injected JIT."
     )
-    css: Optional[str] = Field(
-        default=None, description="Fallback CSS selector."
-    )
-    text: Optional[str] = Field(
-        default=None, description="Fuzzy text match."
-    )
+    css: Optional[str] = Field(default=None, description="Fallback CSS selector.")
+    text: Optional[str] = Field(default=None, description="Fuzzy text match.")
     vision: Optional[Dict[str, int]] = Field(
         default=None, description="Coordinates {x, y, w, h} from VisionTool."
     )
@@ -94,7 +90,12 @@ class ExecutionResult(BaseModel):
     error: Optional[str] = None
     screenshot_path: Optional[str] = None
     failed_at_index: Optional[int] = Field(
-        default=None, description="For batched commands, the index of the action that failed."
+        default=None,
+        description="For batched commands, the index of the action that failed.",
+    )
+    completed_count: Optional[int] = Field(
+        default=None,
+        description="For batched commands, the number of actions completed before returning.",
     )
 
 

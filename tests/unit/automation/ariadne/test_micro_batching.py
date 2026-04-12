@@ -17,7 +17,7 @@ from src.automation.ariadne.models import (
     AriadneObserve,
     AriadneMapMeta,
 )
-from src.automation.ariadne.translators.crawl4ai import Crawl4AITranslator
+from src.automation.adapters.translators.crawl4ai import Crawl4AITranslator
 from src.automation.ariadne.graph.orchestrator import execute_deterministic_node
 
 
@@ -36,21 +36,21 @@ def mock_state() -> AriadneState:
         "session_memory": {},
         "errors": [],
         "history": [],
-        "portal_mode": "easy_apply"
+        "portal_mode": "easy_apply",
     }
 
 
 def test_crawl4ai_translator_batching(mock_state):
     """Verify that Crawl4AITranslator can batch multiple intents into one script."""
     translator = Crawl4AITranslator()
-    
+
     batch = [
         (AriadneIntent.FILL, AriadneTarget(css="#name"), "John Doe"),
         (AriadneIntent.CLICK, AriadneTarget(css="#submit"), None),
     ]
-    
+
     cmd = translator.translate_batch(batch, mock_state)
-    
+
     assert isinstance(cmd, CrawlCommand)
     assert 'await page.fill("#name", "John Doe")' in cmd.c4a_script
     assert 'await page.click("#submit")' in cmd.c4a_script
@@ -64,6 +64,6 @@ async def test_execute_deterministic_batching(mock_state):
     injecting dependencies (MapRepository, Executor, Translator).
     For now, we'll focus on the logic inside the node if we can isolate it.
     """
-    # TODO: Once orchestrator.py is updated, add a test here that verifies 
+    # TODO: Once orchestrator.py is updated, add a test here that verifies
     # that multiple consecutive deterministic edges are batched.
     pass
