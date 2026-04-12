@@ -1,47 +1,49 @@
-# Ariadne 2.0: Master Implementation Index
+# Ariadne 2.0 Implementation Index
 
-This index tracks the 6 core Epics required to transition Ariadne to a **"Programmable Semantic Browser"** based on LangGraph.
+Ariadne 2.0 has its **Architecture Core** implemented. We are now in the **Functional Restoration** phase to restore portal support, executors, and the CLI.
 
-## Execution Queue (Priority Order)
-
-### [EPIC 0: Demolition & Recycling (Cleanup)](epic-0-cleanup.md)
-- **Status**: Ready
-- **Scope**: Isolate legacy code, purge contradictory specs, and setup QA Backlog.
-- **Depends on**: none
-
-### [EPIC 1: Architectural Fitness Functions (The Armor)](epic-1-fitness-functions.md)
-- **Status**: Locked (Blocked by Epic 0)
-- **Scope**: Implement `pytest-archon` and `pyfakefs` guardrails to enforce design boundaries.
-- **Depends on**: Epic 0
-
-### [EPIC 2: Data Layer & Portal Modes (The Stupid Brain)](epic-2-data-layer-modes.md)
-- **Status**: Blocked
-- **Scope**: Migrate to State Graphs and implement the Contextual Mode Pattern.
-- **Depends on**: Epic 1
-
-### [EPIC 3: Interface Taxonomy & Capabilities (The Segregation)](epic-3-interface-taxonomy.md)
-- **Status**: Blocked
-- **Scope**: Refactor Motor protocols into primitive JIT interfaces and implement Hinting.
-- **Depends on**: Epic 2
-
-### [EPIC 4: LangGraph JIT Orchestrator (The Controller)](epic-4-jit-graph.md)
-- **Status**: Blocked
-- **Scope**: Implement the 5-node StateGraph topology and JIT translation loop.
-- **Depends on**: Epic 3
-
-### [EPIC 5: LangGraph MCP Rescue Agent (The Planner)](epic-5-mcp-rescue-agent.md)
-- **Status**: Blocked
-- **Scope**: Implement the Level 3 LLM Rescue Agent with direct MCP tools.
-- **Depends on**: Epic 4
+## Core Accomplishments (Architectural skeleton)
+- [x] **Fitness Functions**: Enforced DIP, I/O isolation, and mode blindness.
+- [x] **Graph Models**: Defined `AriadneMap`, `AriadneStateDefinition`, `AriadneEdge`.
+- [x] **Mode Registry**: Built the Nyxt-inspired contextual mode system.
+- [x] **Segregated Protocols**: Defined `Executor`, `Planner`, and `Capability` interfaces.
+- [x] **StateGraph Controller**: Implemented the LangGraph JIT orchestrator.
+- [x] **Link Hinting**: Implemented the "Set-of-Mark" DOM injection.
+- [x] **JIT Translators**: Built atomic compilers for BrowserOS and Crawl4AI.
+- [x] **Micro-Batching**: Implemented sequence grouping for C4A performance.
+- [x] **Rescue Agent**: Built the direct MCP VLM rescue agent.
 
 ---
 
-## Working Rules
-Once an issue is solved:
-1.  Run the **Fitness Functions** to ensure no architectural drift.
-2.  Update `changelog.md`.
-3.  Delete the solved issue from this index and its file.
-4.  Commit the change.
+## Execution Queue (Functional Restoration)
 
-## Bug & Validation Tracking
-All portal-specific bugs and dry-run validation tasks are tracked in [QA_BACKLOG.md](../../QA_BACKLOG.md).
+### Phase 1: Portal Mode Implementations (Heuristics)
+- [ ] **[Implement: LinkedIn Portal Mode Logic](gaps/implement-linkedin-portal-mode-logic.md)**
+  - *Status*: Ready
+  - *Expected*: Rules for LinkedIn-specific cleanup and recovery.
+- [ ] **[Implement: StepStone Portal Mode Logic](gaps/implement-stepstone-portal-mode-logic.md)**
+  - *Status*: Ready
+  - *Expected*: German keyword rules and StepStone-specific recovery.
+
+### Phase 2: Executor Restoration (The Hands)
+- [ ] **[Rebuild: BrowserOS CLI Executor](unimplemented/rebuild-browseros-cli-executor.md)**
+  - *Status*: Ready
+  - *Expected*: JIT-compliant dumb worker for MCP calls.
+- [ ] **[Rebuild: Crawl4AI JIT Executor](unimplemented/rebuild-crawl4ai-jit-executor.md)**
+  - *Status*: Ready
+  - *Expected*: JIT-compliant worker for C4A-Scripts.
+
+### Phase 3: Map Migration (The Knowledge)
+- [ ] **[Migrate: Portal Maps to AriadneMap Graph](unimplemented/migrate-portal-maps-to-graph.md)**
+  - *Status*: Ready (Architecture-ready)
+  - *Expected*: `easy_apply.json` graphs for StepStone and LinkedIn.
+
+### Phase 4: CLI & Entrypoint (The Interface)
+- [ ] **[Rebuild: CLI Entrypoint for Ariadne 2.0](unimplemented/rebuild-cli-entrypoint.md)**
+  - *Status*: Ready
+  - *Expected*: Functional `python -m src.automation.main apply` invoking the 2.0 graph.
+
+---
+
+## QA & Validation
+Portal-specific bugs and validation tracking are managed in [QA_BACKLOG.md](../../QA_BACKLOG.md).

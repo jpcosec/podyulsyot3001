@@ -1,171 +1,41 @@
-"""Ariadne Core Models — The Unified Semantic & Path Layer.
+"""Ariadne 2.0 Core Models — Graph-based Semantic Navigation.
 
-This module defines the backend-neutral models for automation:
-1. Target Resolution (How to find elements)
-2. Intent Vocabulary (What actions to perform)
-3. Standardized Path (Linear sequences)
-4. Semantic Layer (States, Tasks, and Goals)
-5. Execution Contracts (JobPosting, ApplyMeta, etc.)
+This module defines the models for the Programmable Semantic Browser:
+1. AriadneMap (The directed state graph)
+2. AriadneStateDefinition (The state nodes)
+3. AriadneEdge (The transitions)
+4. AriadneTarget (Multi-strategy element identification)
+5. AriadneState (The immutable working memory/LangGraph state)
+6. Execution Contracts (Executors and Results)
 """
 
 from __future__ import annotations
 
-import re
+import operator
 from enum import Enum
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Annotated, Any, Dict, List, Literal, Optional, TypedDict, Union
 
-from pydantic import BaseModel, Field, field_validator
-
-
-# --- Scrape Layer (Legacy/Portal Schema) ---
-
-
-class ScrapePortalDefinition(BaseModel):
-    """Motor-agnostic description of a portal's scrape interface."""
-
-    source_name: str = Field(description="Unique portal identifier.")
-    base_url: str = Field(description="Root URL for the portal.")
-    supported_params: List[str] = Field(
-        description="Query parameters supported by the scraper."
-    )
-    job_id_pattern: str = Field(description="Regex to extract unique job ID from URLs.")
-
-    @field_validator("job_id_pattern")
-    @classmethod
-    def must_be_valid_regex(cls, v: str) -> str:
-        re.compile(v)
-        return v
-
-
-class JobPosting(BaseModel):
-    """Standardized extraction output contract for all scraping sources."""
-
-    # Mandatory
-    job_title: str = Field(..., description="The official job title")
-    company_name: str = Field(
-        ..., description="Name of the company, university, or institution"
-    )
-    location: str = Field(..., description="City or primary location")
-    employment_type: str = Field(
-        ..., description="Type of employment (e.g. Full-time, Part-time, Internship)"
-    )
-    responsibilities: List[str] = Field(
-        default_factory=list,
-        description="List of responsibilities or tasks. Extract as short action phrases.",
-    )
-    requirements: List[str] = Field(
-        default_factory=list, description="List of requirements, profile or skills."
-    )
-
-    @field_validator("requirements")
-    @classmethod
-    def must_have_some_content(cls, v: List[str], info: Any) -> List[str]:
-        # 'info.data' contains other fields during validation
-        responsibilities = info.data.get("responsibilities", [])
-        if not v and not responsibilities:
-            raise ValueError("JobPosting must have at least one responsibility or requirement.")
-        return v
-
-    # Optional
-    salary: Optional[str] = Field(
-        default=None, description="Estimated salary or salary range."
-    )
-    remote_policy: Optional[str] = Field(
-        default=None, description="Remote work policy (On-site, Hybrid, 100% Remote)."
-    )
-    benefits: List[str] = Field(
-        default_factory=list, description="Extra benefits offered."
-    )
-    company_description: Optional[str] = Field(
-        default=None, description="Short description of the company."
-    )
-    company_industry: Optional[str] = Field(
-        default=None, description="Sector or industry."
-    )
-    company_size: Optional[str] = Field(default=None, description="Company size.")
-    posted_date: Optional[str] = Field(
-        default=None, description="Date of publication (ISO timestamp preferred)."
-    )
-    days_ago: Optional[str] = Field(
-        default=None, description="Relative publication age."
-    )
-    application_deadline: Optional[str] = Field(
-        default=None, description="Deadline to apply."
-    )
-    application_method: Optional[str] = Field(
-        default=None, description="How to apply (e.g. 'email', 'external portal')."
-    )
-    application_url: Optional[str] = Field(
-        default=None, description="Direct application URL or apply button target."
-    )
-    application_email: Optional[str] = Field(
-        default=None, description="Application email address."
-    )
-    application_instructions: Optional[str] = Field(
-        default=None, description="Short instructions on how to apply."
-    )
-    application_routing_confidence: Optional[float] = Field(
-        default=None,
-        ge=0.0,
-        le=1.0,
-        description="Confidence score for the resolved application-routing fields.",
-    )
-    application_routing_diagnostics: Optional[Dict[str, Any]] = Field(
-        default=None,
-        description="Diagnostics describing how the application-routing fields were resolved.",
-    )
-    reference_number: Optional[str] = Field(
-        default=None, description="Internal reference code for the posting."
-    )
-    contact_info: Optional[str] = Field(
-        default=None, description="Email or contact person for application."
-    )
-    original_language: Optional[str] = Field(
-        default=None, description="The detected ISO 639-1 language code."
-    )
-
-
-class ApplicationRoutingInterpretation(BaseModel):
-    """LLM-sized contract for resolving how a job should be submitted."""
-
-    application_method: Optional[str] = Field(
-        default=None,
-        description="Routing method: email, direct_url, or onsite when the current page owns the apply flow.",
-    )
-    application_url: Optional[str] = Field(
-        default=None,
-        description="Resolved apply target URL, or the current detail URL when the flow starts onsite.",
-    )
-    application_email: Optional[str] = Field(
-        default=None,
-        description="Application email address when the posting requests email submission.",
-    )
-    application_instructions: Optional[str] = Field(
-        default=None,
-        description="Short submission instructions grounded in the posting text.",
-    )
+from langgraph.graph.message import AnyMessage, add_messages
+from pydantic import BaseModel, Field
 
 
 # --- Target Layer ---
 
 
 class AriadneTarget(BaseModel):
-    """Multi-strategy element descriptor. Each motor uses what it understands."""
+    """Multi-strategy element descriptor with Priority for Hinting."""
 
+    hint: Optional[str] = Field(
+        default=None, description="Alphanumeric marker (e.g. 'AA', 'AB') injected JIT."
+    )
     css: Optional[str] = Field(
-        default=None, description="CSS selector for Crawl4AI/Playwright"
+        default=None, description="Fallback CSS selector."
     )
     text: Optional[str] = Field(
-        default=None, description="Fuzzy text match for BrowserOS"
+        default=None, description="Fuzzy text match."
     )
-    image_template: Optional[str] = Field(
-        default=None, description="OpenCV template path for Vision"
-    )
-    ocr_text: Optional[str] = Field(
-        default=None, description="OCR text region for Vision fallback"
-    )
-    region: Optional[Dict[str, int]] = Field(
-        default=None, description="Bounding box {x, y, w, h}"
+    vision: Optional[Dict[str, int]] = Field(
+        default=None, description="Coordinates {x, y, w, h} from VisionTool."
     )
 
 
@@ -173,205 +43,152 @@ class AriadneTarget(BaseModel):
 
 
 class AriadneIntent(str, Enum):
-    """The 'What to do' — backend-neutral action vocabulary."""
+    """Semantic 'What to do' vocabulary."""
 
     CLICK = "click"
     FILL = "fill"
-    FILL_REACT = "fill_react_controlled"
     SELECT = "select"
     UPLOAD = "upload"
-    UPLOAD_LETTER = "upload_letter"
-    PRESS_KEY = "press_key"
-    SCROLL = "scroll"
     WAIT = "wait"
-    NAVIGATE = "navigate"
-    ANALYZE_FORM = "analyze_form"
-
-
-class AriadneAction(BaseModel):
-    """An atomic interaction with a target."""
-
-    intent: AriadneIntent
-    target: Optional[AriadneTarget] = None
-    value: Optional[str] = Field(
-        default=None, description="Value with {{placeholders}}"
-    )
-    fallback: Optional[AriadneAction] = None
-    optional: bool = False
-    metadata: Dict[str, Any] = Field(
-        default_factory=dict,
-        description="Motor-specific hyperparameters (e.g., fuzzy_threshold, js_code)",
-    )
+    PRESS = "press"
+    EXTRACT = "extract"
 
 
 # --- Observation Layer ---
 
 
 class AriadneObserve(BaseModel):
-    """Predicate to identify a state or confirm a result."""
+    """Predicate to identify a State Node."""
 
     required_elements: List[AriadneTarget] = Field(default_factory=list)
     forbidden_elements: List[AriadneTarget] = Field(default_factory=list)
     logical_op: Literal["AND", "OR"] = "AND"
 
 
-# --- Semantic Layer ---
+# --- State Graph Models ---
 
 
-class AriadneState(BaseModel):
-    """A semantic 'Room' in the portal (e.g., Login Page, Contact Info Modal)."""
+class AriadneStateDefinition(BaseModel):
+    """A Node in the Directed State Graph."""
 
     id: str
     description: str
     presence_predicate: AriadneObserve
-
-    # Components that compose this page/state
     components: Dict[str, AriadneTarget] = Field(default_factory=dict)
 
-    # Possible actions leading to other states
-    transitions: Dict[str, str] = Field(
-        default_factory=dict, description="Mapping of action_id -> next_state_id"
+
+class AriadneEdge(BaseModel):
+    """A directed Transition between States."""
+
+    from_state: str
+    to_state: str
+    intent: AriadneIntent
+    target: Union[str, AriadneTarget]  # Component name or explicit target
+    value: Optional[str] = Field(
+        default=None, description="Value with {{placeholders}} from AriadneState."
+    )
+    extract: Optional[Dict[str, str]] = Field(
+        default=None, description="Map of key -> selector for session_memory writes."
     )
 
 
-class AriadneRecoveryPlan(BaseModel):
-    """Standardized recovery steps for known blockers (e.g., Cookie Banners)."""
+class AriadneState(TypedDict):
+    """The immutable, serializable working memory of the Ariadne Graph."""
 
-    trigger_predicate: AriadneObserve
-    recovery_actions: List[AriadneAction]
-    resume_strategy: Literal["RETRY_STEP", "RESTART_FLOW", "ABORT"] = "RETRY_STEP"
+    # Identity
+    job_id: str
+    portal_name: str
+
+    # Context (Static injection)
+    profile_data: Dict[str, Any]
+    job_data: Dict[str, Any]
+
+    # Navigation Pointer
+    path_id: Optional[str]
+    current_state_id: str
+
+    # JIT Browser Snapshot
+    dom_elements: List[Dict[str, Any]]
+    current_url: str
+    screenshot_b64: Optional[str]
+
+    # session_memory: Read-write memory for extractions (e.g. Application IDs)
+    session_memory: Dict[str, Any]
+
+    # Memory & Reducers
+    errors: Annotated[List[str], operator.add]
+    history: Annotated[List[AnyMessage], add_messages]
+
+    # Active Strategy (Injected via URL context)
+    portal_mode: str
 
 
-class AriadneTask(BaseModel):
-    """The 'Mission' (e.g., Submit Application). Defines success/failure boundaries."""
+class AriadneMapMeta(BaseModel):
+    """Metadata for an AriadneMap."""
 
-    id: str
-    goal: str
-    entry_state: str
+    source: str
+    flow: str
+    version: str = "v1"
+    status: Literal["draft", "verified", "canonical"] = "draft"
 
+
+class AriadneMap(BaseModel):
+    """The directed State Graph representing a portal flow."""
+
+    meta: AriadneMapMeta
+    states: Dict[str, AriadneStateDefinition] = Field(
+        description="Registry of state nodes identified by their unique ID."
+    )
+    edges: List[AriadneEdge] = Field(
+        description="List of directed transitions between states."
+    )
     success_states: List[str] = Field(
-        description="State IDs that signal mission success"
+        description="State IDs that signal mission success."
     )
     failure_states: List[str] = Field(
-        description="State IDs that signal terminal failure"
-    )
-
-    success_criteria: Dict[str, Any] = Field(
-        default_factory=dict,
-        description="Verification rules (e.g., {'text_match': 'Application sent'})",
-    )
-
-    # Recovery for blockers like captchas or popups
-    blocker_recovery: List[AriadneRecoveryPlan] = Field(default_factory=list)
-
-
-# --- Path Layer ---
-
-
-class AriadneStep(BaseModel):
-    """One sequential unit of a path traversal."""
-
-    step_index: int
-    name: str
-    description: str
-
-    # Semantic Context
-    state_id: Optional[str] = None
-
-    # Execution
-    observe: AriadneObserve
-    actions: List[AriadneAction]
-
-    # Flow Control
-    next_step_index: Optional[int] = None
-    human_required: bool = False
-    dry_run_stop: bool = False
-    metadata: Dict[str, Any] = Field(
-        default_factory=dict,
-        description="Step-level motor hyperparameters (e.g., wait_for_network, enhanced_snapshot)",
+        description="State IDs that signal terminal failure."
     )
 
 
-class AriadnePath(BaseModel):
-    """A linear 'Tape' through a task, used by deterministic replayers."""
-
-    id: str
-    task_id: str
-    steps: List[AriadneStep]
-    metadata: Dict[str, str] = Field(default_factory=dict)
+# --- Execution Interfaces (JIT Payloads) ---
 
 
-# --- The Unified Map ---
+class MotorCommand(BaseModel):
+    """Base class for JIT motor instructions."""
+
+    pass
 
 
-class AriadnePortalMap(BaseModel):
-    """The 'One Map' per portal flow, containing all semantics and paths."""
+class BrowserOSCommand(MotorCommand):
+    """Single MCP tool call for BrowserOS CLI."""
 
-    portal_name: str = Field(
-        description="Unique identifier for the portal (e.g., 'linkedin')."
-    )
-    base_url: str = Field(description="The starting URL for automation on this portal.")
-
-    # Semantic Registry
-    states: Dict[str, AriadneState] = Field(
-        description="Registry of semantic states (rooms) identified by their unique ID."
-    )
-    tasks: Dict[str, AriadneTask] = Field(
-        description="Registry of mission goals and their success/failure boundaries."
-    )
-
-    # Path Registry (Deterministic sequences)
-    paths: Dict[str, AriadnePath] = Field(
-        description="Registry of linear step sequences indexed by path ID."
-    )
-
-    # Global/Cross-State components
-    global_components: Dict[str, AriadneTarget] = Field(
-        default_factory=dict,
-        description="Reusable targets that appear across multiple states (e.g., Logout button).",
-    )
+    tool: Literal["click", "fill", "upload", "press"]
+    selector_text: str
+    value: Optional[str] = None
 
 
-# --- Execution Contracts ---
+class CrawlCommand(MotorCommand):
+    """One or more C4A-Script actions for Crawl4AI."""
+
+    c4a_script: str
+    hooks: List[Dict[str, Any]] = Field(default_factory=list)
 
 
-class ApplicationRecord(BaseModel):
-    """Persisted record of one apply attempt for a specific job."""
+class ScriptCommand(MotorCommand):
+    """Command to execute arbitrary JavaScript and extract results."""
 
-    source: str = Field(description="The portal source name.")
-    job_id: str = Field(description="Unique identifier for the job.")
-    job_title: str = Field(description="Title of the job applied for.")
-    company_name: str = Field(description="Name of the company.")
-    application_url: str = Field(description="URL used for the application.")
-    cv_path: str = Field(description="Local path to the CV used.")
-    letter_path: Optional[str] = Field(
-        default=None, description="Local path to the cover letter if used."
-    )
-    fields_filled: List[str] = Field(
-        default_factory=list,
-        description="List of semantic fields/components interacted with.",
-    )
-    dry_run: bool = Field(description="Whether this was a dry-run.")
-    submitted_at: Optional[str] = Field(
-        default=None, description="ISO timestamp of submission."
-    )
-    confirmation_text: Optional[str] = Field(
-        default=None, description="Success text fragment captured after submission."
-    )
+    script: str
 
 
-class ApplyMeta(BaseModel):
-    """Small status artifact describing the outcome of an apply run."""
+class ExecutionResult(BaseModel):
+    """Outcome of a JIT execution."""
 
-    status: Literal[
-        "submitted", "dry_run", "failed", "portal_changed", "interrupted"
-    ] = Field(description="Final outcome status.")
-    timestamp: str = Field(description="ISO timestamp of the attempt.")
-    error: Optional[str] = Field(default=None, description="Error message if failed.")
+    status: Literal["success", "failed", "aborted"]
+    extracted_data: Dict[str, Any] = Field(default_factory=dict)
+    error: Optional[str] = None
+    screenshot_path: Optional[str] = None
 
 
 # Rebuild models to resolve forward references
-AriadneAction.model_rebuild()
-AriadneStep.model_rebuild()
-AriadnePath.model_rebuild()
-AriadnePortalMap.model_rebuild()
+AriadneMap.model_rebuild()
+AriadneEdge.model_rebuild()

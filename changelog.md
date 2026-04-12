@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+### Added
+- Implemented **JIT Intent Translators** for Ariadne 2.0.
+  - Added `AriadneTranslator` abstract base class in `src/automation/ariadne/translators/base.py`.
+  - Added `resolve_placeholders` utility to `AriadneTranslator` for resolving `{{placeholder}}` patterns from `profile_data`, `job_data`, and `session_memory`.
+  - Implemented `BrowserOSTranslator` in `src/automation/ariadne/translators/browseros.py` for mapping semantic intents to BrowserOS MCP tool calls.
+  - Implemented `Crawl4AITranslator` in `src/automation/ariadne/translators/crawl4ai.py` for compiling semantic intents into Playwright-style script fragments.
+  - Added comprehensive unit tests in `tests/unit/automation/ariadne/test_translators.py`.
+
 ## [2026-04-10] - Unified Agent Entrypoint
 
 ### Changed

@@ -1,0 +1,10 @@
+{
+  "employment_types": {
+    "full_time": ["vollzeit", "full-time", "fulltime"],
+    "part_time": ["teilzeit", "part-time"],
+    "internship": ["praktikum", "internship"]
+  },
+  "company_markers": [
+    "gmbh", "ag", "se", "group", "consulting", "services", "data", "reply", "ntt"
+  ]
+}

@@ -6,17 +6,20 @@ import json
 from pathlib import Path
 from typing import Any
 
-from src.automation.ariadne.models import AriadnePortalMap
+from src.automation.ariadne.models import AriadneMap
 
 
 class MapRepository:
     """Handles the persistence and retrieval of Ariadne portal maps."""
 
-    def __init__(self, base_dir: Path | None = None) -> None:
+    def __init__(self, base_dir: Path | str | None = None) -> None:
         # Default to src/automation/portals/
-        self.base_dir = base_dir or Path(__file__).parent.parent / "portals"
+        if base_dir:
+            self.base_dir = Path(base_dir)
+        else:
+            self.base_dir = Path(__file__).parent.parent / "portals"
 
-    def get_map(self, portal_name: str, map_type: str = "easy_apply") -> AriadnePortalMap:
+    def get_map(self, portal_name: str, map_type: str = "easy_apply") -> AriadneMap:
         """Retrieve a portal map by name and type.
 
         Args:
@@ -24,7 +27,7 @@ class MapRepository:
             map_type: Type of map (default: 'easy_apply').
 
         Returns:
-            The validated AriadnePortalMap.
+            The validated AriadneMap.
 
         Raises:
             FileNotFoundError: If the map JSON does not exist.
@@ -36,4 +39,4 @@ class MapRepository:
             )
 
         with open(map_path, "r", encoding="utf-8") as f:
-            return AriadnePortalMap.model_validate(json.load(f))
+            return AriadneMap.model_validate(json.load(f))
