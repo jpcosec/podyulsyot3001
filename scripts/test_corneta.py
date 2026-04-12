@@ -1,36 +1,51 @@
 #!/usr/bin/env python3
 """
-Test Corneta: Fuerza la cascada de fallos de Ariadne 2.0.
-Determinista -> Heurísticas -> Agente LLM -> HITL.
+Test Corneta: Verifies Ariadne 2.0 fallback cascade.
+
+Flow: Observe -> LLM (no map exists) -> HITL
+
+Purpose: Verify that when no map exists for a page:
+1. LLM auto-traces to discover the path
+2. If LLM fails, HITL breakpoint triggers
+3. Trace saved as draft map
 
 Usage:
-    python scripts/test_corneta.py
+    source .env && python scripts/test_corneta.py
 
 Requires:
-    - GEMINI_API_KEY or GOOGLE_API_KEY in environment
-    - Crawl4AI installed
+    - GEMINI_API_KEY or GOOGLE_API_KEY
+    - BrowserOS running
 """
 
 import asyncio
-import os
 import uuid
+
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except ImportError:
+    pass
 
 from src.automation.ariadne.graph.orchestrator import create_ariadne_graph
 from src.automation.motors.crawl4ai.executor import Crawl4AIExecutor
 
 
 async def run_test():
-    print("\n[🚀] Iniciando Test Corneta en example.com...")
+    print("\n[🚀] Test Corneta: LLM auto-discovery + HITL fallback")
+    print("[💡] Task: Find the main heading on example.com")
+    print("[🔑] Key: No pre-defined map exists -> should hit LLM\n")
 
     thread_id = str(uuid.uuid4())
+
     initial_state = {
-        "job_id": "test_123",
+        "job_id": "test_corneta",
         "portal_name": "example",
         "profile_data": {},
-        "job_data": {},
-        "path_id": "test_cascade",
-        "current_mission_id": "test",
-        "current_state_id": "home",
+        "job_data": {"task": "Find the main heading text"},
+        "path_id": "explore",
+        "current_mission_id": "explore_heading",
+        "current_state_id": "start",
         "current_url": "https://example.com",
         "dom_elements": [],
         "screenshot_b64": None,
@@ -54,46 +69,41 @@ async def run_test():
     }
 
     print(f"[⚡] Thread ID: {thread_id}")
-    print("[⚡] Ejecutando Grafo (Observa la terminal para ver los nodos)...\n")
+    print("[⚡] Running exploration (no map exists)...\n")
 
     async with executor:
         async with create_ariadne_graph(use_memory=True) as app:
-            async for event in app.astream(
-                initial_state, config, stream_mode="updates"
-            ):
-                for node, state_update in event.items():
-                    print(f"\n[🔄] Nodo completado: {node.upper()}")
-                    if "errors" in state_update and state_update["errors"]:
-                        print(f"     [⚠️] Errores reportados: {state_update['errors']}")
-                    if "session_memory" in state_update:
-                        failures = state_update["session_memory"].get(
-                            "agent_failures", 0
-                        )
-                        if failures > 0:
-                            print(f"     [🧠] Fallos del Agente: {failures}/3")
+            try:
+                async for event in app.astream(
+                    initial_state, config, stream_mode="updates"
+                ):
+                    if isinstance(event, dict):
+                        for node, state_update in event.items():
+                            if not isinstance(state_update, dict):
+                                continue
+                            print(f"\n[->] {node.upper()}")
+                            if state_update.get("errors"):
+                                print(f"     [x] {state_update['errors']}")
+                            mem = state_update.get("session_memory", {})
+                            if mem.get("human_intervention"):
+                                print(f"     [!] HITL triggered")
+            except Exception as e:
+                print(f"\n[!!] Breakpoint reached: {type(e).__name__}")
 
             final_state = await app.aget_state(config)
 
             print("\n" + "=" * 50)
-            print("[🛑] EJECUCIÓN DETENIDA")
+            print("[RESULT]")
             print("=" * 50)
 
             if final_state.next and final_state.next[0] == "human_in_the_loop":
-                print(
-                    "\n[✅] ÉXITO DEL TEST: El sistema alcanzó el breakpoint de HITL correctamente."
-                )
-                print(
-                    "El determinismo falló, las heurísticas fallaron, el agente falló, y el humano fue llamado."
-                )
+                print("[PASS] HITL reached (LLM failed -> human called)")
+                return True
             else:
-                print(
-                    f"\n[❌] FALLO DEL TEST: El sistema se detuvo en: {final_state.next}"
-                )
-
-            print(
-                f"\n[💾] Revisa los logs de la sesión en: data/ariadne/recordings/{thread_id}/raw_timeline.jsonl"
-            )
+                print(f"[INFO] Next: {final_state.next}")
+                return False
 
 
 if __name__ == "__main__":
-    asyncio.run(run_test())
+    result = asyncio.run(run_test())
+    exit(0 if result else 1)

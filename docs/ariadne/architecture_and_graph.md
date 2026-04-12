@@ -57,26 +57,29 @@ Ariadne is a cyclic `StateGraph` with 4 levels of fallback:
 
 ## 4. Common Language Models
 
-### AriadneMap (The State Graph)
+### AriadneMap (Exploration Memory)
+> **CRITICAL**: Maps are NOT hand-written JSON. They're built through exploration:
+> 1. Crawl/Explore page → LLM traces action → HITL → Human guides → union of traces = map
+
 ```python
 class AriadneMap(BaseModel):
     meta: AriadneMapMeta
-    states: dict[str, AriadneStateDefinition] # Nodes
-    edges: list[AriadneEdge]                  # Transitions
+    states: dict[str, AriadneStateDefinition] # Nodes (from traces)
+    edges: list[AriadneEdge]                  # Transitions (from traces)
     success_states: list[str]
     failure_states: list[str]
 ```
 
-### AriadneStateDefinition (The Node)
+### AriadneStateDefinition (Discovered Node)
 ```python
 class AriadneStateDefinition(BaseModel):
     id: str
     description: str
     presence_predicate: AriadneObserve   # Logic to identify this node
-    components: dict[str, AriadneTarget] # Named elements
+    components: dict[str, AriadneTarget] # Named elements (from trace)
 ```
 
-### AriadneEdge (The Intent)
+### AriadneEdge (Discovered Intent)
 ```python
 class AriadneEdge(BaseModel):
     from_state: str
