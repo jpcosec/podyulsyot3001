@@ -13,7 +13,7 @@ import operator
 from typing import Annotated, Any, Dict, List, Literal, Optional, TypedDict, Union
 
 from langgraph.graph.message import AnyMessage, add_messages
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from src.automation.ariadne.contracts.base import (
     AriadneIntent,

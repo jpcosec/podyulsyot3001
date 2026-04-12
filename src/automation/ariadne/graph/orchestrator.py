@@ -172,24 +172,73 @@ def _resolve_target(
     )
 
 
+def _is_target_present_in_snapshot(target: AriadneTarget, dom_elements: List[Dict[str, Any]]) -> bool:
+    """Checks if a single target exists in the provided DOM snapshot."""
+    for el in dom_elements:
+        match = True
+        # Text and CSS must ALL match for a single element
+        if target.text and target.text.lower() not in el.get("text", "").lower():
+            match = False
+        if target.css and target.css not in el.get("selector", ""):
+            match = False
+        
+        if match and (target.text or target.css):
+            return True
+    return False
+
+
 def _find_safe_sequence(
-    current_state_id: str, 
-    ariadne_map: AriadneMap, 
-    max_batch: int = 5
+    current_state_id: str,
+    ariadne_map: AriadneMap,
+    state: AriadneState,
+    max_batch: int = 5,
 ) -> List[AriadneEdge]:
-    """Scans the graph for consecutive deterministic edges from the same state."""
-    batch = []
-    cursor = current_state_id
+    """
+    Dynamically evaluates and finds the next valid edge or a safe batch of edges.
     
-    for edge in ariadne_map.edges:
-        if edge.from_state == cursor:
-            # Only batch deterministic, non-waiting intents
-            if edge.intent in [AriadneIntent.FILL, AriadneIntent.SELECT, AriadneIntent.CLICK]:
-                batch.append(edge)
-                cursor = edge.to_state
-                if len(batch) >= max_batch or cursor != current_state_id:
-                    # Stop if we hit limit or move to a different state
-                    break
+    An edge is valid if its target exists in the current snapshot.
+    """
+    dom_elements = state.get("dom_elements", [])
+    
+    # Find all possible outgoing edges
+    candidate_edges = [e for e in ariadne_map.edges if e.from_state == current_state_id]
+    
+    # Evaluate which edges are currently "live" based on the snapshot
+    valid_edges = []
+    for edge in candidate_edges:
+        try:
+            resolved_target = _resolve_target(edge.target, edge.from_state, ariadne_map, state)
+            if _is_target_present_in_snapshot(resolved_target, dom_elements):
+                valid_edges.append(edge)
+        except ValueError:
+            # Target component name couldn't be resolved, so it's not present
+            continue
+    
+    if not valid_edges:
+        return []
+    
+    # TODO: Add mission-based priority logic here if multiple edges are valid.
+    # For now, we take the first valid edge.
+    first_edge = valid_edges[0]
+    
+    # Try to build a micro-batch starting with the first valid edge
+    batch = [first_edge]
+    cursor = first_edge.to_state
+    
+    if len(candidate_edges) > 1 and cursor == current_state_id:
+        # Simple micro-batching: only look for more actions in the same state
+        for edge in candidate_edges:
+            if edge.from_state == cursor and edge != first_edge:
+                if edge.intent in [AriadneIntent.FILL, AriadneIntent.SELECT]:
+                    try:
+                        res_target = _resolve_target(edge.target, edge.from_state, ariadne_map, state)
+                        if _is_target_present_in_snapshot(res_target, dom_elements):
+                            batch.append(edge)
+                            if len(batch) >= max_batch:
+                                break
+                    except ValueError:
+                        continue
+    
     return batch
 
 
@@ -211,10 +260,10 @@ async def execute_deterministic_node(state: AriadneState, config: RunnableConfig
 
     current_state_id = state.get("current_state_id")
     
-    # 3. Identify Safe Sequence
-    batch = _find_safe_sequence(current_state_id, ariadne_map)
+    # 3. Identify Safe Sequence using the current state's snapshot
+    batch = _find_safe_sequence(current_state_id, ariadne_map, state)
     if not batch:
-        return {"errors": [f"NoTransitionError: No edge found from {current_state_id}"]}
+        return {"errors": [f"NoTransitionError: No valid, live edge found from state '{current_state_id}'"]}
 
     # 4. Resolve Translator based on a provided hint or default
     motor_name = config.get("configurable", {}).get("motor_name", "crawl4ai")
@@ -277,7 +326,7 @@ async def apply_local_heuristics_node(state: AriadneState, config: RunnableConfi
         return {"errors": [f"StateDefinitionNotFoundError: {current_state_id}"]}
 
     # 3. Apply heuristics (using a deep copy to be safe)
-    patched_definition = mode.apply_local_heuristics(copy.deepcopy(definition))
+    patched_definition = mode.apply_local_heuristics(copy.deepcopy(definition), runtime_state=state)
     
     # 4. Extract new patches (components that differ from the original map)
     new_patches = {}

@@ -5,7 +5,7 @@ without polluting the core navigation graph.
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from src.automation.ariadne.danger_contracts import ApplyDangerReport, ApplyDangerSignals
 from src.automation.ariadne.models import AriadneStateDefinition, JobPosting
@@ -26,7 +26,7 @@ class AriadneMode(ABC):
 
     @abstractmethod
     def apply_local_heuristics(
-        self, state: AriadneStateDefinition
+        self, state_definition: AriadneStateDefinition, runtime_state: Optional[Dict[str, Any]] = None
     ) -> AriadneStateDefinition:
         """Inject or patch selectors in the state definition based on local rules."""
         pass

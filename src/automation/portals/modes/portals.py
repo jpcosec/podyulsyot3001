@@ -32,15 +32,15 @@ class JsonConfigMode(AriadneMode):
         return ApplyDangerReport(findings=[])
 
     def apply_local_heuristics(
-        self, state: AriadneStateDefinition
+        self, state_definition: AriadneStateDefinition, runtime_state: Optional[Dict[str, Any]] = None
     ) -> AriadneStateDefinition:
         # Inject selectors from config into the state components
         selectors = self.config.get("selectors", {})
         for key, css in selectors.items():
-            if key not in state.components:
+            if key not in state_definition.components:
                 from src.automation.ariadne.models import AriadneTarget
-                state.components[key] = AriadneTarget(css=css)
-        return state
+                state_definition.components[key] = AriadneTarget(css=css)
+        return state_definition
 
 
 class LinkedInMode(JsonConfigMode):
