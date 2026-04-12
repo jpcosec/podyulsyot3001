@@ -33,6 +33,13 @@ All notable changes to this project will be documented in this file.
 - Extended `src/automation/main.py` to accept `--mission` for apply flows and propagate the mission into graph state initialization.
 - Added mission-pathfinding regression coverage in `tests/unit/automation/ariadne/test_mission_pathfinding.py`.
 
+## [2026-04-12] - Ariadne Discovery Mission
+
+### Changed
+- Restored `scrape` in `src/automation/main.py` with a graph-driven `run_scrape()` flow that loads `search` maps, initializes the `discovery` mission, streams execution updates, and prints extracted session memory.
+- Added discovery search maps in `src/automation/portals/linkedin/maps/search.json` and `src/automation/portals/stepstone/maps/search.json`.
+- Extended `src/automation/ariadne/graph/orchestrator.py` so extraction edges merge discovered values into `session_memory`, with regression coverage in `tests/unit/automation/ariadne/test_discovery_mission.py` and `tests/unit/automation/test_main_scrape.py`.
+
 ### Added
 - Implemented **JIT Intent Translators** for Ariadne 2.0.
   - Added `AriadneTranslator` abstract base class in `src/automation/ariadne/translators/base.py`.

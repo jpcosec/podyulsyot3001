@@ -48,18 +48,17 @@ When all parallelizable issues in a given Phase/Level are completed, you MUST pe
 
 ### Phase 4 — Scraper & Discovery
 
-  1. plan_docs/issues/gaps/restore-discovery-graph-mission.md
-     • [Restores the 'scrape' command using the Ariadne 2.0 graph]
+- Completed on 2026-04-12: discovery mission maps and graph-backed scrape flow restored.
 
 ### Phase 5 — The Lifecycle (Learning)
 
-  3. plan_docs/issues/gaps/implement-persistent-sqlite-checkpointer.md
+  1. plan_docs/issues/gaps/implement-persistent-sqlite-checkpointer.md
      • [Enables production-grade HITL and session recovery]
 
-  4. plan_docs/issues/gaps/implement-graph-recorder-capability.md
+  2. plan_docs/issues/gaps/implement-graph-recorder-capability.md
      • [Captures JIT transitions for map promotion]
 
-  5. plan_docs/issues/gaps/implement-promotion-engine.md
+  3. plan_docs/issues/gaps/implement-promotion-engine.md
      • [Converts recordings into canonical AriadneMap candidates]
 
 ## Dependency summary
@@ -73,5 +72,5 @@ When all parallelizable issues in a given Phase/Level are completed, you MUST pe
 Phase 1  [done]          ← [Hotfixes]
 Phase 2  [done]          ← [Polish]
 Phase 3  [done]          ← [Functional]
-Phase 4  [1]             ← [Discovery]
-Phase 5  [2][3][4]       ← [Lifecycle]
+Phase 4  [done]          ← [Discovery]
+Phase 5  [1][2][3]       ← [Lifecycle]

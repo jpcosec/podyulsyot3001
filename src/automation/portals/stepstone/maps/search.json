@@ -1,0 +1,48 @@
+{
+  "meta": {
+    "source": "stepstone",
+    "flow": "search",
+    "version": "v1",
+    "status": "draft"
+  },
+  "states": {
+    "search_results": {
+      "id": "search_results",
+      "description": "StepStone result page with visible listing cards.",
+      "presence_predicate": {
+        "required_elements": [
+          { "css": "[data-at='job-item']" }
+        ],
+        "logical_op": "AND"
+      },
+      "components": {
+        "results_list": { "css": "[data-at='job-item']" }
+      }
+    },
+    "discovery_complete": {
+      "id": "discovery_complete",
+      "description": "Discovery mission completed after collecting StepStone listing content.",
+      "presence_predicate": {
+        "required_elements": [
+          { "css": "[data-at='job-item']" }
+        ],
+        "logical_op": "AND"
+      },
+      "components": {}
+    }
+  },
+  "edges": [
+    {
+      "from_state": "search_results",
+      "to_state": "discovery_complete",
+      "mission_id": "discovery",
+      "intent": "extract",
+      "target": "results_list",
+      "extract": {
+        "jobs_text": "[data-at='job-item']"
+      }
+    }
+  ],
+  "success_states": ["discovery_complete"],
+  "failure_states": []
+}

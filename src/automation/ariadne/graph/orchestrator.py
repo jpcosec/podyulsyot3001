@@ -209,6 +209,40 @@ def _is_target_present_in_snapshot(
     return False
 
 
+def _extract_from_dom(
+    selector: str, dom_elements: List[Dict[str, Any]]
+) -> Optional[str]:
+    """Resolve a selector-like key against the current DOM snapshot."""
+    for element in dom_elements:
+        candidate_selector = element.get("selector") or element.get("css") or ""
+        if selector and selector == candidate_selector:
+            return element.get("text") or element.get("value") or candidate_selector
+    return None
+
+
+def _collect_extracted_memory(
+    edge: AriadneEdge,
+    result: Any,
+    state: AriadneState,
+) -> Dict[str, Any]:
+    """Build session-memory updates from edge extraction rules and command output."""
+    if not edge.extract:
+        return {}
+
+    extracted_memory: Dict[str, Any] = {}
+    command_output = getattr(result, "extracted_data", {}) or {}
+    dom_elements = state.get("dom_elements", [])
+
+    for key, selector in edge.extract.items():
+        extracted_value = command_output.get(key)
+        if extracted_value is None:
+            extracted_value = _extract_from_dom(selector, dom_elements)
+        if extracted_value is not None:
+            extracted_memory[key] = extracted_value
+
+    return extracted_memory
+
+
 def _find_safe_sequence(
     current_state_id: str,
     ariadne_map: AriadneMap,
@@ -372,7 +406,14 @@ async def execute_deterministic_node(
     except Exception as e:
         return {"errors": [f"ExecutionError: {str(e)}"]}
 
-    return {"current_state_id": batch[-1].to_state, "errors": []}
+    updates = {"current_state_id": batch[-1].to_state, "errors": []}
+    extracted_memory = _collect_extracted_memory(batch[-1], result, state)
+    if extracted_memory:
+        new_memory = state.get("session_memory", {}).copy()
+        new_memory.update(extracted_memory)
+        updates["session_memory"] = new_memory
+
+    return updates
 
 
 async def apply_local_heuristics_node(

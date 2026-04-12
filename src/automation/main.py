@@ -182,6 +182,108 @@ async def run_apply(
         sys.exit(1)
 
 
+async def run_scrape(
+    source: str,
+    limit: int,
+    motor_name: str = "crawl4ai",
+    portal_mode: str = "search",
+    mission_id: str = "discovery",
+):
+    """Execute a discovery mission through the Ariadne graph."""
+    print(f"\n🚜 Ariadne 2.0: Starting Discovery Flow")
+    print(f"   Portal: {source}")
+    print(f"   Limit: {limit}")
+    print(f"   Motor: {motor_name}")
+    print(f"   Mission: {mission_id}\n")
+
+    repo = MapRepository()
+    try:
+        ariadne_map = repo.get_map(source, map_type=portal_mode)
+        print(
+            f"✅ Loaded Map: {ariadne_map.meta.source} {ariadne_map.meta.flow} (v{ariadne_map.meta.version})"
+        )
+    except FileNotFoundError as e:
+        print(f"❌ Error: {e}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"❌ Failed to load or validate map: {e}")
+        sys.exit(1)
+
+    entry_state = (
+        "search_results"
+        if "search_results" in ariadne_map.states
+        else next(iter(ariadne_map.states))
+    )
+    initial_state: AriadneState = {
+        "job_id": f"discovery-{source}-{uuid.uuid4().hex[:8]}",
+        "portal_name": source,
+        "profile_data": {},
+        "job_data": {"limit": limit},
+        "path_id": str(uuid.uuid4()),
+        "current_mission_id": mission_id,
+        "current_state_id": entry_state,
+        "dom_elements": [],
+        "current_url": "",
+        "screenshot_b64": None,
+        "session_memory": {"limit": limit},
+        "errors": [],
+        "history": [],
+        "portal_mode": portal_mode,
+        "patched_components": {},
+    }
+
+    try:
+        executor = MotorRegistry.get_executor(motor_name)
+    except ValueError as e:
+        print(f"❌ Error: {e}")
+        sys.exit(1)
+
+    print("🛠️  Compiling Ariadne Graph...")
+    app = create_ariadne_graph()
+    thread_id = str(uuid.uuid4())
+    config = {
+        "configurable": {
+            "thread_id": thread_id,
+            "executor": executor,
+            "motor_name": motor_name,
+        }
+    }
+
+    try:
+        async for chunk in app.astream(initial_state, config, stream_mode="updates"):
+            for node_name, state_update in chunk.items():
+                print(f"[⚡] Node: {node_name}")
+                if "errors" in state_update and state_update["errors"]:
+                    for err in state_update["errors"]:
+                        print(f"    ⚠️ ERROR: {err}")
+                if "current_state_id" in state_update:
+                    print(f"    ➡️ Map State: {state_update['current_state_id']}")
+
+        final_state = await app.aget_state(config)
+        state_values = final_state.values
+        extracted_payload = state_values.get("session_memory", {})
+
+        if state_values.get("current_state_id") in ariadne_map.success_states:
+            print("\n✅ Discovery Success: Mission Completed.")
+        elif state_values.get("errors"):
+            print("\n❌ Discovery Terminated with Errors.")
+            for err in state_values["errors"]:
+                print(f"    - {err}")
+        else:
+            print(
+                f"\n⏹️  Discovery Stopped at State: {state_values.get('current_state_id')}"
+            )
+
+        print("\n📦 Extracted Session Memory")
+        print(json.dumps(extracted_payload, indent=2, sort_keys=True))
+    except Exception as e:
+        print(f"\n💥 Fatal Discovery Error: {str(e)}")
+        import traceback
+
+        traceback.print_exc()
+        sys.exit(1)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Ariadne 2.0 CLI — Semantic Browser Automation"
@@ -218,10 +320,12 @@ def main():
 
     # Scrape Subcommand (Stub)
     scrape_parser = subparsers.add_parser(
-        "scrape", help="Scrape jobs from a portal (Stub)"
+        "scrape", help="Scrape jobs from a portal through the Ariadne graph"
     )
     scrape_parser.add_argument("--source", required=True)
     scrape_parser.add_argument("--limit", type=int, default=10)
+    scrape_parser.add_argument("--motor", default="crawl4ai")
+    scrape_parser.add_argument("--mode", default="search")
     scrape_parser.add_argument("--mission", default="discovery")
 
     args = parser.parse_args()
@@ -252,7 +356,19 @@ def main():
         # In a real implementation, this would ping the endpoint
         print("Status: Placeholder check complete.")
     elif args.command == "scrape":
-        print(f"🚜 Scraper for {args.source} is not yet restored in Ariadne 2.0.")
+        try:
+            asyncio.run(
+                run_scrape(
+                    source=args.source,
+                    limit=args.limit,
+                    motor_name=args.motor,
+                    portal_mode=args.mode,
+                    mission_id=args.mission,
+                )
+            )
+        except KeyboardInterrupt:
+            print("\n🛑 Execution interrupted by user.")
+            sys.exit(0)
     else:
         parser.print_help()
 
