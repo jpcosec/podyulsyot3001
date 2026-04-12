@@ -1,5 +1,6 @@
 """Tests for discovery CLI wiring."""
 
+from contextlib import asynccontextmanager
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -59,12 +60,16 @@ async def test_run_scrape_uses_search_map_and_discovery_mission(capsys):
         )
     )
 
+    @asynccontextmanager
+    async def fake_graph_context(*args, **kwargs):
+        yield fake_app
+
     with (
         patch("src.automation.main.MapRepository") as mock_repo_class,
         patch(
             "src.automation.main.MotorRegistry.get_executor", return_value=MagicMock()
         ),
-        patch("src.automation.main.create_ariadne_graph", return_value=fake_app),
+        patch("src.automation.main.create_ariadne_graph", fake_graph_context),
     ):
         mock_repo_class.return_value.get_map.return_value = ariadne_map
         await run_scrape(source="linkedin", limit=3)

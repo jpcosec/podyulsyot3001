@@ -52,13 +52,10 @@ When all parallelizable issues in a given Phase/Level are completed, you MUST pe
 
 ### Phase 5 — The Lifecycle (Learning)
 
-  1. plan_docs/issues/gaps/implement-persistent-sqlite-checkpointer.md
-     • [Enables production-grade HITL and session recovery]
-
-  2. plan_docs/issues/gaps/implement-graph-recorder-capability.md
+  1. plan_docs/issues/gaps/implement-graph-recorder-capability.md
      • [Captures JIT transitions for map promotion]
 
-  3. plan_docs/issues/gaps/implement-promotion-engine.md
+  2. plan_docs/issues/gaps/implement-promotion-engine.md
      • [Converts recordings into canonical AriadneMap candidates]
 
 ## Dependency summary
@@ -73,4 +70,4 @@ Phase 1  [done]          ← [Hotfixes]
 Phase 2  [done]          ← [Polish]
 Phase 3  [done]          ← [Functional]
 Phase 4  [done]          ← [Discovery]
-Phase 5  [1][2][3]       ← [Lifecycle]
+Phase 5  [1][2]          ← [Lifecycle]

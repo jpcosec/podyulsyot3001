@@ -6,9 +6,13 @@ browser navigation using a cyclic graph with a 4-level fallback cascade.
 
 import asyncio
 import copy
+from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Union
 
+import aiosqlite
 from langgraph.checkpoint.memory import MemorySaver
+from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from langgraph.graph import END, StateGraph
 from langchain_core.runnables import RunnableConfig
 
@@ -530,8 +534,12 @@ def route_after_agent(state: AriadneState) -> str:
 # --- Graph Construction ---
 
 
-def create_ariadne_graph():
-    """Compiles the Ariadne 2.0 StateGraph with memory and HITL."""
+@asynccontextmanager
+async def create_ariadne_graph(
+    checkpoint_path: Path | str | None = None,
+    use_memory: bool = False,
+):
+    """Compile the Ariadne 2.0 StateGraph with persistent HITL checkpoints."""
     workflow = StateGraph(AriadneState)
 
     workflow.add_node("observe", observe_node)
@@ -575,5 +583,19 @@ def create_ariadne_graph():
 
     workflow.add_edge("human_in_the_loop", "observe")
 
-    memory = MemorySaver()
-    return workflow.compile(checkpointer=memory, interrupt_before=["human_in_the_loop"])
+    if use_memory:
+        checkpointer = MemorySaver()
+        yield workflow.compile(
+            checkpointer=checkpointer,
+            interrupt_before=["human_in_the_loop"],
+        )
+    else:
+        resolved_path = Path(checkpoint_path or "data/ariadne/checkpoints.db")
+        resolved_path.parent.mkdir(parents=True, exist_ok=True)
+        async with AsyncSqliteSaver.from_conn_string(
+            str(resolved_path)
+        ) as checkpointer:
+            yield workflow.compile(
+                checkpointer=checkpointer,
+                interrupt_before=["human_in_the_loop"],
+            )

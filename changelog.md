@@ -40,6 +40,12 @@ All notable changes to this project will be documented in this file.
 - Added discovery search maps in `src/automation/portals/linkedin/maps/search.json` and `src/automation/portals/stepstone/maps/search.json`.
 - Extended `src/automation/ariadne/graph/orchestrator.py` so extraction edges merge discovered values into `session_memory`, with regression coverage in `tests/unit/automation/ariadne/test_discovery_mission.py` and `tests/unit/automation/test_main_scrape.py`.
 
+## [2026-04-12] - Ariadne Persistent Checkpointing
+
+### Changed
+- Switched `src/automation/ariadne/graph/orchestrator.py` from in-memory checkpoints to SQLite-backed checkpoints via `AsyncSqliteSaver`, using `data/ariadne/checkpoints.db` by default and an async context-managed graph factory for clean lifecycle management.
+- Updated `src/automation/main.py` to execute apply and scrape flows inside the new async graph context and added persistence regression coverage in `tests/unit/automation/ariadne/test_orchestrator.py`.
+
 ### Added
 - Implemented **JIT Intent Translators** for Ariadne 2.0.
   - Added `AriadneTranslator` abstract base class in `src/automation/ariadne/translators/base.py`.

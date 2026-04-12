@@ -118,7 +118,6 @@ async def run_apply(
         sys.exit(1)
 
     print("🛠️  Compiling Ariadne Graph...")
-    app = create_ariadne_graph()
 
     # 5. Execute using astream for progress tracking
     thread_id = str(uuid.uuid4())
@@ -133,22 +132,25 @@ async def run_apply(
     print("🎬 Beginning JIT Execution...\n")
 
     try:
-        # We use stream_mode="updates" to track node execution
-        async for chunk in app.astream(initial_state, config, stream_mode="updates"):
-            for node_name, state_update in chunk.items():
-                print(f"[⚡] Node: {node_name}")
+        async with create_ariadne_graph() as app:
+            # We use stream_mode="updates" to track node execution
+            async for chunk in app.astream(
+                initial_state, config, stream_mode="updates"
+            ):
+                for node_name, state_update in chunk.items():
+                    print(f"[⚡] Node: {node_name}")
 
-                # Report errors if any
-                if "errors" in state_update and state_update["errors"]:
-                    for err in state_update["errors"]:
-                        print(f"    ⚠️ ERROR: {err}")
+                    # Report errors if any
+                    if "errors" in state_update and state_update["errors"]:
+                        for err in state_update["errors"]:
+                            print(f"    ⚠️ ERROR: {err}")
 
-                # Report navigation state changes
-                if "current_state_id" in state_update:
-                    print(f"    ➡️ Map State: {state_update['current_state_id']}")
+                    # Report navigation state changes
+                    if "current_state_id" in state_update:
+                        print(f"    ➡️ Map State: {state_update['current_state_id']}")
 
-        # 6. Post-execution status check (HITL & Final Results)
-        final_state = await app.aget_state(config)
+            # 6. Post-execution status check (HITL & Final Results)
+            final_state = await app.aget_state(config)
 
         if final_state.next:
             next_node = final_state.next[0]
@@ -238,8 +240,6 @@ async def run_scrape(
         print(f"❌ Error: {e}")
         sys.exit(1)
 
-    print("🛠️  Compiling Ariadne Graph...")
-    app = create_ariadne_graph()
     thread_id = str(uuid.uuid4())
     config = {
         "configurable": {
@@ -250,32 +250,36 @@ async def run_scrape(
     }
 
     try:
-        async for chunk in app.astream(initial_state, config, stream_mode="updates"):
-            for node_name, state_update in chunk.items():
-                print(f"[⚡] Node: {node_name}")
-                if "errors" in state_update and state_update["errors"]:
-                    for err in state_update["errors"]:
-                        print(f"    ⚠️ ERROR: {err}")
-                if "current_state_id" in state_update:
-                    print(f"    ➡️ Map State: {state_update['current_state_id']}")
+        print("🛠️  Compiling Ariadne Graph...")
+        async with create_ariadne_graph() as app:
+            async for chunk in app.astream(
+                initial_state, config, stream_mode="updates"
+            ):
+                for node_name, state_update in chunk.items():
+                    print(f"[⚡] Node: {node_name}")
+                    if "errors" in state_update and state_update["errors"]:
+                        for err in state_update["errors"]:
+                            print(f"    ⚠️ ERROR: {err}")
+                    if "current_state_id" in state_update:
+                        print(f"    ➡️ Map State: {state_update['current_state_id']}")
 
-        final_state = await app.aget_state(config)
-        state_values = final_state.values
-        extracted_payload = state_values.get("session_memory", {})
+            final_state = await app.aget_state(config)
+            state_values = final_state.values
+            extracted_payload = state_values.get("session_memory", {})
 
-        if state_values.get("current_state_id") in ariadne_map.success_states:
-            print("\n✅ Discovery Success: Mission Completed.")
-        elif state_values.get("errors"):
-            print("\n❌ Discovery Terminated with Errors.")
-            for err in state_values["errors"]:
-                print(f"    - {err}")
-        else:
-            print(
-                f"\n⏹️  Discovery Stopped at State: {state_values.get('current_state_id')}"
-            )
+            if state_values.get("current_state_id") in ariadne_map.success_states:
+                print("\n✅ Discovery Success: Mission Completed.")
+            elif state_values.get("errors"):
+                print("\n❌ Discovery Terminated with Errors.")
+                for err in state_values["errors"]:
+                    print(f"    - {err}")
+            else:
+                print(
+                    f"\n⏹️  Discovery Stopped at State: {state_values.get('current_state_id')}"
+                )
 
-        print("\n📦 Extracted Session Memory")
-        print(json.dumps(extracted_payload, indent=2, sort_keys=True))
+            print("\n📦 Extracted Session Memory")
+            print(json.dumps(extracted_payload, indent=2, sort_keys=True))
     except Exception as e:
         print(f"\n💥 Fatal Discovery Error: {str(e)}")
         import traceback
