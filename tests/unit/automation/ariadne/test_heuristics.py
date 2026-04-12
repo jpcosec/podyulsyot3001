@@ -1,10 +1,12 @@
 """Tests for Ariadne Local Heuristics logic."""
 
 import pytest
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 from src.automation.ariadne.graph.orchestrator import (
     apply_local_heuristics_node,
     execute_deterministic_node,
+    route_after_heuristics,
+    MAX_HEURISTIC_RETRIES,
 )
 from src.automation.ariadne.models import (
     AriadneTarget,
@@ -22,6 +24,7 @@ async def test_apply_local_heuristics_node_success():
     """Verify that apply_local_heuristics_node correctly patches components and clears errors."""
     # Mock Mode
     mock_mode = MagicMock()
+    mock_mode.apply_local_heuristics = AsyncMock()
 
     # Original definition
     original_target = AriadneTarget(css="#old")
@@ -68,6 +71,7 @@ async def test_apply_local_heuristics_node_success():
             "portal_mode": "test-mode",
             "errors": ["SomeError"],
             "patched_components": {},
+            "session_memory": {},
         }
 
         config = {"configurable": {}}
@@ -77,6 +81,7 @@ async def test_apply_local_heuristics_node_success():
         assert result["errors"] == []  # Errors cleared
         assert "state1:btn" in result["patched_components"]
         assert result["patched_components"]["state1:btn"].css == "#new"
+        assert result["session_memory"]["heuristic_retries"] == 1
 
 
 @pytest.mark.asyncio
@@ -84,6 +89,7 @@ async def test_apply_local_heuristics_node_no_patch():
     """Verify that apply_local_heuristics_node returns empty dict when no patches are found."""
     # Mock Mode
     mock_mode = MagicMock()
+    mock_mode.apply_local_heuristics = AsyncMock()
 
     definition = AriadneStateDefinition(
         id="state1",
@@ -118,11 +124,35 @@ async def test_apply_local_heuristics_node_no_patch():
             "current_state_id": "state1",
             "portal_mode": "test-mode",
             "errors": ["SomeError"],
+            "session_memory": {},
         }
 
         result = await apply_local_heuristics_node(state, {})
 
         assert result == {}  # No changes returned, errors remain
+
+
+def test_route_after_heuristics_uses_circuit_breaker():
+    """Heuristics retries should eventually escalate to the LLM rescue agent."""
+    assert (
+        route_after_heuristics({"errors": ["boom"], "session_memory": {}})
+        == "llm_rescue_agent"
+    )
+    assert (
+        route_after_heuristics(
+            {
+                "errors": [],
+                "session_memory": {"heuristic_retries": MAX_HEURISTIC_RETRIES},
+            }
+        )
+        == "llm_rescue_agent"
+    )
+    assert (
+        route_after_heuristics(
+            {"errors": [], "session_memory": {"heuristic_retries": 1}}
+        )
+        == "execute_deterministic"
+    )
 
 
 @pytest.mark.asyncio

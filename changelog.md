@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-12] - Heuristic Retry Circuit Breaker
+
+### Changed
+- Added a heuristics circuit breaker in `src/automation/ariadne/graph/orchestrator.py` by tracking `heuristic_retries` in `session_memory`, escalating to `llm_rescue_agent` after repeated retry loops, and resetting the counter after deterministic progress.
+- Updated `tests/unit/automation/ariadne/test_heuristics.py` with regression coverage for retry counting and heuristic-to-agent escalation.
+
 ## [2026-04-12] - Documentation Compliance Cleanup
 
 ### Changed

@@ -35,6 +35,9 @@ from src.automation.ariadne.modes.registry import ModeRegistry
 from src.automation.ariadne.danger_contracts import ApplyDangerSignals
 
 
+MAX_HEURISTIC_RETRIES = 2
+
+
 def _patched_component_key(state_id: str, component_name: str) -> str:
     """Namespace heuristic patches to the state they belong to."""
     return f"{state_id}:{component_name}"
@@ -444,11 +447,16 @@ async def execute_deterministic_node(
         return {"errors": [f"ExecutionError: {str(e)}"]}
 
     updates = {"current_state_id": batch[-1].to_state, "errors": []}
+    session_memory = state.get("session_memory", {}).copy()
+    if session_memory.get("heuristic_retries"):
+        session_memory["heuristic_retries"] = 0
+
     extracted_memory = _collect_extracted_memory(batch[-1], result, state)
     if extracted_memory:
-        new_memory = state.get("session_memory", {}).copy()
-        new_memory.update(extracted_memory)
-        updates["session_memory"] = new_memory
+        session_memory.update(extracted_memory)
+
+    if session_memory != state.get("session_memory", {}):
+        updates["session_memory"] = session_memory
 
     _record_graph_event(
         config,
@@ -501,7 +509,7 @@ async def apply_local_heuristics_node(
         return {"errors": [f"StateDefinitionNotFoundError: {current_state_id}"]}
 
     # 3. Apply heuristics (using a deep copy to be safe)
-    patched_definition = mode.apply_local_heuristics(
+    patched_definition = await mode.apply_local_heuristics(
         copy.deepcopy(definition), runtime_state=state
     )
 
@@ -513,11 +521,19 @@ async def apply_local_heuristics_node(
             new_patches[patch_key] = target
 
     if new_patches:
+        session_memory = state.get("session_memory", {}).copy()
+        session_memory["heuristic_retries"] = (
+            session_memory.get("heuristic_retries", 0) + 1
+        )
         print(
             f"--- HEURISTICS: Patched {len(new_patches)} components for state '{current_state_id}' ---"
         )
         # Clear errors if we found patches to attempt retry
-        return {"patched_components": new_patches, "errors": []}
+        return {
+            "patched_components": new_patches,
+            "session_memory": session_memory,
+            "errors": [],
+        }
 
     print(f"--- HEURISTICS: No local patches found for state '{current_state_id}' ---")
     return {}
@@ -567,7 +583,8 @@ def route_after_deterministic(state: AriadneState) -> str:
 
 def route_after_heuristics(state: AriadneState) -> str:
     """Routing logic after heuristics application."""
-    if state.get("errors"):
+    heuristic_retries = state.get("session_memory", {}).get("heuristic_retries", 0)
+    if state.get("errors") or heuristic_retries >= MAX_HEURISTIC_RETRIES:
         return "llm_rescue_agent"
 
     return "execute_deterministic"
