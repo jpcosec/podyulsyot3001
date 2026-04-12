@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-12] - Crawl4AI Translator Bug Fixes
+
+### Fixed
+- Fixed PRESS intent requiring selector when it shouldn't in `src/automation/adapters/translators/crawl4ai.py`.
+- Fixed WAIT logic bug where `value.isdigit()` was checked twice, using wrong variable in fallback.
+- PRESS now outputs `PRESS key` without requiring a selector.
+- WAIT intelligently handles ms vs seconds and selector-based waiting.
+
+## [2026-04-12] - Test Structure Mirror
+
+### Added
+- Created `tests/unit/automation/motors/test_browseros_executor.py` with 10 tests for BrowserOS executor.
+- Created `tests/unit/automation/motors/test_crawl4ai_executor.py` with 9 tests for Crawl4AI executor.
+- Created `tests/unit/automation/adapters/test_translators.py` with 8 tests for translator registry.
+
 ## [2026-04-12] - Edge Priority Selection Fix
 
 ### Changed
