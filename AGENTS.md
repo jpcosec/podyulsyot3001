@@ -168,7 +168,15 @@ When editing code or documentation, refer to `docs/standards/` before making cha
 - Never ask the user which issue to solve next; there is no usefulness in that. Follow dependency order from `plan_docs/issues/Index.md`.
 - Do not ask the user for permission to continue to the next protocol-defined step. If the dependency order, issue workflow, and git-safety rules already determine the next action, just do it.
 - Do not ask rhetorical progress questions such as whether to continue, whether to take the next cleanup step, or whether to make the required snapshot commit.
-- Once an issue is resolved, remove it from `plan_docs/issues/Index.md` and delete the issue file.
+
+### Execution Mandates
+
+To ensure system integrity and agent efficiency, follow the **Commit -> Delete -> Clean** cycle:
+
+1.  **Granular Traceability**: Commit immediately after solving a single atomized issue. This creates a perfect audit log and allows for surgical reverts if a regression is introduced.
+2.  **Ephemerality**: Issue files are temporary work contracts. Once the work is delivered and verified, **delete the issue file** immediately. Leaving fulfilled contracts in the workspace violates the "no archives" rule.
+3.  **Context Integrity**: For AI agents, a finished task remaining in the `Index.md` is "noise" that consumes context and causes redundant reasoning. **Remove resolved entries from the Index** to maintain focus on the next dependency.
+4.  **Single Source of Truth**: The `Index.md` must always reflect the *live* state of the project. If an entry is present, the logic must be physically missing or broken in the code.
 
 ## Documentation Lifecycle
 
