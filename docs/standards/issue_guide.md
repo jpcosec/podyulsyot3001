@@ -94,10 +94,14 @@ Issue files are ephemeral (plan_docs/ lifespan rules apply). Once an issue is so
  1. Check whether any existing test is no longer valid and delete it if needed.
  2. Add new tests where necessary.
  3. Run the relevant tests.
- 4. Verify compliance: Check that the implementation complies with all project standards and architectural boundaries.
- 5. Update changelog.md.
- 6. Delete the solved issue from both this index and the corresponding file in plan_docs/issues/.
- 7. Make a commit that clearly states what was fixed, making sure all required files are staged.
+ 4. Update changelog.md.
+ 5. Delete the solved issue from both this index and the corresponding file in plan_docs/issues/.
+ 6. Make a commit that clearly states what was fixed, making sure all required files are staged.
+
+### Phase Completion (Level-up Ritual)
+
+When all parallelizable issues in a given Phase/Level are completed, you MUST perform a compliance check before moving to the next Phase:
+- **Verify compliance**: Check that the combined implementations of the phase comply with all project standards and architectural boundaries. Run all architectural fitness functions and full test suites to ensure no regressions were introduced.
 
 ### Validation-type issues
 
