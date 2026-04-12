@@ -1,5 +1,7 @@
 # Documentation
 
+> **This repo uses README files as an indexation system.** READMEs point to source files (the definitive truth), they do not duplicate content. See root `README.md` for the full hierarchy.
+
 ## Ariadne references
 
 - `ariadne/architecture_and_graph.md` — graph topology, state model, and execution flow

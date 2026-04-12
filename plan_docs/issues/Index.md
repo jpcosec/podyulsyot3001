@@ -7,46 +7,36 @@ All issue-fixing work must stay aligned with the rest of plan_docs/ and docs/, w
 ## Initialization Procedure (Before Execution)
 
 Before executing any issue or assigning work to a subagent, you MUST perform this ritual:
- 1. Atomize: break down work into the smallest possible units.
- 2. See what's redundant > merge.
- 3. Legacy > delete.
- 4. Contradictory > resolve.
- 5. Iterate until the plan is clean and straightforward.
- 6. Update `plan_docs/issues/Index.md`.
- 7. Execute using the smallest possible/available subagent for each step. Provide the subagent with explicit context (e.g., architectural boundaries, limits, or relevant reference files) to prevent them from making wrong choices. Review their work.
+  1. Atomize: break down work into the smallest possible units.
+  2. See what's redundant > merge.
+  3. Legacy > delete.
+  4. Contradictory > resolve.
+  5. Iterate until the plan is clean and straightforward.
+  6. Update `plan_docs/issues/Index.md`.
+  7. Execute using the smallest possible/available subagent for each step. Provide the subagent with explicit context (e.g., architectural boundaries, limits, or relevant reference files) to prevent them from making wrong choices. Review their work.
 
 ## Working rule for every issue
 
 Once an issue is solved, the next step is always:
 
- 1. Check whether any existing test is no longer valid and delete it if needed.
- 2. Add new tests where necessary.
- 3. Run the relevant tests.
- 4. Update changelog.md.
- 5. Delete the solved issue from both this index and the corresponding file in plan_docs/issues/.
- 6. Make a commit that clearly states what was fixed, making sure all required files are staged.
+  1. Check whether any existing test is no longer valid and delete it if needed.
+  2. Add new tests where necessary.
+  3. Run the relevant tests.
+  4. Update changelog.md.
+  5. Delete the solved issue from both this index and the corresponding file in plan_docs/issues/.
+  6. Make a commit that clearly states what was fixed, making sure all required files are staged.
 
 ## Phase Completion Ritual
 
 When all parallelizable issues in a given Phase/Level are completed, you MUST perform a compliance check before moving to the next Phase:
- 1. Verify compliance: Check that the combined implementations of the phase comply with all project standards and architectural boundaries.
- 2. Run all architectural fitness functions and full test suites to ensure no regressions were introduced.
+  1. Verify compliance: Check that the combined implementations of the phase comply with all project standards and architectural boundaries.
+  2. Run all architectural fitness functions and full test suites to ensure no regressions were introduced.
 
 ## Priority roadmap
 
 ### Phase 6 — Runtime Hardening
 
-   1. plan_docs/issues/gaps/missing-test-structure.md
-      • [Ensures unit tests mirror src/automation/ structure per STANDARDS]
-
-   2. plan_docs/issues/gaps/async-mode-io.md
-      • [Removes blocking LLM calls from the async graph loop]
-
-   3. plan_docs/issues/gaps/lazy-danger-detection.md
-      • [Avoids unconditional LLM danger checks in observe hot loops]
-
-   5. plan_docs/issues/gaps/rewrite-crawl4ai-translator.md
-      • [Replaces invalid hybrid batch code with native Crawl4AI scripts]
+- Completed on 2026-04-12: Test structure mirror, async-safe modes (already done), lazy danger detection (already done), edge priority selection, and native C4A-Script output.
 
 ### Phase 1 — Execution & State Integrity (Hotfixes)
 
@@ -68,10 +58,6 @@ When all parallelizable issues in a given Phase/Level are completed, you MUST pe
 
 - Completed on 2026-04-12: persistent checkpoints, graph trace recording, and draft-map promotion are implemented.
 
-## Dependency summary
-
-- plan_docs/issues/gaps/lazy-danger-detection.md -> plan_docs/issues/gaps/async-mode-io.md
-
 ## Parallelization map
 
 Phase 1  [done]          ← [Hotfixes]
@@ -79,4 +65,4 @@ Phase 2  [done]          ← [Polish]
 Phase 3  [done]          ← [Functional]
 Phase 4  [done]          ← [Discovery]
 Phase 5  [done]          ← [Lifecycle]
-Phase 6  [1][2][4][5]     ← [Hardening], then [3]
+Phase 6  [done]          ← [Hardening]

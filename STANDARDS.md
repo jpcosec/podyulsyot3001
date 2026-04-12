@@ -75,6 +75,19 @@ Logs are real-time execution documentation. Import `LogTag` from `src/shared/log
 
 ## 3. Documentation & Schemas
 
+### Test Structure Mirror
+Tests MUST mirror the `src/` structure. For every `src/package/module.py` that needs a test, create `tests/unit/package/module.py`:
+
+```
+src/automation/motors/browseros/executor.py
+→ tests/unit/automation/motors/test_browseros_executor.py
+
+src/automation/ariadne/modes/default.py
+→ tests/unit/automation/ariadne/test_modes.py
+```
+
+This ensures test discoverability and prevents orphaned tests.
+
 ### Pydantic Field Descriptions
 `Field(description=...)` is consumed by LLMs for structured outputs.
 - Write semantic, specific descriptions with examples.

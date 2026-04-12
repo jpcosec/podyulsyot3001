@@ -7,9 +7,13 @@ import argparse
 import asyncio
 import json
 import os
+import subprocess
+import time
 import traceback
 import uuid
 from typing import Optional
+
+import requests
 
 from src.automation.ariadne.graph.orchestrator import create_ariadne_graph
 from src.automation.ariadne.models import AriadneMap, AriadneState
@@ -30,6 +34,11 @@ def _build_parser() -> argparse.ArgumentParser:
     """Build the canonical automation CLI parser."""
     parser = argparse.ArgumentParser(
         description="Ariadne 2.0 CLI - Semantic Browser Automation"
+    )
+    parser.add_argument(
+        "--auto-start-browseros",
+        action="store_true",
+        help="Auto-launch BrowserOS if not running",
     )
     subparsers = parser.add_subparsers(dest="command", help="Subcommand to execute")
 
@@ -329,12 +338,68 @@ async def run_scrape(
     return 0
 
 
+def _check_browseros_running(base_url: str = "http://127.0.0.1:9000") -> bool:
+    """Check if BrowserOS is running at the given base URL."""
+    try:
+        resp = requests.get(f"{base_url}/mcp", timeout=5)
+        return resp.status_code == 200
+    except requests.RequestException:
+        return False
+
+
+def _launch_browseros(appimage_path: str) -> subprocess.Popen:
+    """Launch BrowserOS via AppImage and return the process handle."""
+    return subprocess.Popen(
+        [appimage_path, "--no-sandbox"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+
+def _ensure_browseros(
+    auto_start: bool, base_url: str = "http://127.0.0.1:9000"
+) -> None:
+    """Ensure BrowserOS is running, optionally auto-launching if enabled."""
+    if _check_browseros_running(base_url):
+        print(f"[✅] BrowserOS already running at {base_url}")
+        return
+
+    if not auto_start:
+        print(f"[❌] BrowserOS not running at {base_url}")
+        print(
+            "    Use --auto-start-browseros to auto-launch, or set BROWSEROS_APPIMAGE_PATH"
+        )
+        raise CliExecutionError("BrowserOS unreachable")
+
+    appimage_path = os.environ.get("BROWSEROS_APPIMAGE_PATH")
+    if not appimage_path:
+        print("[❌] BROWSEROS_APPIMAGE_PATH not set")
+        raise CliExecutionError("Cannot auto-start: BROWSEROS_APPIMAGE_PATH not set")
+
+    print(f"[⚡] Launching BrowserOS from {appimage_path}...")
+    proc = _launch_browseros(appimage_path)
+
+    for _ in range(30):
+        time.sleep(1)
+        if _check_browseros_running(base_url):
+            print(f"[✅] BrowserOS running at {base_url}")
+            return
+
+    proc.kill()
+    raise CliExecutionError("BrowserOS failed to start within 30s")
+
+
 def main(argv: list[str] | None = None) -> int:
     """Parse CLI args, dispatch commands, and return a process exit code."""
     parser = _build_parser()
     args = parser.parse_args(argv)
 
+    base_url = os.environ.get("BROWSEROS_BASE_URL", "http://127.0.0.1:9000")
+
     try:
+        if args.auto_start_browseros:
+            _ensure_browseros(auto_start=True, base_url=base_url)
+
         if args.command == "apply":
             if args.resume and not args.thread_id:
                 raise CliInputError("--resume requires --thread-id")
@@ -352,9 +417,12 @@ def main(argv: list[str] | None = None) -> int:
             )
 
         if args.command == "browseros-check":
-            print("[⚡] Checking BrowserOS runtime (http://127.0.0.1:9000)...")
-            print("[✅] Status: Placeholder check complete.")
-            return 0
+            print(f"[⚡] Checking BrowserOS runtime ({base_url})...")
+            if _check_browseros_running(base_url):
+                print(f"[✅] BrowserOS running at {base_url}")
+                return 0
+            print(f"[❌] BrowserOS not running at {base_url}")
+            return 1
 
         if args.command == "scrape":
             return asyncio.run(

@@ -43,7 +43,7 @@ async def test_observe_node_success():
     config = {"configurable": {"executor": mock_executor}}
 
     mock_mode = MagicMock()
-    mock_mode.inspect_danger.return_value = MagicMock(findings=[])
+    mock_mode.inspect_danger = AsyncMock(return_value=MagicMock(findings=[]))
     mock_map = MagicMock()
     mock_map.states = {
         "start": AriadneStateDefinition(

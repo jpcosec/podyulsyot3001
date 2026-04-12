@@ -4,5 +4,5 @@ Durable reference material that is not an active plan and does not belong inside
 
 ## Contents
 
-- This folder currently contains only `docs/reference/README.md`.
-- External vendor references are no longer vendored in this worktree; use canonical module READMEs and `docs/ariadne/` for active repository guidance.
+- [external_libs/](external_libs/) — External vendor documentation (BrowserOS, Crawl4AI)
+- [browseros_interfaces.md](browseros_interfaces.md) — BrowserOS interface contracts

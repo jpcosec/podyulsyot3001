@@ -4,7 +4,19 @@ This worktree is focused on the browser automation pipeline, utilizing the **Ari
 
 ---
 
-## Architecture
+## README Indexation System
+
+This repo uses README files as an **indexation system** to avoid context overload and drift:
+
+1. **`README.md` (root)** → points to module READMEs
+2. **Module READMEs** (`src/automation/README.md`, `docs/README.md`) → point to definitive source files
+3. **Source files** (`src/automation/*.py`, `docs/ariadne/*.md`) → the actual source of truth
+
+READMEs are NOT comprehensive documentation. They are navigation hints. Do not duplicate content from source files into READMEs.
+
+---
+
+## 🏗️ Architecture & Features
 
 All runtime automation code lives under `src/automation/`:
 
@@ -18,7 +30,7 @@ For a detailed architectural overview, see `docs/ariadne/architecture_and_graph.
 
 ---
 
-## Configuration
+## ⚙️ Configuration
 
 The worktree uses a root `.env` file for runtime secrets and environment setup.
 
@@ -52,7 +64,7 @@ For runtime behavior and package boundaries, start with `src/automation/README.m
 
 ---
 
-## CLI / Usage
+## 🚀 CLI / Usage
 
 The unified automation CLI is the primary entry point. The authoritative command surface lives in `src/automation/main.py`.
 
@@ -67,7 +79,9 @@ python -m src.automation.main apply --source xing --job-id 12345 --cv path/to/cv
 python -m src.automation.main apply --backend browseros --source linkedin --job-id 99 --cv path/to/cv.pdf
 ```
 
-## Data Contract
+---
+
+## 📝 Data Contract
 
 - The canonical runtime contracts live in `src/automation/ariadne/models.py`, `src/automation/ariadne/contracts/base.py`, and `src/automation/contracts.py`.
 - Runtime artifacts are stored under `data/jobs/<source>/<job_id>/` and `data/ariadne/`.

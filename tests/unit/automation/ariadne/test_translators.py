@@ -62,7 +62,7 @@ def test_crawl4ai_translator_click(mock_state):
     target = AriadneTarget(css="button.submit")
     command = translator.translate_intent(AriadneIntent.CLICK, target, mock_state)
     assert isinstance(command, CrawlCommand)
-    assert 'await page.click("button.submit")' in command.c4a_script
+    assert "CLICK `button.submit`" == command.c4a_script
 
 
 def test_crawl4ai_translator_fill(mock_state):
@@ -72,4 +72,4 @@ def test_crawl4ai_translator_fill(mock_state):
         AriadneIntent.FILL, target, mock_state, value="Python"
     )
     assert isinstance(command, CrawlCommand)
-    assert 'await page.fill("input[name=\'q\']", "Python")' in command.c4a_script
+    assert "SET `input[name='q']` \"Python\"" == command.c4a_script

@@ -52,8 +52,8 @@ def test_crawl4ai_translator_batching(mock_state):
     cmd = translator.translate_batch(batch, mock_state)
 
     assert isinstance(cmd, CrawlCommand)
-    assert 'await page.fill("#name", "John Doe")' in cmd.c4a_script
-    assert 'await page.click("#submit")' in cmd.c4a_script
+    assert 'SET `#name` "John Doe"' in cmd.c4a_script
+    assert "CLICK `#submit`" in cmd.c4a_script
     assert "\n" in cmd.c4a_script
 
 

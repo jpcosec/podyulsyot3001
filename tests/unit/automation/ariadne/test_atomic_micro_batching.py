@@ -149,24 +149,18 @@ async def test_atomic_fallback_on_batch_failure(mock_state, mock_map_repo):
     # Verify the executor was called correctly
     assert mock_executor.execute.call_count == 2
 
-    # First call should be the big batch script
+    # First call should be the batch script
     first_call_cmd = mock_executor.execute.call_args_list[0].args[0]
     assert isinstance(first_call_cmd, CrawlCommand)
-    # Check that it's a batch script with our try/catch logic
-    assert "try {" in first_call_cmd.c4a_script
-    assert (
-        "return { 'failed_at': 0, 'completed_count': 0, 'error': e.message }"
-        in first_call_cmd.c4a_script
-    )
-    assert 'await page.fill("#input2", "val2")' in first_call_cmd.c4a_script
-    assert 'await page.click("#submit-btn")' not in first_call_cmd.c4a_script
+    # Check that it's a batch script with native C4A-Script
+    assert "SET" in first_call_cmd.c4a_script
+    assert 'SET `#input2` "val2"' in first_call_cmd.c4a_script
 
     # Second call should be the atomic retry of the failed action
     second_call_cmd = mock_executor.execute.call_args_list[1].args[0]
     assert isinstance(second_call_cmd, CrawlCommand)
-    assert 'await page.fill("#input2", "val2")' in second_call_cmd.c4a_script
-    assert "try {" not in second_call_cmd.c4a_script
-    assert "failed_at" not in second_call_cmd.c4a_script
+    assert 'SET `#input2` "val2"' in second_call_cmd.c4a_script
+    assert "# Action" not in second_call_cmd.c4a_script
 
     print("Test passed: Orchestrator correctly fell back to atomic execution.")
 
@@ -208,7 +202,7 @@ async def test_full_batch_failure_stops_execution(mock_state, mock_map_repo):
 
 def test_crawl4ai_translator_generates_correct_atomic_batch_script(mock_state):
     """
-    Verify the translator creates a JS script with the correct try/catch structure.
+    Verify the translator creates a native C4A-Script batch.
     """
     translator = Crawl4AITranslator()
 
@@ -221,23 +215,10 @@ def test_crawl4ai_translator_generates_correct_atomic_batch_script(mock_state):
 
     assert isinstance(cmd, CrawlCommand)
 
-    expected_script = """try {
-  // Action 0
-  try {
-    await page.fill("#name", "John Doe");
-  } catch (e) {
-    return { 'failed_at': 0, 'completed_count': 0, 'error': e.message };
-  }
-  // Action 1
-  try {
-    await page.click("#submit");
-  } catch (e) {
-    return { 'failed_at': 1, 'completed_count': 1, 'error': e.message };
-  }
-  return { 'completed_count': 2 };
-} catch (e) {
-  return { 'failed_at': -1, 'completed_count': 0, 'error': `Unexpected batch error: ${e.message}` };
-}"""
+    expected_script = """# Action 0
+SET `#name` "John Doe"
+# Action 1
+CLICK `#submit`"""
 
     assert cmd.c4a_script == expected_script
     print("Test passed: Translator generates correct atomic batch script.")
