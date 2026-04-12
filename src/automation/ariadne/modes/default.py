@@ -6,6 +6,7 @@ is available or identified. It relies on generalized heuristics and LLMs.
 
 from __future__ import annotations
 
+import re
 from typing import Any, Dict, Optional
 
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -26,6 +27,16 @@ from src.automation.ariadne.modes.base import AriadneMode
 class DefaultMode(AriadneMode):
     """Fallback mode for generalized interpretation using LLMs."""
 
+    _danger_keywords = (
+        "captcha",
+        "security",
+        "verify",
+        "robot",
+        "human",
+        "permission denied",
+        "access denied",
+    )
+
     def __init__(self):
         self._llm: ChatGoogleGenerativeAI | None = None
 
@@ -35,7 +46,7 @@ class DefaultMode(AriadneMode):
             self._llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash")
         return self._llm
 
-    def normalize_job(self, payload: JobPosting) -> JobPosting:
+    async def normalize_job(self, payload: JobPosting) -> JobPosting:
         """Clean up and normalize job posting data using LLM cleanup."""
         try:
             structured_llm = self._get_llm().with_structured_output(JobPosting)
@@ -45,7 +56,7 @@ class DefaultMode(AriadneMode):
                 "Do not invent information; if a field is missing, leave it as is or null.\n\n"
                 f"Input Data: {payload.model_dump_json()}"
             )
-            normalized = structured_llm.invoke(prompt)
+            normalized = await structured_llm.ainvoke(prompt)
             if isinstance(normalized, JobPosting):
                 return normalized
             return payload
@@ -54,8 +65,30 @@ class DefaultMode(AriadneMode):
             print(f"--- DEFAULT MODE: normalize_job failed: {e} ---")
             return payload
 
-    def inspect_danger(self, snapshot: ApplyDangerSignals) -> ApplyDangerReport:
-        """Evaluate security blocks, CAPTCHAs, or login walls via LLM analysis."""
+    def _requires_llm_danger_check(self, snapshot: ApplyDangerSignals) -> bool:
+        """Run a cheap keyword pass before escalating danger detection to the LLM."""
+        evidence = " ".join(
+            part.lower()
+            for part in [
+                snapshot.dom_text,
+                snapshot.screenshot_text,
+                snapshot.current_url,
+            ]
+            if part
+        )
+        if not evidence:
+            return False
+
+        return any(
+            re.search(rf"\b{re.escape(keyword)}\b", evidence)
+            for keyword in self._danger_keywords
+        )
+
+    async def inspect_danger(self, snapshot: ApplyDangerSignals) -> ApplyDangerReport:
+        """Evaluate security blocks, CAPTCHAs, or login walls via gated LLM analysis."""
+        if not self._requires_llm_danger_check(snapshot):
+            return ApplyDangerReport(findings=[])
+
         try:
             structured_llm = self._get_llm().with_structured_output(ApplyDangerReport)
             prompt = (
@@ -72,7 +105,7 @@ class DefaultMode(AriadneMode):
             if snapshot.current_url:
                 prompt += f"Current URL: {snapshot.current_url}\n"
 
-            report = structured_llm.invoke(prompt)
+            report = await structured_llm.ainvoke(prompt)
             if isinstance(report, ApplyDangerReport):
                 return report
             return ApplyDangerReport(findings=[])
@@ -80,7 +113,7 @@ class DefaultMode(AriadneMode):
             print(f"--- DEFAULT MODE: inspect_danger failed: {e} ---")
             return ApplyDangerReport(findings=[])
 
-    def apply_local_heuristics(
+    async def apply_local_heuristics(
         self,
         state_definition: AriadneStateDefinition,
         runtime_state: Optional[Dict[str, Any]] = None,
@@ -116,7 +149,7 @@ class DefaultMode(AriadneMode):
                 f"Current Page DOM (truncated):\n{dom_summary}"
             )
 
-            response = structured_llm.invoke(prompt)
+            response = await structured_llm.ainvoke(prompt)
             components = getattr(response, "components", None)
             if components:
                 print(f"--- DEFAULT MODE: LLM proposed {len(components)} patches ---")

@@ -47,11 +47,11 @@ class JsonConfigMode(AriadneMode):
             cls.preload_configs()
         return dict(cls._config_cache.get(portal_name, {}))
 
-    def normalize_job(self, payload: JobPosting) -> JobPosting:
+    async def normalize_job(self, payload: JobPosting) -> JobPosting:
         # Default implementation: pass-through
         return payload
 
-    def inspect_danger(self, snapshot: Any) -> ApplyDangerReport:
+    async def inspect_danger(self, snapshot: Any) -> ApplyDangerReport:
         if not isinstance(snapshot, ApplyDangerSignals):
             return ApplyDangerReport(findings=[])
 
@@ -85,7 +85,7 @@ class JsonConfigMode(AriadneMode):
 
         return ApplyDangerReport(findings=findings)
 
-    def apply_local_heuristics(
+    async def apply_local_heuristics(
         self,
         state_definition: AriadneStateDefinition,
         runtime_state: Optional[Dict[str, Any]] = None,
@@ -108,7 +108,7 @@ class LinkedInMode(JsonConfigMode):
     def __init__(self):
         super().__init__("linkedin")
 
-    def normalize_job(self, payload: JobPosting) -> JobPosting:
+    async def normalize_job(self, payload: JobPosting) -> JobPosting:
         # Cleanup LinkedIn-specific location suffixes
         if payload.location:
             payload.location = payload.location.split("·")[0].strip()
@@ -123,7 +123,7 @@ class StepStoneMode(JsonConfigMode):
     def __init__(self):
         super().__init__("stepstone")
 
-    def normalize_job(self, payload: JobPosting) -> JobPosting:
+    async def normalize_job(self, payload: JobPosting) -> JobPosting:
         # Cleanup StepStone markers
         if payload.company_name:
             payload.company_name = payload.company_name.replace(" (m/w/d)", "").strip()
