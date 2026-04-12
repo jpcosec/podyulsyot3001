@@ -25,7 +25,9 @@ class MapRepository:
         return f"{portal_name}:{map_type}"
 
     def get_map(self, portal_name: str, map_type: str = "easy_apply") -> AriadneMap:
-        """Retrieve a portal map by name and type.
+        """Retrieve a portal map (synchronous, uses thread pool).
+
+        Uses synchronous I/O via thread pool - safe to call from sync or async.
 
         Args:
             portal_name: Name of the portal (e.g., 'linkedin').
@@ -40,9 +42,23 @@ class MapRepository:
         cache_key = self._cache_key(portal_name, map_type)
         if cache_key in self._map_cache:
             return self._map_cache[cache_key]
-        return asyncio.get_event_loop().run_until_complete(
-            self.get_map_async(portal_name, map_type)
-        )
+
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+
+        if loop and loop.is_running():
+            ariadne_map = asyncio.run(self._load_map_async(portal_name, map_type))
+        else:
+            ariadne_map = self._load_map_sync(portal_name, map_type)
+
+        self._map_cache[cache_key] = ariadne_map
+        return ariadne_map
+
+    async def _load_map_async(self, portal_name: str, map_type: str) -> AriadneMap:
+        """Async wrapper for sync load (runs in thread pool)."""
+        return await asyncio.to_thread(self._load_map_sync, portal_name, map_type)
 
     async def get_map_async(
         self, portal_name: str, map_type: str = "easy_apply"
