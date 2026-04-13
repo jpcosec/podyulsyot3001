@@ -7,35 +7,31 @@ source: src/automation/ariadne/models.py:121
 # Pill: AriadneState
 
 ## Structure
-Key fields agents read/write (`models.py:121`):
+Key fields in `AriadneState` (TypedDict):
 
 | Field | Type | Notes |
 |---|---|---|
-| `current_mission_id` | `Optional[str]` | Active mission gate |
-| `current_state_id` | `str` | Current AriadneMap node |
-| `dom_elements` | `List[Dict]` | Snapshot of interactive elements |
-| `screenshot_b64` | `Optional[str]` | Base64; set after hint injection |
-| `session_memory` | `Dict[str, Any]` | Scratchpad — holds counters + extractions |
-| `errors` | `List[str]` | Append-only reducer — never overwrite |
-| `history` | `List[AnyMessage]` | Append via `add_messages` reducer |
-
-Key counters inside `session_memory`:
-- `heuristic_retries` — incremented by heuristics node, triggers LLM at `>= 2`
-- `agent_failures` — incremented by agent node, triggers HITL at `>= 3`
+| `job_id` | `str` | Active job identifier |
+| `portal_name` | `str` | e.g., 'linkedin', 'stepstone' |
+| `profile_data` | `Dict` | User profile / CV data |
+| `job_data` | `Dict` | Target job description data |
+| `path_id` | `Optional[str]` | Active navigation path |
+| `current_mission_id` | `Optional[str]` | Current mission goal |
+| `current_state_id` | `str` | Active Labyrinth node ID |
+| `dom_elements` | `List[Dict]` | Last captured DOM snapshot |
+| `current_url` | `str` | Last captured URL |
+| `screenshot_b64` | `Optional[str]` | Base64 encoded screenshot |
+| `session_memory` | `Dict` | Read-write mission scratchpad |
+| `errors` | `List[str]` | Append-only error log |
+| `history` | `List[AnyMessage]` | LangGraph message history |
+| `portal_mode` | `str` | Active heuristic strategy |
+| `patched_components` | `Dict` | JIT patches for Labyrinth |
 
 ## Usage
-Nodes return a **partial dict** — only changed fields. LangGraph merges it.
-
+Nodes return partial dicts to update the state.
 ```python
-async def my_node(state: AriadneState) -> Dict[str, Any]:
-    new_memory = {**state.get("session_memory", {}), "my_key": "value"}
-    return {
-        "session_memory": new_memory,
-        "errors": state.get("errors", []) + ["optional error"],
-    }
+return {"session_memory": {**state["session_memory"], "new": "val"}}
 ```
 
 ## Verify
-```bash
-grep -n "class AriadneState" src/automation/ariadne/models.py
-```
+`grep "class AriadneState" src/automation/ariadne/models.py`

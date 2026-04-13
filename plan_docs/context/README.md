@@ -51,6 +51,7 @@ ariadne
    │    ├─ ariadne-models.md
    │    ├─ error-contract.md
    │    └─ fitness-map-model.md
+   │    ├─ interpreter-node.md
    └─ pattern
        ├─ actor-pattern.md
        ├─ ariadne-thread-pattern.md

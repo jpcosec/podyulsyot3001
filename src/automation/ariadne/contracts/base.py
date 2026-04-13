@@ -102,20 +102,66 @@ class ExecutionResult(BaseModel):
 # --- Segregated Protocols ---
 
 
-class Executor(Protocol):
-    """Factory for executing JIT commands."""
+class Sensor(Protocol):
+    """Read-only browser perception contract.
 
-    async def execute(self, command: MotorCommand) -> ExecutionResult:
+    Abstract Methods:
+    - perceive() -> SnapshotResult
+    - is_healthy() -> bool
+    """
+
+    async def perceive(self) -> SnapshotResult:
+        """Captures the current browser state."""
+        ...
+
+    async def is_healthy(self) -> bool:
+        """Checks if the sensor is connected and responsive."""
+        ...
+
+
+class Motor(Protocol):
+    """Write-only browser mutation contract.
+
+    Abstract Methods:
+    - act(command: MotorCommand) -> ExecutionResult
+    - is_healthy() -> bool
+    """
+
+    async def act(self, command: MotorCommand) -> ExecutionResult:
         """Runs a JIT command or batch and returns the outcome."""
         ...
 
-    async def take_snapshot(self) -> SnapshotResult:
-        """Captures the current browser state."""
+    async def is_healthy(self) -> bool:
+        """Checks if the motor is connected and responsive."""
+        ...
+
+
+class PeripheralAdapter(Sensor, Motor, Protocol):
+    """Unified browser interface combining Sensor and Motor.
+
+    Abstract Methods:
+    - perceive() -> SnapshotResult
+    - act(command: MotorCommand) -> ExecutionResult
+    - is_healthy() -> bool
+    - __aenter__()
+    - __aexit__()
+    """
+
+    async def __aenter__(self) -> PeripheralAdapter:
+        """Enter the adapter lifecycle."""
+        ...
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+        """Exit the adapter lifecycle."""
         ...
 
 
 class Planner(Protocol):
-    """Autonomous agent that proposes recovery actions."""
+    """Autonomous agent that proposes recovery actions.
+
+    Abstract Methods:
+    - plan_action(state: Any) -> Any
+    """
 
     async def plan_action(self, state: Any) -> Any:
         """Decides the next semantic action when the graph path is lost."""
@@ -123,8 +169,12 @@ class Planner(Protocol):
 
 
 class HintingTool(Protocol):
-    """Capability to inject alphanumeric overlays on the DOM."""
+    """Capability to inject alphanumeric overlays on the DOM.
 
-    async def inject_hints(self, executor: Executor) -> Dict[str, Any]:
+    Abstract Methods:
+    - inject_hints(sensor: Sensor) -> Dict[str, Any]
+    """
+
+    async def inject_hints(self, sensor: Sensor) -> Dict[str, Any]:
         """Injects hints and returns the ID-to-metadata mapping."""
         ...

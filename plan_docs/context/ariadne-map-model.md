@@ -1,29 +1,32 @@
 ---
 type: model
 domain: ariadne
-source: src/automation/ariadne/models.py:1
+source: src/automation/ariadne/models.py:161
 ---
 
-# Pill: Ariadne Map Model (Full Schema)
+# Pill: AriadneMap Model
 
 ## Structure
-The `AriadneMap` is a static directed graph of states (`AriadneObserve`) and transitions (`AriadneEdge`).
+`AriadneMap` is the directed state graph representing a portal flow.
 
-### Components
-- `AriadneObserve`: Predicate to identify a JIT state (URL + DOM elements).
-- `AriadneEdge`: Condition to move between states (`intent`, `target`, `value`).
-- `AriadneTarget`: Exact selector/text to find an element.
+- `states`: `Dict[str, AriadneStateDefinition]` (Nodes)
+- `edges`: `List[AriadneEdge]` (Transitions)
+- `success_states`: `List[str]` (Goal nodes)
+- `failure_states`: `List[str]` (Terminal failure nodes)
+
+`AriadneStateDefinition` fields:
+- `id`: Unique state identifier.
+- `presence_predicate`: `AriadneObserve` (Logic to identify this state).
+- `components`: `Dict[str, AriadneTarget]` (Semantic elements in this state).
+
+`AriadneEdge` fields:
+- `from_state` / `to_state`: Edge endpoints.
+- `mission_id`: Optional gate (e.g., 'easy_apply').
+- `intent`: Action type (click, fill, etc.).
+- `target`: Component name or explicit `AriadneTarget`.
 
 ## Usage
-Used by `MapRepository` to load JSON maps and by the deterministic node to find the next action.
-
-```python
-# MapRepository.get_map(portal) returns an AriadneMap instance
-ariadne_map = await repo.get_map_async("linkedin")
-for edge in ariadne_map.edges:
-    if edge.from_state == current_state:
-        # Match found!
-```
+`Labyrinth` uses `AriadneMap` to resolve "Where am I?" and "What is here?".
 
 ## Verify
-Validate with `pydantic.ValidationError` on any JSON map under `src/automation/portals/`.
+`grep "class AriadneMap" src/automation/ariadne/models.py`
