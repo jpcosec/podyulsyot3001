@@ -1,10 +1,10 @@
-# Set-of-Mark: Agent Prompt and Hint Consumption
+# Set-of-Mark: Delphi Prompt and Hint Consumption
 
-**Explanation:** The rescue agent must be updated to use the hints dictionary and the annotated screenshot provided by the `observe_node`.
+**Umbrella:** depends on `ariadne-oop-skeleton.md`, `som-hint-injection.md`.
 
-**Reference:** `src/automation/ariadne/graph/nodes/agent.py`
+**Explanation:** `Delphi` must consume the hints dictionary and the annotated screenshot produced by `Theseus`/`Sensor` and reference elements via their `[AA]` labels.
 
-**Depends on:** `som-hint-injection.md`
+**Reference:** `src/automation/ariadne/core/actors.py` (`Delphi`)
 
 **Status:** Not started.
 
@@ -19,9 +19,9 @@
 2. **MCP Only:** Agent MUST only use the BrowserOS MCP toolset to interact with hints.
 
 **Real fix:**
-1. Update `agent.py` to check for `state["session_memory"]["hints"]`.
-2. If hints exist, add the hint dictionary to the agent's prompt.
-3. Instruct the agent to reference elements using their `[AA]` labels and the `click_hint` / `fill_hint` MCP tools.
+1. `Delphi.__call__` checks `state["session_memory"]["hints"]`.
+2. If hints exist, inject the hint dictionary into the LLM prompt.
+3. Instruct the LLM to reference elements using their `[AA]` labels and to emit `click_hint` / `fill_hint` tool calls routed through `Motor.act()`.
 
 **Steps:**
 1. Update the agent prompt builder.

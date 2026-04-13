@@ -1,41 +1,32 @@
 ---
 type: pattern
 domain: ariadne
-source: src/automation/ariadne/graph/nodes/agent.py:1
+source: plan_docs/design/ariadne-oop-architecture.md:96
 ---
 
 # Pill: Node Implementation Pattern
 
 ## Pattern
-All LangGraph nodes in Ariadne 2.0 must be `async` functions that accept `AriadneState` and return a **partial** state dictionary.
+LangGraph nodes should be callable actor objects with injected dependencies. Prefer `class Actor: async def __call__(self, state) -> dict` over free functions when the node needs `Sensor`, `Motor`, memory objects, or collaborators.
 
 ## Implementation
 ```python
-async def my_feature_node(state: AriadneState, config: RunnableConfig) -> Dict[str, Any]:
-    """Short description of node intent."""
-    print("--- NODE: My Feature ---")
-    
-    # 1. Extract what you need
-    portal_name = state.get("portal_name")
-    memory = state.get("session_memory", {}).copy()
-    
-    # 2. Perform async work
-    try:
-        # result = await some_async_call()
-        pass
-    except Exception as e:
-        # 3. Always catch and log to state['errors']
-        return {"errors": state.get("errors", []) + [f"FeatureError: {str(e)}"]}
-    
-    # 4. Return ONLY what changed
-    return {
-        "session_memory": {**memory, "new_key": "value"},
-        "history": state.get("history", []) # if appending messages
-    }
+class Theseus:
+    def __init__(self, sensor, motor, labyrinth, thread):
+        self.sensor = sensor
+        self.motor = motor
+        self.labyrinth = labyrinth
+        self.thread = thread
+
+    async def __call__(self, state: dict) -> dict:
+        snapshot = await self.sensor.perceive()
+        room_id = self.labyrinth.identify_room(snapshot)
+        command = self.thread.get_next_step(room_id)
+        return await self.motor.act(command)
 ```
 
 ## When to use
-Use for every new node added to `src/automation/ariadne/graph/nodes/`.
+Use for new Ariadne actors such as `Theseus`, `Delphi`, and `Recorder`.
 
 ## Verify
-Ensure the node is wired into `orchestrator.py` and returns a `Dict`.
+Ensure the actor is injected into the graph as a callable instance and returns a partial state dict.

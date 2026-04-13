@@ -1,20 +1,20 @@
 ---
 type: decision
 domain: scraping
-source: docs/adrs/2026-04-09-browseros-mcp-is-the-canonical-rescue-contract.md
+source: plan_docs/design/browseros-adapter-lifecycle.md:5
 ---
 
 # Pill: BrowserOS MCP Contract
 
 ## Decision
-The "Rescue" agent MUST interact with portals exclusively through the BrowserOS MCP (Model Context Protocol) toolset.
+BrowserOS remains the canonical rescue interface, but its lifecycle is owned by the BrowserOS adapter itself. The adapter exposes MCP-backed `Sensor`/`Motor` behavior plus `is_healthy()` and async context management.
 
 ## Rationale
-Standardizing on MCP tools (like `click_element`, `fill_form`) creates a clean interface that works across any VLM (Gemini, Claude, GPT). It prevents the agent from generating raw JS or Playwright code, which is brittle and hard to validate.
+This keeps `main.py` thin, centralizes startup and health probing, and lets the fast path fail cleanly when the physical browser layer is down.
 
 ## Trade-offs
-- Limited to the actions exposed by the MCP.
-- Requires a running MCP server (`local-server` at `:9000`).
+- Adapter implementations become heavier because they own process and network lifecycle.
+- Health checks must still respect async runtime rules.
 
 ## Do not reverse unless
-A more universal, vendor-neutral protocol for browser manipulation replaces MCP.
+BrowserOS MCP is replaced or adapter lifecycle ownership moves to another dedicated infrastructure boundary.

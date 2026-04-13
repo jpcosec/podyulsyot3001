@@ -1,30 +1,24 @@
 ---
 type: pattern
 domain: scraping
-source: src/automation/ariadne/capabilities/recording.py:1
+source: plan_docs/design/ariadne-oop-architecture.md:117
 ---
 
 # Pill: Graph Recording Pattern
 
 ## Pattern
-Record every event (URL change, click, fill) to the `AriadneState.history` during a discovery run. This is the source for future "Promotion" to a static map.
+Recording is an assimilation step, not just history accumulation. `Recorder` captures deterministic and exploratory actions, persists raw trace artifacts through the shared Ariadne I/O layer, and feeds newly discovered structure back into memory.
 
 ## Implementation
 ```python
-# In any node that performs an action
-action_event = {
-    "type": "click",
-    "selector": "#submit",
-    "url_after": await executor.get_url(),
-    "screenshot_after": await executor.take_snapshot().screenshot_b64
-}
-
-# Update history (using add_messages reducer)
-return {"history": state.get("history", []) + [action_event]}
+event = {"source": "deterministic", "payload": payload}
+await append_jsonl_async(trace_path, event)
+labyrinth.expand(room_data)
+thread.add_step(edge)
 ```
 
 ## When to use
-Use in Phase 4 `recording-promoter-guard.md`.
+Use for trace capture, session recording, and any feature that learns from executed browser actions.
 
 ## Verify
-Verify that `final_state.history` contains all executed steps in chronological order.
+Verify the raw trace is persisted, new rooms/steps are assimilated, and promotion can consume the resulting recording.

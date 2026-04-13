@@ -1,15 +1,18 @@
 # Epic 2: Prueba de Humo y Calibración End-to-End
 
-**Objective:** Validate that the assembled graph survives real browser conditions — not mocked state. Two tests: one that forces the full cascade to fail down to HITL, and one that completes a real discovery mission on StepStone.
+**Umbrella:** depends on `ariadne-oop-skeleton.md` and `interpreter-node.md`.
 
-**Priority:** HIGH — validates that Epic 1 actually works. No real confidence in the system until this passes.
+**Objective:** Validate that the assembled OOP graph (`Theseus` → `Delphi` → HITL, wrapped in `async with adapter:`) survives real browser conditions — not mocked state. Two tests: one that forces the full cascade to fail down to HITL, and one that completes a real discovery mission on StepStone.
+
+**Priority:** HIGH — validates that the skeleton actually works end to end.
 
 **Contains:**
 - [ ] **Task 2.1 — The Corneta Test** (smoke test, forces full cascade)
 - [ ] **Task 2.2 — The Fire Test** (real StepStone discovery run)
-- [ ] `404-danger-signal.md` — HTTP error pages must short-circuit to HITL without burning the cascade
-- [ ] `single-browser-universal.md` — verify correct `async with` nesting in the new CLI's `run_ariadne()`
+- [ ] `404-danger-signal.md` — HTTP error pages short-circuit to HITL from `Theseus.__call__`
 - [ ] `zero-shot-error-typing.md` — `MapNotFoundError` + `"explore"` fallback so unknown portals degrade cleanly
+
+Single-browser enforcement is no longer a sub-issue: `BrowserAdapter.__aenter__` owns the lifecycle per `ariadne-oop-skeleton.md`, and the Corneta test's fitness assertion (browser opens/closes exactly once) validates it.
 
 ### 📦 Required Context Pills
 - [Smoke Test Pattern (Corneta)](../context/smoke-test-pattern.md)

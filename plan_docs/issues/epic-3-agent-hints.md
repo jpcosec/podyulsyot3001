@@ -1,13 +1,15 @@
 # Epic 3: Tuning del Agente de Rescate (Visión + Hints)
 
-**Objective:** The LLM rescue agent must receive an annotated screenshot with Set-of-Mark hint labels already injected — not a raw screenshot. This eliminates CSS hallucinations and reduces token cost by ~20x per agent invocation.
+**Umbrella:** depends on `ariadne-oop-skeleton.md`.
+
+**Objective:** `Delphi` must receive an annotated screenshot with Set-of-Mark hint labels already injected by `Theseus`/`Sensor` — not a raw screenshot. This eliminates CSS hallucinations and reduces token cost by ~20x per rescue invocation.
 
 **Priority:** HIGH — without this, the agent is unreliable in production. Resolve any conflict with sub-issues in favor of this epic's objective.
 
 **Contains:**
-- [ ] `som-hint-injection.md` — call `HintingTool.inject_hints()` inside `observe_node`
-- [ ] `som-agent-prompt-update.md` — update agent to consume hint dictionary from state
-- [ ] `hint-failure-fallback.md` — implement fallback when hint injection fails
+- [ ] `som-hint-injection.md` — `Theseus` drives `HintingCapability` after `Sensor.perceive()`
+- [ ] `som-agent-prompt-update.md` — `Delphi` consumes the hint dictionary from state
+- [ ] `hint-failure-fallback.md` — degradation path when hint injection fails
 
 ### 📦 Required Context Pills
 - [Set-of-Mark (SoM) Pattern](../context/som-pattern.md)
@@ -22,7 +24,7 @@
 
 **Execution order:** `som-hint-injection` → `som-agent-prompt-update` (sequential) → `hint-failure-fallback`.
 
-**Key constraint:** `HintingToolImpl` requires an `executor` at `__init__` time. In `observe_node`, the executor is available via `config["configurable"]["executor"]`. Instantiate `HintingToolImpl(executor)` inside the node function — do not inject it via config.
+**Key constraint:** `HintingCapability` is constructor-injected into `Theseus` alongside `Sensor`/`Motor`. No runtime `config["configurable"]` lookups — all dependencies are resolved at graph-build time.
 
 **Validation (real browser required):**
 

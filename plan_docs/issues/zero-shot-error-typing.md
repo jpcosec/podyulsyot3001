@@ -1,17 +1,19 @@
 # Zero-Shot Navigation: Typed MapNotFoundError and Explore Fallback Mission
 
-**Explanation:** When Ariadne encounters a portal with no map, the system must distinguish a legitimate "no map exists" case from a real load error. The interpreter node must handle this with a named `MapNotFoundError` and fall back to a generic `"explore"` mission.
+**Umbrella:** depends on `ariadne-oop-skeleton.md` and `interpreter-node.md`.
 
-**Reference:** `src/automation/ariadne/repository.py`, `src/automation/ariadne/graph/nodes/interpreter.py` (to be created)
+**Explanation:** When Ariadne encounters a portal with no map, the system must distinguish a legitimate "no map exists" case from a real load error. `Labyrinth.load_from_db()` must raise a named `MapNotFoundError`, and the `Interpreter` actor must catch it narrowly and fall back to a `"explore"` mission.
 
-**Status:** Not started. `MapRepository.get_map()` raises `FileNotFoundError` which is caught broadly in `interpreter.py` snippets using bare `except Exception`.
+**Reference:** `src/automation/ariadne/core/cognition.py` (`Labyrinth.load_from_db`), `src/automation/ariadne/core/actors.py` (`Interpreter`), `src/automation/ariadne/exceptions.py`
+
+**Status:** Not started.
 
 **Why it's wrong:** A bare `except Exception` in `parse_instruction_node` hides real bugs (permissions error, malformed JSON, import failures) and conflates them with the expected "portal not yet mapped" case. It also defaults to `available_missions[0]` arbitrarily instead of a named explore mission.
 
 **Real fix:**
-1. In `MapRepository.get_map()`, raise `MapNotFoundError(portal_name)` (custom exception) when the map file doesn't exist.
-2. In `parse_instruction_node`, catch only `MapNotFoundError` narrowly and set `current_mission_id = "explore"`.
-3. The `"explore"` mission has no deterministic edges — it signals to `execute_deterministic` to skip directly to heuristics/agent.
+1. `Labyrinth.load_from_db(portal)` raises `MapNotFoundError(portal_name)` (defined in `exceptions.py`) when no map exists.
+2. `Interpreter.__call__` catches only `MapNotFoundError` narrowly and sets `current_mission_id = "explore"`.
+3. `"explore"` mission has no `AriadneThread` edges — `Theseus` detects this and delegates to `Delphi` immediately.
 4. All other exceptions propagate normally.
 
 **Don't:** Use `except Exception` as a map-missing catch-all.

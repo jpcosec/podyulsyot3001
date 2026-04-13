@@ -44,16 +44,20 @@ ariadne
   │    ├─ law-1-async.md
   │    ├─ law-3-dom-hostility.md
   │    └─ law-4-finite-routing.md
-  ├─ model
-  │    ├─ ariadne-map-model.md
-  │    ├─ ariadne-models.md
-  │    ├─ error-contract.md
-  │    └─ fitness-map-model.md
-  └─ pattern
+   ├─ model
+   │    ├─ ariadne-map-model.md
+   │    ├─ ariadne-thread-model.md
+   │    ├─ labyrinth-model.md
+   │    ├─ ariadne-models.md
+   │    ├─ error-contract.md
+   │    └─ fitness-map-model.md
+   └─ pattern
+       ├─ actor-pattern.md
+       ├─ ariadne-thread-pattern.md
+       ├─ ariadne-io-pattern.md
        ├─ exception-pattern.md
+       ├─ labyrinth-pattern.md
        ├─ node-pattern.md
-       └─ som-pattern.md
-
        └─ som-pattern.md
 
 cli
@@ -65,7 +69,12 @@ cli
 scraping
   ├─ decision
   │    └─ browseros-mcp-contract.md
+  ├─ model
+  │    ├─ motor-contract.md
+  │    ├─ peripheral-adapter-contract.md
+  │    └─ sensor-contract.md
   └─ pattern
+       ├─ peripheral-adapter-pattern.md
        ├─ promotion-pattern.md
        ├─ recording-pattern.md
        └─ smoke-test-pattern.md

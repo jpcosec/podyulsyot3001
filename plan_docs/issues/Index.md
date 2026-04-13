@@ -82,44 +82,48 @@ Before starting any work, verify these "Laws of Physics" are not violated:
 - [x] Fitness Tests closed on 2026-04-13. `python -m pytest tests/architecture/ -v` is green, and the superseded `gaps/fitness-*.md` files were removed.
 - [x] Posthumous issue `fix-ariadne-io-refactor.md` was closed in `cc29691`, extending the Phase 0 sync-I/O cleanup across Ariadne recording, promotion, repository access, and shared JSON/JSONL helpers before final phase closure.
 
-### Phase 1 — Epic 1: CLI + Interpreter
-- [ ] **`epic-1-cli-and-interpreter.md`** ← read this first
-  - [ ] `interpreter-node.md`
-  - [ ] `agent-context-aware.md`
-  - [ ] `cli-engine-implementation.md`
-  - [ ] `cli-dead-code-cleanup.md`
-  - [ ] test cleanup (inline in epic)
+### Phase 0.5 — OOP Skeleton (foundational, blocks all epics below)
+- **`ariadne-oop-skeleton.md`** ← umbrella, atomized. Do not execute directly.
+  - [ ] `oop-01-scaffold.md` — empty `core/` package (protocols, ABCs, stubs)
+  - [ ] `oop-02-adapters.md` — `BrowserOSAdapter` + `Crawl4AIAdapter` (parallel with 03)
+  - [ ] `oop-03-cognition.md` — `Labyrinth` + `AriadneThread` (parallel with 02)
+  - [ ] `oop-04-theseus.md` — `Theseus` actor (parallel with 05, 06)
+  - [ ] `oop-05-delphi.md` — `Delphi` actor + circuit breakers (parallel with 04, 06)
+  - [ ] `oop-06-recorder.md` — `Recorder` actor + `promote()` (parallel with 04, 05)
+  - [ ] `oop-07-graph-wiring.md` — rewrite `orchestrator.py` DI; slim `main.py`
+  - [ ] `oop-08-cleanup.md` — delete absorbed modules, docs, modes as strategies
 
-### Phase 2 — Epic 2: Smoke & Calibration
-Validates Epic 1 on real data. Cannot start until Epic 1 validation passes.
-- [ ] **`epic-2-smoke-and-calibration.md`** ← read this first
-  - [ ] Corneta test (integration test, forces full cascade)
-  - [ ] Fire test (live StepStone discovery run)
+### Phase 1 — Interpreter (depends on Phase 0.5)
+- [ ] `interpreter-node.md` — `Interpreter` actor: instruction → mission_id (fast + slow path), `Delphi` becomes context-aware via `state['instruction']`.
 
-Parallel robustness work (can land alongside Epic 2):
-- [ ] `404-danger-signal.md`
-- [ ] `single-browser-universal.md`
-- [ ] `zero-shot-error-typing.md`
+### Phase 2 — Smoke & Calibration (depends on Phase 1)
+- [ ] **`epic-2-smoke-and-calibration.md`** ← read first
+  - [ ] Corneta test (forces full cascade to HITL)
+  - [ ] Fire test (live StepStone discovery)
+- [ ] `404-danger-signal.md` — short-circuit from `Theseus`
+- [ ] `theseus-adapter-health-guard.md` — `Theseus` asks `adapter.is_healthy()` before every step
+- [ ] `zero-shot-error-typing.md` — `MapNotFoundError` + `"explore"` fallback
 
-### Phase 3 — Epic 3: Agent Hints
-- [ ] **`epic-3-agent-hints.md`** ← read this first
-  - [ ] `som-hint-injection.md`
-  - [ ] `som-agent-prompt-update.md`
-  - [ ] `hint-failure-fallback.md`
+### Phase 3 — Agent Hints (depends on Phase 0.5, can run parallel to Phase 2)
+- [ ] **`epic-3-agent-hints.md`** ← read first
+  - [ ] `som-hint-injection.md` — `Theseus` drives `HintingCapability`
+  - [ ] `som-agent-prompt-update.md` — `Delphi` consumes hints
+  - [ ] `hint-failure-fallback.md` — CSP/DOM/coordinate degradation
 
-### Phase 4 — Epic 4: Map Factory
-- [ ] **`epic-4-map-factory.md`** ← read this first
-  - [ ] `recording-promoter-guard.md`
+### Phase 4 — Map Factory (depends on Phase 0.5)
+- [ ] **`epic-4-map-factory.md`** ← read first
+  - [ ] `recording-promoter-guard.md` — `Recorder` source tagging + draft guard
+  - [ ] `ariadne-io-layer-and-tests.md`
   - [ ] Live recording session (XING or LinkedIn)
-  - [ ] Promotion + canonical map validation
+  - [ ] `Recorder.promote()` validation
 
-### Docs (anytime)
-- [ ] `map-concept-docs.md`
+### Docs (anytime after Phase 0.5)
+- [ ] `map-concept-docs.md` — document `Labyrinth` + `AriadneThread` split
 
 ## Parallelization map
 
-**Phase 0:** All four fitness tests are independent.
-**Phase 1:** `interpreter-node` → `agent-context-aware` (sequential). `cli-engine-implementation` → `cli-dead-code-cleanup` (sequential).
-**Phase 2:** Corneta test and Fire test are sequential (Corneta first). Robustness issues (`404`, `single-browser`, `zero-shot`) are parallel to each other and to Epic 2.
-**Phase 3:** `som-hint-injection` → `som-agent-prompt-update` (sequential) → `hint-failure-fallback`.
-**Phase 4:** `recording-promoter-guard` before Tasks 4.1 and 4.2. Docs are independent of everything.
+**Phase 0.5:** `oop-01` → (`oop-02` ∥ `oop-03`) → (`oop-04` ∥ `oop-05` ∥ `oop-06`) → `oop-07` → `oop-08`. Blocks all phases below.
+**Phase 1:** `interpreter-node` is a single issue. Blocks Phase 2.
+**Phase 2:** Corneta test → Fire test (sequential). `404-danger-signal` and `zero-shot-error-typing` are parallel to each other and to Phase 2's tests.
+**Phase 3:** `som-hint-injection` → `som-agent-prompt-update` (sequential) → `hint-failure-fallback`. Runs parallel to Phase 2.
+**Phase 4:** `recording-promoter-guard` + `ariadne-io-layer-and-tests` before Tasks 4.1/4.2. Docs independent.

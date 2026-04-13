@@ -1,8 +1,10 @@
-# Set-of-Mark: Hint Injection in Observe Node
+# Set-of-Mark: Hint Injection in Sensor.perceive
 
-**Explanation:** The `observe_node` must inject hint labels (`[AA]`, `[AB]`) into the UI before capturing the final screenshot for the VLM agent.
+**Umbrella:** depends on `ariadne-oop-skeleton.md`.
 
-**Reference:** `src/automation/ariadne/graph/orchestrator.py` (`observe_node`), `src/automation/ariadne/capabilities/hinting.js`
+**Explanation:** The `Sensor` (or a `HintingCapability` injected into `Theseus`) must inject hint labels (`[AA]`, `[AB]`) into the UI before capturing the final screenshot that `Delphi` will consume.
+
+**Reference:** `src/automation/ariadne/core/periphery.py` (`Sensor`), `src/automation/ariadne/core/actors.py` (`Theseus`), `src/automation/ariadne/capabilities/hinting.js`
 
 **Status:** Not started.
 
@@ -18,9 +20,9 @@
 2. **Law 3 (DOM Hostility):** `hinting.js` must NEVER use `appendChild` or `innerHTML` on existing page elements. It must attach to a single root overlay anchored to `document.body`.
 
 **Real fix:**
-1. Call `HintingTool.inject_hints()` in `observe_node` after the first `take_snapshot()`.
+1. `Theseus.__call__` calls `self.sensor.perceive()`, then invokes an injected `HintingCapability` that overlays hint labels, then re-captures the snapshot.
 2. Store the hints dictionary in `state["session_memory"]["hints"]`.
-3. Recapture the screenshot and store it in `state["screenshot_b64"]`.
+3. Store the annotated screenshot in `state["screenshot_b64"]` so `Delphi` consumes it.
 
 **Steps:**
 1. Update `observe_node`.

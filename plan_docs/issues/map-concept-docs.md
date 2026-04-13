@@ -1,6 +1,8 @@
-# Map Concept: Document That Maps Are State Graphs, Not Traces
+# Map Concept: Document Labyrinth + AriadneThread Split
 
-**Explanation:** AGENTS.md, README.md, and any onboarding docs must clearly state that an `AriadneMap` is a directed state graph evaluated against a mission — not a linear playbook or recorded trace.
+**Umbrella:** depends on `ariadne-oop-skeleton.md`.
+
+**Explanation:** AGENTS.md, README.md, and STANDARDS.md must define Ariadne's long-term memory as two cooperating objects: `Labyrinth` (topology — "where am I?") and `AriadneThread` (mission path — "where do I go next?"). Neither is a script or playback trace.
 
 **Reference:** `AGENTS.md`, `README.md`, `STANDARDS.md`
 
@@ -9,11 +11,12 @@
 **Why it matters:** This mental model leak caused the CLI to be designed with `apply` vs `scrape` as separate commands, when both are just the same graph run with different `mission_id`s on the same map. If agents or developers misunderstand this, they'll keep recreating domain-specific wrappers.
 
 **Real fix:**
-Add a short "What is a Map?" section to `AGENTS.md` (and/or `STANDARDS.md`) explaining:
-- A map is a `StateGraph` defined in JSON: nodes are page states, edges are transitions with intent/target/mission_id.
-- The `instruction` (or `mission_id`) selects which edges are eligible — it doesn't pick a different map file.
-- Scraping and applying are the same graph execution with different `mission_id` values.
-- Maps are authored via the Recording/Promotion pipeline, not written by hand.
+Add a "Labyrinth & Thread" section to `AGENTS.md` (and/or `STANDARDS.md`) explaining:
+- `Labyrinth` is a topological graph of rooms (page states) with predicates that `Theseus` uses to answer "where am I?".
+- `AriadneThread` is a mission-specific sequence of transitions ("which step next for `easy_apply`?"). Same labyrinth, different threads per mission.
+- The `instruction` / `mission_id` selects which thread is loaded — not a different map file.
+- Scraping and applying are the same graph execution with different `AriadneThread` instances over the same `Labyrinth`.
+- Both are authored via `Recorder.promote()`, not written by hand.
 
 **Don't:** Document the map as a "script" or "playbook" — these words imply linearity.
 
