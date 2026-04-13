@@ -112,3 +112,71 @@ Active plans live in `plan_docs/`. Once a feature is built, tested, and document
 ## 4. Git Hygiene
 - **Never edit files while the git tree is dirty.** First make a snapshot commit, then edit on top of a clean state.
 - Do not ask the user for permission to commit if the workflow dictates it. Just do it.
+
+---
+
+## 5. Architectural Invariants (Laws of Physics)
+
+These are non-negotiable constraints on the Ariadne 2.0 runtime. **Any implementation that violates one of these invariants is wrong by definition, regardless of whether tests pass.** Every subagent must check their work against these before closing an issue.
+
+Each invariant is enforced by an automated fitness test in `tests/architecture/`. If a fitness test is red, no feature work merges.
+
+---
+
+### Law 1 — The Event Loop is Sacred (No Blocking I/O)
+
+> No graph node, portal mode, or translator may block the main thread.
+
+All disk reads (loading map JSON), network calls (LLM prompts, HTTP requests), and subprocess waits inside `src/automation/ariadne/` must use `async/await`. Synchronous calls (`open()`, `requests.get()`, `time.sleep()`) are forbidden in the hot loop — the window between the first `observe_node` call and mission completion.
+
+**Why:** A single blocking call freezes the entire event loop, preventing parallel job processing and causing silent timeouts in LangGraph checkpoints.
+
+**Enforced by:** `tests/architecture/test_sync_io_detector.py` — patches `builtins.open` during node execution and fails if called synchronously.
+
+**Allowed exception:** Boot-time I/O (before the first node fires) is permitted — e.g. Crawl4AI initializing its browser process.
+
+---
+
+### Law 2 — One Browser Per Mission (Session Singleton)
+
+> The graph must operate on a single browser context from `observe_node` through mission completion. Opening or closing the browser mid-graph is architecturally prohibited.
+
+`Executor.__aenter__` must be called exactly once per graph run, and `__aexit__` exactly once at the end. This is enforced by wrapping the entire graph execution in `async with executor`.
+
+**Why:** SPA frameworks (React, Vue) store state in JavaScript memory. Destroying and recreating the browser context between `observe` and `execute` wipes cookies, open modals, and in-memory form state — breaking every multi-step portal flow.
+
+**Enforced by:** `tests/architecture/test_single_browser.py` — spies on `AsyncWebCrawler.__aenter__` and asserts call count == 1 across a multi-step run.
+
+**Implementation:** `async with executor as active_executor` wraps `create_ariadne_graph()` in `main.py`. See `cli-rewrite.md`.
+
+---
+
+### Law 3 — The DOM is Hostile (Non-Destructive Capabilities)
+
+> Capabilities that inject code into portal pages (e.g. Link Hinting) must not mutate the original DOM tree.
+
+All JS injection must attach to a dedicated overlay element anchored to `document.body`. Never use `appendChild` or `innerHTML` directly on page elements — this destroys event listeners and breaks SPA routing.
+
+**Why:** Portal pages built on React/Vue bind event listeners to DOM nodes at render time. Mutating those nodes detaches the listeners, making subsequent `click` commands silently fail or trigger the wrong handler.
+
+**Enforced by:** `tests/architecture/test_hostile_dom.py` — loads a "poisoned" HTML fixture (void elements, iframes, nested shadow roots) and asserts that `hinting.js` injects without throwing `DOMException`.
+
+---
+
+### Law 4 — Routing is Finite (Mandatory Circuit Breakers)
+
+> The graph is forbidden from spinning in blind loops. Every cyclic fallback path must have a counter that escalates to the next intelligence level or terminates at HITL.
+
+Counters live in `session_memory` and are checked by routing functions:
+- `heuristic_retries >= MAX_HEURISTIC_RETRIES (2)` → escalate to `llm_rescue_agent`
+- `agent_failures >= 3` → escalate to `human_in_the_loop`
+
+No routing function may return to a previous node unconditionally.
+
+**Why:** Without circuit breakers, a portal A/B test or a missing element causes infinite `observe → execute → heuristics → observe` loops, burning tokens and blocking the thread indefinitely.
+
+**Enforced by:** `tests/architecture/test_graph_depth.py` — uses an executor that always fails and asserts the graph reaches `human_in_the_loop` within 10 steps.
+
+---
+
+*Fitness tests live in `tests/architecture/`. See `plan_docs/issues/epic-0-fitness-tests.md` for current status.*

@@ -32,10 +32,60 @@ When all parallelizable issues in a given Phase/Level are completed, you MUST pe
   1. Verify compliance: Check that the combined implementations of the phase comply with all project standards and architectural boundaries.
   2. Run all architectural fitness functions and full test suites to ensure no regressions were introduced.
 
+## Priority convention
+
+**Epic issues have the highest priority.** When a sub-issue conflicts with or is ambiguous relative to its parent epic, the epic's stated objective wins. Sub-issues exist to atomize work — they do not override the epic's intent.
+
+Epic issues are identified by the `epic-` prefix. Each epic ends with a real-browser validation step that must pass before the epic is considered closed.
+
 ## Priority roadmap
 
-*All active issues listed above - execute in parallel where possible.*
+### Phase 0 — Epic 0: Fitness Tests (prerequisite for everything)
+Run in parallel. These must be green before any Phase 1 work is merged.
+- [ ] **`epic-0-fitness-tests.md`** ← read this first
+  - [ ] `fix-test-domain-isolation.md` — delete dummy classes from lines 31–130
+  - [ ] `fix-test-single-browser.md` — run real graph, not just `take_snapshot()`
+  - [ ] `fix-test-sync-io-detector.md` — run real graph, not just `take_snapshot()`
+  - [ ] `fix-test-graph-depth.md` — create from scratch, invalid API key, no mock LLM
+
+**Note:** `gaps/fitness-*.md` are superseded by the above. Delete them when Epic 0 closes.
+
+### Phase 1 — Epic 1: CLI + Interpreter
+- [ ] **`epic-1-cli-and-interpreter.md`** ← read this first
+  - [ ] `interpreter-node.md`
+  - [ ] `agent-context-aware.md`
+  - [ ] `cli-rewrite.md`
+  - [ ] test cleanup (inline in epic)
+
+### Phase 2 — Epic 2: Smoke & Calibration
+Validates Epic 1 on real data. Cannot start until Epic 1 validation passes.
+- [ ] **`epic-2-smoke-and-calibration.md`** ← read this first
+  - [ ] Corneta test (integration test, forces full cascade)
+  - [ ] Fire test (live StepStone discovery run)
+
+Parallel robustness work (can land alongside Epic 2):
+- [ ] `404-danger-signal.md`
+- [ ] `single-browser-universal.md`
+- [ ] `zero-shot-error-typing.md`
+
+### Phase 3 — Epic 3: Agent Hints
+- [ ] **`epic-3-agent-hints.md`** ← read this first
+  - [ ] `set-of-mark-observe.md`
+  - [ ] `hint-failure-fallback.md`
+
+### Phase 4 — Epic 4: Map Factory
+- [ ] **`epic-4-map-factory.md`** ← read this first
+  - [ ] `recording-promoter-guard.md`
+  - [ ] Live recording session (XING or LinkedIn)
+  - [ ] Promotion + canonical map validation
+
+### Docs (anytime)
+- [ ] `map-concept-docs.md`
 
 ## Parallelization map
 
-*Ready for new work.*
+**Phase 0:** All three fitness tests are independent.
+**Phase 1:** `interpreter-node` → `agent-context-aware` (sequential). `cli-rewrite` is independent but integrates after interpreter node lands.
+**Phase 2:** Corneta test and Fire test are sequential (Corneta first). Robustness issues (`404`, `single-browser`, `zero-shot`) are parallel to each other and to Epic 2.
+**Phase 3:** `set-of-mark-observe` before `hint-failure-fallback`. No other dependencies.
+**Phase 4:** `recording-promoter-guard` before Tasks 4.1 and 4.2. Docs are independent of everything.

@@ -30,6 +30,10 @@ python -m src.automation.main scrape --source <portal> --limit <n>              
 python -m src.automation.main browseros-check          # check runtime
 ```
 
+## Environment
+- API keys and secrets live in `.env` at the project root (auto-loaded by config module)
+- `GOOGLE_API_KEY` is set — LLM nodes and fitness tests that require it will work
+
 ## Troubleshooting
 - BrowserOS unreachable → set BROWSEROS_APPIMAGE_PATH, use --auto-start-browseros
 - Already submitted → remove apply_meta.json in data/jobs/<source>/<job_id>/
