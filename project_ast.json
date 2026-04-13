@@ -1,0 +1,1070 @@
+{
+  "src/automation/_main_runtime.py": [
+    {
+      "type": "Function",
+      "name": "build_config"
+    },
+    {
+      "type": "Function",
+      "name": "build_theseus"
+    },
+    {
+      "type": "Function",
+      "name": "load_runtime_cognition"
+    },
+    {
+      "type": "Function",
+      "name": "prepare_runtime_config"
+    }
+  ],
+  "src/automation/_main_output.py": [
+    {
+      "type": "Function",
+      "name": "print_apply_banner"
+    },
+    {
+      "type": "Function",
+      "name": "print_scrape_banner"
+    },
+    {
+      "type": "Function",
+      "name": "print_map_loaded"
+    },
+    {
+      "type": "Function",
+      "name": "print_updates"
+    },
+    {
+      "type": "Function",
+      "name": "print_node_header"
+    },
+    {
+      "type": "Function",
+      "name": "print_node_errors"
+    },
+    {
+      "type": "Function",
+      "name": "print_node_state"
+    },
+    {
+      "type": "Function",
+      "name": "print_hitl_resume"
+    },
+    {
+      "type": "Function",
+      "name": "print_success"
+    },
+    {
+      "type": "Function",
+      "name": "print_errors"
+    },
+    {
+      "type": "Function",
+      "name": "print_stopped"
+    },
+    {
+      "type": "Function",
+      "name": "print_scrape_status"
+    },
+    {
+      "type": "Function",
+      "name": "print_browseros_check_result"
+    },
+    {
+      "type": "Function",
+      "name": "handle_cli_error"
+    }
+  ],
+  "src/automation/_main_state.py": [
+    {
+      "type": "Function",
+      "name": "get_entry_state"
+    },
+    {
+      "type": "Function",
+      "name": "base_state"
+    },
+    {
+      "type": "Function",
+      "name": "apply_job_data"
+    },
+    {
+      "type": "Function",
+      "name": "scrape_job_data"
+    },
+    {
+      "type": "Function",
+      "name": "scrape_session_memory"
+    },
+    {
+      "type": "Function",
+      "name": "build_apply_state"
+    },
+    {
+      "type": "Function",
+      "name": "build_scrape_state"
+    }
+  ],
+  "src/automation/_main_dispatch.py": [
+    {
+      "type": "Function",
+      "name": "extract_apply_args"
+    },
+    {
+      "type": "Function",
+      "name": "extract_scrape_args"
+    },
+    {
+      "type": "Function",
+      "name": "run_apply_command"
+    },
+    {
+      "type": "Function",
+      "name": "run_scrape_command"
+    },
+    {
+      "type": "Function",
+      "name": "run_browseros_check"
+    },
+    {
+      "type": "Function",
+      "name": "dispatch_command"
+    }
+  ],
+  "src/automation/main.py": [
+    {
+      "type": "Function",
+      "name": "run_apply"
+    },
+    {
+      "type": "Function",
+      "name": "run_scrape"
+    },
+    {
+      "type": "Function",
+      "name": "is_hitl_pause"
+    },
+    {
+      "type": "Function",
+      "name": "is_success_state"
+    },
+    {
+      "type": "Function",
+      "name": "handle_scrape_result"
+    },
+    {
+      "type": "Function",
+      "name": "main"
+    }
+  ],
+  "src/automation/_main_config.py": [
+    {
+      "type": "Class",
+      "name": "CliInputError"
+    },
+    {
+      "type": "Class",
+      "name": "CliExecutionError"
+    },
+    {
+      "type": "Function",
+      "name": "default_profile"
+    },
+    {
+      "type": "Function",
+      "name": "load_profile"
+    },
+    {
+      "type": "Function",
+      "name": "load_map"
+    },
+    {
+      "type": "Function",
+      "name": "adapter_kwargs"
+    },
+    {
+      "type": "Function",
+      "name": "get_adapter"
+    }
+  ],
+  "src/automation/_main_parsing.py": [
+    {
+      "type": "Function",
+      "name": "build_parser"
+    },
+    {
+      "type": "Function",
+      "name": "configure_apply_parser"
+    },
+    {
+      "type": "Function",
+      "name": "add_apply_args"
+    },
+    {
+      "type": "Function",
+      "name": "configure_scrape_parser"
+    }
+  ],
+  "src/automation/contracts.py": [
+    {
+      "type": "Class",
+      "name": "CandidateProfile"
+    }
+  ],
+  "src/automation/ariadne/models.py": [
+    {
+      "type": "Class",
+      "name": "JobPosting"
+    },
+    {
+      "type": "Class",
+      "name": "AriadneObserve"
+    },
+    {
+      "type": "Class",
+      "name": "AriadneStateDefinition"
+    },
+    {
+      "type": "Class",
+      "name": "AriadneEdge"
+    },
+    {
+      "type": "Class",
+      "name": "AriadneState"
+    },
+    {
+      "type": "Class",
+      "name": "AriadneMapMeta"
+    },
+    {
+      "type": "Class",
+      "name": "AriadneMap"
+    }
+  ],
+  "src/automation/ariadne/danger_contracts.py": [
+    {
+      "type": "Class",
+      "name": "ApplyDangerSignals"
+    },
+    {
+      "type": "Class",
+      "name": "ApplyDangerFinding"
+    },
+    {
+      "type": "Class",
+      "name": "ApplyDangerReport"
+    }
+  ],
+  "src/automation/ariadne/repository.py": [
+    {
+      "type": "Class",
+      "name": "MapRepository"
+    }
+  ],
+  "src/automation/ariadne/_repository_loading.py": [
+    {
+      "type": "Function",
+      "name": "load_map_sync"
+    },
+    {
+      "type": "Function",
+      "name": "load_map_async"
+    },
+    {
+      "type": "Function",
+      "name": "resolve_sync_or_async"
+    },
+    {
+      "type": "Function",
+      "name": "choose_loader"
+    }
+  ],
+  "src/automation/ariadne/_promotion_processing.py": [
+    {
+      "type": "Function",
+      "name": "build_state"
+    },
+    {
+      "type": "Function",
+      "name": "substitute_placeholders"
+    },
+    {
+      "type": "Function",
+      "name": "process_events"
+    },
+    {
+      "type": "Function",
+      "name": "write_map"
+    }
+  ],
+  "src/automation/ariadne/promotion.py": [
+    {
+      "type": "Class",
+      "name": "AriadnePromoter"
+    }
+  ],
+  "src/automation/ariadne/config.py": [
+    {
+      "type": "Function",
+      "name": "get_config"
+    },
+    {
+      "type": "Function",
+      "name": "get_gemini_model"
+    },
+    {
+      "type": "Function",
+      "name": "get_browseros_path"
+    },
+    {
+      "type": "Function",
+      "name": "get_google_api_key"
+    },
+    {
+      "type": "Function",
+      "name": "is_headless"
+    }
+  ],
+  "src/automation/ariadne/_promotion_events.py": [
+    {
+      "type": "Function",
+      "name": "load_deterministic_events"
+    },
+    {
+      "type": "Function",
+      "name": "extract_metadata"
+    }
+  ],
+  "src/automation/ariadne/_io_helpers.py": [
+    {
+      "type": "Function",
+      "name": "normalize_path"
+    },
+    {
+      "type": "Function",
+      "name": "parse_jsonl_lines"
+    }
+  ],
+  "src/automation/ariadne/__init__.py": [],
+  "src/automation/ariadne/exceptions.py": [
+    {
+      "type": "Class",
+      "name": "AriadneError"
+    },
+    {
+      "type": "Class",
+      "name": "ObservationFailed"
+    },
+    {
+      "type": "Class",
+      "name": "TargetNotFound"
+    },
+    {
+      "type": "Class",
+      "name": "InteractionFailed"
+    },
+    {
+      "type": "Class",
+      "name": "TerminalStateReached"
+    },
+    {
+      "type": "Class",
+      "name": "TaskAborted"
+    },
+    {
+      "type": "Class",
+      "name": "TranslationError"
+    },
+    {
+      "type": "Class",
+      "name": "PortalDriftError"
+    },
+    {
+      "type": "Class",
+      "name": "MapNotFoundError"
+    },
+    {
+      "type": "Class",
+      "name": "HumanInterventionRequired"
+    },
+    {
+      "type": "Class",
+      "name": "FormReviewRequired"
+    }
+  ],
+  "src/automation/ariadne/io.py": [
+    {
+      "type": "Function",
+      "name": "_normalize_path"
+    },
+    {
+      "type": "Function",
+      "name": "append_jsonl"
+    },
+    {
+      "type": "Function",
+      "name": "append_jsonl_async"
+    },
+    {
+      "type": "Function",
+      "name": "read_jsonl"
+    },
+    {
+      "type": "Function",
+      "name": "read_jsonl_async"
+    },
+    {
+      "type": "Function",
+      "name": "read_json"
+    },
+    {
+      "type": "Function",
+      "name": "read_json_async"
+    },
+    {
+      "type": "Function",
+      "name": "write_json"
+    },
+    {
+      "type": "Function",
+      "name": "write_json_async"
+    },
+    {
+      "type": "Function",
+      "name": "_parse_jsonl_lines"
+    }
+  ],
+  "src/automation/ariadne/core/periphery.py": [
+    {
+      "type": "Class",
+      "name": "Sensor"
+    },
+    {
+      "type": "Class",
+      "name": "Motor"
+    },
+    {
+      "type": "Class",
+      "name": "BrowserAdapter"
+    }
+  ],
+  "src/automation/ariadne/core/__init__.py": [],
+  "src/automation/ariadne/core/actors/theseus.py": [
+    {
+      "type": "Class",
+      "name": "Theseus"
+    }
+  ],
+  "src/automation/ariadne/core/actors/delphi.py": [
+    {
+      "type": "Class",
+      "name": "Delphi"
+    }
+  ],
+  "src/automation/ariadne/core/actors/__init__.py": [],
+  "src/automation/ariadne/core/actors/_theseus_debug.py": [
+    {
+      "type": "Function",
+      "name": "should_stop_after_observe"
+    },
+    {
+      "type": "Function",
+      "name": "print_streamed_updates"
+    },
+    {
+      "type": "Function",
+      "name": "print_node"
+    },
+    {
+      "type": "Function",
+      "name": "print_errors"
+    },
+    {
+      "type": "Function",
+      "name": "print_state"
+    }
+  ],
+  "src/automation/ariadne/core/actors/interpreter.py": [
+    {
+      "type": "Class",
+      "name": "Interpreter"
+    }
+  ],
+  "src/automation/ariadne/core/actors/recorder.py": [
+    {
+      "type": "Class",
+      "name": "Recorder"
+    }
+  ],
+  "src/automation/ariadne/core/actors/_theseus_workflow.py": [
+    {
+      "type": "Function",
+      "name": "build_workflow"
+    },
+    {
+      "type": "Function",
+      "name": "_add_nodes"
+    },
+    {
+      "type": "Function",
+      "name": "_add_edges"
+    }
+  ],
+  "src/automation/ariadne/core/actors/_theseus_checkpointer.py": [
+    {
+      "type": "Function",
+      "name": "create_sqlite_checkpointer"
+    },
+    {
+      "type": "Function",
+      "name": "compile_with_memory"
+    },
+    {
+      "type": "Function",
+      "name": "compile_with_sqlite"
+    }
+  ],
+  "src/automation/ariadne/core/cognition/thread.py": [
+    {
+      "type": "Class",
+      "name": "AriadneThread"
+    }
+  ],
+  "src/automation/ariadne/core/cognition/labyrinth.py": [
+    {
+      "type": "Function",
+      "name": "_matches_target"
+    },
+    {
+      "type": "Function",
+      "name": "_matches_observe"
+    },
+    {
+      "type": "Class",
+      "name": "Labyrinth"
+    }
+  ],
+  "src/automation/ariadne/core/cognition/__init__.py": [],
+  "src/automation/ariadne/core/adapters/crawl4ai.py": [
+    {
+      "type": "Class",
+      "name": "Crawl4AIAdapter"
+    }
+  ],
+  "src/automation/ariadne/core/adapters/__init__.py": [],
+  "src/automation/ariadne/core/adapters/browseros.py": [
+    {
+      "type": "Class",
+      "name": "BrowserOSAdapter"
+    }
+  ],
+  "src/automation/ariadne/modes/registry.py": [
+    {
+      "type": "Class",
+      "name": "ModeRegistry"
+    }
+  ],
+  "src/automation/ariadne/modes/default.py": [
+    {
+      "type": "Class",
+      "name": "DefaultMode"
+    }
+  ],
+  "src/automation/ariadne/modes/__init__.py": [],
+  "src/automation/ariadne/modes/base.py": [
+    {
+      "type": "Class",
+      "name": "AriadneMode"
+    }
+  ],
+  "src/automation/ariadne/graph/_orchestrator_helpers.py": [
+    {
+      "type": "Function",
+      "name": "_patched_component_key"
+    },
+    {
+      "type": "Function",
+      "name": "_target_text_matches"
+    },
+    {
+      "type": "Function",
+      "name": "_target_css_matches"
+    },
+    {
+      "type": "Function",
+      "name": "_target_has_matchers"
+    },
+    {
+      "type": "Function",
+      "name": "_target_present_in_snapshot"
+    },
+    {
+      "type": "Function",
+      "name": "_url_matches"
+    },
+    {
+      "type": "Function",
+      "name": "_presence_results"
+    },
+    {
+      "type": "Function",
+      "name": "_forbidden_results"
+    },
+    {
+      "type": "Function",
+      "name": "_evaluate_presence"
+    },
+    {
+      "type": "Function",
+      "name": "_adapter_snapshot"
+    },
+    {
+      "type": "Function",
+      "name": "_adapter_execute"
+    },
+    {
+      "type": "Function",
+      "name": "_executor_not_found"
+    },
+    {
+      "type": "Function",
+      "name": "_snapshot_updates"
+    },
+    {
+      "type": "Function",
+      "name": "_identify_state"
+    },
+    {
+      "type": "Function",
+      "name": "_identify_from_map"
+    },
+    {
+      "type": "Function",
+      "name": "_apply_identified_state"
+    },
+    {
+      "type": "Function",
+      "name": "_danger_dom_text"
+    },
+    {
+      "type": "Function",
+      "name": "_danger_signals"
+    },
+    {
+      "type": "Function",
+      "name": "_update_danger_memory"
+    },
+    {
+      "type": "Function",
+      "name": "_mark_goal_achieved"
+    },
+    {
+      "type": "Function",
+      "name": "_record_observe_event"
+    },
+    {
+      "type": "Function",
+      "name": "_observe_updates"
+    },
+    {
+      "type": "Function",
+      "name": "_safe_identify_state"
+    },
+    {
+      "type": "Function",
+      "name": "_get_patched_target"
+    },
+    {
+      "type": "Function",
+      "name": "_get_map_component_target"
+    },
+    {
+      "type": "Function",
+      "name": "_resolve_target"
+    },
+    {
+      "type": "Function",
+      "name": "_element_matches_target"
+    },
+    {
+      "type": "Function",
+      "name": "_is_target_present_in_snapshot"
+    },
+    {
+      "type": "Function",
+      "name": "_resolve_selector"
+    },
+    {
+      "type": "Function",
+      "name": "_get_element_value"
+    },
+    {
+      "type": "Function",
+      "name": "_extract_from_dom"
+    },
+    {
+      "type": "Function",
+      "name": "_extract_single_value"
+    },
+    {
+      "type": "Function",
+      "name": "_collect_extracted_memory"
+    },
+    {
+      "type": "Function",
+      "name": "_record_graph_event"
+    },
+    {
+      "type": "Function",
+      "name": "_get_candidate_edges"
+    },
+    {
+      "type": "Function",
+      "name": "_filter_valid_edges"
+    },
+    {
+      "type": "Function",
+      "name": "_can_expand_batch"
+    },
+    {
+      "type": "Function",
+      "name": "_add_batchable_edge"
+    },
+    {
+      "type": "Function",
+      "name": "_build_micro_batch"
+    },
+    {
+      "type": "Function",
+      "name": "_sort_valid_edges"
+    },
+    {
+      "type": "Function",
+      "name": "_find_safe_sequence"
+    },
+    {
+      "type": "Function",
+      "name": "_score_edge"
+    },
+    {
+      "type": "Function",
+      "name": "_target_specificity"
+    },
+    {
+      "type": "Function",
+      "name": "_deterministic_executor"
+    },
+    {
+      "type": "Function",
+      "name": "_load_deterministic_map"
+    },
+    {
+      "type": "Function",
+      "name": "_live_thread_batch"
+    },
+    {
+      "type": "Function",
+      "name": "_edge_present"
+    },
+    {
+      "type": "Function",
+      "name": "_deterministic_batch"
+    },
+    {
+      "type": "Function",
+      "name": "_translation_error"
+    },
+    {
+      "type": "Function",
+      "name": "_translate_batch_command"
+    },
+    {
+      "type": "Function",
+      "name": "_translate_single_command"
+    },
+    {
+      "type": "Function",
+      "name": "_translate_command"
+    },
+    {
+      "type": "Function",
+      "name": "_execution_failed"
+    },
+    {
+      "type": "Function",
+      "name": "_execution_error_message"
+    },
+    {
+      "type": "Function",
+      "name": "_deterministic_updates"
+    },
+    {
+      "type": "Function",
+      "name": "_record_deterministic_event"
+    },
+    {
+      "type": "Function",
+      "name": "_observe_next_step"
+    },
+    {
+      "type": "Function",
+      "name": "_agent_should_escalate"
+    },
+    {
+      "type": "Function",
+      "name": "_print_agent_circuit_breaker"
+    },
+    {
+      "type": "Function",
+      "name": "_build_workflow_nodes"
+    },
+    {
+      "type": "Function",
+      "name": "_add_workflow_edges"
+    },
+    {
+      "type": "Function",
+      "name": "_compile_workflow"
+    },
+    {
+      "type": "Function",
+      "name": "_resolve_mode"
+    },
+    {
+      "type": "Function",
+      "name": "_load_state_definition"
+    },
+    {
+      "type": "Function",
+      "name": "_extract_component_patches"
+    },
+    {
+      "type": "Function",
+      "name": "_get_state_definition"
+    },
+    {
+      "type": "Function",
+      "name": "_apply_heuristic_patches"
+    },
+    {
+      "type": "Function",
+      "name": "_build_heuristic_result"
+    }
+  ],
+  "src/automation/ariadne/graph/orchestrator.py": [
+    {
+      "type": "Function",
+      "name": "observe_node"
+    },
+    {
+      "type": "Function",
+      "name": "execute_deterministic_node"
+    },
+    {
+      "type": "Function",
+      "name": "apply_local_heuristics_node"
+    },
+    {
+      "type": "Function",
+      "name": "llm_rescue_agent_node"
+    },
+    {
+      "type": "Function",
+      "name": "human_in_the_loop_node"
+    },
+    {
+      "type": "Function",
+      "name": "route_after_observe"
+    },
+    {
+      "type": "Function",
+      "name": "route_after_deterministic"
+    },
+    {
+      "type": "Function",
+      "name": "route_after_heuristics"
+    },
+    {
+      "type": "Function",
+      "name": "route_after_agent"
+    },
+    {
+      "type": "Function",
+      "name": "create_ariadne_graph"
+    }
+  ],
+  "src/automation/ariadne/graph/__init__.py": [],
+  "src/automation/ariadne/graph/nodes/agent.py": [
+    {
+      "type": "Class",
+      "name": "LangGraphBrowserOSAgent"
+    }
+  ],
+  "src/automation/ariadne/graph/nodes/__init__.py": [],
+  "src/automation/ariadne/capabilities/hinting.py": [
+    {
+      "type": "Class",
+      "name": "HintingToolImpl"
+    }
+  ],
+  "src/automation/ariadne/capabilities/recording.py": [
+    {
+      "type": "Class",
+      "name": "GraphRecorder"
+    }
+  ],
+  "src/automation/ariadne/capabilities/__init__.py": [],
+  "src/automation/ariadne/translators/__init__.py": [],
+  "src/automation/ariadne/translators/base.py": [
+    {
+      "type": "Class",
+      "name": "AriadneTranslator"
+    }
+  ],
+  "src/automation/ariadne/contracts/base.py": [
+    {
+      "type": "Class",
+      "name": "AriadneTarget"
+    },
+    {
+      "type": "Class",
+      "name": "AriadneIntent"
+    },
+    {
+      "type": "Class",
+      "name": "MotorCommand"
+    },
+    {
+      "type": "Class",
+      "name": "BrowserOSCommand"
+    },
+    {
+      "type": "Class",
+      "name": "CrawlCommand"
+    },
+    {
+      "type": "Class",
+      "name": "ScriptCommand"
+    },
+    {
+      "type": "Class",
+      "name": "SnapshotResult"
+    },
+    {
+      "type": "Class",
+      "name": "ExecutionResult"
+    },
+    {
+      "type": "Class",
+      "name": "Sensor"
+    },
+    {
+      "type": "Class",
+      "name": "Motor"
+    },
+    {
+      "type": "Class",
+      "name": "PeripheralAdapter"
+    },
+    {
+      "type": "Class",
+      "name": "Executor"
+    },
+    {
+      "type": "Class",
+      "name": "Planner"
+    },
+    {
+      "type": "Class",
+      "name": "HintingTool"
+    }
+  ],
+  "src/automation/motors/registry.py": [
+    {
+      "type": "Class",
+      "name": "MotorRegistry"
+    }
+  ],
+  "src/automation/motors/crawl4ai/executor.py": [
+    {
+      "type": "Class",
+      "name": "Crawl4AIExecutor"
+    }
+  ],
+  "src/automation/motors/browseros/executor.py": [
+    {
+      "type": "Class",
+      "name": "BrowserOSCliExecutor"
+    }
+  ],
+  "src/automation/portals/__init__.py": [],
+  "src/automation/portals/modes/portals.py": [
+    {
+      "type": "Class",
+      "name": "JsonConfigMode"
+    },
+    {
+      "type": "Class",
+      "name": "LinkedInMode"
+    },
+    {
+      "type": "Class",
+      "name": "StepStoneMode"
+    },
+    {
+      "type": "Class",
+      "name": "XingMode"
+    }
+  ],
+  "src/automation/portals/modes/__init__.py": [],
+  "src/automation/adapters/__init__.py": [],
+  "src/automation/adapters/translators/registry.py": [
+    {
+      "type": "Class",
+      "name": "TranslatorRegistry"
+    }
+  ],
+  "src/automation/adapters/translators/crawl4ai.py": [
+    {
+      "type": "Class",
+      "name": "Crawl4AITranslator"
+    }
+  ],
+  "src/automation/adapters/translators/_crawl4ai_builders.py": [
+    {
+      "type": "Function",
+      "name": "escape_value"
+    },
+    {
+      "type": "Function",
+      "name": "build_click_script"
+    },
+    {
+      "type": "Function",
+      "name": "build_set_script"
+    },
+    {
+      "type": "Function",
+      "name": "build_press_script"
+    },
+    {
+      "type": "Function",
+      "name": "build_wait_script"
+    },
+    {
+      "type": "Function",
+      "name": "build_extract_script"
+    },
+    {
+      "type": "Function",
+      "name": "build_c4a_script"
+    }
+  ],
+  "src/automation/adapters/translators/__init__.py": [],
+  "src/automation/adapters/translators/browseros.py": [
+    {
+      "type": "Class",
+      "name": "BrowserOSTranslator"
+    }
+  ]
+}

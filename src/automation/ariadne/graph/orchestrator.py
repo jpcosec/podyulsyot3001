@@ -19,7 +19,7 @@ from src.automation.ariadne.models import AriadneState
 from src.automation.ariadne.contracts.base import SnapshotResult
 from src.automation.adapters.translators.registry import TranslatorRegistry
 from src.automation.ariadne.graph.nodes.agent import LangGraphBrowserOSAgent
-from src.automation.ariadne.repository import MapRepository
+
 
 
 MAX_HEURISTIC_RETRIES = 2

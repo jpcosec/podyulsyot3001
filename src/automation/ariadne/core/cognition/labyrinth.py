@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Optional
 
 from src.automation.ariadne.contracts.base import AriadneTarget, SnapshotResult
 from src.automation.ariadne.exceptions import MapNotFoundError
+from src.automation.ariadne.io import read_json_async
 from src.automation.ariadne.models import AriadneMap, AriadneObserve
-from src.automation.ariadne.repository import MapRepository
 
 
 def _matches_target(target: AriadneTarget, snapshot: SnapshotResult) -> bool:
@@ -64,12 +66,17 @@ class Labyrinth:
         cls,
         portal_name: str,
         map_type: str = "easy_apply",
-        repository: MapRepository | None = None,
+        base_dir: Path | str | None = None,
     ) -> "Labyrinth":
-        """Load the portal topology from persistent storage."""
-        repo = repository or MapRepository()
+        """Load the portal topology from persistent storage without MapRepository."""
+        # Portals are in src/automation/portals/
+        root = Path(base_dir) if base_dir else Path(__file__).parent.parent.parent.parent / "portals"
+        map_path = root / portal_name / "maps" / f"{map_type}.json"
+
         try:
-            ariadne_map = await repo.get_map_async(portal_name, map_type=map_type)
+            map_payload = await read_json_async(map_path)
+            # Use to_thread for heavy model validation
+            ariadne_map = await asyncio.to_thread(AriadneMap.model_validate, map_payload)
+            return cls(ariadne_map=ariadne_map)
         except FileNotFoundError as exc:
-            raise MapNotFoundError(str(exc)) from exc
-        return cls(ariadne_map=ariadne_map)
+            raise MapNotFoundError(f"Labyrinth map not found at {map_path}") from exc

@@ -11,111 +11,9 @@ from src.automation.ariadne.models import (
     AriadneTarget,
 )
 
-from src.automation.ariadne.repository import MapRepository
+from src.automation.ariadne.core.cognition.labyrinth import Labyrinth
+from src.automation.ariadne.core.cognition.thread import AriadneThread
 from src.automation.ariadne.modes.registry import ModeRegistry
-
-
-def _patched_component_key(state_id: str, component_name: str) -> str:
-    """Namespace heuristic patches to the state they belong to."""
-    return f"{state_id}:{component_name}"
-
-
-def _target_text_matches(target: AriadneTarget, element: Dict[str, Any]) -> bool:
-    """Return whether an element satisfies the target text constraint."""
-    if not target.text:
-        return True
-    return target.text.lower() in element.get("text", "").lower()
-
-
-def _target_css_matches(target: AriadneTarget, element: Dict[str, Any]) -> bool:
-    """Return whether an element satisfies the target css constraint."""
-    if not target.css:
-        return True
-    return element.get("css") == target.css or element.get("selector") == target.css
-
-
-def _target_has_matchers(target: AriadneTarget) -> bool:
-    """Return whether the target defines any matching criteria."""
-    return bool(target.text or target.css)
-
-
-def _target_present_in_snapshot(
-    target: AriadneTarget, snapshot: SnapshotResult
-) -> bool:
-    """Return whether a target is present in the snapshot DOM."""
-    for element in snapshot.dom_elements:
-        if not _target_has_matchers(target):
-            continue
-        if _target_text_matches(target, element) and _target_css_matches(
-            target, element
-        ):
-            return True
-    return False
-
-
-def _url_matches(predicate: Any, snapshot: SnapshotResult) -> bool:
-    """Return whether the snapshot URL satisfies the predicate."""
-    if not predicate.url_contains:
-        return True
-    return predicate.url_contains in snapshot.url
-
-
-def _presence_results(
-    targets: List[AriadneTarget], snapshot: SnapshotResult
-) -> List[bool]:
-    """Evaluate target presence against the snapshot."""
-    return [_target_present_in_snapshot(target, snapshot) for target in targets]
-
-
-def _forbidden_results(
-    targets: List[AriadneTarget], snapshot: SnapshotResult
-) -> List[bool]:
-    """Evaluate forbidden targets against the snapshot."""
-    return [not _target_present_in_snapshot(target, snapshot) for target in targets]
-
-
-def _evaluate_presence(predicate: Any, snapshot: SnapshotResult) -> bool:
-    """Evaluate whether a state is present based on URL and DOM signals."""
-    if not _url_matches(predicate, snapshot):
-        return False
-    req_results = _presence_results(predicate.required_elements, snapshot)
-    forb_results = _forbidden_results(predicate.forbidden_elements, snapshot)
-    all_results = req_results + forb_results
-    if not all_results:
-        return True
-    if predicate.logical_op == "AND":
-        return all(all_results)
-    return any(all_results)
-
-
-async def _adapter_snapshot(executor: Any) -> SnapshotResult:
-    """Read browser state from either the legacy executor or the new adapter API."""
-    if hasattr(executor, "perceive"):
-        return await executor.perceive()
-    return await executor.take_snapshot()
-
-
-async def _adapter_execute(executor: Any, command: Any) -> Any:
-    """Run a motor command through the executor API."""
-    return await executor.execute(command)
-
-
-def _executor_not_found() -> Dict[str, Any]:
-    """Return the standard missing-executor error payload."""
-    return {
-        "errors": [
-            "ExecutorNotFoundError: No executor instance provided in config['configurable']['executor']"
-        ]
-    }
-
-
-def _snapshot_updates(snapshot: SnapshotResult) -> Dict[str, Any]:
-    """Build state updates from a snapshot."""
-    return {
-        "current_url": snapshot.url,
-        "dom_elements": snapshot.dom_elements,
-        "screenshot_b64": snapshot.screenshot_b64,
-    }
 
 
 async def _identify_state(
@@ -125,11 +23,11 @@ async def _identify_state(
 ) -> tuple[AriadneMap | None, str | None]:
     """Resolve the current state id from injected cognition or repository data."""
     labyrinth = config.get("configurable", {}).get("labyrinth")
-    if labyrinth is not None:
-        return labyrinth.ariadne_map, await labyrinth.identify_room(snapshot)
-    repo = MapRepository()
-    ariadne_map = await repo.get_map_async(state["portal_name"])
-    return ariadne_map, _identify_from_map(ariadne_map, snapshot)
+    if labyrinth is None:
+        labyrinth = await Labyrinth.load_from_db(state["portal_name"])
+    
+    return labyrinth.ariadne_map, await labyrinth.identify_room(snapshot)
+
 
 
 def _identify_from_map(ariadne_map: AriadneMap, snapshot: SnapshotResult) -> str | None:
@@ -573,10 +471,10 @@ async def _load_deterministic_map(
 ) -> AriadneMap:
     """Load the active Ariadne map for deterministic execution."""
     labyrinth = config.get("configurable", {}).get("labyrinth")
-    if labyrinth is not None:
-        return labyrinth.ariadne_map
-    repo = MapRepository()
-    return await repo.get_map_async(state["portal_name"])
+    if labyrinth is None:
+        labyrinth = await Labyrinth.load_from_db(state["portal_name"])
+    return labyrinth.ariadne_map
+
 
 
 def _live_thread_batch(
@@ -841,10 +739,9 @@ def _resolve_mode(state: AriadneState) -> Any:
 
 async def _load_state_definition(state: AriadneState) -> AriadneMap:
     """Load the AriadneMap for the current portal."""
-    from src.automation.ariadne.repository import MapRepository
+    lab = await Labyrinth.load_from_db(state["portal_name"])
+    return lab.ariadne_map
 
-    repo = MapRepository()
-    return await repo.get_map_async(state["portal_name"])
 
 
 def _extract_component_patches(

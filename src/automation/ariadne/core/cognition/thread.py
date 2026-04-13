@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Iterable, Optional
 
 from src.automation.ariadne.exceptions import MapNotFoundError
-from src.automation.ariadne.models import AriadneEdge
-from src.automation.ariadne.repository import MapRepository
+from src.automation.ariadne.io import read_json_async
+from src.automation.ariadne.models import AriadneEdge, AriadneMap
 
 
 @dataclass(slots=True)
@@ -42,14 +44,17 @@ class AriadneThread:
         portal_name: str,
         mission_id: Optional[str] = None,
         map_type: str = "easy_apply",
-        repository: MapRepository | None = None,
+        base_dir: Path | str | None = None,
     ) -> "AriadneThread":
-        """Load mission transitions from persistent storage."""
-        repo = repository or MapRepository()
+        """Load mission transitions from persistent storage without MapRepository."""
+        root = Path(base_dir) if base_dir else Path(__file__).parent.parent.parent.parent / "portals"
+        map_path = root / portal_name / "maps" / f"{map_type}.json"
+
         try:
-            ariadne_map = await repo.get_map_async(portal_name, map_type=map_type)
+            map_payload = await read_json_async(map_path)
+            ariadne_map = await asyncio.to_thread(AriadneMap.model_validate, map_payload)
         except FileNotFoundError as exc:
-            raise MapNotFoundError(str(exc)) from exc
+            raise MapNotFoundError(f"Thread map not found at {map_path}") from exc
 
         edges = [
             edge
