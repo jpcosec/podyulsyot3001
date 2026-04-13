@@ -32,7 +32,7 @@ async def test_execute_deterministic_node_success():
         "src.automation.ariadne.graph.orchestrator.MapRepository"
     ) as mock_repo_class:
         mock_repo = mock_repo_class.return_value
-        mock_repo.get_map.return_value = mock_map
+        mock_repo.get_map_async = AsyncMock(return_value=mock_map)
 
         # 2. Mock Executor
         mock_executor = AsyncMock()
@@ -56,7 +56,7 @@ async def test_execute_deterministic_node_success():
         }
 
         # We'll try to provide the executor in config
-        config = {"configurable": {"executor": mock_executor}}
+        config = {"configurable": {"executor": mock_executor, "motor_name": "crawl4ai"}}
 
         # 4. Run Node
         result = await execute_deterministic_node(state, config)

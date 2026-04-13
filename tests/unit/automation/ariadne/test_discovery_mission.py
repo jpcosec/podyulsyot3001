@@ -54,7 +54,7 @@ async def test_execute_deterministic_node_captures_discovery_extracts(monkeypatc
     )
     monkeypatch.setattr(
         "src.automation.ariadne.graph.orchestrator.MapRepository",
-        lambda: MagicMock(get_map=MagicMock(return_value=ariadne_map)),
+        lambda: MagicMock(get_map_async=AsyncMock(return_value=ariadne_map)),
     )
 
     executor = AsyncMock()
