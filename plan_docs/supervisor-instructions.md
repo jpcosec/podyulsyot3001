@@ -5,6 +5,7 @@ As the supervisor/orchestrator, your role is to validate work delivered by execu
 ## Role Boundary
 
 The executor fixes the issue and creates the closing commit.
+The executor then reports that commit in `plan_docs/issues/Index.md`.
 The supervisor reviews that commit and decides whether the issue remains closed.
 
 Supervisor-only responsibilities:
@@ -12,6 +13,8 @@ Supervisor-only responsibilities:
 - accepting or rejecting the close attempt
 - reverting failed issue commits individually
 - enriching the issue file with review findings when a fix is rejected
+- dispatching one `context_compiler` per issue during the initialization ritual, before implementation begins
+- dispatching a `context_compiler` when the issue package is not clear enough for safe execution
 - deleting resolved issue files and removing Index entries only after full phase completion
 
 ## 🛂 The Gatekeeper's Checklist
@@ -37,6 +40,7 @@ Verify that the executor performed the "Execution Ritual" from `STANDARDS.md`:
 - [ ] Is `changelog.md` updated with high-signal descriptions?
 - [ ] Did the executor create exactly one resolving commit for the issue?
 - [ ] Does `plan_docs/issues/Index.md` mark that issue as `{closed with commit id <sha>}`?
+- [ ] Is the Index bookkeeping present even if it is not committed yet?
 - [ ] Does the commit message identify the issue being closed?
 - [ ] Was the issue file preserved for supervisor review instead of being deleted early?
 - [ ] Was the issue entry preserved in `Index.md` instead of being removed early?
@@ -79,3 +83,15 @@ A Phase is only complete when:
 4. All `tests/architecture/` are green.
 5. (For Phase 1+) The Universal CLI can successfully execute a discovery mission.
 6. Only then may the supervisor delete resolved issue files and remove their Index entries.
+
+## Phase-Closing Ritual
+When a phase is ready to close, the supervisor must execute this ritual in order:
+1. Freeze the phase boundary: confirm no new issue is being added to the phase while sign-off is running.
+2. Review every issue entry in `plan_docs/issues/Index.md` for that phase.
+3. Inspect every `{closed with commit id <sha>}` commit and accept or reject it explicitly.
+4. Revert every rejected closing commit individually and update the corresponding issue file with review findings.
+5. Confirm every accepted issue still has its issue file and its `{closed with commit id <sha>}` entry.
+6. Run the architecture and validation gates for the whole phase.
+7. Update the phase-level context/reporting artifacts.
+8. Only after all checks pass, delete resolved issue files and remove their Index entries.
+9. Mark the phase as completed in the Index and any required reports.

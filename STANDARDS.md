@@ -24,13 +24,15 @@ Before assigning work to an executor, the orchestrator MUST perform this ritual:
 2. **Context Injection**: Route relevant "Context Pills" from `plan_docs/context/` into the issue `.md` file.
 3. **Redundant > Merge**: Merge overlapping issues to ensure unambiguous ownership.
 4. **Legacy > Delete**: Review issues for dead content. Delete and record as an ADR in `docs/adrs/` if necessary.
-5. **Pill Audit - Phase B**: Run `plan_docs/context-pill-audit.md` Phase B. Verify every issue has the correct pills, no broken links, and zero-context sufficiency. Must reach `READY FOR EXECUTION: YES` before continuing.
-6. **Update Index.md**: Regenerate the dependency graph and parallelization map.
-7. **Execute**: Provide the executor with the specific issue file and verify they have access to the linked context pills.
+5. **Context Compiler Pass**: For each executable issue, dispatch a `context_compiler` to review the issue package after atomization/merge/legacy/contradiction cleanup is complete. The context compiler must verify that the issue has the right pills, explicit dependencies, current source references, and zero-context sufficiency.
+6. **Pill Audit - Phase B**: Run `plan_docs/context-pill-audit.md` Phase B. Verify every issue has the correct pills, no broken links, and zero-context sufficiency. Must reach `READY FOR EXECUTION: YES` before continuing.
+7. **Update Index.md**: Regenerate the dependency graph and parallelization map.
+8. **Execute**: Provide the executor with the specific issue file and verify they have access to the linked context pills.
 
 ### Stage 3: Role Instructions
 Role-specific execution rules live in these documents and are mandatory:
 - `plan_docs/executor-instructions.md`
+- `plan_docs/context_compiler-instructions.md`
 - `plan_docs/supervisor-instructions.md`
 
 ### Stage 3.1: Traceability Contract
@@ -41,11 +43,14 @@ Every closed issue must remain traceable through all three artifacts until the s
 
 There must be a one-to-one mapping between a closed issue and its resolving commit. Do not batch multiple closed issues into one commit, and do not close one issue across multiple commits unless the supervisor explicitly re-opens it after review.
 
+The resolving commit is created first by the executor. The matching `Index.md` entry is updated immediately after handoff bookkeeping and may remain uncommitted until the phase-closing ritual.
+
 ### QA & Validation Issues
 - **Validation-Type Issues:** If a validation fails, do not close silently. Atomize every uncovered real problem into new gap issues before closing the validation issue.
 
 ### Phase Completion (Level-up Ritual)
 When all parallelizable issues in a given Phase/Level are completed:
+- Run the dedicated phase-closing ritual defined in `plan_docs/supervisor-instructions.md`.
 - Verify every issue in the phase is either still open or marked `{closed with commit id <sha>}` in `plan_docs/issues/Index.md`.
 - Review and accept or reject each closing commit before phase sign-off.
 - Only after the phase is accepted, delete the resolved issue files and clear their corresponding Index entries.

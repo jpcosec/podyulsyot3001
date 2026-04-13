@@ -6,6 +6,7 @@ All issue-fixing work must stay aligned with the rest of plan_docs/ and docs/, w
 
 Role-specific instructions:
 - Executors must follow `plan_docs/executor-instructions.md`.
+- Context compilers must follow `plan_docs/context_compiler-instructions.md`.
 - Supervisors must follow `plan_docs/supervisor-instructions.md`.
 
 ## Initialization Procedure (Before Execution)
@@ -16,8 +17,10 @@ Before executing any issue or assigning work to an executor, you MUST perform th
   3. Legacy > delete.
   4. Contradictory > resolve.
   5. Iterate until the plan is clean and straightforward.
-  6. Update `plan_docs/issues/Index.md`.
-  7. Execute using the smallest possible/available executor for each step. Provide the executor with explicit context (e.g., architectural boundaries, limits, or relevant reference files) to prevent them from making wrong choices. Review their work.
+  6. Dispatch one `context_compiler` per executable issue to validate the issue package, linked pills, dependencies, and zero-context sufficiency before implementation starts.
+  7. Update `plan_docs/issues/Index.md`.
+  8. Execute using the smallest possible/available executor for each step. Provide the executor with explicit context (e.g., architectural boundaries, limits, or relevant reference files) to prevent them from making wrong choices. Review their work.
+  9. If the assigned executor still reports unclear issue scope or insufficient context, dispatch a new `context_compiler` before allowing implementation work to continue.
 
 ## Working rule for every issue
 
@@ -28,8 +31,9 @@ When an executor finishes an issue, the next step is always:
   3. Run the relevant tests.
   4. Update changelog.md.
   5. Make exactly one commit for that closed issue, with the issue id in the commit message.
-  6. Overwrite the issue entry in this file with the status form `{closed with commit id <sha>}`.
+  6. After that commit, overwrite the issue entry in this file with the status form `{closed with commit id <sha>}`.
   7. Do not delete the issue file and do not remove the entry from this index. That is supervisor-only cleanup after the full phase is accepted.
+  8. The Index bookkeeping may remain uncommitted until the phase-closing ritual.
 
 ## Supervisor-only cleanup rule
 
@@ -54,6 +58,8 @@ When all parallelizable issues in a given Phase/Level are completed, you MUST pe
   2. Run all architectural fitness functions and full test suites to ensure no regressions were introduced.
   3. Review every `{closed with commit id <sha>}` entry before clearing any issue file or removing any index entry.
   4. Delete resolved issue files and clear their index entries only after the whole phase is accepted.
+
+The authoritative phase-closing checklist lives in `plan_docs/supervisor-instructions.md` under `## Phase-Closing Ritual`.
 
 ## Priority convention
 

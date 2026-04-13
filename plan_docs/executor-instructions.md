@@ -2,10 +2,13 @@
 
 As the executor, your role is to solve exactly one assigned issue and hand it back in a reviewable state. You do not clear issue tracking artifacts. You produce a fix, proof, and one traceable commit.
 
+After each handoff, you must create the issue commit first and then report that commit in `plan_docs/issues/Index.md`. That Index update may remain uncommitted until the phase-closing ritual.
+
 ## Mission
 
 You are responsible for:
 - reading the assigned issue file and linked context
+- stopping before implementation when the issue or context is unclear, and dispatching a context compiler
 - implementing the fix
 - updating tests and changelog as needed
 - creating exactly one resolving commit for that issue
@@ -17,6 +20,7 @@ You are **not** responsible for deleting the issue file or removing the issue en
 
 For every assigned issue, you must complete all of the following:
 - [ ] Read the issue file and linked context pills before editing code.
+- [ ] Run the clarity gate before implementation: if the issue, scope, dependencies, or context pills are incomplete, contradictory, stale, or ambiguous, stop and call a new `context_compiler` using `plan_docs/context_compiler-instructions.md`.
 - [ ] Keep the fix scoped to the assigned issue only.
 - [ ] Update or delete invalid tests.
 - [ ] Add tests where necessary.
@@ -36,6 +40,19 @@ The resolving commit must follow these rules:
 
 If you discover extra problems outside the issue scope, do not silently include them. Record them in the issue file or report them for atomization.
 
+## Clarity Gate
+
+Before writing code, review the assigned issue and its linked context for the following failure modes:
+- unclear objective or end state
+- missing source references
+- missing or stale context pills
+- contradictory instructions between the issue, Index, pills, and code
+- hidden dependencies not captured in the issue
+
+If any of those are present, do not guess. Dispatch a new `context_compiler` and wait for clarified context before implementation.
+
+The `context_compiler` must follow `plan_docs/context_compiler-instructions.md`.
+
 ## Index Update Contract
 
 After creating the resolving commit, update the exact matching issue entry in `plan_docs/issues/Index.md` to:
@@ -44,6 +61,7 @@ After creating the resolving commit, update the exact matching issue entry in `p
 
 Rules:
 - use the real commit id you just created
+- this Index update is bookkeeping and may remain uncommitted until phase closure
 - overwrite only the status for that issue entry
 - do not delete the entry
 - do not delete the issue file
