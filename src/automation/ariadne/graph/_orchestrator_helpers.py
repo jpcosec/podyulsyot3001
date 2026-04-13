@@ -1,5 +1,6 @@
 """Internal helpers for orchestrator - moved here for better organization."""
 
+import asyncio
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
@@ -16,6 +17,111 @@ from src.automation.ariadne.core.cognition.thread import AriadneThread
 from src.automation.ariadne.modes.registry import ModeRegistry
 
 
+def _patched_component_key(state_id: str, component_name: str) -> str:
+    """Namespace heuristic patches to the state they belong to."""
+    return f"{state_id}:{component_name}"
+
+
+def _target_text_matches(target: AriadneTarget, element: Dict[str, Any]) -> bool:
+    """Return whether an element satisfies the target text constraint."""
+    if not target.text:
+        return True
+    return target.text.lower() in element.get("text", "").lower()
+
+
+def _target_css_matches(target: AriadneTarget, element: Dict[str, Any]) -> bool:
+    """Return whether an element satisfies the target css constraint."""
+    if not target.css:
+        return True
+    return element.get("css") == target.css or element.get("selector") == target.css
+
+
+def _target_has_matchers(target: AriadneTarget) -> bool:
+    """Return whether the target defines any matching criteria."""
+    return bool(target.text or target.css)
+
+
+def _target_present_in_snapshot(
+    target: AriadneTarget, snapshot: SnapshotResult
+) -> bool:
+    """Return whether a target is present in the snapshot DOM."""
+    for element in snapshot.dom_elements:
+        if not _target_has_matchers(target):
+            continue
+        if _target_text_matches(target, element) and _target_css_matches(
+            target, element
+        ):
+            return True
+    return False
+
+
+def _url_matches(predicate: Any, snapshot: SnapshotResult) -> bool:
+    """Return whether the snapshot URL satisfies the predicate."""
+    if not predicate.url_contains:
+        return True
+    return predicate.url_contains in snapshot.url
+
+
+def _presence_results(
+    targets: List[AriadneTarget], snapshot: SnapshotResult
+) -> List[bool]:
+    """Evaluate target presence against the snapshot."""
+    return [_target_present_in_snapshot(target, snapshot) for target in targets]
+
+
+def _forbidden_results(
+    targets: List[AriadneTarget], snapshot: SnapshotResult
+) -> List[bool]:
+    """Evaluate forbidden targets against the snapshot."""
+    return [not _target_present_in_snapshot(target, snapshot) for target in targets]
+
+
+def _evaluate_presence(predicate: Any, snapshot: SnapshotResult) -> bool:
+    """Evaluate whether a state is present based on URL and DOM signals."""
+    if not _url_matches(predicate, snapshot):
+        return False
+    req_results = _presence_results(predicate.required_elements, snapshot)
+    forb_results = _forbidden_results(predicate.forbidden_elements, snapshot)
+    all_results = req_results + forb_results
+    if not all_results:
+        return True
+    if predicate.logical_op == "AND":
+        return all(all_results)
+    return any(all_results)
+
+
+async def _adapter_snapshot(executor: Any) -> SnapshotResult:
+    """Read browser state from either the legacy executor or the new adapter API."""
+    if hasattr(executor, "perceive"):
+        return await executor.perceive()
+    return await executor.take_snapshot()
+
+
+async def _adapter_execute(executor: Any, command: Any) -> Any:
+    """Run a motor command through the executor API."""
+    if hasattr(executor, "act"):
+        return await executor.act(command)
+    return await executor.execute(command)
+
+
+def _executor_not_found() -> Dict[str, Any]:
+    """Return the standard missing-executor error payload."""
+    return {
+        "errors": [
+            "ExecutorNotFoundError: No executor instance provided in config['configurable']['executor']"
+        ]
+    }
+
+
+def _snapshot_updates(snapshot: SnapshotResult) -> Dict[str, Any]:
+    """Build state updates from a snapshot."""
+    return {
+        "current_url": snapshot.url,
+        "dom_elements": snapshot.dom_elements,
+        "screenshot_b64": snapshot.screenshot_b64,
+    }
+
+
 async def _identify_state(
     state: AriadneState,
     config: Any,
@@ -27,7 +133,6 @@ async def _identify_state(
         labyrinth = await Labyrinth.load_from_db(state["portal_name"])
     
     return labyrinth.ariadne_map, await labyrinth.identify_room(snapshot)
-
 
 
 def _identify_from_map(ariadne_map: AriadneMap, snapshot: SnapshotResult) -> str | None:
@@ -262,6 +367,7 @@ def _collect_extracted_memory(
     state: AriadneState,
 ) -> Dict[str, Any]:
     """Build session-memory updates from edge extraction rules and command output."""
+    print(f"DEBUG: _collect_extracted_memory for edge {edge.from_state}->{edge.to_state}")
     if not edge.extract:
         return {}
 
@@ -348,6 +454,7 @@ def _add_batchable_edge(
     max_batch: int,
 ) -> List[AriadneEdge]:
     """Try to add an edge to the batch if it's batchable."""
+    from src.automation.ariadne.models import AriadneIntent
     if len(batch) >= max_batch:
         return batch
     if edge.intent not in [AriadneIntent.FILL, AriadneIntent.SELECT]:

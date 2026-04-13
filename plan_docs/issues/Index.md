@@ -92,7 +92,7 @@ Before starting any work, verify these "Laws of Physics" are not violated:
 - **`ariadne-oop-skeleton.md`** ← umbrella, atomized. Do not execute directly.
   - {closed with commit id f1df743} `oop-01-scaffold.md` — empty `core/` package (protocols, ABCs, stubs)
   - {closed with commit id f22915a} `oop-02-adapters.md` — `BrowserOSAdapter` + `Crawl4AIAdapter` (parallel with 03)
-  - [ ] `oop-03-cognition.md` — `Labyrinth` + `AriadneThread` (parallel with 02)
+  - {closed with commit id df32b28} `oop-03-cognition.md` — `Labyrinth` + `AriadneThread` (parallel with 02)
   - [ ] `oop-04-theseus.md` — `Theseus` actor (parallel with 05, 06)
   - [ ] `oop-05-delphi.md` — `Delphi` actor + circuit breakers (parallel with 04, 06)
   - [ ] `oop-06-recorder.md` — `Recorder` actor + `promote()` (parallel with 04, 05)
