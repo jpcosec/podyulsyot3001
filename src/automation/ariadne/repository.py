@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
-import asyncio
 from pathlib import Path
 
-from src.automation.ariadne.io import read_json, read_json_async
 from src.automation.ariadne.models import AriadneMap
+from src.automation.ariadne._repository_loading import (
+    load_map_sync,
+    load_map_async,
+    resolve_sync_or_async,
+)
 
 
 class MapRepository:
@@ -15,7 +18,6 @@ class MapRepository:
     _map_cache: dict[str, AriadneMap] = {}
 
     def __init__(self, base_dir: Path | str | None = None) -> None:
-        # Default to src/automation/portals/
         if base_dir:
             self.base_dir = Path(base_dir)
         else:
@@ -25,77 +27,29 @@ class MapRepository:
         return f"{portal_name}:{map_type}"
 
     def get_map(self, portal_name: str, map_type: str = "easy_apply") -> AriadneMap:
-        """Retrieve a portal map (synchronous, uses thread pool).
-
-        Uses synchronous I/O via thread pool - safe to call from sync or async.
-
-        Args:
-            portal_name: Name of the portal (e.g., 'linkedin').
-            map_type: Type of map (default: 'easy_apply').
-
-        Returns:
-            The validated AriadneMap.
-
-        Raises:
-            FileNotFoundError: If the map JSON does not exist.
-        """
+        """Retrieve a portal map (synchronous, uses thread pool)."""
         cache_key = self._cache_key(portal_name, map_type)
         if cache_key in self._map_cache:
             return self._map_cache[cache_key]
 
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            loop = None
-
-        if loop and loop.is_running():
-            ariadne_map = asyncio.run(self._load_map_async(portal_name, map_type))
+        if resolve_sync_or_async():
+            ariadne_map = asyncio.run(
+                load_map_async(self.base_dir, portal_name, map_type)
+            )
         else:
-            ariadne_map = self._load_map_sync(portal_name, map_type)
+            ariadne_map = load_map_sync(self.base_dir, portal_name, map_type)
 
         self._map_cache[cache_key] = ariadne_map
         return ariadne_map
-
-    async def _load_map_async(self, portal_name: str, map_type: str) -> AriadneMap:
-        """Load map from disk asynchronously."""
-        map_path = self.base_dir / portal_name / "maps" / f"{map_type}.json"
-        try:
-            map_payload = await read_json_async(map_path)
-            return await asyncio.to_thread(AriadneMap.model_validate, map_payload)
-        except FileNotFoundError as exc:
-            raise FileNotFoundError(
-                f"Ariadne Map not found for '{portal_name}' (type: {map_type}) at {map_path}"
-            ) from exc
 
     async def get_map_async(
         self, portal_name: str, map_type: str = "easy_apply"
     ) -> AriadneMap:
-        """Retrieve a portal map asynchronously with caching.
-
-        Args:
-            portal_name: Name of the portal (e.g., 'linkedin').
-            map_type: Type of map (default: 'easy_apply').
-
-        Returns:
-            The validated AriadneMap.
-
-        Raises:
-            FileNotFoundError: If the map JSON does not exist.
-        """
+        """Retrieve a portal map asynchronously with caching."""
         cache_key = self._cache_key(portal_name, map_type)
         if cache_key in self._map_cache:
             return self._map_cache[cache_key]
 
-        ariadne_map = await self._load_map_async(portal_name, map_type)
+        ariadne_map = await load_map_async(self.base_dir, portal_name, map_type)
         self._map_cache[cache_key] = ariadne_map
         return ariadne_map
-
-    def _load_map_sync(self, portal_name: str, map_type: str) -> AriadneMap:
-        """Load map from disk synchronously (runs in thread pool)."""
-        map_path = self.base_dir / portal_name / "maps" / f"{map_type}.json"
-        try:
-            return AriadneMap.model_validate(read_json(map_path))
-        except FileNotFoundError as exc:
-            raise FileNotFoundError(
-                f"Ariadne Map not found for '{portal_name}' (type: {map_type}) at {map_path}"
-            ) from exc

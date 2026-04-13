@@ -65,6 +65,12 @@ class PortalDriftError(AriadneError):
     pass
 
 
+class MapNotFoundError(AriadneError):
+    """Raised when no Ariadne map exists for the requested portal or mission."""
+
+    pass
+
+
 class HumanInterventionRequired(AriadneError):
     """The run paused so an operator can inspect and safely resume the session."""
 

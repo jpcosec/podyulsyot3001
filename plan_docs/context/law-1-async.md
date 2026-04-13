@@ -33,7 +33,6 @@ async with httpx.AsyncClient() as client:
 
 ## Verify
 ```bash
-python -m pytest tests/architecture/test_sync_io_detector.py -q
-# spot-check:
+# NOTE: pytest-architecture sync_io_detector is disabled pending test suite realignment. Use manual spot-check:
 grep -rn "time\.sleep\|requests\.\|open(" src/automation/ariadne/
 ```

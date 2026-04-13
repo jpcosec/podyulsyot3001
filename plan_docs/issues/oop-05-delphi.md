@@ -1,38 +1,38 @@
-# OOP 05 — Delphi actor (LLM/HITL rescue)
+# OOP 05 — Delphi next-step chooser
 
 **Umbrella:** `ariadne-oop-skeleton.md`. Depends on `oop-02-adapters.md`. Parallel with `oop-04-theseus.md` and `oop-06-recorder.md`.
 
 ### 1. Explanation
-Implement `Delphi.__call__` by absorbing `graph/nodes/llm_rescue*` and `graph/nodes/hitl*`. Delphi is the expensive rescue path; it must enforce Law 4 circuit breakers.
+Implement `Delphi` as the next-step chooser used only when no deterministic `AriadneThread` path exists for the current `Labyrinth` position. Delphi may still trigger HITL through circuit breakers, but it is not the general coordinator.
 
 ### 2. Reference
 `src/automation/ariadne/graph/nodes/llm_rescue*`, `src/automation/ariadne/graph/nodes/hitl*`, `src/automation/ariadne/core/actors.py`
 
 ### 3. Real fix
-Rescue `Delphi` actor absorbing `llm_rescue` and `hitl` nodes with circuit breakers.
+LLM-backed `Delphi` actor choosing the next step when thread guidance is missing.
 
 ### 4. Steps
 **Flow:**
-1. `snapshot = await self.sensor.perceive()`.
-2. Build prompt using `state["instruction"]` + `state["current_mission_id"]` + (if present) `state["session_memory"]["hints"]` + annotated screenshot.
-3. Circuit breakers (Law 4):
-   - ≥2 consecutive LLM parse failures on the same room → escalate to HITL.
-   - `session_memory["agent_failures"] >= 3` → escalate to HITL immediately.
-4. LLM returns a `MotorCommand` (structured output). Execute via `await self.motor.act(command)`. `result.trace` is appended to `state["trace"]` (tagged `source: "llm_agent"` by `Recorder` downstream). `Delphi` does not call `Recorder` directly.
-6. HITL branch: pause the graph and surface a breakpoint for human intervention.
+1. Trigger only when `AriadneThread` has no usable next step for the current room.
+2. Collect context: current room/state, local `Labyrinth` vicinity, mission/instruction context, optional hints, and current snapshot.
+3. Build the prompt through a LangChain-facing module/client.
+4. Circuit breakers (Law 4):
+   - repeated parse/decision failures on the same room escalate to HITL
+   - `session_memory["agent_failures"] >= 3` escalates immediately
+5. Return the chosen next step/command to `Theseus` for coordination and execution, or surface HITL when the circuit breaker trips.
 
-**Dependencies injected:** `sensor`, `motor`, `llm_client`, `hitl_handler`.
+**Dependencies injected:** `sensor`, `motor`, `labyrinth`, LangChain LLM module/client, optional HITL handler.
 
 ### 4.1 Serena AST refactor operations
-- `src/automation/ariadne/graph/orchestrator.py::llm_rescue_agent_node` -> absorb into `src/automation/ariadne/core/actors.py::Delphi/__call__` as prompt construction, structured-output parsing, and command execution.
-- `src/automation/ariadne/graph/orchestrator.py::human_in_the_loop_node` -> absorb into `src/automation/ariadne/core/actors.py::Delphi/__call__` as the explicit HITL escalation branch.
-- Any retry/circuit-breaker state currently threaded through `route_after_heuristics` or `route_after_agent` -> move to `Delphi`-owned counters first, then leave graph routing to consume the normalized state flags in OOP 07.
+- `src/automation/ariadne/graph/orchestrator.py::llm_rescue_agent_node` -> absorb into `Delphi` as prompt construction and next-step choice logic.
+- `src/automation/ariadne/graph/orchestrator.py::human_in_the_loop_node` -> absorb into `Delphi`/`Theseus` coordination as the explicit escalation branch.
+- Any retry/circuit-breaker state currently threaded through `route_after_heuristics` or `route_after_agent` -> move to `Delphi`-owned counters and normalized decision outputs.
 - After migration, use `find_referencing_symbols` on `llm_rescue_agent_node` and `human_in_the_loop_node` to verify only graph wiring still mentions them before deleting the legacy nodes.
 
 ### 5. Test command
-1. Unit tests cover: happy LLM resolve, repeated LLM failure → HITL, `agent_failures >= 3` → HITL, prompt includes `instruction` + `mission_id`.
-2. `graph/nodes/llm_rescue*` and `graph/nodes/hitl*` are flagged for deletion in OOP 07.
-3. No imports from `motors/`. All browser interaction goes through `self.motor`.
+1. Unit tests cover: no-thread-path trigger, happy LLM next-step resolve, repeated LLM failure → HITL, `agent_failures >= 3` → HITL, prompt includes current room + vicinity + mission context.
+2. `Delphi` does not own general graph coordination; it only decides the next step when deterministic guidance is missing.
+3. No imports from `motors/`. All browser interaction goes through injected periphery abstractions.
 
 ### 📦 Required Context Pills
 - [DIP Enforcement](../context/dip-enforcement.md)

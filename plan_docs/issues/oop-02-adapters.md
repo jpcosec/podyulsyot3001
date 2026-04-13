@@ -26,13 +26,11 @@ Concrete `BrowserOSAdapter` and `Crawl4AIAdapter` implementing `BrowserAdapter`.
 4. Law 1: all methods `async`; the `/mcp` poll uses `asyncio.to_thread(requests.get, ...)` or `httpx.AsyncClient`.
 
 ### 4.1 Serena AST refactor operations
-- `src/automation/main.py::_check_browseros_running` -> move behavior into `src/automation/ariadne/core/adapters/browseros.py::BrowserOSAdapter/is_healthy` via `find_symbol(include_body=True)` + `replace_symbol_body`.
-- `src/automation/main.py::_launch_browseros` -> move behavior into `src/automation/ariadne/core/adapters/browseros.py::BrowserOSAdapter/__aenter__`; keep spawned-process ownership on the adapter instance.
-- `src/automation/main.py::_ensure_browseros` -> dissolve into `BrowserOSAdapter/__aenter__` and delete the legacy function after `find_referencing_symbols` confirms no callers remain.
-- `src/automation/motors/browseros/executor.py::BrowserOSCliExecutor/take_snapshot` -> absorb into `src/automation/ariadne/core/adapters/browseros.py::BrowserOSAdapter/perceive`.
-- `src/automation/motors/browseros/executor.py::BrowserOSCliExecutor/execute` -> absorb into `src/automation/ariadne/core/adapters/browseros.py::BrowserOSAdapter/act`.
-- `src/automation/motors/crawl4ai/executor.py::Crawl4AIExecutor/__aenter__`, `__aexit__`, `take_snapshot`, `execute` -> absorb into `src/automation/ariadne/core/adapters/crawl4ai.py::Crawl4AIAdapter` methods with the same lifecycle ownership boundary.
-- `src/automation/main.py::_get_executor` -> replace with adapter construction only; after adapter wiring lands, use `find_referencing_symbols` and remove executor-specific branching that survives only for legacy paths.
+*Note from Context Compiler: `main.py` has already been refactored in `ee0c1d0` and `f1df743` and NO LONGER contains the `_ensure_browseros` or legacy `/mcp` polling logic. The executor's job is to ensure `core/adapters/browseros.py` and `core/adapters/crawl4ai.py` conform to `BrowserAdapter` and are wired correctly.*
+
+- Review the already scaffolded `BrowserOSAdapter` in `src/automation/ariadne/core/adapters/browseros.py` to ensure it absorbs `take_snapshot` and `execute` correctly as `perceive` and `act`.
+- Review the already scaffolded `Crawl4AIAdapter` in `src/automation/ariadne/core/adapters/crawl4ai.py` to ensure it conforms.
+- Check `main.py` one last time to ensure `MotorRegistry` successfully resolves the adapter and correctly passes it into the `_build_config` logic.
 
 ### 5. Test command
 1. `async with BrowserOSAdapter(...)` launches, waits for health, and cleans up the subprocess it owns.
@@ -46,10 +44,11 @@ Concrete `BrowserOSAdapter` and `Crawl4AIAdapter` implementing `BrowserAdapter`.
 - [Law 2 - One Browser Per Mission](../context/law-2-single-browser.md)
 - [Ariadne State & Models](../context/ariadne-models.md)
 - [Motor Contract](../context/motor-contract.md)
-- [Peripheral Adapter Contract](../context/peripheral-adapter-contract.md)
+- [Browser Adapter Contract](../context/browser-adapter-contract.md)
 - [Sensor Contract](../context/sensor-contract.md)
 
 ### 🚫 Non-Negotiable Constraints
+- **Context Clarification (BrowserAdapter):** `src/automation/ariadne/contracts/base.py` currently defines `PeripheralAdapter`, but `src/automation/ariadne/core/periphery.py` defines `BrowserAdapter`. **You MUST implement `BrowserAdapter`** as specified in `core/periphery.py`. `base.py` is stale and will be cleaned up in `oop-08-cleanup.md`. Do not import `PeripheralAdapter`.
 - **DIP Enforcement:** `ariadne/` (domain layer) must never import from `motors/` (infrastructure layer). Infrastructure is injected via `config` or resolved through `MotorRegistry`.
 - **Law 1 (No Blocking I/O):** All I/O in `ariadne/` MUST be `async/await`. No `open()`, `time.sleep()`, or `requests`.
-- **Law 2 (One Browser Per Mission):** A single `async with executor` block must wrap the entire graph execution. Nodes must never open or close the browser themselves.
+- **Law 2 (One Browser Per Mission):** A single `async with adapter` block must wrap the entire graph execution. Nodes must never open or close the browser themselves.

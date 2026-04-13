@@ -8,81 +8,54 @@ import asyncio
 import copy
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Dict
 
-import aiosqlite
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from langgraph.graph import END, StateGraph
 from langchain_core.runnables import RunnableConfig
 
+from src.automation.ariadne.models import AriadneState
+from src.automation.ariadne.contracts.base import SnapshotResult
 from src.automation.adapters.translators.registry import TranslatorRegistry
-from src.automation.ariadne.capabilities.recording import GraphRecorder
 from src.automation.ariadne.graph.nodes.agent import LangGraphBrowserOSAgent
-from src.automation.ariadne.contracts.base import (
-    SnapshotResult,
-)
-from src.automation.ariadne.models import (
-    AriadneEdge,
-    AriadneIntent,
-    AriadneMap,
-    AriadneObserve,
-    AriadneState,
-    AriadneTarget,
-)
 from src.automation.ariadne.repository import MapRepository
-from src.automation.ariadne.modes.registry import ModeRegistry
-from src.automation.ariadne.danger_contracts import ApplyDangerSignals
 
 
 MAX_HEURISTIC_RETRIES = 2
 
-
-def _patched_component_key(state_id: str, component_name: str) -> str:
-    """Namespace heuristic patches to the state they belong to."""
-    return f"{state_id}:{component_name}"
-
-
-# --- Node Functions ---
-
-
-def _evaluate_presence(predicate: AriadneObserve, snapshot: SnapshotResult) -> bool:
-    """Evaluates if a state is present based on the snapshot (URL and DOM)."""
-
-    def is_target_present(target: AriadneTarget) -> bool:
-        # For a target to be present, ALL specified criteria (text, css)
-        # must match at least one DOM element.
-        for el in snapshot.dom_elements:
-            match = True
-            if target.text and target.text.lower() not in el.get("text", "").lower():
-                match = False
-            if (
-                target.css
-                and el.get("css") != target.css
-                and el.get("selector") != target.css
-            ):
-                match = False
-
-            # If at least one criteria was specified and it matched
-            if match and (target.text or target.css):
-                return True
-        return False
-
-    # 1. URL Matching
-    if predicate.url_contains and predicate.url_contains not in snapshot.url:
-        return False
-
-    # 2. Element Matching
-    req_results = [is_target_present(t) for t in predicate.required_elements]
-    forb_results = [not is_target_present(t) for t in predicate.forbidden_elements]
-
-    all_results = req_results + forb_results
-    if not all_results:
-        return True
-
-    if predicate.logical_op == "AND":
-        return all(all_results)
-    return any(all_results)
+from src.automation.ariadne.graph._orchestrator_helpers import (
+    _adapter_execute,
+    _adapter_snapshot,
+    _apply_identified_state,
+    _collect_extracted_memory,
+    _danger_signals,
+    _deterministic_batch,
+    _deterministic_executor,
+    _deterministic_updates,
+    _executor_not_found,
+    _filter_valid_edges,
+    _find_safe_sequence,
+    _get_candidate_edges,
+    _load_deterministic_map,
+    _mark_goal_achieved,
+    _observe_updates,
+    _observe_next_step,
+    _record_deterministic_event,
+    _record_graph_event,
+    _resolve_target,
+    _safe_identify_state,
+    _score_edge,
+    _snapshot_updates,
+    _target_specificity,
+    _translate_command,
+    _translation_error,
+    _update_danger_memory,
+    _execution_failed,
+    _execution_error_message,
+    _agent_should_escalate,
+    _print_agent_circuit_breaker,
+)
 
 
 async def observe_node(state: AriadneState, config: RunnableConfig) -> Dict[str, Any]:
@@ -91,283 +64,12 @@ async def observe_node(state: AriadneState, config: RunnableConfig) -> Dict[str,
     executor = config.get("configurable", {}).get("executor")
 
     if not executor:
-        return {
-            "errors": [
-                "ExecutorNotFoundError: No executor instance provided in config['configurable']['executor']"
-            ]
-        }
+        return _executor_not_found()
 
     try:
-        snapshot = await executor.take_snapshot()
-
-        updates = {
-            "current_url": snapshot.url,
-            "dom_elements": snapshot.dom_elements,
-            "screenshot_b64": snapshot.screenshot_b64,
-        }
-
-        # 1. State Identification
-        repo = MapRepository()
-        ariadne_map = None
-        identified_state_id = None
-        try:
-            ariadne_map = await repo.get_map_async(state["portal_name"])
-            for state_id, state_def in ariadne_map.states.items():
-                if _evaluate_presence(state_def.presence_predicate, snapshot):
-                    identified_state_id = state_id
-                    break
-
-            if identified_state_id:
-                updates["current_state_id"] = identified_state_id
-                print(f"--- OBSERVE: Identified state '{identified_state_id}' ---")
-            else:
-                print("--- OBSERVE: Could not identify any state from map ---")
-        except Exception as e:
-            print(f"--- OBSERVE: Map matching skipped: {str(e)} ---")
-
-        # 2. Danger Detection (CAPTCHAs, Security Blocks)
-        mode = ModeRegistry.get_mode_for_url(snapshot.url)
-        all_text = " ".join(
-            [el.get("text", "") for el in snapshot.dom_elements if el.get("text")]
-        )
-
-        danger_signals = ApplyDangerSignals(
-            dom_text=all_text,
-            current_url=snapshot.url,
-        )
-
-        danger_report = await mode.inspect_danger(danger_signals)
-        if danger_report.findings:
-            primary = danger_report.primary
-            print(
-                f"--- OBSERVE: Danger detected [{primary.code}]: {primary.message} ---"
-            )
-
-            new_memory = state.get("session_memory", {}).copy()
-            new_memory["danger_detected"] = True
-            new_memory["danger_findings"] = [
-                f.model_dump() for f in danger_report.findings
-            ]
-            updates["session_memory"] = new_memory
-
-        # 3. Goal Achievement Check
-        if (
-            identified_state_id
-            and ariadne_map
-            and identified_state_id in ariadne_map.success_states
-        ):
-            print(f"--- OBSERVE: Goal achieved (state: {identified_state_id}) ---")
-            new_memory = updates.get(
-                "session_memory", state.get("session_memory", {})
-            ).copy()
-            new_memory["goal_achieved"] = True
-            updates["session_memory"] = new_memory
-
-        await _record_graph_event(
-            config,
-            "observe",
-            {
-                "portal_name": state.get("portal_name"),
-                "current_mission_id": state.get("current_mission_id"),
-                "current_state_id": updates.get(
-                    "current_state_id", state.get("current_state_id")
-                ),
-                "current_url": snapshot.url,
-                "session_memory": updates.get(
-                    "session_memory", state.get("session_memory", {})
-                ),
-            },
-        )
-
-        return updates
-
+        return await _observe_updates(state, config, executor)
     except Exception as e:
         return {"errors": [f"ObservationError: {str(e)}"]}
-
-
-def _resolve_target(
-    target: Union[str, AriadneTarget],
-    from_state_id: str,
-    ariadne_map: AriadneMap,
-    state: AriadneState,
-) -> AriadneTarget:
-    """Resolves a target (component name or explicit target) to an AriadneTarget.
-
-    Checks:
-    1. JIT Patches in state['patched_components']
-    2. Map components in definition for from_state_id
-    """
-    if isinstance(target, AriadneTarget):
-        return target
-
-    # 1. Check JIT Patches in State
-    patched_components = state.get("patched_components", {})
-    scoped_key = _patched_component_key(from_state_id, target)
-    if scoped_key in patched_components:
-        return patched_components[scoped_key]
-
-    # 2. Check Map components
-    definition = ariadne_map.states.get(from_state_id)
-    if definition and target in definition.components:
-        return definition.components[target]
-
-    raise ValueError(
-        f"Target component '{target}' not found in state patches or map definition for state '{from_state_id}'."
-    )
-
-
-def _is_target_present_in_snapshot(
-    target: AriadneTarget, dom_elements: List[Dict[str, Any]]
-) -> bool:
-    """Checks if a single target exists in the provided DOM snapshot."""
-    for el in dom_elements:
-        match = True
-        # Text and CSS must ALL match for a single element
-        if target.text and target.text.lower() not in el.get("text", "").lower():
-            match = False
-        if target.css and target.css not in el.get("selector", ""):
-            match = False
-
-        if match and (target.text or target.css):
-            return True
-    return False
-
-
-def _extract_from_dom(
-    selector: str, dom_elements: List[Dict[str, Any]]
-) -> Optional[str]:
-    """Resolve a selector-like key against the current DOM snapshot."""
-    for element in dom_elements:
-        candidate_selector = element.get("selector") or element.get("css") or ""
-        if selector and selector == candidate_selector:
-            return element.get("text") or element.get("value") or candidate_selector
-    return None
-
-
-def _collect_extracted_memory(
-    edge: AriadneEdge,
-    result: Any,
-    state: AriadneState,
-) -> Dict[str, Any]:
-    """Build session-memory updates from edge extraction rules and command output."""
-    if not edge.extract:
-        return {}
-
-    extracted_memory: Dict[str, Any] = {}
-    command_output = getattr(result, "extracted_data", {}) or {}
-    dom_elements = state.get("dom_elements", [])
-
-    for key, selector in edge.extract.items():
-        extracted_value = command_output.get(key)
-        if extracted_value is None:
-            extracted_value = _extract_from_dom(selector, dom_elements)
-        if extracted_value is not None:
-            extracted_memory[key] = extracted_value
-
-    return extracted_memory
-
-
-async def _record_graph_event(
-    config: RunnableConfig,
-    event_type: str,
-    payload: Dict[str, Any],
-) -> None:
-    """Persist one graph event when recording context is available."""
-    configurable = config.get("configurable", {})
-    thread_id = configurable.get("thread_id")
-    if not thread_id or not configurable.get("record_graph", False):
-        return
-
-    recording_dir = configurable.get("recording_dir", "data/ariadne/recordings")
-    recorder = GraphRecorder(recording_dir)
-    await recorder.record_event_async(thread_id, event_type, payload)
-
-
-def _find_safe_sequence(
-    current_state_id: str,
-    ariadne_map: AriadneMap,
-    state: AriadneState,
-    max_batch: int = 5,
-) -> List[AriadneEdge]:
-    """
-    Dynamically evaluates and finds the next valid edge or a safe batch of edges.
-
-    An edge is valid if its target exists in the current snapshot.
-    """
-    dom_elements = state.get("dom_elements", [])
-    current_mission_id = state.get("current_mission_id")
-
-    # Find all possible outgoing edges
-    candidate_edges = [
-        edge
-        for edge in ariadne_map.edges
-        if edge.from_state == current_state_id
-        and (edge.mission_id is None or edge.mission_id == current_mission_id)
-    ]
-
-    # Evaluate which edges are currently "live" based on the snapshot
-    valid_edges = []
-    for edge in candidate_edges:
-        try:
-            resolved_target = _resolve_target(
-                edge.target, edge.from_state, ariadne_map, state
-            )
-            if _is_target_present_in_snapshot(resolved_target, dom_elements):
-                valid_edges.append(edge)
-        except ValueError:
-            # Target component name couldn't be resolved, so it's not present
-            continue
-
-    if not valid_edges:
-        return []
-
-    def _score_edge(edge: AriadneEdge) -> tuple:
-        """Returns a tuple: (mission_match, specificity_score, edge_order).
-
-        - mission_match: 1 if mission_id matches current_mission_id, 0 otherwise
-        - specificity_score: higher is better (css=3, hint=2, text=1, fallback=0)
-        """
-        mission_match = 1 if edge.mission_id == current_mission_id else 0
-
-        specificity = 0
-        try:
-            resolved = _resolve_target(edge.target, edge.from_state, ariadne_map, state)
-            if resolved.css:
-                specificity = 3
-            elif resolved.hint:
-                specificity = 2
-            elif resolved.text:
-                specificity = 1
-        except ValueError:
-            pass
-
-        return (mission_match, specificity)
-
-    # Sort by mission match first, then specificity
-    valid_edges_sorted = sorted(valid_edges, key=_score_edge, reverse=True)
-    first_edge = valid_edges_sorted[0]
-
-    # Try to build a micro-batch starting with the first valid edge
-    batch = [first_edge]
-    cursor = first_edge.to_state
-
-    if len(candidate_edges) > 1 and cursor == current_state_id:
-        # Simple micro-batching: only look for more actions in the same state
-        for edge in candidate_edges:
-            if edge.from_state == cursor and edge != first_edge:
-                if edge.intent in [AriadneIntent.FILL, AriadneIntent.SELECT]:
-                    try:
-                        res_target = _resolve_target(
-                            edge.target, edge.from_state, ariadne_map, state
-                        )
-                        if _is_target_present_in_snapshot(res_target, dom_elements):
-                            batch.append(edge)
-                            if len(batch) >= max_batch:
-                                break
-                    except ValueError:
-                        continue
-
-    return batch
 
 
 async def execute_deterministic_node(
@@ -376,22 +78,20 @@ async def execute_deterministic_node(
     """Replays the AriadneMap for the current node state with Micro-Batching and atomic fallback."""
     print("--- NODE: Execute Deterministic ---")
 
-    executor = config.get("configurable", {}).get("executor")
+    executor = _deterministic_executor(config)
     if not executor:
         return {
             "errors": [
                 "ExecutorNotFoundError: No executor instance provided in config."
             ]
         }
-
-    repo = MapRepository()
     try:
-        ariadne_map = await repo.get_map_async(state["portal_name"])
+        ariadne_map = await _load_deterministic_map(state, config)
     except Exception as e:
         return {"errors": [f"MapLoadError: {str(e)}"]}
 
     current_state_id = state.get("current_state_id")
-    batch = _find_safe_sequence(current_state_id, ariadne_map, state)
+    batch = _deterministic_batch(state, config, ariadne_map)
     if not batch:
         return {
             "errors": [
@@ -403,78 +103,21 @@ async def execute_deterministic_node(
     translator = TranslatorRegistry.get_translator_by_name(motor_name)
 
     try:
-        if len(batch) > 1:
-            print(f"--- JIT Batching {len(batch)} intents ---")
-            resolved_batch = [
-                (_resolve_target(e.target, e.from_state, ariadne_map, state), e)
-                for e in batch
-            ]
-            command = translator.translate_batch(
-                [(e.intent, target, e.value) for target, e in resolved_batch], state
-            )
-        else:
-            edge = batch[0]
-            res_target = _resolve_target(
-                edge.target, edge.from_state, ariadne_map, state
-            )
-            command = translator.translate_intent(
-                edge.intent, res_target, state, edge.value
-            )
+        command = _translate_command(batch, translator, ariadne_map, state)
     except Exception as e:
-        return {"errors": [f"TranslationError: {str(e)}"]}
+        return _translation_error(e)
 
     print(f"--- Dispatching Command: {command} ---")
     try:
-        result = await executor.execute(command)
-
-        if result.status == "failed":
-            # Micro-batch failure - return error so route_after_deterministic handles it
-            if result.failed_at_index is not None:
-                error_msg = (
-                    f"Batch failed at index {result.failed_at_index}: {result.error}"
-                )
-            else:
-                error_msg = result.error or "Unknown error"
-            return {"errors": [f"ExecutionFailed: {error_msg}"]}
-
+        result = await _adapter_execute(executor, command)
+        failure = _execution_failed(result)
+        if failure is not None:
+            return failure
     except Exception as e:
         return {"errors": [f"ExecutionError: {str(e)}"]}
 
-    updates = {"current_state_id": batch[-1].to_state, "errors": []}
-    session_memory = state.get("session_memory", {}).copy()
-    if session_memory.get("heuristic_retries"):
-        session_memory["heuristic_retries"] = 0
-
-    extracted_memory = _collect_extracted_memory(batch[-1], result, state)
-    if extracted_memory:
-        session_memory.update(extracted_memory)
-
-    if session_memory != state.get("session_memory", {}):
-        updates["session_memory"] = session_memory
-
-    await _record_graph_event(
-        config,
-        "execute_deterministic",
-        {
-            "portal_name": state.get("portal_name"),
-            "current_mission_id": state.get("current_mission_id"),
-            "state_before": {
-                "current_state_id": state.get("current_state_id"),
-                "profile_data": state.get("profile_data", {}),
-                "job_data": state.get("job_data", {}),
-            },
-            "selected_edges": [edge.model_dump(mode="json") for edge in batch],
-            "result": {
-                "status": result.status,
-                "error": result.error,
-                "failed_at_index": result.failed_at_index,
-                "completed_count": result.completed_count,
-                "extracted_data": result.extracted_data,
-            },
-            "state_after": updates,
-        },
-    )
-
+    updates = _deterministic_updates(state, batch, result)
+    await _record_deterministic_event(config, state, batch, result, updates)
     return updates
 
 
@@ -484,53 +127,22 @@ async def apply_local_heuristics_node(
     """Applies local rules from the active portal_mode (e.g. 'easy_apply')."""
     print("--- NODE: Apply Local Heuristics ---")
 
-    # 1. Resolve PortalMode
-    from src.automation.ariadne.modes.registry import ModeRegistry
+    from src.automation.ariadne.graph._orchestrator_helpers import (
+        _resolve_mode,
+        _load_state_definition,
+        _get_state_definition,
+        _apply_heuristic_patches,
+    )
 
-    mode_id = state.get("portal_mode") or state.get("current_url")
-    mode = ModeRegistry.get_mode_for_url(mode_id)
-
-    # 2. Load Map to get current state definition
-    repo = MapRepository()
-    try:
-        ariadne_map = await repo.get_map_async(state["portal_name"])
-    except Exception as e:
-        return {"errors": [f"MapLoadError: {str(e)}"]}
-
+    mode = _resolve_mode(state)
+    ariadne_map = await _load_state_definition(state)
     current_state_id = state.get("current_state_id")
-    definition = ariadne_map.states.get(current_state_id)
+    definition = _get_state_definition(ariadne_map, current_state_id)
+
     if not definition:
         return {"errors": [f"StateDefinitionNotFoundError: {current_state_id}"]}
 
-    # 3. Apply heuristics (using a deep copy to be safe)
-    patched_definition = await mode.apply_local_heuristics(
-        copy.deepcopy(definition), runtime_state=state
-    )
-
-    # 4. Extract new patches (components that differ from the original map)
-    new_patches = {}
-    for key, target in patched_definition.components.items():
-        if key not in definition.components or definition.components[key] != target:
-            patch_key = _patched_component_key(current_state_id, key)
-            new_patches[patch_key] = target
-
-    if new_patches:
-        session_memory = state.get("session_memory", {}).copy()
-        session_memory["heuristic_retries"] = (
-            session_memory.get("heuristic_retries", 0) + 1
-        )
-        print(
-            f"--- HEURISTICS: Patched {len(new_patches)} components for state '{current_state_id}' ---"
-        )
-        # Clear errors if we found patches to attempt retry
-        return {
-            "patched_components": new_patches,
-            "session_memory": session_memory,
-            "errors": [],
-        }
-
-    print(f"--- HEURISTICS: No local patches found for state '{current_state_id}' ---")
-    return {}
+    return await _apply_heuristic_patches(definition, current_state_id, state, mode)
 
 
 async def llm_rescue_agent_node(
@@ -552,19 +164,12 @@ async def human_in_the_loop_node(
     return {"session_memory": new_memory}
 
 
-# --- Conditional Routing Functions ---
-
-
 def route_after_observe(state: AriadneState) -> str:
     """Routing logic after observation."""
     session_memory = state.get("session_memory", {})
     if session_memory.get("goal_achieved"):
         return END
-
-    if session_memory.get("danger_detected"):
-        return "human_in_the_loop"
-
-    return "execute_deterministic"
+    return _observe_next_step(session_memory)
 
 
 def route_after_deterministic(state: AriadneState) -> str:
@@ -589,16 +194,10 @@ def route_after_agent(state: AriadneState) -> str:
     session_memory = state.get("session_memory", {})
     agent_failures = session_memory.get("agent_failures", 0)
 
-    if state.get("errors") or session_memory.get("give_up") or agent_failures >= 3:
-        print(
-            f"--- CIRCUIT BREAKER: {agent_failures} agent failures. Routing to HITL. ---"
-        )
+    if _agent_should_escalate(state, session_memory, agent_failures):
+        _print_agent_circuit_breaker(agent_failures)
         return "human_in_the_loop"
-
     return "observe"
-
-
-# --- Graph Construction ---
 
 
 @asynccontextmanager
@@ -607,62 +206,14 @@ async def create_ariadne_graph(
     use_memory: bool = False,
 ):
     """Compile the Ariadne 2.0 StateGraph with persistent HITL checkpoints."""
+    from src.automation.ariadne.graph._orchestrator_helpers import (
+        _build_workflow_nodes,
+        _add_workflow_edges,
+        _compile_workflow,
+    )
+
     workflow = StateGraph(AriadneState)
-
-    workflow.add_node("observe", observe_node)
-    workflow.add_node("execute_deterministic", execute_deterministic_node)
-    workflow.add_node("apply_local_heuristics", apply_local_heuristics_node)
-    workflow.add_node("llm_rescue_agent", llm_rescue_agent_node)
-    workflow.add_node("human_in_the_loop", human_in_the_loop_node)
-
-    workflow.set_entry_point("observe")
-
-    workflow.add_conditional_edges(
-        "observe",
-        route_after_observe,
-        {
-            "execute_deterministic": "execute_deterministic",
-            "human_in_the_loop": "human_in_the_loop",
-            END: END,
-        },
-    )
-
-    workflow.add_conditional_edges(
-        "execute_deterministic",
-        route_after_deterministic,
-        {"apply_local_heuristics": "apply_local_heuristics", "observe": "observe"},
-    )
-
-    workflow.add_conditional_edges(
-        "apply_local_heuristics",
-        route_after_heuristics,
-        {
-            "llm_rescue_agent": "llm_rescue_agent",
-            "execute_deterministic": "execute_deterministic",
-        },
-    )
-
-    workflow.add_conditional_edges(
-        "llm_rescue_agent",
-        route_after_agent,
-        {"human_in_the_loop": "human_in_the_loop", "observe": "observe"},
-    )
-
-    workflow.add_edge("human_in_the_loop", "observe")
-
-    if use_memory:
-        checkpointer = MemorySaver()
-        yield workflow.compile(
-            checkpointer=checkpointer,
-            interrupt_before=["human_in_the_loop"],
-        )
-    else:
-        resolved_path = Path(checkpoint_path or "data/ariadne/checkpoints.db")
-        resolved_path.parent.mkdir(parents=True, exist_ok=True)
-        async with AsyncSqliteSaver.from_conn_string(
-            str(resolved_path)
-        ) as checkpointer:
-            yield workflow.compile(
-                checkpointer=checkpointer,
-                interrupt_before=["human_in_the_loop"],
-            )
+    _build_workflow_nodes(workflow)
+    _add_workflow_edges(workflow)
+    compiled = await _compile_workflow(workflow, use_memory, checkpoint_path)
+    yield compiled

@@ -12,6 +12,7 @@ from src.automation.ariadne.contracts.base import (
 )
 from src.automation.ariadne.models import AriadneState
 from src.automation.ariadne.translators.base import AriadneTranslator
+from src.automation.adapters.translators._crawl4ai_builders import build_c4a_script
 
 
 class Crawl4AITranslator(AriadneTranslator):
@@ -20,6 +21,18 @@ class Crawl4AITranslator(AriadneTranslator):
     command_types = (CrawlCommand,)
     motor_names = ("crawl4ai",)
 
+    def _resolve_selector(self, target: AriadneTarget, intent: AriadneIntent) -> str:
+        """Resolve selector from target based on available attributes."""
+        if target.css:
+            return target.css
+        if target.text:
+            return f"text={target.text}"
+        if target.hint:
+            return f"[data-ariadne-hint='{target.hint}']"
+        if intent != AriadneIntent.PRESS:
+            raise ValueError(f"Target {target} has no css, text, or hint selector.")
+        return ""
+
     def translate_intent(
         self,
         intent: AriadneIntent,
@@ -27,53 +40,10 @@ class Crawl4AITranslator(AriadneTranslator):
         state: AriadneState,
         value: Optional[str] = None,
     ) -> MotorCommand:
-        selector = target.css
-        if not selector:
-            if target.text:
-                selector = f"text={target.text}"
-            elif target.hint:
-                selector = f"[data-ariadne-hint='{target.hint}']"
-
-        # PRESS doesn't require a selector
-        if not selector and intent != AriadneIntent.PRESS:
-            raise ValueError(f"Target {target} has no css, text, or hint selector.")
-
+        selector = self._resolve_selector(target, intent)
         resolved_value = self.resolve_placeholders(value, state) if value else ""
-        script = self._build_c4a_script(intent, selector or "", resolved_value)
+        script = build_c4a_script(intent, selector, resolved_value)
         return CrawlCommand(c4a_script=script, hooks=[])
-
-    def _build_c4a_script(
-        self, intent: AriadneIntent, selector: str, value: str
-    ) -> str:
-        """Build native C4A-Script command for the given intent."""
-        if intent == AriadneIntent.CLICK:
-            return f"CLICK `{selector}`"
-        elif intent == AriadneIntent.FILL:
-            escaped_value = value.replace('"', '\\"')
-            return f'SET `{selector}` "{escaped_value}"'
-        elif intent == AriadneIntent.SELECT:
-            escaped_value = value.replace('"', '\\"')
-            return f'SET `{selector}` "{escaped_value}"'
-        elif intent == AriadneIntent.PRESS:
-            return f"PRESS {value}"
-        elif intent == AriadneIntent.UPLOAD:
-            escaped_value = value.replace('"', '\\"')
-            return f'SET `{selector}` "{escaped_value}"'
-        elif intent == AriadneIntent.WAIT:
-            if value and value.lstrip("-").isdigit():
-                if int(value) < 100:
-                    return f"WAIT {value}"
-                else:
-                    seconds = int(value) / 1000
-                    return f"WAIT {seconds}"
-            elif selector:
-                return f"WAIT `{selector}` 5"
-            else:
-                return "WAIT 2"
-        elif intent == AriadneIntent.EXTRACT:
-            return f"EVAL `await page.innerText(`{selector}`)`"
-        else:
-            raise ValueError(f"Unsupported intent for Crawl4AI: {intent}")
 
     def translate_batch(
         self,

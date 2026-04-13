@@ -156,6 +156,25 @@ class PeripheralAdapter(Sensor, Motor, Protocol):
         ...
 
 
+class Executor(PeripheralAdapter, Protocol):
+    """Backward-compatible executor protocol during the adapter migration.
+
+    Abstract Methods:
+    - take_snapshot() -> SnapshotResult
+    - execute(command: MotorCommand) -> ExecutionResult
+    - __aenter__()
+    - __aexit__()
+    """
+
+    async def take_snapshot(self) -> SnapshotResult:
+        """Capture browser state for the legacy graph interface."""
+        ...
+
+    async def execute(self, command: MotorCommand) -> ExecutionResult:
+        """Run a command for the legacy graph interface."""
+        ...
+
+
 class Planner(Protocol):
     """Autonomous agent that proposes recovery actions.
 
@@ -169,12 +188,8 @@ class Planner(Protocol):
 
 
 class HintingTool(Protocol):
-    """Capability to inject alphanumeric overlays on the DOM.
+    """Capability to inject alphanumeric overlays on the DOM."""
 
-    Abstract Methods:
-    - inject_hints(sensor: Sensor) -> Dict[str, Any]
-    """
-
-    async def inject_hints(self, sensor: Sensor) -> Dict[str, Any]:
-        """Injects hints and returns the ID-to-metadata mapping."""
+    async def inject_hints(self) -> Dict[str, Any]:
+        """Inject hints and return the ID-to-metadata mapping."""
         ...

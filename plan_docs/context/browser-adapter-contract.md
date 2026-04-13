@@ -1,17 +1,17 @@
 ---
 type: model
 domain: scraping
-source: plan_docs/design/browseros-adapter-lifecycle.md:9
+source: src/automation/ariadne/core/periphery.py:56
 lifecycle: target
 ---
 
-# Pill: Peripheral Adapter Contract
+# Pill: Browser Adapter Contract
 
 ## Structure
-`PeripheralAdapter` combines browser lifecycle, health, perception, and action contracts behind one injected object.
+`BrowserAdapter` combines browser lifecycle, health, perception, and action contracts behind one injected object.
 
 Required behavior:
-- `async def __aenter__(self) -> PeripheralAdapter`
+- `async def __aenter__(self) -> BrowserAdapter`
 - `async def __aexit__(self, exc_type, exc, tb) -> None`
 - `async def is_healthy(self) -> bool`
 - `async def perceive(self) -> SnapshotResult`
@@ -24,6 +24,6 @@ Actors consume the adapter through injected `Sensor` and `Motor` roles, while li
 
 ## Verify
 Check that:
-- startup and health checks live in the adapter
+- startup and health checks live in the adapter implementation (e.g. `BrowserOSAdapter`)
 - CLI does not own adapter polling or launch loops
 - graph actors use injected interfaces instead of constructing browser runtimes themselves

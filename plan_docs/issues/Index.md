@@ -126,6 +126,9 @@ Before starting any work, verify these "Laws of Physics" are not violated:
 
 ### Docs (anytime after Phase 0.5)
 - [ ] `map-concept-docs.md` — document `Labyrinth` + `AriadneThread` split
+- [ ] `test-suite-realignment-for-oop-skeleton.md` — realign tests to actor/adapter/cognition ownership after the refactor settles
+- [ ] `function-length-normalization.md` — normalize oversized functions and extract classes where ownership becomes obvious
+- [ ] `docstring-alignment-after-oop-skeleton.md` — align symbol and module docstrings with the final ownership model
 
 ## Parallelization map
 

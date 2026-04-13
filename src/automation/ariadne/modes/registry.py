@@ -17,6 +17,22 @@ class ModeRegistry:
     _default_mode: AriadneMode | None = None
 
     @classmethod
+    def _register_mode_instance(cls, obj):
+        """Register a mode instance for its URL patterns."""
+        if not (
+            isinstance(obj, type)
+            and issubclass(obj, AriadneMode)
+            and obj is not AriadneMode
+            and hasattr(obj, "url_patterns")
+        ):
+            return
+        mode_instance = obj()
+        patterns = getattr(obj, "url_patterns")
+        if isinstance(patterns, list):
+            for pattern in patterns:
+                cls._mapping[pattern.lower()] = mode_instance
+
+    @classmethod
     def _discover_modes(cls):
         """Perform dynamic discovery of AriadneMode implementations in portals."""
         if cls._loaded:
@@ -27,29 +43,16 @@ class ModeRegistry:
         try:
             import src.automation.portals.modes as portals_modes
 
-            # Walk the package to find all modules
             for _, module_name, _ in pkgutil.walk_packages(
                 portals_modes.__path__, portals_modes.__name__ + "."
             ):
                 try:
                     module = importlib.import_module(module_name)
                     for _, obj in vars(module).items():
-                        if (
-                            isinstance(obj, type)
-                            and issubclass(obj, AriadneMode)
-                            and obj is not AriadneMode
-                            and hasattr(obj, "url_patterns")
-                        ):
-                            mode_instance = obj()
-                            patterns = getattr(obj, "url_patterns")
-                            if isinstance(patterns, list):
-                                for pattern in patterns:
-                                    cls._mapping[pattern.lower()] = mode_instance
+                        cls._register_mode_instance(obj)
                 except Exception:
-                    # Skip modules that fail to load
                     continue
         except ImportError:
-            # Portals package not found, fallback to defaults only
             pass
 
         cls._loaded = True

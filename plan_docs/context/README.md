@@ -73,7 +73,7 @@ scraping
   │    └─ browseros-mcp-contract.md
   ├─ model
   │    ├─ motor-contract.md
-  │    ├─ peripheral-adapter-contract.md
+  │    ├─ browser-adapter-contract.md
   │    └─ sensor-contract.md
   └─ pattern
        ├─ peripheral-adapter-pattern.md

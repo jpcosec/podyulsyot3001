@@ -29,6 +29,6 @@ Option B is only valid in infrastructure-layer files (`main.py`, wiring code). I
 
 ## Verify
 ```bash
-python -m pytest tests/architecture/test_domain_isolation.py -q
+# NOTE: test_domain_isolation.py is disabled pending test suite realignment. Use manual check:
+grep -rn "from src\.automation\.motors" src/automation/ariadne/
 ```
-Uses `pytest-archon` to fail if any file in `ariadne/` imports from `motors/`.

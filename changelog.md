@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-13] - OOP Skeleton Adapters
+
+### Added
+- Executed `#oop-02-adapters.md` by formally adopting the `BrowserOSAdapter` and `Crawl4AIAdapter` into the `BrowserAdapter` contract, and confirmed their integration into `MotorRegistry` without legacy `main.py` polling.
+
 ## [2026-04-13] - Phase 0 Fitness Gauntlet
 
 ### Changed
