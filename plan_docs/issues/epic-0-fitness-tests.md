@@ -10,6 +10,25 @@
 - [ ] `fix-test-sync-io-detector.md` — same: replace `take_snapshot()` with real `app.astream()` so node-level sync I/O is detected
 - [ ] `fix-test-graph-depth.md` — create `test_graph_depth.py` from scratch; use invalid API key via `monkeypatch`, no mock LLM node
 
+### 📦 Required Context Pills
+- [Law 1 — No Blocking I/O](../context/law-1-async.md)
+- [Law 4 — Finite Routing](../context/law-4-finite-routing.md)
+- [DIP Enforcement](../context/dip-enforcement.md)
+
+### 🧩 Atomized Sub-Tasks
+1. [ ] **Task 0.1: Fix Sync I/O Detection** (`fix-test-sync-io-detector.md`)
+   - Needs: Real `app.astream()` call to exercise nodes.
+   - Context: `plan_docs/context/law-1-async.md`
+2. [ ] **Task 0.2: Single Browser Session** (`fix-test-single-browser.md`)
+   - Needs: Spy on `__aenter__` and verify session persistence.
+   - Context: `plan_docs/context/law-2-single-browser.md`
+3. [ ] **Task 0.3: Domain Isolation Audit** (`fix-test-domain-isolation.md`)
+   - Needs: Clean up dummy classes and run `archrule`.
+   - Context: `plan_docs/context/dip-enforcement.md`
+4. [ ] **Task 0.4: Circuit Breaker Verification** (`fix-test-graph-depth.md`)
+   - Needs: Invalid API key test to reach HITL.
+   - Context: `plan_docs/context/law-4-finite-routing.md`
+
 ### 🚫 Non-Negotiable Constraints (Laws of Physics)
 
 1. **Law 1 (No Blocking I/O):** All tests must verify that no synchronous I/O occurs during graph execution. If `test_sync_io_detector.py` is red, no other work is valid.

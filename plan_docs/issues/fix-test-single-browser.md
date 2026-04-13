@@ -87,3 +87,12 @@ async def test_executor_maintains_single_browser_session():
 3. Verify a `fitness_test` portal map exists (or create a minimal one targeting `#does-not-exist`).
 4. Run: `python -m pytest tests/architecture/test_single_browser.py -v -s`
 5. Confirm `enter_count == 1` in output.
+
+### 📦 Required Context Pills
+- [Law 2 — One Browser Per Mission](../context/law-2-single-browser.md)
+- [Async Spy Pattern](../context/test-spy-pattern.md)
+- [Async Test Pattern (LangGraph)](../context/async-test-pattern.md)
+
+### 🚫 Non-Negotiable Constraints
+- **Law 2 (One Browser Per Mission):** The orchestrator MUST wrap the entire graph execution in a single `async with executor` block. No `__aenter__` inside nodes.
+- **Law 1 (No Blocking I/O):** All I/O in the test and graph MUST be `async`.

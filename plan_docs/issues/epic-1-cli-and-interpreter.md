@@ -7,10 +7,22 @@
 **Contains:**
 - [ ] `interpreter-node.md` — create `parse_instruction_node`, add `instruction` to `AriadneState`, rewire orchestrator entry point
 - [ ] `agent-context-aware.md` — replace hardcoded goal string with `state['instruction']` + `state['current_mission_id']`
-- [ ] `cli-rewrite.md` — delete `apply`/`scrape`, replace with universal `instruction + --portal + kwargs`
-- [ ] `test-cleanup.md` *(inline task)* — move `tests/unit/automation/fitness/` to `tests/architecture/` and `tests/integration/`; delete any test that mocks what it's supposed to test
+- [ ] `cli-engine-implementation.md` — implement universal `instruction + --portal + kwargs` engine
+- [ ] `cli-dead-code-cleanup.md` — delete `apply`/`scrape` and dead code blocks
 
-**Execution order:** `interpreter-node` → `agent-context-aware` → `cli-rewrite` → test cleanup. The first three can be reviewed as one PR.
+### 📦 Required Context Pills
+- [Universal CLI Pattern](../context/cli-universal-pattern.md)
+- [Node Implementation Pattern](../context/node-pattern.md)
+- [Ariadne State & Models](../context/ariadne-models.md)
+- [DIP Enforcement](../context/dip-enforcement.md)
+
+### 🚫 Non-Negotiable Constraints (Laws of Physics)
+
+1. **Law 1 (No Blocking I/O):** All new nodes and CLI logic MUST be `async`.
+2. **Law 2 (One Browser Per Mission):** The CLI MUST wrap the graph in a single `async with executor` block.
+3. **DIP Enforcement:** `interpreter.py` and `agent.py` MUST NOT import from `src/automation/motors/`.
+
+**Execution order:** `interpreter-node` → `agent-context-aware` (sequential). `cli-engine-implementation` → `cli-dead-code-cleanup` (sequential).
 
 **Validation (real browser required):**
 Run the following against a live portal after all sub-issues are merged:

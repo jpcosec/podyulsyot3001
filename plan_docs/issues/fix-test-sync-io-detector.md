@@ -81,4 +81,13 @@ async def test_no_sync_io_in_hot_loop():
 1. Add `from src.automation.ariadne.graph.orchestrator import create_ariadne_graph` import.
 2. Replace test body with implementation above (keep `SyncIODetector` class unchanged).
 3. Run: `python -m pytest tests/architecture/test_sync_io_detector.py -v -s`
-4. If it fails, trace the `stack` in `detector.hot_loop_calls` to find the offending `open()` call and fix it at source.
+4. If it fails, trace the `stack` in `detector.hot_loop_calls` to find the offending `open()` call and fix at source.
+
+### 📦 Required Context Pills
+- [Law 1 — No Blocking I/O](../context/law-1-async.md)
+- [Node Implementation Pattern](../context/node-pattern.md)
+- [Async Test Pattern (LangGraph)](../context/async-test-pattern.md)
+
+### 🚫 Non-Negotiable Constraints
+- **Law 1 (No Blocking I/O):** All disk, network, and subprocess calls MUST use `async/await`. Verify by running the sync I/O detector. No `open()`, `time.sleep()`, or `requests`.
+- **DIP Enforcement:** Domain layers (`ariadne`) MUST NOT import from infrastructure layers (`motors`). Use `config["configurable"]["executor"]`.

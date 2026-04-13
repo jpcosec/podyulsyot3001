@@ -96,3 +96,13 @@ async def test_circuit_breaker_halts_infinite_loops(monkeypatch):
 3. Run: `python -m pytest tests/architecture/test_graph_depth.py -v -s`
 4. Confirm: `step_count <= 10` and `final_node == "human_in_the_loop"`.
 5. Delete `gaps/fitness-graph-depth.md` — this issue supersedes it.
+
+### 📦 Required Context Pills
+- [Law 4 — Finite Routing](../context/law-4-finite-routing.md)
+- [Async Test Pattern (LangGraph)](../context/async-test-pattern.md)
+- [Ariadne State & Models](../context/ariadne-models.md)
+
+### 🚫 Non-Negotiable Constraints
+- **Law 4 (Finite Routing):** All loops must have finite circuit breakers. Escalation to HITL MUST occur after 3 agent failures.
+- **Law 1 (No Blocking I/O):** All I/O in the test and graph MUST be `async`.
+- **DIP Enforcement:** Domain layers (`ariadne`) MUST NOT import from infrastructure layers (`motors`).

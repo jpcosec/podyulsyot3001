@@ -43,3 +43,11 @@ def test_executors_are_dumb():
 1. Delete lines 31–130 from `test_domain_isolation.py`.
 2. Run `python -m pytest tests/architecture/test_domain_isolation.py -v` — 2 tests must pass.
 3. Confirm no import errors.
+
+### 📦 Required Context Pills
+- [DIP Enforcement](../context/dip-enforcement.md)
+- [Registry Pattern (DIP-Compliant)](../context/registry-pattern.md)
+
+### 🚫 Non-Negotiable Constraints
+- **DIP Enforcement:** Domain layers (`ariadne`) MUST NOT import from infrastructure layers (`motors`). This is the primary invariant being tested.
+- **Law 1 (No Blocking I/O):** Do not introduce sync I/O in the test file itself.

@@ -5,10 +5,22 @@
 **Priority:** HIGH — without this, the agent is unreliable in production. Resolve any conflict with sub-issues in favor of this epic's objective.
 
 **Contains:**
-- [ ] `set-of-mark-observe.md` — call `HintingTool.inject_hints()` inside `observe_node` before the agent screenshot is taken; store hints dict in `session_memory`
-- [ ] `hint-failure-fallback.md` — when hint injection fails (CSP/Shadow DOM), fall back to raw DOM tree + coordinate-based clicks
+- [ ] `som-hint-injection.md` — call `HintingTool.inject_hints()` inside `observe_node`
+- [ ] `som-agent-prompt-update.md` — update agent to consume hint dictionary from state
+- [ ] `hint-failure-fallback.md` — implement fallback when hint injection fails
 
-**Execution order:** `set-of-mark-observe` must land first. `hint-failure-fallback` builds on top of it.
+### 📦 Required Context Pills
+- [Set-of-Mark (SoM) Pattern](../context/som-pattern.md)
+- [Law 3 — DOM Hostility](../context/law-3-dom-hostility.md)
+- [Node Implementation Pattern](../context/node-pattern.md)
+
+### 🚫 Non-Negotiable Constraints (Laws of Physics)
+
+1. **Law 1 (No Blocking I/O):** Hinting and agent nodes MUST be `async`.
+2. **Law 3 (DOM Hostility):** Hinting MUST NOT mutate existing DOM nodes. Use overlays.
+3. **Law 4 (Finite Routing):** Agent failures MUST trigger escalation to HITL.
+
+**Execution order:** `som-hint-injection` → `som-agent-prompt-update` (sequential) → `hint-failure-fallback`.
 
 **Key constraint:** `HintingToolImpl` requires an `executor` at `__init__` time. In `observe_node`, the executor is available via `config["configurable"]["executor"]`. Instantiate `HintingToolImpl(executor)` inside the node function — do not inject it via config.
 

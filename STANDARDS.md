@@ -19,12 +19,14 @@ Each issue file MUST follow this format:
 
 ### Stage 2: Initialization Procedure (Before Execution)
 Before assigning work to a subagent, the orchestrator MUST perform this ritual:
+0. **Pill Audit — Phase A**: Run `plan_docs/context-pill-audit.md` Phase A. Delete stale pills, create missing mandatory pills, resolve contradictions. Do this before touching any issue.
 1. **Atomize**: Break down work into the smallest possible child issues.
-2. **Redundant > Merge**: Merge overlapping issues to ensure unambiguous ownership.
-3. **Legacy > Delete**: Review issues for dead content. Delete and record as an ADR in `docs/adrs/` if necessary.
-4. **Contradictory > Resolve**: Resolve incompatible end states.
-5. **Update Index.md**: Regenerate the dependency graph and parallelization map.
-6. **Execute**: Provide the subagent with explicit context (e.g., architectural boundaries) to prevent wrong choices.
+2. **Context Injection**: Route relevant "Context Pills" from `plan_docs/context/` into the issue `.md` file.
+3. **Redundant > Merge**: Merge overlapping issues to ensure unambiguous ownership.
+4. **Legacy > Delete**: Review issues for dead content. Delete and record as an ADR in `docs/adrs/` if necessary.
+5. **Pill Audit — Phase B**: Run `plan_docs/context-pill-audit.md` Phase B. Verify every issue has the correct pills, no broken links, and zero-context sufficiency. Must reach `READY FOR EXECUTION: YES` before continuing.
+6. **Update Index.md**: Regenerate the dependency graph and parallelization map.
+7. **Execute**: Provide the subagent with the specific issue file and verify they have access to the linked context pills.
 
 ### Stage 3: Lifecycle (Execution Ritual)
 Once an issue is solved, the subagent MUST follow these steps:

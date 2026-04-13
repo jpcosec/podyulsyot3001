@@ -21,6 +21,13 @@ async with executor as active_executor:
 **Don't:** Pass the uninitialized executor directly in `config["configurable"]["executor"]` outside the context manager.
 
 **Steps:**
-1. Implement `run_ariadne()` in the CLI rewrite (see `cli-rewrite.md`) with correct nesting.
+1. Implement `run_ariadne()` in the CLI engine implementation (`cli-engine-implementation.md`) with correct nesting.
 2. Verify `Crawl4AIExecutor.__aexit__` calls `kill_session(self.session_id)` before closing the crawler.
 3. Fitness test: assert `AsyncWebCrawler.__aenter__` is called exactly once per graph run (tracked in `test_single_browser_session.py`).
+
+### 📦 Required Context Pills
+- [Law 2 — One Browser Per Mission](../context/law-2-single-browser.md)
+- [Universal CLI Pattern](../context/cli-universal-pattern.md)
+
+### 🚫 Non-Negotiable Constraints
+- **Law 2 (One Browser Per Mission):** The executor context MUST wrap the entire `app.astream()` loop.

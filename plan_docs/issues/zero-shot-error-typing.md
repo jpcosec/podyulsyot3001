@@ -16,9 +16,11 @@
 
 **Don't:** Use `except Exception` as a map-missing catch-all.
 
-**Steps:**
-1. Define `MapNotFoundError` in `repository.py`.
-2. Raise it in `get_map()` on `FileNotFoundError`.
-3. Update `interpreter.py` to catch it narrowly.
-4. Define `"explore"` as a valid fallback mission in the AriadneMap contract or as a sentinel value in `AriadneState`.
-5. Test: call interpreter with a portal that has no map, assert `current_mission_id == "explore"`.
+### 📦 Required Context Pills
+- [Error Contract](../context/error-contract.md)
+- [Ariadne State & Models](../context/ariadne-models.md)
+- [Node Implementation Pattern](../context/node-pattern.md)
+
+### 🚫 Non-Negotiable Constraints
+- **Law 1 (No Blocking I/O):** Repository access must be `async`.
+- **DIP Enforcement:** Domain errors must be defined in `ariadne/` and caught in `interpreter.py`.

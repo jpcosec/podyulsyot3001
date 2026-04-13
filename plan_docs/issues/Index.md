@@ -63,7 +63,8 @@ Run in parallel. These must be green before any Phase 1 work is merged.
 - [ ] **`epic-1-cli-and-interpreter.md`** ← read this first
   - [ ] `interpreter-node.md`
   - [ ] `agent-context-aware.md`
-  - [ ] `cli-rewrite.md`
+  - [ ] `cli-engine-implementation.md`
+  - [ ] `cli-dead-code-cleanup.md`
   - [ ] test cleanup (inline in epic)
 
 ### Phase 2 — Epic 2: Smoke & Calibration
@@ -79,7 +80,8 @@ Parallel robustness work (can land alongside Epic 2):
 
 ### Phase 3 — Epic 3: Agent Hints
 - [ ] **`epic-3-agent-hints.md`** ← read this first
-  - [ ] `set-of-mark-observe.md`
+  - [ ] `som-hint-injection.md`
+  - [ ] `som-agent-prompt-update.md`
   - [ ] `hint-failure-fallback.md`
 
 ### Phase 4 — Epic 4: Map Factory
@@ -93,8 +95,8 @@ Parallel robustness work (can land alongside Epic 2):
 
 ## Parallelization map
 
-**Phase 0:** All three fitness tests are independent.
-**Phase 1:** `interpreter-node` → `agent-context-aware` (sequential). `cli-rewrite` is independent but integrates after interpreter node lands.
+**Phase 0:** All four fitness tests are independent.
+**Phase 1:** `interpreter-node` → `agent-context-aware` (sequential). `cli-engine-implementation` → `cli-dead-code-cleanup` (sequential).
 **Phase 2:** Corneta test and Fire test are sequential (Corneta first). Robustness issues (`404`, `single-browser`, `zero-shot`) are parallel to each other and to Epic 2.
-**Phase 3:** `set-of-mark-observe` before `hint-failure-fallback`. No other dependencies.
+**Phase 3:** `som-hint-injection` → `som-agent-prompt-update` (sequential) → `hint-failure-fallback`.
 **Phase 4:** `recording-promoter-guard` before Tasks 4.1 and 4.2. Docs are independent of everything.

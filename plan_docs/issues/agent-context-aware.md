@@ -6,6 +6,12 @@
 
 **Status:** Partial — agent works but ignores user intent.
 
+### 📦 Required Context Pills
+- [Node Implementation Pattern](../context/node-pattern.md)
+- [Ariadne State & Models](../context/ariadne-models.md)
+- [Log Tags & Observability](../context/log-tags.md)
+- [BrowserOS MCP Contract](../context/browseros-mcp-contract.md)
+
 ### 🚫 Non-Negotiable Constraints (Laws of Physics)
 
 1. **Law 1 (No Blocking I/O):** The agent node must be fully `async`. Do not use `time.sleep()` for LLM retries or synchronous file I/O for logs.

@@ -10,7 +10,19 @@
 - [ ] **Task 4.1** — run a live recording session on XING or LinkedIn (see steps below)
 - [ ] **Task 4.2** — run `AriadnePromoter` on the recorded session and verify the output map
 
-**Note:** `promotion.py` does not exist yet. `recording-promoter-guard.md` must be resolved first — it defines the `AriadnePromoter` class that Tasks 4.1 and 4.2 depend on.
+### 📦 Required Context Pills
+- [Ariadne Map Model (Full Schema)](../context/ariadne-map-model.md)
+- [Graph Recording Pattern](../context/recording-pattern.md)
+- [Promotion Pattern (Recording -> Map)](../context/promotion-pattern.md)
+- [Node Implementation Pattern](../context/node-pattern.md)
+
+### 🚫 Non-Negotiable Constraints (Laws of Physics)
+
+1. **Law 1 (No Blocking I/O):** All recording and promotion logic MUST be `async`.
+2. **DIP Enforcement:** `promotion.py` MUST NOT import from `src/automation/motors/`.
+3. **Law 2 (One Browser Per Mission):** Recording MUST capture events from a single browser session.
+
+**Note:** `promotion.py` does not exist yet.
 
 **Task 4.1: Live Recording Session**
 1. Start a graph run with `record_graph: True` in config (already wired in CLI).

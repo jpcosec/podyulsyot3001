@@ -16,8 +16,11 @@
 
 **Don't:** Let HTTP error pages reach `execute_deterministic`. They have no valid transition in any map.
 
-**Steps:**
-1. Add HTTP error text patterns to danger signals.
-2. Update `observe_node` to check these patterns post-snapshot.
-3. Update `route_after_observe` to handle `"http_error"` danger type.
-4. Write test: mock a 404 page snapshot, assert graph routes to HITL without touching `execute_deterministic`.
+### 📦 Required Context Pills
+- [Danger Signal & Short-Circuit Pattern](../context/danger-signal-pattern.md)
+- [Error Contract](../context/error-contract.md)
+- [Ariadne State & Models](../context/ariadne-models.md)
+
+### 🚫 Non-Negotiable Constraints
+- **Law 4 (Finite Routing):** Danger signals MUST short-circuit to HITL or Rescue Agent immediately. Do not enter the deterministic cascade if a 404/500 is detected.
+- **Law 1 (No Blocking I/O):** Danger detection logic must be `async`.

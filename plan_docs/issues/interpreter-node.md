@@ -6,6 +6,14 @@
 
 **Status:** Not started. Node file does not exist.
 
+### 📦 Required Context Pills
+- [Node Implementation Pattern](../context/node-pattern.md)
+- [Structured Output Pattern (VLM/LLM)](../context/structured-output-pattern.md)
+- [Ariadne State & Models](../context/ariadne-models.md)
+- [Log Tags & Observability](../context/log-tags.md)
+- [Gemini Flash Default LLM](../context/gemini-flash-default.md)
+- [LangGraph Flight Controller](../context/ariadne-langgraph.md)
+
 ### 🚫 Non-Negotiable Constraints (Laws of Physics)
 
 1. **Law 1 (No Blocking I/O):** The `parse_instruction_node` must be fully `async`. Use `await repo.get_map_async(portal_name)`. Do not use `open()` or synchronous `json.load()`.
