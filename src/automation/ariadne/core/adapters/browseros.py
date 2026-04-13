@@ -1,13 +1,14 @@
 """BrowserOS Adapter Implementation — MCP-based Periphery."""
 
+from __future__ import annotations
+
+import asyncio
 import json
 import os
 import subprocess
-import asyncio
 from typing import Any, Dict, Optional
 
 import httpx
-from src.automation.ariadne.core.periphery import BrowserAdapter
 from src.automation.ariadne.contracts.base import (
     BrowserOSCommand,
     ExecutionResult,
@@ -15,11 +16,12 @@ from src.automation.ariadne.contracts.base import (
     SnapshotResult,
     ScriptCommand,
 )
+from src.automation.ariadne.core.periphery import BrowserAdapter
 
 
 class BrowserOSAdapter(BrowserAdapter):
     """
-    Implements Sensor, Motor and PeripheralAdapter for BrowserOS via MCP.
+    Implements Sensor and Motor via BrowserOS MCP tools.
     Handles the lifecycle of the BrowserOS AppImage and MCP connectivity.
     """
 
@@ -42,7 +44,7 @@ class BrowserOSAdapter(BrowserAdapter):
         except Exception:
             return False
 
-    async def __aenter__(self) -> "BrowserOSAdapter":
+    async def __aenter__(self) -> BrowserOSAdapter:
         """Ensure BrowserOS is running before entering the context."""
         if await self.is_healthy():
             return self
@@ -52,7 +54,6 @@ class BrowserOSAdapter(BrowserAdapter):
                 f"BrowserOS not running at {self.base_url} and no BROWSEROS_APPIMAGE_PATH set."
             )
 
-        print(f"[⚡] Launching BrowserOS from {self.appimage_path}...")
         self._process = subprocess.Popen(
             [self.appimage_path, "--no-sandbox"],
             stdout=subprocess.DEVNULL,
@@ -62,43 +63,44 @@ class BrowserOSAdapter(BrowserAdapter):
         for _ in range(30):
             await asyncio.sleep(1)
             if await self.is_healthy():
-                print(f"[✅] BrowserOS ready at {self.base_url}")
                 return self
 
         self._kill_process()
         raise TimeoutError("BrowserOS failed to start within 30s")
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
-        """Cleans up the BrowserOS process if it was started by this adapter."""
+        """Cleans up the BrowserOS process."""
         self._kill_process()
 
     async def perceive(self) -> SnapshotResult:
         """Captures the current browser state via the MCP snapshot tool."""
-        tools = await self._get_tools()
-        tool = next((item for item in tools if item.name == "take_snapshot"), None)
-        if tool is None:
-            return SnapshotResult(url="error", dom_elements=[], screenshot_b64=None)
-
         try:
+            tools = await self._get_tools()
+            tool = next((item for item in tools if item.name == "take_snapshot"), None)
+            if tool is None:
+                return SnapshotResult(url="error: tool not found", dom_elements=[], screenshot_b64=None)
+
             result = await tool.ainvoke({})
             data = self._parse_mcp_result(result)
+            
+            if not isinstance(data, dict):
+                return SnapshotResult(url="error: invalid response", dom_elements=[], screenshot_b64=None)
+                
+            return SnapshotResult(
+                url=data.get("url", "unknown"),
+                dom_elements=data.get("dom_elements", []),
+                screenshot_b64=data.get("screenshot_b64"),
+            )
         except Exception as exc:
             return SnapshotResult(
                 url=f"error: {exc}", dom_elements=[], screenshot_b64=None
             )
 
-        if not isinstance(data, dict):
-            data = {}
-        return SnapshotResult(
-            url=data.get("url", "unknown"),
-            dom_elements=data.get("dom_elements", []),
-            screenshot_b64=data.get("screenshot_b64"),
-        )
-
     async def act(self, command: MotorCommand) -> ExecutionResult:
         """Executes a motor command via BrowserOS MCP tools."""
         if isinstance(command, ScriptCommand):
             return await self._execute_script(command.script)
+            
         if not isinstance(command, BrowserOSCommand):
             return ExecutionResult(
                 status="failed",
@@ -109,34 +111,25 @@ class BrowserOSAdapter(BrowserAdapter):
             tools = await self._get_tools()
             tool = next((item for item in tools if item.name == command.tool), None)
             if tool is None:
-                return ExecutionResult(
-                    status="failed",
-                    error=f"Tool {command.tool} not found",
-                )
-            result = await tool.ainvoke(self._map_command_to_inputs(command))
+                return ExecutionResult(status="failed", error=f"Tool {command.tool} not found")
+            
+            inputs = self._map_command_to_inputs(command)
+            result = await tool.ainvoke(inputs)
+            
+            # BrowserOS tools usually return a string report or JSON.
+            # We assume success if no exception was raised by ainvoke.
+            return ExecutionResult(
+                status="success", extracted_data={"mcp_output": str(result)}
+            )
         except Exception as exc:
             return ExecutionResult(status="failed", error=str(exc))
 
-        return ExecutionResult(
-            status="success", extracted_data={"mcp_output": str(result)}
-        )
-
-    async def take_snapshot(self) -> SnapshotResult:
-        """Backward-compatible alias for the legacy graph interface."""
-        return await self.perceive()
-
-    async def execute(self, command: MotorCommand) -> ExecutionResult:
-        """Backward-compatible alias for the legacy graph interface."""
-        return await self.act(command)
-
     async def _get_tools(self):
         from langchain_mcp_adapters.tools import load_mcp_tools
-
         return await load_mcp_tools(f"{self.base_url}/mcp")
 
     def _kill_process(self) -> None:
         if self._process:
-            print("[⚡] Terminating BrowserOS process...")
             self._process.terminate()
             try:
                 self._process.wait(timeout=5)
@@ -149,15 +142,11 @@ class BrowserOSAdapter(BrowserAdapter):
         try:
             tools = await self._get_tools()
             tool = next((t for t in tools if t.name == "execute_script"), None)
-
             if not tool:
-                return ExecutionResult(
-                    status="failed", error="execute_script tool not found"
-                )
+                return ExecutionResult(status="failed", error="execute_script tool not found")
 
             result = await tool.ainvoke({"script": script})
             data = self._parse_mcp_result(result)
-
             return ExecutionResult(
                 status="success",
                 extracted_data=data if isinstance(data, dict) else {"result": data},

@@ -1,6 +1,6 @@
 """Ariadne core exports."""
 
-from src.automation.ariadne.core.actors import Delphi, Interpreter, Recorder, Theseus
+from src.automation.ariadne.core.actors.theseus import Theseus
 from src.automation.ariadne.core.cognition import (
     AriadneThread,
     Labyrinth,
@@ -16,7 +16,4 @@ __all__ = [
     "AriadneThread",
     "MapNotFoundError",
     "Theseus",
-    "Delphi",
-    "Recorder",
-    "Interpreter",
 ]

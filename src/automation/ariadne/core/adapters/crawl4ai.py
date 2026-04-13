@@ -1,5 +1,7 @@
 """Crawl4AI adapter implementation."""
 
+from __future__ import annotations
+
 from typing import Optional
 
 from crawl4ai import AsyncWebCrawler, CrawlerRunConfig, CacheMode
@@ -16,7 +18,7 @@ from src.automation.ariadne.contracts.base import (
 
 class Crawl4AIAdapter(BrowserAdapter):
     """
-    Implements Sensor, Motor and PeripheralAdapter for Crawl4AI.
+    Implements Sensor and Motor via Crawl4AI.
     Manages the lifecycle of a single AsyncWebCrawler session.
     """
 
@@ -30,7 +32,7 @@ class Crawl4AIAdapter(BrowserAdapter):
         """Checks if the crawler is open and ready."""
         return self._crawler is not None
 
-    async def __aenter__(self) -> "Crawl4AIAdapter":
+    async def __aenter__(self) -> Crawl4AIAdapter:
         """Create the persistent browser session on context entry."""
         if self._crawler is None:
             self._crawler = AsyncWebCrawler()
@@ -116,14 +118,6 @@ class Crawl4AIAdapter(BrowserAdapter):
             return ExecutionResult(status="failed", error=result.error_message)
         except Exception as exc:
             return ExecutionResult(status="failed", error=str(exc))
-
-    async def take_snapshot(self) -> SnapshotResult:
-        """Backward-compatible alias for the legacy graph interface."""
-        return await self.perceive()
-
-    async def execute(self, command: MotorCommand) -> ExecutionResult:
-        """Backward-compatible alias for the legacy graph interface."""
-        return await self.act(command)
 
     async def _execute_js(self, script: str) -> ExecutionResult:
         """Helper to run arbitrary JS via the crawler."""
