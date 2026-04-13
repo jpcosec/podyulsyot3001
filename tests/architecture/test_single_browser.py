@@ -1,16 +1,13 @@
-# Fitness Function 2: Single Browser Session (State Persistence)
-# USA el executor REAL (Crawl4AIExecutor) y verifica que abra Chromium una sola vez
-
 import pytest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
+
+from src.automation.ariadne.graph.orchestrator import create_ariadne_graph
 from src.automation.motors.crawl4ai.executor import Crawl4AIExecutor
 
 
 @pytest.mark.asyncio
 async def test_executor_maintains_single_browser_session():
-    """Fitness: Crawl4AIExecutor abre navegador una vez, cierra una vez."""
-
-    # Spy sobre los métodos reales de Crawl4AI que levantan Chromium
+    """Fitness: browser opens once and closes once across a graph run."""
     enter_count = 0
     exit_count = 0
 
@@ -27,17 +24,57 @@ async def test_executor_maintains_single_browser_session():
         exit_count += 1
         return await original_aexit(self, *args)
 
+    initial_state = {
+        "job_id": "fitness-browser-test",
+        "portal_name": "fitness_test",
+        "profile_data": {},
+        "job_data": {},
+        "path_id": None,
+        "current_mission_id": "test",
+        "current_state_id": "start",
+        "dom_elements": [],
+        "current_url": "raw:<html><body><main>fitness test</main></body></html>",
+        "screenshot_b64": None,
+        "session_memory": {"agent_failures": 2},
+        "errors": [],
+        "history": [],
+        "portal_mode": "fitness_test",
+        "patched_components": {},
+    }
+
     with patch.object(Crawl4AIExecutor, "__aenter__", tracked_aenter):
         with patch.object(Crawl4AIExecutor, "__aexit__", tracked_aexit):
             executor = Crawl4AIExecutor()
-            async with executor:
-                # Simular una ejecución mínima
-                from src.automation.ariadne.contracts.base import SnapshotResult
+            executor.current_url = initial_state["current_url"]
+            config = {
+                "configurable": {
+                    "thread_id": "fitness-browser-test",
+                    "motor_name": "crawl4ai",
+                    "record_graph": False,
+                }
+            }
 
-                try:
-                    await executor.take_snapshot()
-                except Exception:
-                    pass
+            async with executor as active_executor:
+                config["configurable"]["executor"] = active_executor
 
-    assert enter_count == 1, f"🚨 Navegador abrió {enter_count} veces en una sesión"
-    assert exit_count == 1, f"🚨 Navegador cerró {exit_count} veces"
+                async with create_ariadne_graph(use_memory=False) as app:
+                    events = []
+                    async for chunk in app.astream(initial_state, config):
+                        events.append(chunk)
+
+                    snapshot = await app.aget_state(config)
+
+    node_names = [
+        list(event.keys())[0] for event in events if "__interrupt__" not in event
+    ]
+
+    assert node_names == [
+        "observe",
+        "execute_deterministic",
+        "apply_local_heuristics",
+        "llm_rescue_agent",
+    ]
+    assert "__interrupt__" in events[-1]
+    assert "human_in_the_loop" in snapshot.next
+    assert enter_count == 1, f"Browser opened {enter_count} times - singleton violated"
+    assert exit_count == 1, f"Browser closed {exit_count} times - singleton violated"

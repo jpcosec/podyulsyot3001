@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 from typing import Any
 
 from src.automation.ariadne.capabilities.recording import GraphRecorder
+from src.automation.ariadne.io import write_json
 from src.automation.ariadne.models import (
     AriadneEdge,
     AriadneMap,
@@ -106,9 +106,5 @@ class AriadnePromoter:
         return value
 
     def _write_map(self, thread_id: str, ariadne_map: AriadneMap) -> Path:
-        session_dir = self.recorder.base_dir / thread_id
-        session_dir.mkdir(parents=True, exist_ok=True)
-        output_path = session_dir / "normalized_map.json"
-        with output_path.open("w", encoding="utf-8") as handle:
-            json.dump(ariadne_map.model_dump(mode="json"), handle, indent=2)
-        return output_path
+        output_path = self.recorder.base_dir / thread_id / "normalized_map.json"
+        return write_json(output_path, ariadne_map.model_dump(mode="json"), indent=2)

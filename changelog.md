@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-13] - Phase 0 Fitness Gauntlet
+
+### Changed
+- Reworked the Phase 0 architecture tests in `tests/architecture/` so the single-browser, sync-I/O, and graph-depth checks now drive the real Ariadne graph instead of isolated executor or mock-only paths.
+- Updated `src/automation/ariadne/repository.py` to load portal maps asynchronously in the hot loop, eliminating sync file reads from the async map-loading path.
+- Added `src/automation/ariadne/io.py` as the shared Ariadne JSON/JSONL I/O layer, moved recording and promotion persistence onto it, and updated `src/automation/ariadne/graph/orchestrator.py` plus `tests/architecture/test_sync_io_detector.py` so recording and map access stay compatible with the no-blocking-I/O Phase 0 guardrail.
+
+### Removed
+- Deleted the dummy-class coverage from `tests/architecture/test_domain_isolation.py`, leaving only the real `pytest-archon` guardrails for DIP enforcement.
+
 ## [2026-04-12] - Phase 7 Critical Bombs Fixed
 
 ### Fixed

@@ -163,7 +163,7 @@ async def observe_node(state: AriadneState, config: RunnableConfig) -> Dict[str,
             new_memory["goal_achieved"] = True
             updates["session_memory"] = new_memory
 
-        _record_graph_event(
+        await _record_graph_event(
             config,
             "observe",
             {
@@ -267,7 +267,7 @@ def _collect_extracted_memory(
     return extracted_memory
 
 
-def _record_graph_event(
+async def _record_graph_event(
     config: RunnableConfig,
     event_type: str,
     payload: Dict[str, Any],
@@ -280,7 +280,7 @@ def _record_graph_event(
 
     recording_dir = configurable.get("recording_dir", "data/ariadne/recordings")
     recorder = GraphRecorder(recording_dir)
-    recorder.record_event(thread_id, event_type, payload)
+    await recorder.record_event_async(thread_id, event_type, payload)
 
 
 def _find_safe_sequence(
@@ -452,7 +452,7 @@ async def execute_deterministic_node(
     if session_memory != state.get("session_memory", {}):
         updates["session_memory"] = session_memory
 
-    _record_graph_event(
+    await _record_graph_event(
         config,
         "execute_deterministic",
         {

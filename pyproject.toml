@@ -1,7 +1,7 @@
 [project]
 name = "podyulsyot3001"
 version = "0.1"
-dependencies = ["langdetect>=1.0.9,<2"]
+dependencies = ["langdetect>=1.0.9,<2", "aiofiles>=24.1.0,<25"]
 
 [tool.setuptools]
 package-dir = {"" = "src"}

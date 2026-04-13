@@ -1,11 +1,11 @@
-"""Ariadne Map Repository — Infrastructure for loading portal maps."""
+"""Ariadne Map Repository - Infrastructure for loading portal maps."""
 
 from __future__ import annotations
 
 import asyncio
-import json
 from pathlib import Path
 
+from src.automation.ariadne.io import read_json, read_json_async
 from src.automation.ariadne.models import AriadneMap
 
 
@@ -57,8 +57,15 @@ class MapRepository:
         return ariadne_map
 
     async def _load_map_async(self, portal_name: str, map_type: str) -> AriadneMap:
-        """Async wrapper for sync load (runs in thread pool)."""
-        return await asyncio.to_thread(self._load_map_sync, portal_name, map_type)
+        """Load map from disk asynchronously."""
+        map_path = self.base_dir / portal_name / "maps" / f"{map_type}.json"
+        try:
+            map_payload = await read_json_async(map_path)
+            return await asyncio.to_thread(AriadneMap.model_validate, map_payload)
+        except FileNotFoundError as exc:
+            raise FileNotFoundError(
+                f"Ariadne Map not found for '{portal_name}' (type: {map_type}) at {map_path}"
+            ) from exc
 
     async def get_map_async(
         self, portal_name: str, map_type: str = "easy_apply"
@@ -79,19 +86,16 @@ class MapRepository:
         if cache_key in self._map_cache:
             return self._map_cache[cache_key]
 
-        ariadne_map = await asyncio.to_thread(
-            self._load_map_sync, portal_name, map_type
-        )
+        ariadne_map = await self._load_map_async(portal_name, map_type)
         self._map_cache[cache_key] = ariadne_map
         return ariadne_map
 
     def _load_map_sync(self, portal_name: str, map_type: str) -> AriadneMap:
         """Load map from disk synchronously (runs in thread pool)."""
         map_path = self.base_dir / portal_name / "maps" / f"{map_type}.json"
-        if not map_path.exists():
+        try:
+            return AriadneMap.model_validate(read_json(map_path))
+        except FileNotFoundError as exc:
             raise FileNotFoundError(
                 f"Ariadne Map not found for '{portal_name}' (type: {map_type}) at {map_path}"
-            )
-
-        with open(map_path, "r", encoding="utf-8") as f:
-            return AriadneMap.model_validate(json.load(f))
+            ) from exc

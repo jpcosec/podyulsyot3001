@@ -1,12 +1,14 @@
 # Fitness Function 1: Synchronous I/O in Hot Loop
 # SOLO detecta I/O síncrono durante la ejecución del grafo (NO en boot/caching)
 
-import pytest
 import builtins
-import asyncio
 from unittest.mock import patch
-from src.automation.motors.crawl4ai.executor import Crawl4AIExecutor
+
+import pytest
+
+from src.automation.ariadne.graph.orchestrator import create_ariadne_graph
 from src.automation.ariadne.repository import MapRepository
+from src.automation.motors.crawl4ai.executor import Crawl4AIExecutor
 
 
 class SyncIODetector:
@@ -50,28 +52,53 @@ class SyncIODetector:
 
 @pytest.mark.asyncio
 async def test_no_sync_io_in_hot_loop():
-    """Fitness: No synchronous I/O during graph execution (hot loop only)."""
+    """Fitness: no synchronous disk I/O during graph node execution."""
 
-    # PRE-BOOT: Cargar el repositorio (I/O permitido aquí)
-    repo = MapRepository()
+    MapRepository()
 
     detector = SyncIODetector()
     detector.start()
 
+    initial_state = {
+        "instruction": "easy_apply",
+        "portal_name": "fitness_test",
+        "job_id": "fitness-sync-io-test",
+        "portal_mode": "fitness_test",
+        "current_url": "https://example.com",
+        "current_state_id": "start",
+        "dom_elements": [],
+        "screenshot_b64": None,
+        "profile_data": {},
+        "job_data": {},
+        "session_memory": {},
+        "errors": [],
+        "history": [],
+        "patched_components": {},
+        "path_id": None,
+        "current_mission_id": "easy_apply",
+    }
+
+    config = {
+        "configurable": {
+            "thread_id": "fitness-sync-io-test",
+            "motor_name": "crawl4ai",
+            "record_graph": False,
+        }
+    }
+
     try:
         executor = Crawl4AIExecutor()
-        async with executor:
-            # Simular operaciones reales del grafo
-            try:
-                await executor.take_snapshot()
-            except Exception:
-                pass
+        async with executor as active_executor:
+            config["configurable"]["executor"] = active_executor
+            async with create_ariadne_graph(use_memory=False) as app:
+                async for _ in app.astream(initial_state, config):
+                    pass
 
-            # Verificar que no hubo I/O síncrono durante ejecución
             if detector.hot_loop_calls:
+                files = [call["file"] for call in detector.hot_loop_calls[:3]]
                 pytest.fail(
-                    f"🚨 I/O Síncrono en Hot Loop: {len(detector.hot_loop_calls)} reads. "
-                    f"Files: {[c['file'] for c in detector.hot_loop_calls[:3]]}"
+                    f"Sync I/O detected in hot loop: {len(detector.hot_loop_calls)} reads. "
+                    f"Files: {files}"
                 )
     finally:
         detector.stop()
