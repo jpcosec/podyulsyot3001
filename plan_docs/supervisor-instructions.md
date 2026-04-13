@@ -1,6 +1,18 @@
 # Supervisor Instructions: Final Validation & Gatekeeping
 
-As the supervisor/orchestrator, your role is to ensure that the work delivered by zero-context subagents meets the absolute architectural standards of Ariadne 2.0 before any Phase is considered closed.
+As the supervisor/orchestrator, your role is to validate work delivered by executors, accept or reject issue-closing commits, and clear issue-tracking artifacts only after a whole phase is complete.
+
+## Role Boundary
+
+The executor fixes the issue and creates the closing commit.
+The supervisor reviews that commit and decides whether the issue remains closed.
+
+Supervisor-only responsibilities:
+- reviewing the exact commit recorded in `plan_docs/issues/Index.md`
+- accepting or rejecting the close attempt
+- reverting failed issue commits individually
+- enriching the issue file with review findings when a fix is rejected
+- deleting resolved issue files and removing Index entries only after full phase completion
 
 ## 🛂 The Gatekeeper's Checklist
 
@@ -18,33 +30,52 @@ No Phase Completion Ritual is valid unless the following command is 100% green:
 python -m pytest tests/architecture/ -v
 ```
 
-### 3. Subagent Lifecycle Verification
-Verify that the subagent performed the "Execution Ritual" from `STANDARDS.md`:
+### 3. Executor Lifecycle Verification
+Verify that the executor performed the "Execution Ritual" from `STANDARDS.md`:
 - [ ] Are existing tests updated or deleted?
 - [ ] Are new tests added and passing?
 - [ ] Is `changelog.md` updated with high-signal descriptions?
-- [ ] Is the `.md` issue file deleted?
-- [ ] Is the issue removed from `Index.md`?
-- [ ] Does the commit message follow the `docs:` or `feat:` convention?
+- [ ] Did the executor create exactly one resolving commit for the issue?
+- [ ] Does `plan_docs/issues/Index.md` mark that issue as `{closed with commit id <sha>}`?
+- [ ] Does the commit message identify the issue being closed?
+- [ ] Was the issue file preserved for supervisor review instead of being deleted early?
+- [ ] Was the issue entry preserved in `Index.md` instead of being removed early?
+
+### 3.1 Commit Review Rule
+For every issue marked `{closed with commit id <sha>}`:
+- inspect that exact commit
+- verify it closes only the intended issue
+- verify the implementation, tests, and docs match the issue scope
+- accept it or reject it explicitly before phase sign-off
 
 ### 4. Real-World Calibration (Epic Gate)
 Before closing an Epic (e.g., Epic 1 or Epic 2), you MUST execute the "Validation" commands listed in the Epic file using a real browser. Do not rely on unit tests for final Epic sign-off.
 
 ### 5. Context Pill Freshness
-After major implementation changes, run the `plan_docs/context-pill-audit.md` guide to see if any Patterns or Models have become stale. If a subagent changed a function signature, you MUST update the corresponding Context Pill.
+After major implementation changes, run the `plan_docs/context-pill-audit.md` guide to see if any Patterns or Models have become stale. If an executor changed a function signature, you MUST update the corresponding Context Pill.
 
 ---
 
 ## 🛑 Failure Protocol
-If a subagent violates a Law of Physics or breaks a fitness test:
+If an executor violates a Law of Physics or breaks a fitness test:
 1. **DO NOT MERGE.** 
 2. **Re-Atomize:** Identify the specific gap that allowed the violation.
 3. **Create Guardrail Pill:** If the violation was "creative," create a new Pill that explicitly forbids that specific implementation pattern.
-4. **Re-Dispatch:** Send the task back to a subagent with the new, stricter context.
+4. **Revert the exact issue commit:** Use the commit id recorded in `Index.md` for that issue.
+5. **Update the issue file:** Record what failed in the prior attempt, what review found, and what extra context the next executor must receive.
+6. **Re-Dispatch:** Send the task back to a new executor with the new, stricter context.
+
+If a fix is correct but the phase is not finished yet:
+1. Keep the commit.
+2. Keep the issue file.
+3. Keep the `Index.md` entry in the form `{closed with commit id <sha>}`.
+4. Do not clear tracking artifacts until phase completion.
 
 ## 🏗️ Phase Completion Sign-off
 A Phase is only complete when:
-1. The `Index.md` section for that Phase is 100% checked.
-2. The `Context Audit Report` for the Phase is updated.
-3. All `tests/architecture/` are green.
-4. (For Phase 1+) The Universal CLI can successfully execute a discovery mission.
+1. Every issue in the phase has been reviewed against its recorded closing commit.
+2. The `Index.md` section for that Phase is 100% checked or explicitly marked with `{closed with commit id <sha>}` awaiting final cleanup.
+3. The `Context Audit Report` for the Phase is updated.
+4. All `tests/architecture/` are green.
+5. (For Phase 1+) The Universal CLI can successfully execute a discovery mission.
+6. Only then may the supervisor delete resolved issue files and remove their Index entries.

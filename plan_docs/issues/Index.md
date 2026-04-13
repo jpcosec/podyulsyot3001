@@ -1,36 +1,59 @@
 # unified-automation Issues Index
 
-This file is the entrypoint for subagents deployed to solve issues in this repository.
+This file is the entrypoint for executors deployed to solve issues in this repository.
 
 All issue-fixing work must stay aligned with the rest of plan_docs/ and docs/, with special care for STANDARDS.md so implementation, tests, and documentation remain consistent with the project's rules.
 
+Role-specific instructions:
+- Executors must follow `plan_docs/executor-instructions.md`.
+- Supervisors must follow `plan_docs/supervisor-instructions.md`.
+
 ## Initialization Procedure (Before Execution)
 
-Before executing any issue or assigning work to a subagent, you MUST perform this ritual:
+Before executing any issue or assigning work to an executor, you MUST perform this ritual:
   1. Atomize: break down work into the smallest possible units.
   2. See what's redundant > merge.
   3. Legacy > delete.
   4. Contradictory > resolve.
   5. Iterate until the plan is clean and straightforward.
   6. Update `plan_docs/issues/Index.md`.
-  7. Execute using the smallest possible/available subagent for each step. Provide the subagent with explicit context (e.g., architectural boundaries, limits, or relevant reference files) to prevent them from making wrong choices. Review their work.
+  7. Execute using the smallest possible/available executor for each step. Provide the executor with explicit context (e.g., architectural boundaries, limits, or relevant reference files) to prevent them from making wrong choices. Review their work.
 
 ## Working rule for every issue
 
-Once an issue is solved, the next step is always:
+When an executor finishes an issue, the next step is always:
 
   1. Check whether any existing test is no longer valid and delete it if needed.
   2. Add new tests where necessary.
   3. Run the relevant tests.
   4. Update changelog.md.
-  5. Delete the solved issue from both this index and the corresponding file in plan_docs/issues/.
-  6. Make a commit that clearly states what was fixed, making sure all required files are staged.
+  5. Make exactly one commit for that closed issue, with the issue id in the commit message.
+  6. Overwrite the issue entry in this file with the status form `{closed with commit id <sha>}`.
+  7. Do not delete the issue file and do not remove the entry from this index. That is supervisor-only cleanup after the full phase is accepted.
+
+## Supervisor-only cleanup rule
+
+The supervisor is the only actor allowed to delete a resolved issue file or remove its entry from this index.
+
+- If the closing commit is accepted, keep the issue file and keep the `{closed with commit id <sha>}` entry until the entire phase is complete.
+- If the closing commit is rejected, revert that exact commit, update the issue file with failure notes and missing context, and dispatch a new executor.
+- Once the whole phase is complete, the supervisor deletes the resolved issue files and removes their entries from this index.
+
+## Entry state contract
+
+Each executable issue listed in this index must be in exactly one of these states:
+- open
+- `{closed with commit id <sha>}`
+
+No issue may disappear from the index before the supervisor finishes phase-level validation.
 
 ## Phase Completion Ritual
 
 When all parallelizable issues in a given Phase/Level are completed, you MUST perform a compliance check before moving to the next Phase:
   1. Verify compliance: Check that the combined implementations of the phase comply with all project standards and architectural boundaries.
   2. Run all architectural fitness functions and full test suites to ensure no regressions were introduced.
+  3. Review every `{closed with commit id <sha>}` entry before clearing any issue file or removing any index entry.
+  4. Delete resolved issue files and clear their index entries only after the whole phase is accepted.
 
 ## Priority convention
 
@@ -49,15 +72,8 @@ Before starting any work, verify these "Laws of Physics" are not violated:
 
 ### Priority roadmap
 
-### Phase 0 — Epic 0: Fitness Tests (prerequisite for everything)
-Run in parallel. These must be green before any Phase 1 work is merged.
-- [ ] **`epic-0-fitness-tests.md`** ← read this first
-  - [ ] `fix-test-domain-isolation.md` — delete dummy classes from lines 31–130
-  - [ ] `fix-test-single-browser.md` — run real graph, not just `take_snapshot()`
-  - [ ] `fix-test-sync-io-detector.md` — run real graph, not just `take_snapshot()`
-  - [ ] `fix-test-graph-depth.md` — create from scratch, invalid API key, no mock LLM
-
-**Note:** `gaps/fitness-*.md` are superseded by the above. Delete them when Epic 0 closes.
+### Phase 0 — Completed
+- [x] Fitness Tests closed on 2026-04-13. `python -m pytest tests/architecture/ -v` is green, and the superseded `gaps/fitness-*.md` files were removed.
 
 ### Phase 1 — Epic 1: CLI + Interpreter
 - [ ] **`epic-1-cli-and-interpreter.md`** ← read this first

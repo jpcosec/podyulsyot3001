@@ -18,30 +18,37 @@ Each issue file MUST follow this format:
 - **Depends on:** Explicit dependencies.
 
 ### Stage 2: Initialization Procedure (Before Execution)
-Before assigning work to a subagent, the orchestrator MUST perform this ritual:
-0. **Pill Audit — Phase A**: Run `plan_docs/context-pill-audit.md` Phase A. Delete stale pills, create missing mandatory pills, resolve contradictions. Do this before touching any issue.
+Before assigning work to an executor, the orchestrator MUST perform this ritual:
+0. **Pill Audit - Phase A**: Run `plan_docs/context-pill-audit.md` Phase A. Delete stale pills, create missing mandatory pills, resolve contradictions. Do this before touching any issue.
 1. **Atomize**: Break down work into the smallest possible child issues.
 2. **Context Injection**: Route relevant "Context Pills" from `plan_docs/context/` into the issue `.md` file.
 3. **Redundant > Merge**: Merge overlapping issues to ensure unambiguous ownership.
 4. **Legacy > Delete**: Review issues for dead content. Delete and record as an ADR in `docs/adrs/` if necessary.
-5. **Pill Audit — Phase B**: Run `plan_docs/context-pill-audit.md` Phase B. Verify every issue has the correct pills, no broken links, and zero-context sufficiency. Must reach `READY FOR EXECUTION: YES` before continuing.
+5. **Pill Audit - Phase B**: Run `plan_docs/context-pill-audit.md` Phase B. Verify every issue has the correct pills, no broken links, and zero-context sufficiency. Must reach `READY FOR EXECUTION: YES` before continuing.
 6. **Update Index.md**: Regenerate the dependency graph and parallelization map.
-7. **Execute**: Provide the subagent with the specific issue file and verify they have access to the linked context pills.
+7. **Execute**: Provide the executor with the specific issue file and verify they have access to the linked context pills.
 
-### Stage 3: Lifecycle (Execution Ritual)
-Once an issue is solved, the subagent MUST follow these steps:
-1. Check if existing tests are invalid and delete/update them.
-2. Add and run new tests to verify the fix.
-3. **Verify compliance**: Check that the implementation strictly complies with all standards in this document (e.g., no DIP violations, correct log tags).
-4. Update `changelog.md`.
-5. Delete the solved issue from `plan_docs/issues/` and remove it from `Index.md`.
-6. Make a commit stating exactly what was fixed.
+### Stage 3: Role Instructions
+Role-specific execution rules live in these documents and are mandatory:
+- `plan_docs/executor-instructions.md`
+- `plan_docs/supervisor-instructions.md`
+
+### Stage 3.1: Traceability Contract
+Every closed issue must remain traceable through all three artifacts until the supervisor clears it:
+- the issue file in `plan_docs/issues/`
+- the matching entry in `plan_docs/issues/Index.md`
+- the git commit that resolved it
+
+There must be a one-to-one mapping between a closed issue and its resolving commit. Do not batch multiple closed issues into one commit, and do not close one issue across multiple commits unless the supervisor explicitly re-opens it after review.
 
 ### QA & Validation Issues
 - **Validation-Type Issues:** If a validation fails, do not close silently. Atomize every uncovered real problem into new gap issues before closing the validation issue.
 
 ### Phase Completion (Level-up Ritual)
 When all parallelizable issues in a given Phase/Level are completed:
+- Verify every issue in the phase is either still open or marked `{closed with commit id <sha>}` in `plan_docs/issues/Index.md`.
+- Review and accept or reject each closing commit before phase sign-off.
+- Only after the phase is accepted, delete the resolved issue files and clear their corresponding Index entries.
 - Run all architectural fitness functions (`pytest-archon`, `pyfakefs`) and full test suites to ensure no regressions were introduced before moving to the next Phase.
 
 ---
@@ -114,12 +121,14 @@ Active plans live in `plan_docs/`. Once a feature is built, tested, and document
 ## 4. Git Hygiene
 - **Never edit files while the git tree is dirty.** First make a snapshot commit, then edit on top of a clean state.
 - Do not ask the user for permission to commit if the workflow dictates it. Just do it.
+- Executors must create the resolving commit for their assigned issue before handing work back to the supervisor.
+- Supervisors must revert failed issue commits individually; do not squash away traceability.
 
 ---
 
 ## 5. Architectural Invariants (Laws of Physics)
 
-These are non-negotiable constraints on the Ariadne 2.0 runtime. **Any implementation that violates one of these invariants is wrong by definition, regardless of whether tests pass.** Every subagent must check their work against these before closing an issue.
+These are non-negotiable constraints on the Ariadne 2.0 runtime. **Any implementation that violates one of these invariants is wrong by definition, regardless of whether tests pass.** Every executor must check their work against these before closing an issue.
 
 Each invariant is enforced by an automated fitness test in `tests/architecture/`. If a fitness test is red, no feature work merges.
 
