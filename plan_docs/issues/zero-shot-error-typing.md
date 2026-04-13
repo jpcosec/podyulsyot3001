@@ -2,15 +2,18 @@
 
 **Umbrella:** depends on `ariadne-oop-skeleton.md` and `interpreter-node.md`.
 
-**Explanation:** When Ariadne encounters a portal with no map, the system must distinguish a legitimate "no map exists" case from a real load error. `Labyrinth.load_from_db()` must raise a named `MapNotFoundError`, and the `Interpreter` actor must catch it narrowly and fall back to a `"explore"` mission.
+### 1. Explanation
+ When Ariadne encounters a portal with no map, the system must distinguish a legitimate "no map exists" case from a real load error. `Labyrinth.load_from_db()` must raise a named `MapNotFoundError`, and the `Interpreter` actor must catch it narrowly and fall back to a `"explore"` mission.
 
-**Reference:** `src/automation/ariadne/core/cognition.py` (`Labyrinth.load_from_db`), `src/automation/ariadne/core/actors.py` (`Interpreter`), `src/automation/ariadne/exceptions.py`
+### 2. Reference
+ `src/automation/ariadne/core/cognition.py` (`Labyrinth.load_from_db`), `src/automation/ariadne/core/actors.py` (`Interpreter`), `src/automation/ariadne/exceptions.py`
 
 **Status:** Not started.
 
 **Why it's wrong:** A bare `except Exception` in `parse_instruction_node` hides real bugs (permissions error, malformed JSON, import failures) and conflates them with the expected "portal not yet mapped" case. It also defaults to `available_missions[0]` arbitrarily instead of a named explore mission.
 
-**Real fix:**
+### 3. Real fix
+
 1. `Labyrinth.load_from_db(portal)` raises `MapNotFoundError(portal_name)` (defined in `exceptions.py`) when no map exists.
 2. `Interpreter.__call__` catches only `MapNotFoundError` narrowly and sets `current_mission_id = "explore"`.
 3. `"explore"` mission has no `AriadneThread` edges — `Theseus` detects this and delegates to `Delphi` immediately.
@@ -18,11 +21,21 @@
 
 **Don't:** Use `except Exception` as a map-missing catch-all.
 
+### 4. Steps
+1. Define `MapNotFoundError`.
+2. Raise it in `Labyrinth.load_from_db`.
+3. Catch it in `Interpreter` and set mission to 'explore'.
+
+### 5. Test command
+`python -m pytest tests/unit/automation/ariadne/test_exceptions.py`
+
 ### 📦 Required Context Pills
+- [DIP Enforcement](../context/dip-enforcement.md)
 - [Error Contract](../context/error-contract.md)
+- [Law 1 - No Blocking I/O](../context/law-1-async.md)
 - [Ariadne State & Models](../context/ariadne-models.md)
 - [Node Implementation Pattern](../context/node-pattern.md)
 
 ### 🚫 Non-Negotiable Constraints
-- **Law 1 (No Blocking I/O):** Repository access must be `async`.
-- **DIP Enforcement:** Domain errors must be defined in `ariadne/` and caught in `interpreter.py`.
+- **DIP Enforcement:** `ariadne/` (domain layer) must never import from `motors/` (infrastructure layer). Infrastructure is injected via `config` or resolved through `MotorRegistry`.
+- **Law 1 (No Blocking I/O):** All I/O in `ariadne/` MUST be `async/await`. No `open()`, `time.sleep()`, or `requests`.

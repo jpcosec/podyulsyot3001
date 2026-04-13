@@ -7,26 +7,26 @@ source: src/automation/ariadne/models.py:161
 # Pill: AriadneMap Model
 
 ## Structure
-`AriadneMap` is the directed state graph representing a portal flow.
+The `AriadneMap` structure at `models.py:161`:
 
 - `states`: `Dict[str, AriadneStateDefinition]` (Nodes)
 - `edges`: `List[AriadneEdge]` (Transitions)
-- `success_states`: `List[str]` (Goal nodes)
-- `failure_states`: `List[str]` (Terminal failure nodes)
+- `success_states`: `List[str]` (Goal states)
+- `failure_states`: `List[str]` (Terminal failure states)
 
-`AriadneStateDefinition` fields:
-- `id`: Unique state identifier.
-- `presence_predicate`: `AriadneObserve` (Logic to identify this state).
-- `components`: `Dict[str, AriadneTarget]` (Semantic elements in this state).
+`AriadneStateDefinition`:
+- `id`: State identifier.
+- `presence_predicate`: `AriadneObserve` logic.
+- `components`: `Dict[str, AriadneTarget]`.
 
-`AriadneEdge` fields:
-- `from_state` / `to_state`: Edge endpoints.
-- `mission_id`: Optional gate (e.g., 'easy_apply').
-- `intent`: Action type (click, fill, etc.).
-- `target`: Component name or explicit `AriadneTarget`.
+`AriadneEdge`:
+- `from_state` / `to_state`: Connection points.
+- `mission_id`: Mission gate.
+- `intent`: `AriadneIntent` (click, fill, etc.).
+- `target`: `Union[str, AriadneTarget]`.
 
 ## Usage
-`Labyrinth` uses `AriadneMap` to resolve "Where am I?" and "What is here?".
+`Labyrinth` and `Theseus` use the map to navigate.
 
 ## Verify
-`grep "class AriadneMap" src/automation/ariadne/models.py`
+`grep -n "class AriadneMap" src/automation/ariadne/models.py`

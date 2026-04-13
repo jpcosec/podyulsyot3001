@@ -9,7 +9,7 @@ This document is the single source of truth for coding, documentation, and workf
 Every change must be managed through the `plan_docs/issues/Index.md` execution queue.
 
 ### Stage 1: Mapping
-Produce one `.md` file per concern under `plan_docs/issues/gaps/` or `plan_docs/issues/unimplemented/`.
+Produce one `.md` file per concern directly under `plan_docs/issues/`. The prior `gaps/` vs `unimplemented/` split is retired — there is one flat issue pool.
 Each issue file MUST follow this format:
 - **Explanation:** What is wrong/missing.
 - **Reference:** Files where the issue lives.

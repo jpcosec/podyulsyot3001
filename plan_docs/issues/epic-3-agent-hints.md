@@ -12,33 +12,13 @@
 - [ ] `hint-failure-fallback.md` — degradation path when hint injection fails
 
 ### 📦 Required Context Pills
-- [Set-of-Mark (SoM) Pattern](../context/som-pattern.md)
-- [Law 3 — DOM Hostility](../context/law-3-dom-hostility.md)
+- [Law 1 - No Blocking I/O](../context/law-1-async.md)
+- [Law 3 - DOM Hostility](../context/law-3-dom-hostility.md)
+- [Law 4 - Finite Routing](../context/law-4-finite-routing.md)
 - [Node Implementation Pattern](../context/node-pattern.md)
+- [Set-of-Mark (SoM) Pattern](../context/som-pattern.md)
 
-### 🚫 Non-Negotiable Constraints (Laws of Physics)
-
-1. **Law 1 (No Blocking I/O):** Hinting and agent nodes MUST be `async`.
-2. **Law 3 (DOM Hostility):** Hinting MUST NOT mutate existing DOM nodes. Use overlays.
-3. **Law 4 (Finite Routing):** Agent failures MUST trigger escalation to HITL.
-
-**Execution order:** `som-hint-injection` → `som-agent-prompt-update` (sequential) → `hint-failure-fallback`.
-
-**Key constraint:** `HintingCapability` is constructor-injected into `Theseus` alongside `Sensor`/`Motor`. No runtime `config["configurable"]` lookups — all dependencies are resolved at graph-build time.
-
-**Validation (real browser required):**
-
-```bash
-# Force the cascade to reach the agent by using a portal with no matching edges
-# then observe whether the screenshot saved in state has [AA]/[AB] labels painted on it
-python -m src.automation.main "easy_apply" --portal fitness_test \
-  url="https://example.com" --motor crawl4ai
-```
-
-Inspect the screenshot stored in `session_memory` or saved to `data/ariadne/recordings/<thread_id>/`. It must show yellow hint labels overlaid on interactive elements.
-
-**Acceptance criteria:**
-1. Agent receives a screenshot with `[AA]`/`[AB]` labels visible on buttons and inputs.
-2. Agent prompt contains the hints dict (e.g. `{"AA": "button 'Apply'", "AB": "input 'Email'"}`), not the full DOM tree.
-3. When hint injection fails (simulate by disabling JS in the executor config), `session_memory["hints_available"]` is `False` and the agent switches to DOM-tree mode without crashing.
-4. `python -m pytest tests/architecture/ tests/unit/automation/ -q` still passes green.
+### 🚫 Non-Negotiable Constraints
+- **Law 1 (No Blocking I/O):** All I/O in `ariadne/` MUST be `async/await`. No `open()`, `time.sleep()`, or `requests`.
+- **Law 3 (DOM Hostility):** All JS injection must use an isolated overlay. Do not mutate existing DOM nodes or event listeners.
+- **Law 4 (Finite Routing):** All loops must have finite circuit breakers. Escalation through counters (heuristic_retries >= 2, agent_failures >= 3) to HITL is mandatory.

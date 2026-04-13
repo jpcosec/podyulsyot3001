@@ -2,6 +2,7 @@
 type: model
 domain: scraping
 source: src/automation/ariadne/contracts/base.py
+lifecycle: target
 ---
 
 # Pill: Motor Contract

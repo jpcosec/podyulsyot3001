@@ -2,7 +2,8 @@
 
 **Umbrella:** depends on `ariadne-oop-skeleton.md`.
 
-**Explanation:** AGENTS.md, README.md, and STANDARDS.md must define Ariadne's long-term memory as two cooperating objects: `Labyrinth` (topology — "where am I?") and `AriadneThread` (mission path — "where do I go next?"). Neither is a script or playback trace.
+### 1. Explanation
+ AGENTS.md, README.md, and STANDARDS.md must define Ariadne's long-term memory as two cooperating objects: `Labyrinth` (topology — "where am I?") and `AriadneThread` (mission path — "where do I go next?"). Neither is a script or playback trace.
 
 **Reference:** `AGENTS.md`, `README.md`, `STANDARDS.md`
 
@@ -23,3 +24,26 @@ Add a "Labyrinth & Thread" section to `AGENTS.md` (and/or `STANDARDS.md`) explai
 **Steps:**
 1. Add "What is a Map?" section to `AGENTS.md`.
 2. Optionally add a one-paragraph note in `STANDARDS.md` under the architecture section.
+
+### 2. Reference
+`ariadne-oop-architecture.md`
+
+### 3. Real fix
+Document the split.
+
+### 4. Steps
+1. Write documentation.
+
+### 5. Test command
+N/A
+
+### 📦 Required Context Pills
+- [DIP Enforcement](../context/dip-enforcement.md)
+- [Labyrinth Model](../context/labyrinth-model.md)
+- [Law 1 - No Blocking I/O](../context/law-1-async.md)
+- [Ariadne State & Models](../context/ariadne-models.md)
+- [Ariadne Thread Model](../context/ariadne-thread-model.md)
+
+### 🚫 Non-Negotiable Constraints
+- **DIP Enforcement:** `ariadne/` (domain layer) must never import from `motors/` (infrastructure layer). Infrastructure is injected via `config` or resolved through `MotorRegistry`.
+- **Law 1 (No Blocking I/O):** All I/O in `ariadne/` MUST be `async/await`. No `open()`, `time.sleep()`, or `requests`.

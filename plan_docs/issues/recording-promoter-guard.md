@@ -2,15 +2,18 @@
 
 **Umbrella:** depends on `ariadne-oop-skeleton.md`.
 
-**Explanation:** `Recorder.promote()` must only generate canonical `AriadneThread` edges from deterministic `Theseus`/`Motor` events. `Delphi` turns must be stored as observations but never promoted as canonical edges without human review.
+### 1. Explanation
+ `Recorder.promote()` must only generate canonical `AriadneThread` edges from deterministic `Theseus`/`Motor` events. `Delphi` turns must be stored as observations but never promoted as canonical edges without human review.
 
-**Reference:** `src/automation/ariadne/core/actors.py` (`Recorder`), `src/automation/ariadne/core/cognition.py` (`Labyrinth`, `AriadneThread`)
+### 2. Reference
+ `src/automation/ariadne/core/actors.py` (`Recorder`), `src/automation/ariadne/core/cognition.py` (`Labyrinth`, `AriadneThread`)
 
 **Status:** Needs verification. The pipeline exists but it's unclear whether agent events are filtered during edge extraction.
 
 **Why it matters:** If an LLM agent turn (e.g., "I clicked the button because I guessed the selector") gets promoted as a deterministic edge, the next run will try to replay an LLM guess as a scripted action. This creates fragile maps that fail silently on any portal variation.
 
-**Real fix:**
+### 3. Real fix
+
 1. `Recorder.__call__` tags every event with `source: "deterministic" | "heuristic" | "llm_agent"`.
 2. `Recorder.promote()` only builds canonical `AriadneThread` edges from events with `source == "deterministic"`.
 3. LLM agent events are stored as observations on `Labyrinth` rooms for human review, but never become executable edges.
@@ -18,8 +21,20 @@
 
 **Don't:** Promote any LLM-generated action as a deterministic edge without human review.
 
-**Steps:**
+### 4. Steps
+
 1. Add `source` field to `GraphRecorder` event schema.
 2. Update `AriadnePromoter` to filter on `source == "deterministic"`.
 3. Add `status` guard to `MapRepository.get_map()`.
 4. Test: record a session with mixed deterministic + LLM events, assert promoted map contains only deterministic edges.
+
+### 📦 Required Context Pills
+- [Labyrinth Model](../context/labyrinth-model.md)
+- [Law 1 - No Blocking I/O](../context/law-1-async.md)
+- [Ariadne State & Models](../context/ariadne-models.md)
+- [Promotion Pattern (Recording -> Map)](../context/promotion-pattern.md)
+- [Graph Recording Pattern](../context/recording-pattern.md)
+- [Ariadne Thread Model](../context/ariadne-thread-model.md)
+
+### 🚫 Non-Negotiable Constraints
+- **Law 1 (No Blocking I/O):** All I/O in `ariadne/` MUST be `async/await`. No `open()`, `time.sleep()`, or `requests`.

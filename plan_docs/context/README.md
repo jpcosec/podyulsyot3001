@@ -13,6 +13,7 @@ Context pills are short, disposable summaries that give zero-context agents exac
 type: guardrail | decision | pattern | model
 domain: ariadne | cli | scraping | architecture   # layer this pill belongs to
 source: path/to/file.py:line                      # authoritative source of truth
+lifecycle: current | target               # current mirrors code; target is the goal
 law: 1-4                                           # guardrails only, when applicable
 ---
 ```

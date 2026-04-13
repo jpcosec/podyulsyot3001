@@ -14,52 +14,16 @@
 - [ ] **Task 4.2** — run `Recorder.promote()` on the thread and verify the generated `Labyrinth`/`AriadneThread`
 
 ### 📦 Required Context Pills
-- [Ariadne Map Model (Full Schema)](../context/ariadne-map-model.md)
+- [DIP Enforcement](../context/dip-enforcement.md)
 - [Ariadne Shared I/O Pattern](../context/ariadne-io-pattern.md)
-- [Graph Recording Pattern](../context/recording-pattern.md)
-- [Promotion Pattern (Recording -> Map)](../context/promotion-pattern.md)
+- [Law 1 - No Blocking I/O](../context/law-1-async.md)
+- [Law 2 - One Browser Per Mission](../context/law-2-single-browser.md)
+- [Ariadne State & Models](../context/ariadne-models.md)
 - [Node Implementation Pattern](../context/node-pattern.md)
+- [Promotion Pattern (Recording -> Map)](../context/promotion-pattern.md)
+- [Graph Recording Pattern](../context/recording-pattern.md)
 
-### 🚫 Non-Negotiable Constraints (Laws of Physics)
-
-1. **Law 1 (No Blocking I/O):** All recording and promotion logic MUST be `async`.
-2. **DIP Enforcement:** `promotion.py` MUST NOT import from `src/automation/motors/`.
-3. **Law 2 (One Browser Per Mission):** Recording MUST capture events from a single browser session.
-
-**Task 4.1: Live Recording Session**
-1. Start a graph run with `record_graph: True` in config (already wired in CLI).
-2. Navigate manually through XING or LinkedIn easy apply while the recorder listens.
-3. Note the `thread_id` printed by the CLI.
-
-```bash
-python -m src.automation.main "easy_apply" --portal xing \
-  url="https://xing.com/jobs/..." cv_path=./cv.pdf
-# Note the thread_id from the output
-```
-
-**Task 4.2: Promote the Session**
-Run `Recorder.promote()` on the recorded thread:
-
-```python
-from src.automation.ariadne.core.actors import Recorder
-recorder = Recorder(labyrinth=..., thread=...)
-await recorder.promote(thread_id="<thread_id_from_above>")
-```
-
-Inspect the resulting `Labyrinth` rooms and `AriadneThread` edges. If variables are templated (`{{email}}`, `{{profile.first_name}}`) and edges derive from deterministic events only, flip `status` from `draft` to `canonical`.
-
-**Validation (real browser required):**
-
-Run the promoted canonical map against the live portal in dry-run mode:
-
-```bash
-python -m src.automation.main "easy_apply" --portal xing \
-  url="https://xing.com/jobs/..." cv_path=./cv.pdf dry_run=true
-```
-
-**Acceptance criteria:**
-1. `raw_timeline.jsonl` contains events with `source: "deterministic"` and `source: "llm_agent"` correctly tagged.
-2. Promoted `normalized_map.json` contains only edges derived from `"deterministic"` events.
-3. All literal profile values in the map are replaced with `{{...}}` templates.
-4. Dry-run replay against the live portal completes without HITL (proves the map is valid).
-5. `MapRepository` refuses to load the map in a normal run until `status` is manually set to `"canonical"`.
+### 🚫 Non-Negotiable Constraints
+- **DIP Enforcement:** `ariadne/` (domain layer) must never import from `motors/` (infrastructure layer). Infrastructure is injected via `config` or resolved through `MotorRegistry`.
+- **Law 1 (No Blocking I/O):** All I/O in `ariadne/` MUST be `async/await`. No `open()`, `time.sleep()`, or `requests`.
+- **Law 2 (One Browser Per Mission):** A single `async with executor` block must wrap the entire graph execution. Nodes must never open or close the browser themselves.

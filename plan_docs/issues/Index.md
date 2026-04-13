@@ -82,15 +82,22 @@ Before starting any work, verify these "Laws of Physics" are not violated:
 - [x] Fitness Tests closed on 2026-04-13. `python -m pytest tests/architecture/ -v` is green, and the superseded `gaps/fitness-*.md` files were removed.
 - [x] Posthumous issue `fix-ariadne-io-refactor.md` was closed in `cc29691`, extending the Phase 0 sync-I/O cleanup across Ariadne recording, promotion, repository access, and shared JSON/JSONL helpers before final phase closure.
 
+### Phase 0.1 — Architectural Alignment
+- {closed with commit id ee0c1d0} `refactor-protocol-separation.md` ← foundational, blocks Phase 0.5
+
+### Phase 0.1 — Architectural Alignment
+- [ ] `refactor-protocol-separation.md` ← foundational, blocks Phase 0.5
+
 ### Phase 0.5 — OOP Skeleton (foundational, blocks all epics below)
 - **`ariadne-oop-skeleton.md`** ← umbrella, atomized. Do not execute directly.
-  - [ ] `oop-01-scaffold.md` — empty `core/` package (protocols, ABCs, stubs)
+  - {closed with commit id f1df743} `oop-01-scaffold.md` — empty `core/` package (protocols, ABCs, stubs)
   - [ ] `oop-02-adapters.md` — `BrowserOSAdapter` + `Crawl4AIAdapter` (parallel with 03)
   - [ ] `oop-03-cognition.md` — `Labyrinth` + `AriadneThread` (parallel with 02)
   - [ ] `oop-04-theseus.md` — `Theseus` actor (parallel with 05, 06)
   - [ ] `oop-05-delphi.md` — `Delphi` actor + circuit breakers (parallel with 04, 06)
   - [ ] `oop-06-recorder.md` — `Recorder` actor + `promote()` (parallel with 04, 05)
   - [ ] `oop-07-graph-wiring.md` — rewrite `orchestrator.py` DI; slim `main.py`
+  - [ ] `oop-08b-package-locality.md` — relocate contracts/models/io/config/hints to owning packages
   - [ ] `oop-08-cleanup.md` — delete absorbed modules, docs, modes as strategies
 
 ### Phase 1 — Interpreter (depends on Phase 0.5)
@@ -122,7 +129,7 @@ Before starting any work, verify these "Laws of Physics" are not violated:
 
 ## Parallelization map
 
-**Phase 0.5:** `oop-01` → (`oop-02` ∥ `oop-03`) → (`oop-04` ∥ `oop-05` ∥ `oop-06`) → `oop-07` → `oop-08`. Blocks all phases below.
+**Phase 0.5:** `oop-01` → (`oop-02` ∥ `oop-03`) → (`oop-04` ∥ `oop-05` ∥ `oop-06`) → `oop-07` → `oop-08b` → `oop-08`. Blocks all phases below.
 **Phase 1:** `interpreter-node` is a single issue. Blocks Phase 2.
 **Phase 2:** Corneta test → Fire test (sequential). `404-danger-signal` and `zero-shot-error-typing` are parallel to each other and to Phase 2's tests.
 **Phase 3:** `som-hint-injection` → `som-agent-prompt-update` (sequential) → `hint-failure-fallback`. Runs parallel to Phase 2.
