@@ -6,6 +6,12 @@
 
 **Status:** Partial — agent works but ignores user intent.
 
+### 🚫 Non-Negotiable Constraints (Laws of Physics)
+
+1. **Law 1 (No Blocking I/O):** The agent node must be fully `async`. Do not use `time.sleep()` for LLM retries or synchronous file I/O for logs.
+2. **Law 4 (Finite Routing):** The agent node must update `session_memory["agent_failures"]` on each failed attempt. If failures >= 3, the orchestrator MUST route to `human_in_the_loop`.
+3. **DIP Enforcement:** `agent.py` must only import from `ariadne/` domain layers. It must NEVER import from `src/automation/motors/`.
+
 **Why it's wrong:**
 ```python
 prompt += "Goal: Continue the application process.\n"

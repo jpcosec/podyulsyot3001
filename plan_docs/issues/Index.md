@@ -38,7 +38,16 @@ When all parallelizable issues in a given Phase/Level are completed, you MUST pe
 
 Epic issues are identified by the `epic-` prefix. Each epic ends with a real-browser validation step that must pass before the epic is considered closed.
 
-## Priority roadmap
+### ⚠️ Risk Mitigation Guardrails (Read First)
+
+Before starting any work, verify these "Laws of Physics" are not violated:
+1. **Law 1 (No Blocking I/O):** All I/O in `ariadne/` MUST be `async/await`. No `open()`, `time.sleep()`, or `requests`.
+2. **Law 2 (One Browser Per Mission):** The graph must share a single browser context. No `Executor.__aenter__` inside the loop.
+3. **Law 3 (DOM Hostility):** All JS injection must use an isolated overlay. Do not mutate existing DOM nodes or event listeners.
+4. **Law 4 (Finite Routing):** All loops must have finite circuit breakers. Escalation to LLM rescue (2 retries) or HITL (3 agent failures) is mandatory.
+5. **DIP Enforcement:** Domain layers (`ariadne`) MUST NOT import from infrastructure layers (`motors`).
+
+### Priority roadmap
 
 ### Phase 0 — Epic 0: Fitness Tests (prerequisite for everything)
 Run in parallel. These must be green before any Phase 1 work is merged.

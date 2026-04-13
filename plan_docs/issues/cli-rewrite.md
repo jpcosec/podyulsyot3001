@@ -6,6 +6,12 @@
 
 **Status:** Not started.
 
+### 🚫 Non-Negotiable Constraints (Laws of Physics)
+
+1. **Law 1 (No Blocking I/O):** The CLI entrypoint must be `async`. Use `asyncio.run(run_ariadne(args))`. All I/O in the graph must be `async`.
+2. **Law 2 (One Browser Per Mission):** The `run_ariadne` function MUST wrap the entire graph execution in a single `async with executor` block. Do not open/close the browser inside the graph nodes.
+3. **DIP Enforcement:** `main.py` is an infrastructure component. It may import from `ariadne/` and `motors/` to wire them together, but it must not contain business/domain logic (e.g., hardcoded LinkedIn URL logic).
+
 **Why it's wrong:** `main.py` has `apply`, `scrape`, `browseros-check` subcommands with job-specific flags (`--cv`, `--job-id`). This couples the transport layer (CLI) to a specific domain (job applications). Dead code block at lines 382–396 (`_ensure_browseros` after `raise`). `run_apply` and `run_scrape` duplicate graph-wiring logic.
 
 **Real fix:**
@@ -14,7 +20,7 @@
 3. Implement `parse_kwargs(kwarg_list) -> dict` to convert `key=value` strings.
 4. Single `run_ariadne(args)` function that builds minimal initial state and wraps execution in `async with executor` + `async with create_ariadne_graph()`.
 5. Remove dead code block at lines 382–396.
-
+...
 **Don't:** Reconstruct `apply`/`scrape` as wrappers — they must be deleted entirely.
 
 **Steps:**

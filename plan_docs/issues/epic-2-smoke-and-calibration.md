@@ -11,6 +11,12 @@
 - [ ] `single-browser-universal.md` — verify correct `async with` nesting in the new CLI's `run_ariadne()`
 - [ ] `zero-shot-error-typing.md` — `MapNotFoundError` + `"explore"` fallback so unknown portals degrade cleanly
 
+### 🚫 Infrastructure & Circuit Breaker Guardrails
+
+1. **Law 1 (No Blocking I/O):** All integration tests in Task 2.1 and 2.2 must be fully `async`.
+2. **Law 4 (Finite Routing):** The "Corneta Test" (Task 2.1) MUST verify that the graph escalates to HITL after 3 agent failures. If it exceeds 15 steps without reaching HITL, the test MUST fail.
+3. **Environment Check:** Before starting the "Fire Test" (Task 2.2), verify `GOOGLE_API_KEY` is present and `BROWSEROS_APPIMAGE_PATH` is valid if using the BrowserOS motor. Use `--auto-start-browseros` or `browseros-check` before the run.
+
 **Task 2.1: The Corneta Test**
 Create `tests/integration/test_cascade_smoke.py`.
 

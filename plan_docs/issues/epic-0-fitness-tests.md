@@ -10,6 +10,13 @@
 - [ ] `fix-test-sync-io-detector.md` — same: replace `take_snapshot()` with real `app.astream()` so node-level sync I/O is detected
 - [ ] `fix-test-graph-depth.md` — create `test_graph_depth.py` from scratch; use invalid API key via `monkeypatch`, no mock LLM node
 
+### 🚫 Non-Negotiable Constraints (Laws of Physics)
+
+1. **Law 1 (No Blocking I/O):** All tests must verify that no synchronous I/O occurs during graph execution. If `test_sync_io_detector.py` is red, no other work is valid.
+2. **Law 2 (One Browser Session):** Tests must assert that the browser is NOT opened or closed within the graph nodes.
+3. **Law 4 (Finite Routing):** `test_graph_depth.py` must use a real invalid API key to trigger a real failure and verify the circuit breaker escalates to HITL.
+4. **DIP Enforcement:** `test_domain_isolation.py` must enforce that `ariadne/` does not import from `motors/`.
+
 **Supersedes:** `gaps/fitness-sync-io.md`, `gaps/fitness-single-browser.md`, `gaps/fitness-graph-depth.md` — those described the right intent with the wrong approach. Delete them once this epic closes.
 
 **Execution order:** All four are independent — run in parallel.

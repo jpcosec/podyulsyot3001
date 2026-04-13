@@ -6,6 +6,12 @@
 
 **Status:** Not started. Node file does not exist.
 
+### 🚫 Non-Negotiable Constraints (Laws of Physics)
+
+1. **Law 1 (No Blocking I/O):** The `parse_instruction_node` must be fully `async`. Use `await repo.get_map_async(portal_name)`. Do not use `open()` or synchronous `json.load()`.
+2. **Law 4 (Finite Routing):** The interpreter must always return a valid `current_mission_id`. If resolution fails, it must fall back to a safe default (e.g., `"discovery"`) rather than erroring out and breaking the graph.
+3. **DIP Enforcement:** `interpreter.py` must only import from `ariadne/` domain layers (`models.py`, `repository.py`, `config.py`). Imports from `src/automation/motors/` are strictly prohibited.
+
 **Why it's wrong:** `workflow.set_entry_point("observe")` skips intent resolution entirely. `AriadneState` has no `instruction` field, so there is no way to carry user intent through the graph. The agent node hardcodes `"Goal: Continue the application process."` regardless of what the user asked.
 
 **Real fix:**
