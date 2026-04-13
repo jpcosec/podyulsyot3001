@@ -64,7 +64,13 @@ All 21 issues in `plan_docs/issues/` now contain enough detail (What is wrong, R
 ## 🚀 Final Status
 The workspace is in a "High-Signal" state. The boundary between **Domain Logic** (`ariadne/`) and **Infrastructure** (`motors/`) is clearly defined and protected by automated fitness tests and context pills.
 
-**Next Immediate Action:** Begin Phase 0 — Task 0.1 (`fix-test-sync-io-detector.md`).
+**Next Immediate Action:** Begin Phase 1 — Epic 1 (`epic-1-cli-and-interpreter.md`).
+
+### Phase 0 Completion Update
+- Completed `fix-test-domain-isolation.md`, `fix-test-single-browser.md`, `fix-test-sync-io-detector.md`, and `fix-test-graph-depth.md`.
+- Verified the full architecture gauntlet with `python -m pytest tests/architecture/ -v` -> `6 passed`.
+- Removed the closed Epic 0 issue files and the superseded `gaps/fitness-*.md` planning artifacts.
+- Closed the posthumous follow-up `fix-ariadne-io-refactor.md` in commit `cc29691`, extending the no-blocking-I/O cleanup through `src/automation/ariadne/io.py`, recording/promotion persistence, and async map loading before final Phase 0 sign-off.
 
 ---
 

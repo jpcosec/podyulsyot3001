@@ -80,6 +80,7 @@ Before starting any work, verify these "Laws of Physics" are not violated:
 
 ### Phase 0 — Completed
 - [x] Fitness Tests closed on 2026-04-13. `python -m pytest tests/architecture/ -v` is green, and the superseded `gaps/fitness-*.md` files were removed.
+- [x] Posthumous issue `fix-ariadne-io-refactor.md` was closed in `cc29691`, extending the Phase 0 sync-I/O cleanup across Ariadne recording, promotion, repository access, and shared JSON/JSONL helpers before final phase closure.
 
 ### Phase 1 — Epic 1: CLI + Interpreter
 - [ ] **`epic-1-cli-and-interpreter.md`** ← read this first
