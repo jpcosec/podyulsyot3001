@@ -2,5 +2,6 @@
 
 from src.automation.adapters.browser_os import BrowserOSAdapter
 from src.automation.adapters.gemini import GeminiClient
+from src.automation.adapters.portal_extractor import PortalExtractor
 
-__all__ = ["BrowserOSAdapter", "GeminiClient"]
+__all__ = ["BrowserOSAdapter", "GeminiClient", "PortalExtractor"]

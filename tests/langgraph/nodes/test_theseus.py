@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from src.automation.contracts.sensor import SnapshotResult
 from src.automation.contracts.motor import MotorCommand, TraceEvent, ExecutionResult
+from src.automation.ariadne.thread.action import ExtractionAction
 from src.automation.langgraph.nodes.theseus import TheseusNode
 
 
@@ -119,3 +120,41 @@ class TestTheseusNode:
         assert result["is_mission_complete"] is True
         assert result["current_room_id"] == "success.page"
         assert "trace" not in result
+
+
+class TestExtractionDispatch:
+    @pytest.mark.asyncio
+    async def test_extraction_action_calls_extractor(self):
+        extractor = AsyncMock()
+        extractor.extract.return_value = [{"title": "Job A"}]
+        step = [ExtractionAction(schema_id="jobs")]
+        node = TheseusNode(make_motor(), make_labyrinth("search.results"), make_thread(step), extractor)
+        result = await node({"snapshot": make_snapshot()})
+        extractor.extract.assert_called_once()
+        assert result["extracted_data"] == [{"title": "Job A"}]
+
+    @pytest.mark.asyncio
+    async def test_extraction_result_absent_when_empty(self):
+        extractor = AsyncMock()
+        extractor.extract.return_value = []
+        step = [ExtractionAction(schema_id="jobs")]
+        node = TheseusNode(make_motor(), make_labyrinth("search.results"), make_thread(step), extractor)
+        result = await node({"snapshot": make_snapshot()})
+        assert "extracted_data" not in result
+
+    @pytest.mark.asyncio
+    async def test_extraction_without_extractor_returns_empty(self):
+        step = [ExtractionAction(schema_id="jobs")]
+        node = TheseusNode(make_motor(), make_labyrinth("search.results"), make_thread(step))
+        result = await node({"snapshot": make_snapshot()})
+        assert "extracted_data" not in result
+
+    @pytest.mark.asyncio
+    async def test_mixed_step_runs_extraction_then_motor(self):
+        extractor = AsyncMock()
+        extractor.extract.return_value = [{"count": 42}]
+        step = [ExtractionAction(schema_id="jobs"), MotorCommand(operation="click", selector="#next")]
+        node = TheseusNode(make_motor(success=True), make_labyrinth("search.results"), make_thread(step), extractor)
+        result = await node({"snapshot": make_snapshot()})
+        assert result["extracted_data"] == [{"count": 42}]
+        assert len(result["trace"]) == 1

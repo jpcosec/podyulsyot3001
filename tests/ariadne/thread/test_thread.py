@@ -2,8 +2,8 @@ import pytest
 from unittest.mock import patch
 
 from src.automation.contracts.motor import MotorCommand, TraceEvent
-from src.automation.ariadne.thread.thread import AriadneThread
-from src.automation.ariadne.thread.action import TransitionAction
+from src.automation.ariadne.thread.thread import AriadneThread, Transition
+from src.automation.ariadne.thread.action import TransitionAction, ExtractionAction
 
 
 def cmd(operation="click", selector="#btn") -> MotorCommand:
@@ -103,3 +103,16 @@ class TestPersistence:
             commands = restored.get_next_step("home.anon")
             assert commands[0].operation == "fill"
             assert commands[0].selector == "#email"
+
+    def test_extraction_action_survives_roundtrip(self, tmp_path):
+        with patch("src.automation.ariadne.thread.thread.DATA_ROOT", tmp_path):
+            thread = AriadneThread("portal", "mission")
+            extract = ExtractionAction(schema_id="job_listings")
+            thread._transitions.append(Transition("search.results", [extract], "search.results"))
+            thread.save()
+
+            restored = AriadneThread.load("portal", "mission")
+            step = restored.get_next_step("search.results")
+            assert len(step) == 1
+            assert isinstance(step[0], ExtractionAction)
+            assert step[0].schema_id == "job_listings"

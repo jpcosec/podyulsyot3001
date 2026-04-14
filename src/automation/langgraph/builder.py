@@ -18,6 +18,9 @@ from src.automation.contracts.state import AriadneState
 from src.automation.ariadne.labyrinth.labyrinth import Labyrinth
 from src.automation.ariadne.thread.thread import AriadneThread
 from src.automation.adapters.gemini import GeminiClient
+from src.automation.adapters.portal_extractor import PortalExtractor
+from src.automation.ariadne.extraction.portal_dictionary import PortalDictionary
+from src.automation.ariadne.extraction.schema_builder import SchemaBuilder
 from src.automation.langgraph.nodes.interpreter import InterpreterNode
 from src.automation.langgraph.nodes.observe import ObserveNode
 from src.automation.langgraph.nodes.theseus import TheseusNode
@@ -33,9 +36,12 @@ def build_graph(sensor: Sensor, motor: Motor, portal_name: str, mission_id: str)
         model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
     )
 
+    schema_builder = SchemaBuilder(portal_name, _llm_config())
+    extractor = PortalExtractor(PortalDictionary.load(portal_name, schema_builder))
+
     interpreter = InterpreterNode()
     observe     = ObserveNode(sensor)
-    theseus     = TheseusNode(motor, labyrinth, thread)
+    theseus     = TheseusNode(motor, labyrinth, thread, extractor)
     delphi      = DelphiNode(motor, labyrinth, llm)
     recorder    = RecorderNode(labyrinth, thread)
 
@@ -89,3 +95,11 @@ def _route_after_delphi(state: AriadneState) -> str:
 
 def _has_fatal(state: AriadneState) -> bool:
     return any("FatalError" in e for e in state.get("errors", []))
+
+
+def _llm_config():
+    from crawl4ai import LLMConfig
+    return LLMConfig(
+        provider=f"gemini/{os.getenv('GEMINI_MODEL', 'gemini-2.5-flash')}",
+        api_token=os.environ["GOOGLE_API_KEY"],
+    )

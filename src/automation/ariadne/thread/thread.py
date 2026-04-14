@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from src.automation.contracts.motor import MotorCommand, TraceEvent
-from src.automation.ariadne.thread.action import TransitionAction
+from src.automation.ariadne.thread.action import Action, ExtractionAction, TransitionAction
 
 DATA_ROOT = Path("data/portals")
 
@@ -20,7 +20,7 @@ DATA_ROOT = Path("data/portals")
 @dataclass
 class Transition:
     room_from: str
-    actions: list[TransitionAction]
+    actions: list[Action]
     room_to: str
 
 
@@ -34,11 +34,11 @@ class AriadneThread:
 
     # ── Fast path ────────────────────────────────────────────────────────────
 
-    def get_next_step(self, current_room_id: str) -> list[MotorCommand] | None:
-        """Return the Motor commands for the next transition, or None if unknown."""
+    def get_next_step(self, current_room_id: str) -> list[MotorCommand | ExtractionAction] | None:
+        """Return motor commands and extraction actions for the next step, or None."""
         for t in self._transitions:
             if t.room_from == current_room_id:
-                return [cmd for action in t.actions for cmd in action.commands]
+                return _flatten_step(t.actions)
         return None
 
     # ── Learning ─────────────────────────────────────────────────────────────
@@ -85,26 +85,41 @@ class AriadneThread:
 
 # ── Serialization helpers ─────────────────────────────────────────────────────
 
+def _flatten_step(actions: list[Action]) -> list[MotorCommand | ExtractionAction]:
+    result = []
+    for action in actions:
+        if isinstance(action, TransitionAction):
+            result.extend(action.commands)
+        elif isinstance(action, ExtractionAction):
+            result.append(action)
+    return result
+
+
 def _command_to_dict(c: MotorCommand) -> dict:
     return {"operation": c.operation, "selector": c.selector, "value": c.value, "wait_for": c.wait_for}
 
 
+def _action_to_dict(action: Action) -> dict:
+    if isinstance(action, ExtractionAction):
+        return {"type": "extraction", "schema_id": action.schema_id, "target_selector": action.target_selector}
+    return {"type": "transition", "commands": [_command_to_dict(c) for c in action.commands]}
+
+
+def _action_from_dict(data: dict) -> Action:
+    if data.get("type") == "extraction":
+        return ExtractionAction(schema_id=data["schema_id"], target_selector=data.get("target_selector", ""))
+    return TransitionAction(commands=tuple(
+        MotorCommand(operation=c["operation"], selector=c["selector"], value=c.get("value"), wait_for=c.get("wait_for"))
+        for c in data.get("commands", [])
+    ))
+
+
 def _transition_to_dict(t: Transition) -> dict:
-    return {
-        "room_from": t.room_from,
-        "room_to": t.room_to,
-        "actions": [{"commands": [_command_to_dict(c) for c in a.commands]} for a in t.actions],
-    }
+    return {"room_from": t.room_from, "room_to": t.room_to, "actions": [_action_to_dict(a) for a in t.actions]}
 
 
 def _transition_from_dict(data: dict) -> Transition:
-    actions = [
-        TransitionAction(commands=tuple(
-            MotorCommand(operation=c["operation"], selector=c["selector"], value=c.get("value"), wait_for=c.get("wait_for"))
-            for c in a["commands"]
-        ))
-        for a in data.get("actions", [])
-    ]
+    actions = [_action_from_dict(a) for a in data.get("actions", [])]
     return Transition(room_from=data["room_from"], actions=actions, room_to=data["room_to"])
 
 
