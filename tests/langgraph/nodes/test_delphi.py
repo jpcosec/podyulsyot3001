@@ -23,8 +23,7 @@ class TestDelphiNode:
         assert any("circuit breaker" in e for e in result["errors"])
 
     @pytest.mark.asyncio
-    async def test_below_max_returns_not_implemented_error(self):
+    async def test_below_max_returns_no_errors(self):
         node = DelphiNode()
         result = await node({"agent_failures": 0})
-        assert result["errors"]
-        assert "circuit breaker" not in result["errors"][0]
+        assert "errors" not in result or result.get("errors") == []

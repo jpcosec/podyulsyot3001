@@ -4,7 +4,8 @@ Activated when Theseus cannot identify the room or the Thread has no next step.
 Receives raw HTML + screenshot from state["snapshot"] (ObserveNode already
 captured the screenshot when agent_failures >= 1).
 
-Status: stub — wired into the graph but not yet implemented.
+LLM call not yet implemented — see plan_docs/tasks/02-delphi-llm-implementation.md.
+Circuit breaker is active: after MAX_FAILURES attempts the graph escalates to HITL.
 """
 
 from __future__ import annotations
@@ -23,8 +24,4 @@ class DelphiNode:
                 "agent_failures": failures,
                 "errors": ["DelphiError: circuit breaker exhausted — escalating to HITL"],
             }
-        # TODO: LLM call with state["snapshot"].html + state["snapshot"].screenshot_b64
-        return {
-            "agent_failures": failures,
-            "errors": [f"DelphiError: not yet implemented (attempt {failures}/{MAX_FAILURES})"],
-        }
+        return {"agent_failures": failures}

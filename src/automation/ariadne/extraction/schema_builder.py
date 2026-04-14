@@ -23,7 +23,7 @@ class SchemaBuilder:
 
     def build(self, schema_id: str, sample_html: str, query: str) -> dict:
         """Return cached schema or generate it via LLM (one call)."""
-        cached = self._load(schema_id)
+        cached = self.load_cached(schema_id)
         if cached:
             return cached
         schema = JsonCssExtractionStrategy.generate_schema(
@@ -34,7 +34,8 @@ class SchemaBuilder:
         self._save(schema_id, schema)
         return schema
 
-    def _load(self, schema_id: str) -> dict | None:
+    def load_cached(self, schema_id: str) -> dict | None:
+        """Return cached schema dict, or None if not yet generated."""
         path = self._schema_path(schema_id)
         if path.exists():
             return json.loads(path.read_text())

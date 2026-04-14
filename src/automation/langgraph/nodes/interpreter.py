@@ -23,6 +23,7 @@ class InterpreterNode:
             "current_room_id": None,
             "snapshot": None,
             "agent_failures": 0,
+            "is_mission_complete": False,
         }
 
 

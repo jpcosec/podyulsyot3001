@@ -59,20 +59,13 @@ def _route_after_observe(state: AriadneState) -> str:
 
 
 def _route_after_theseus(state: AriadneState) -> str:
-    if _has_fatal(state):
+    if _has_fatal(state) or state.get("is_mission_complete"):
         return END
-    room_id = state.get("current_room_id")
-    if not room_id:
-        return "delphi"  # room unknown
+    if not state.get("current_room_id"):
+        return "delphi"
     trace = state.get("trace", [])
-    last = trace[-1] if trace else None
-    if last and not last.success:
-        return "delphi"  # execution failed
-    if not trace:
-        return "delphi"  # room known but no step in thread
-    room = _labyrinth_from_state(state, room_id)
-    if room and room.state.is_terminal:
-        return END
+    if not trace or (trace and not trace[-1].success):
+        return "delphi"
     return "recorder"
 
 
@@ -89,10 +82,3 @@ def _route_after_delphi(state: AriadneState) -> str:
 
 def _has_fatal(state: AriadneState) -> bool:
     return any("FatalError" in e for e in state.get("errors", []))
-
-
-def _labyrinth_from_state(state: AriadneState, room_id: str):
-    # Labyrinth is injected into TheseusNode/RecorderNode, not in state.
-    # Routing uses only state fields — terminal check requires a workaround.
-    # For now: terminal is signalled via errors or a dedicated flag.
-    return None  # TODO: pass labyrinth ref if terminal-room routing is needed

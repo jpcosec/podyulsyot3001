@@ -19,9 +19,12 @@ def make_motor(success=True) -> AsyncMock:
     return motor
 
 
-def make_labyrinth(room_id=None) -> MagicMock:
+def make_labyrinth(room_id=None, is_terminal=False) -> MagicMock:
     lab = MagicMock()
     lab.identify_room.return_value = room_id
+    room = MagicMock()
+    room.state.is_terminal = is_terminal
+    lab.get_room.return_value = room if room_id else None
     return lab
 
 
@@ -108,3 +111,11 @@ class TestTheseusNode:
 
         assert len(result["trace"]) == 2
         assert all(e.success for e in result["trace"])
+
+    @pytest.mark.asyncio
+    async def test_terminal_room_sets_mission_complete(self):
+        node = TheseusNode(make_motor(), make_labyrinth("success.page", is_terminal=True), make_thread())
+        result = await node({"snapshot": make_snapshot()})
+        assert result["is_mission_complete"] is True
+        assert result["current_room_id"] == "success.page"
+        assert "trace" not in result

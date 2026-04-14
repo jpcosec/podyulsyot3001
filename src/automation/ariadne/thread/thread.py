@@ -47,19 +47,12 @@ class AriadneThread:
         """Record a successful transition. Called by Recorder."""
         if not trace_event.success or not trace_event.room_before:
             return
-        action = TransitionAction(
-            commands=(trace_event.command,),
-            expected_next_room=room_after,
-        )
+        action = TransitionAction(commands=(trace_event.command,), expected_next_room=room_after)
         existing = self._find_transition(trace_event.room_before, room_after)
         if existing:
             existing.actions.append(action)
         else:
-            self._transitions.append(Transition(
-                room_from=trace_event.room_before,
-                actions=[action],
-                room_to=room_after,
-            ))
+            self._transitions.append(Transition(trace_event.room_before, [action], room_after))
 
     def _find_transition(self, room_from: str, room_to: str) -> Transition | None:
         return next(
@@ -92,14 +85,15 @@ class AriadneThread:
 
 # ── Serialization helpers ─────────────────────────────────────────────────────
 
+def _command_to_dict(c: MotorCommand) -> dict:
+    return {"operation": c.operation, "selector": c.selector, "value": c.value, "wait_for": c.wait_for}
+
+
 def _transition_to_dict(t: Transition) -> dict:
     return {
         "room_from": t.room_from,
         "room_to": t.room_to,
-        "actions": [
-            {"commands": [{"operation": c.operation, "selector": c.selector, "value": c.value, "wait_for": c.wait_for} for c in a.commands]}
-            for a in t.actions
-        ],
+        "actions": [{"commands": [_command_to_dict(c) for c in a.commands]} for a in t.actions],
     }
 
 

@@ -63,18 +63,13 @@ class Labyrinth:
     def save(self) -> None:
         path = _portal_path(self.portal_name)
         path.parent.mkdir(parents=True, exist_ok=True)
-        data = {
+        path.write_text(json.dumps(self._to_dict(), indent=2))
+
+    def _to_dict(self) -> dict:
+        return {
             "portal_name": self.portal_name,
-            "rooms": {
-                room_id: {
-                    "url_node": room.url_node.to_dict(),
-                    "state": room.state.to_dict(),
-                    "skeleton": room.skeleton.to_dict(),
-                }
-                for room_id, room in self._rooms.items()
-            },
+            "rooms": {rid: _room_to_dict(r) for rid, r in self._rooms.items()},
         }
-        path.write_text(json.dumps(data, indent=2))
 
     @classmethod
     def load(cls, portal_name: str) -> "Labyrinth":
@@ -85,19 +80,29 @@ class Labyrinth:
             return labyrinth
         data = json.loads(path.read_text())
         for room_id, room_data in data.get("rooms", {}).items():
-            url_node = URLNode.from_dict(room_data["url_node"])
-            skeleton = Skeleton.from_dict(room_data["skeleton"])
-            # Predicates are not serializable — rooms loaded from disk use a
-            # skeleton-equality predicate until re-registered with real predicates.
-            # Fallback predicate: match by URL node only (no visual distinction).
-            # Re-register real predicates after load if finer detection is needed.
-            state = RoomState.from_dict(
-                room_data["state"],
-                predicate=lambda snapshot, node=url_node: node.match(snapshot.url),
-            )
-            labyrinth._rooms[room_id] = Room(url_node=url_node, state=state, skeleton=skeleton)
+            labyrinth._rooms[room_id] = _room_from_dict(room_data)
         return labyrinth
 
 
 def _portal_path(portal_name: str) -> Path:
     return DATA_ROOT / portal_name / "labyrinth.json"
+
+
+def _room_to_dict(room: Room) -> dict:
+    return {
+        "url_node": room.url_node.to_dict(),
+        "state": room.state.to_dict(),
+        "skeleton": room.skeleton.to_dict(),
+    }
+
+
+def _room_from_dict(data: dict) -> Room:
+    url_node = URLNode.from_dict(data["url_node"])
+    skeleton = Skeleton.from_dict(data["skeleton"])
+    # Predicates are not serializable. Fallback: match by URL only.
+    # Re-register real predicates after load if finer detection is needed.
+    state = RoomState.from_dict(
+        data["state"],
+        predicate=lambda snapshot, node=url_node: node.match(snapshot.url),
+    )
+    return Room(url_node=url_node, state=state, skeleton=skeleton)

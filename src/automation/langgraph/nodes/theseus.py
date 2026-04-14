@@ -31,7 +31,10 @@ class TheseusNode:
 
         room_id = self._labyrinth.identify_room(snapshot)
         if not room_id:
-            return {"current_room_id": None}  # triggers cold path routing
+            return {"current_room_id": None}
+
+        if self._is_terminal(room_id):
+            return {"current_room_id": room_id, "is_mission_complete": True}
 
         commands = self._thread.get_next_step(room_id)
         if not commands:
@@ -44,6 +47,10 @@ class TheseusNode:
             "trace": trace_events,
             "errors": errors,
         }
+
+    def _is_terminal(self, room_id: str) -> bool:
+        room = self._labyrinth.get_room(room_id)
+        return bool(room and room.state.is_terminal)
 
     async def _execute_commands(self, commands, room_before: str) -> list:
         events = []

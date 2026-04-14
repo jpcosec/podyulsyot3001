@@ -40,5 +40,8 @@ class AriadneState(TypedDict):
     # --- Circuit breaker ---
     agent_failures: int
 
+    # --- Terminal flag — set by Theseus when current room is_terminal ---
+    is_mission_complete: bool
+
     # --- Error log (append-only) ---
     errors: Annotated[list[str], _append]

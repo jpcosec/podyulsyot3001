@@ -31,7 +31,7 @@ class PortalDictionary:
         """Return ready-to-use extraction strategy, or None if schema not built yet."""
         if schema_id in self._strategies:
             return self._strategies[schema_id]
-        schema = self._builder._load(schema_id)
+        schema = self._builder.load_cached(schema_id)
         if schema:
             strategy = JsonCssExtractionStrategy(schema)
             self._strategies[schema_id] = strategy

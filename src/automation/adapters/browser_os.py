@@ -41,7 +41,7 @@ class BrowserOSAdapter:
             async with httpx.AsyncClient(timeout=2) as client:
                 resp = await client.get(f"{MCP_URL}/health")
                 return resp.status_code == 200
-        except Exception:
+        except (httpx.ConnectError, httpx.TimeoutException):
             return False
 
     async def __aenter__(self) -> "BrowserOSAdapter":
@@ -60,13 +60,19 @@ class BrowserOSAdapter:
     async def _ensure_browseros_running(self) -> None:
         if await self.is_healthy():
             return
+        self._process = self._launch_process()
+        await self._wait_for_healthy()
+
+    def _launch_process(self) -> subprocess.Popen:
         if not self._appimage_path:
             raise RuntimeError(f"BrowserOS not responding at {MCP_URL} and no appimage_path provided.")
-        self._process = subprocess.Popen(
+        return subprocess.Popen(
             [self._appimage_path, "--no-sandbox"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
+
+    async def _wait_for_healthy(self) -> None:
         for _ in range(STARTUP_TIMEOUT_S):
             await asyncio.sleep(1)
             if await self.is_healthy():
@@ -97,8 +103,6 @@ class BrowserOSAdapter:
     async def act(self, command: MotorCommand) -> ExecutionResult:
         if command.operation == "navigate":
             return await self._navigate(command)
-        if command.operation == "extract":
-            return await self._extract(command)
         return await self._execute_js(command)
 
     async def _navigate(self, command: MotorCommand) -> ExecutionResult:
@@ -122,11 +126,6 @@ class BrowserOSAdapter:
         )
         result = await self._crawler.arun(self._current_url, config=config)
         return self._build_result(command, result.success, result.error_message)
-
-    async def _extract(self, command: MotorCommand) -> ExecutionResult:
-        # command.value carries the JSON schema id — caller must resolve it to a
-        # JsonCssExtractionStrategy before calling act(). Placeholder for now.
-        raise NotImplementedError("ExtractionAction must provide a pre-built strategy — see PortalDictionary.")
 
     @staticmethod
     def _build_result(command: MotorCommand, success: bool, error: Optional[str]) -> ExecutionResult:
