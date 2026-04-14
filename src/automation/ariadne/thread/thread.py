@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from src.automation.contracts.motor import MotorCommand, TraceEvent
-from src.automation.ariadne.thread.action import Action, ExtractionAction, TransitionAction
+from src.automation.ariadne.thread.action import Action, ExtractionAction, PassiveAction, TransitionAction
 
 DATA_ROOT = Path("data/portals")
 
@@ -30,6 +30,7 @@ class AriadneThread:
     def __init__(self, portal_name: str, mission_id: str) -> None:
         self.portal_name = portal_name
         self.mission_id = mission_id
+        self.draft: bool = False  # True until a live run confirms all transitions
         self._transitions: list[Transition] = []
 
     # ── Fast path ────────────────────────────────────────────────────────────
@@ -68,6 +69,7 @@ class AriadneThread:
         data = {
             "portal_name": self.portal_name,
             "mission_id": self.mission_id,
+            "draft": self.draft,
             "transitions": [_transition_to_dict(t) for t in self._transitions],
         }
         path.write_text(json.dumps(data, indent=2))
@@ -79,6 +81,7 @@ class AriadneThread:
         if not path.exists():
             return thread
         data = json.loads(path.read_text())
+        thread.draft = data.get("draft", False)
         thread._transitions = [_transition_from_dict(t) for t in data.get("transitions", [])]
         return thread
 
@@ -92,7 +95,15 @@ def _flatten_step(actions: list[Action]) -> list[MotorCommand | ExtractionAction
             result.extend(action.commands)
         elif isinstance(action, ExtractionAction):
             result.append(action)
+        elif isinstance(action, PassiveAction):
+            result.append(_passive_to_command(action))
     return result
+
+
+def _passive_to_command(action: PassiveAction) -> MotorCommand:
+    if action.operation == "scroll":
+        return MotorCommand("scroll", action.selector or "")
+    return MotorCommand("wait", action.selector or "")
 
 
 def _command_to_dict(c: MotorCommand) -> dict:
@@ -102,12 +113,16 @@ def _command_to_dict(c: MotorCommand) -> dict:
 def _action_to_dict(action: Action) -> dict:
     if isinstance(action, ExtractionAction):
         return {"type": "extraction", "schema_id": action.schema_id, "target_selector": action.target_selector}
+    if isinstance(action, PassiveAction):
+        return {"type": "passive", "operation": action.operation, "selector": action.selector}
     return {"type": "transition", "commands": [_command_to_dict(c) for c in action.commands]}
 
 
 def _action_from_dict(data: dict) -> Action:
     if data.get("type") == "extraction":
         return ExtractionAction(schema_id=data["schema_id"], target_selector=data.get("target_selector", ""))
+    if data.get("type") == "passive":
+        return PassiveAction(operation=data["operation"], selector=data.get("selector", ""))
     return TransitionAction(commands=tuple(
         MotorCommand(operation=c["operation"], selector=c["selector"], value=c.get("value"), wait_for=c.get("wait_for"))
         for c in data.get("commands", [])
