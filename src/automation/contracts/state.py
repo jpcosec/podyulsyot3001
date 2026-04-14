@@ -25,6 +25,9 @@ class AriadneState(TypedDict):
     mission_id: str
     portal_name: str
 
+    # --- Written by Observe (derived from snapshot.url netloc) ---
+    domain: str
+
     # --- Written by Observe ---
     snapshot: SnapshotResult | None
 

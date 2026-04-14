@@ -20,64 +20,66 @@ def make_motor(success=True) -> AsyncMock:
     return motor
 
 
-def make_labyrinth(room_id=None, is_terminal=False) -> MagicMock:
+def make_registry(room_id=None, is_terminal=False, commands=None) -> MagicMock:
     lab = MagicMock()
     lab.identify_room.return_value = room_id
     room = MagicMock()
     room.state.is_terminal = is_terminal
     lab.get_room.return_value = room if room_id else None
-    return lab
 
-
-def make_thread(commands=None) -> MagicMock:
     thread = MagicMock()
     thread.get_next_step.return_value = commands
-    return thread
+
+    registry = MagicMock()
+    registry.get.return_value = (lab, thread)
+    return registry
 
 
 def make_commands():
     return [MotorCommand(operation="click", selector="#btn")]
 
 
+STATE = {"snapshot": make_snapshot(), "domain": "example.com"}
+
+
 class TestTheseusNode:
     @pytest.mark.asyncio
     async def test_no_snapshot_returns_error(self):
-        node = TheseusNode(make_motor(), make_labyrinth(), make_thread())
-        result = await node({"snapshot": None})
+        node = TheseusNode(make_motor(), make_registry())
+        result = await node({"snapshot": None, "domain": "example.com"})
         assert result["errors"]
 
     @pytest.mark.asyncio
     async def test_unknown_room_returns_none_room_id(self):
-        node = TheseusNode(make_motor(), make_labyrinth(room_id=None), make_thread())
-        result = await node({"snapshot": make_snapshot()})
+        node = TheseusNode(make_motor(), make_registry(room_id=None))
+        result = await node(STATE)
         assert result["current_room_id"] is None
         assert "trace" not in result or result.get("trace") == []
 
     @pytest.mark.asyncio
     async def test_known_room_no_step_returns_room_id_no_trace(self):
-        node = TheseusNode(make_motor(), make_labyrinth("home.anon"), make_thread(commands=None))
-        result = await node({"snapshot": make_snapshot()})
+        node = TheseusNode(make_motor(), make_registry("home.anon", commands=None))
+        result = await node(STATE)
         assert result["current_room_id"] == "home.anon"
         assert not result.get("trace")
 
     @pytest.mark.asyncio
     async def test_known_room_with_step_executes_and_traces(self):
-        node = TheseusNode(make_motor(success=True), make_labyrinth("home.anon"), make_thread(make_commands()))
-        result = await node({"snapshot": make_snapshot()})
+        node = TheseusNode(make_motor(success=True), make_registry("home.anon", commands=make_commands()))
+        result = await node(STATE)
         assert result["current_room_id"] == "home.anon"
         assert len(result["trace"]) == 1
         assert result["trace"][0].success is True
 
     @pytest.mark.asyncio
     async def test_trace_event_has_room_before(self):
-        node = TheseusNode(make_motor(success=True), make_labyrinth("home.anon"), make_thread(make_commands()))
-        result = await node({"snapshot": make_snapshot()})
+        node = TheseusNode(make_motor(success=True), make_registry("home.anon", commands=make_commands()))
+        result = await node(STATE)
         assert result["trace"][0].room_before == "home.anon"
 
     @pytest.mark.asyncio
     async def test_failed_command_stops_sequence(self):
         motor = AsyncMock()
-        cmd = MotorCommand(operation="click", selector="#btn")
 
         def act_side_effect(command):
             trace = TraceEvent(command=command, success=False, error="not found")
@@ -88,8 +90,8 @@ class TestTheseusNode:
             MotorCommand(operation="click", selector="#btn1"),
             MotorCommand(operation="click", selector="#btn2"),
         ]
-        node = TheseusNode(motor, make_labyrinth("home.anon"), make_thread(commands))
-        result = await node({"snapshot": make_snapshot()})
+        node = TheseusNode(motor, make_registry("home.anon", commands=commands))
+        result = await node(STATE)
 
         assert len(result["trace"]) == 1  # stopped after first failure
         assert result["errors"]
@@ -107,16 +109,16 @@ class TestTheseusNode:
             MotorCommand(operation="fill",  selector="#email"),
             MotorCommand(operation="click", selector="#submit"),
         ]
-        node = TheseusNode(motor, make_labyrinth("login.form"), make_thread(commands))
-        result = await node({"snapshot": make_snapshot()})
+        node = TheseusNode(motor, make_registry("login.form", commands=commands))
+        result = await node(STATE)
 
         assert len(result["trace"]) == 2
         assert all(e.success for e in result["trace"])
 
     @pytest.mark.asyncio
     async def test_terminal_room_sets_mission_complete(self):
-        node = TheseusNode(make_motor(), make_labyrinth("success.page", is_terminal=True), make_thread())
-        result = await node({"snapshot": make_snapshot()})
+        node = TheseusNode(make_motor(), make_registry("success.page", is_terminal=True))
+        result = await node(STATE)
         assert result["is_mission_complete"] is True
         assert result["current_room_id"] == "success.page"
         assert "trace" not in result
@@ -128,8 +130,8 @@ class TestExtractionDispatch:
         extractor = AsyncMock()
         extractor.extract.return_value = [{"title": "Job A"}]
         step = [ExtractionAction(schema_id="jobs")]
-        node = TheseusNode(make_motor(), make_labyrinth("search.results"), make_thread(step), extractor)
-        result = await node({"snapshot": make_snapshot()})
+        node = TheseusNode(make_motor(), make_registry("search.results", commands=step), extractor)
+        result = await node(STATE)
         extractor.extract.assert_called_once()
         assert result["extracted_data"] == [{"title": "Job A"}]
 
@@ -138,15 +140,15 @@ class TestExtractionDispatch:
         extractor = AsyncMock()
         extractor.extract.return_value = []
         step = [ExtractionAction(schema_id="jobs")]
-        node = TheseusNode(make_motor(), make_labyrinth("search.results"), make_thread(step), extractor)
-        result = await node({"snapshot": make_snapshot()})
+        node = TheseusNode(make_motor(), make_registry("search.results", commands=step), extractor)
+        result = await node(STATE)
         assert "extracted_data" not in result
 
     @pytest.mark.asyncio
     async def test_extraction_without_extractor_returns_empty(self):
         step = [ExtractionAction(schema_id="jobs")]
-        node = TheseusNode(make_motor(), make_labyrinth("search.results"), make_thread(step))
-        result = await node({"snapshot": make_snapshot()})
+        node = TheseusNode(make_motor(), make_registry("search.results", commands=step))
+        result = await node(STATE)
         assert "extracted_data" not in result
 
     @pytest.mark.asyncio
@@ -154,7 +156,7 @@ class TestExtractionDispatch:
         extractor = AsyncMock()
         extractor.extract.return_value = [{"count": 42}]
         step = [ExtractionAction(schema_id="jobs"), MotorCommand(operation="click", selector="#next")]
-        node = TheseusNode(make_motor(success=True), make_labyrinth("search.results"), make_thread(step), extractor)
-        result = await node({"snapshot": make_snapshot()})
+        node = TheseusNode(make_motor(success=True), make_registry("search.results", commands=step), extractor)
+        result = await node(STATE)
         assert result["extracted_data"] == [{"count": 42}]
         assert len(result["trace"]) == 1

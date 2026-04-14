@@ -2,9 +2,13 @@
 
 Never called twice in the same turn. Theseus and Delphi read from
 state["snapshot"], they do not call perceive() themselves.
+Emits `domain` (netloc of current URL) so downstream nodes can load
+the correct Labyrinth/Thread from PortalRegistry.
 """
 
 from __future__ import annotations
+
+from urllib.parse import urlparse
 
 from src.automation.contracts.sensor import Sensor
 from src.automation.contracts.state import AriadneState
@@ -23,4 +27,10 @@ class ObserveNode:
 
         with_screenshot = state.get("agent_failures", 0) >= _NEEDS_SCREENSHOT_AFTER_N_FAILURES
         snapshot = await self._sensor.perceive(with_screenshot=with_screenshot)
-        return {"snapshot": snapshot}
+        domain = _domain_from_url(snapshot.url)
+        return {"snapshot": snapshot, "domain": domain}
+
+
+def _domain_from_url(url: str) -> str:
+    netloc = urlparse(url).netloc
+    return netloc.removeprefix("www.") or "unknown"

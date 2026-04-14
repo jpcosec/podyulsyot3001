@@ -26,6 +26,27 @@ class TestObserveNode:
         assert result["snapshot"].url == "https://stepstone.de"
 
     @pytest.mark.asyncio
+    async def test_domain_derived_from_url(self):
+        snap = make_snapshot(url="https://www.emol.com/noticias/")
+        node = ObserveNode(make_sensor(snapshot=snap))
+        result = await node({"agent_failures": 0})
+        assert result["domain"] == "emol.com"
+
+    @pytest.mark.asyncio
+    async def test_domain_strips_www(self):
+        snap = make_snapshot(url="https://www.stepstone.de/jobs")
+        node = ObserveNode(make_sensor(snapshot=snap))
+        result = await node({"agent_failures": 0})
+        assert result["domain"] == "stepstone.de"
+
+    @pytest.mark.asyncio
+    async def test_domain_unknown_for_non_http(self):
+        snap = make_snapshot(url="about:blank")
+        node = ObserveNode(make_sensor(snapshot=snap))
+        result = await node({"agent_failures": 0})
+        assert result["domain"] == "unknown"
+
+    @pytest.mark.asyncio
     async def test_unhealthy_sensor_returns_fatal_error(self):
         node = ObserveNode(make_sensor(healthy=False))
         result = await node({"agent_failures": 0})
