@@ -1,6 +1,6 @@
 import os
 
-issues_dir = "../issues/"
+tasks_dir = "../tasks/"
 issues = [
     "oop-01-scaffold.md",
     "oop-02-adapters.md",
@@ -29,7 +29,7 @@ PILLS = {
 }
 
 def patch_issue(filename):
-    path = os.path.join(issues_dir, filename)
+    path = os.path.join(tasks_dir, filename)
     with open(path, "r") as f:
         content = f.read()
 

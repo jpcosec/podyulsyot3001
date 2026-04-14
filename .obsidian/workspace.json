@@ -1,0 +1,223 @@
+{
+  "main": {
+    "id": "37f83358cd4dfb1e",
+    "type": "split",
+    "children": [
+      {
+        "id": "8856d3cb18505644",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "f7227712ac7f9171",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "docs/reference/external_libs/crawl4ai/llm_extraction.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "llm_extraction"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "616848643708aed7",
+    "type": "split",
+    "children": [
+      {
+        "id": "6c1c0dc8d8686eb9",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "07adb54aafd7c57e",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Explorador de archivos"
+            }
+          },
+          {
+            "id": "8f9cdacd343bd16a",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Buscar"
+            }
+          },
+          {
+            "id": "3bf9e8a7b83b3f42",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Marcadores"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "7a99a152f0a5e47d",
+    "type": "split",
+    "children": [
+      {
+        "id": "f9b40336231c3eb2",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "0abc46b66b0963ba",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "docs/reference/external_libs/crawl4ai/llm_extraction.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Enlaces entrantes de llm_extraction"
+            }
+          },
+          {
+            "id": "7c56db165bd4680b",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "docs/reference/external_libs/crawl4ai/llm_extraction.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Enlaces salientes de llm_extraction"
+            }
+          },
+          {
+            "id": "28c2291dd4fe0d6d",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Etiquetas"
+            }
+          },
+          {
+            "id": "a87119f4450349eb",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "Todas las propiedades"
+            }
+          },
+          {
+            "id": "05a14f5ff3d19903",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "docs/reference/external_libs/crawl4ai/llm_extraction.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Esquema de llm_extraction"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Abrir selector rápido": false,
+      "graph:Abrir vista gráfica": false,
+      "canvas:Crear nuevo lienzo": false,
+      "daily-notes:Abrir la nota de hoy": false,
+      "templates:Insertar plantilla": false,
+      "command-palette:Abrir paleta de comandos": false,
+      "bases:Crear nueva base": false
+    }
+  },
+  "active": "07adb54aafd7c57e",
+  "lastOpenFiles": [
+    "tests/ariadne/__init__.py",
+    "tests/__init__.py",
+    "tests/graph/nodes/__init__.py",
+    "tests/graph/nodes",
+    "tests/graph/__init__.py",
+    "tests/graph",
+    "tests/ariadne/thread/__init__.py",
+    "tests/ariadne/labyrinth/__init__.py",
+    "tests/ariadne/thread",
+    "tests/ariadne/labyrinth",
+    "tests/ariadne",
+    "docs/reference/external_libs/crawl4ai/FULL DOCS/instalation.md",
+    "docs/reference/external_libs/crawl4ai/FULL DOCS/crawl4ai_custom_context (3).md",
+    "docs/reference/external_libs/crawl4ai/c4a_script_reference.md",
+    "docs/ariadne/recording_and_promotion.md",
+    "plan_docs/context-pill-audit.md",
+    "plan_docs/tasks/Index.md",
+    "AGENTS.md",
+    "plan_docs/design/ariadne-oop-architecture.md",
+    "plan_docs/design/ariadne-ontology-draft.md",
+    "old_code/automation/portals/README.md",
+    "old_code/automation/motors/README.md",
+    "old_code/automation/ariadne/README.md",
+    "old_code/automation/adapters/README.md",
+    "old_code/automation/README.md",
+    "plan_docs/supervisor-instructions.md",
+    "plan_docs/executor-instructions.md",
+    "plan_docs/context_compiler-instructions.md",
+    "src/automation/portals/README.md",
+    "src/automation/motors/README.md",
+    "src/automation/ariadne/README.md",
+    "src/automation/adapters/README.md",
+    "src/automation/README.md",
+    "QA_BACKLOG.md"
+  ]
+}

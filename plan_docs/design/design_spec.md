@@ -59,27 +59,27 @@ flowchart TD
     classDef node_slow fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#000;
     classDef system fill:#eceff1,stroke:#616161,stroke-width:2px,color:#000;
 
-    subgraph Periphery ["🔌 La Periferia (Adaptadores I/O)"]
+    subgraph Periphery ["🔌 La Periferia - Adaptadores IO"]
         direction TB
-        Sensor[["«Protocol»\nSensor\n.perceive()"]]:::protocol
-        Motor[["«Protocol»\nMotor\n.act()"]]:::protocol
+        Sensor[["«Protocol» Sensor"]]:::protocol
+        Motor[["«Protocol» Motor"]]:::protocol
         
-        BrowserAdapter["🌐 BrowserAdapter\n(Implementa Sensor y Motor)"]:::concrete
+        BrowserAdapter["🌐 BrowserAdapter - Implementa Sensor y Motor"]:::concrete
         BrowserAdapter -.->|Bind| Sensor
         BrowserAdapter -.->|Bind| Motor
     end
 
-    subgraph Cognition ["🧠 Dimensión Cognitiva (Memoria Activa)"]
+    subgraph Cognition ["🧠 Dimensión Cognitiva - Memoria Activa"]
         direction TB
-        Labyrinth["🏛️ Labyrinth\n.identify_room(snapshot)\n.expand(room_data)"]:::memory
-        Thread["🧵 AriadneThread\n.get_next_step(room_id)\n.add_step(edge)"]:::memory
+        Labyrinth["🏛️ Labyrinth - Identifica y Expande"]:::memory
+        Thread["🧵 AriadneThread - Gestión de pasos"]:::memory
     end
 
-    subgraph LangGraph ["⚡ Nodos del Grafo (Inyección de Dependencias)"]
+    subgraph LangGraph ["⚡ Nodos del Grafo - Inyección de Dependencias"]
         direction LR
-        Theseus{"⚔️ Theseus\n(Determinismo)"}:::node_fast
-        Delphi["🔮 Delphi\n(LLM/HITL Rescue)"]:::node_slow
-        Recorder["📜 Recorder\n(Asimilación)"]:::system
+        Theseus{"⚔️ Theseus - Determinismo"}:::node_fast
+        Delphi["🔮 Delphi - LLM/HITL Rescue"]:::node_slow
+        Recorder["📜 Recorder - Asimilación"]:::system
     end
 
     %% Interacciones
@@ -93,7 +93,7 @@ flowchart TD
     Delphi -->|2. act(command)| Motor
 
     Motor -.->|Traza interna| Recorder
-    Chrome[("Chrome DevTools\n(Exportación Pasiva)")]:::system -.->|Traza humana| Recorder
+    Chrome[("Chrome DevTools - Exportación Pasiva")]:::system -.->|Traza humana| Recorder
     
     Recorder -->|1. expand()| Labyrinth
     Recorder -->|2. add_step()| Thread

@@ -5,11 +5,11 @@ As the supervisor/orchestrator, your role is to validate work delivered by execu
 ## Role Boundary
 
 The executor fixes the issue and creates the closing commit.
-The executor then reports that commit in `plan_docs/issues/Index.md`.
+The executor then reports that commit in `plan_docs/tasks/Index.md`.
 The supervisor reviews that commit and decides whether the issue remains closed.
 
 Supervisor-only responsibilities:
-- reviewing the exact commit recorded in `plan_docs/issues/Index.md`
+- reviewing the exact commit recorded in `plan_docs/tasks/Index.md`
 - accepting or rejecting the close attempt
 - reverting failed issue commits individually
 - enriching the issue file with review findings when a fix is rejected
@@ -39,7 +39,7 @@ Verify that the executor performed the "Execution Ritual" from `STANDARDS.md`:
 - [ ] Are new tests added and passing?
 - [ ] Is `changelog.md` updated with high-signal descriptions?
 - [ ] Did the executor create exactly one resolving commit for the issue?
-- [ ] Does `plan_docs/issues/Index.md` mark that issue as `{closed with commit id <sha>}`?
+- [ ] Does `plan_docs/tasks/Index.md` mark that issue as `{closed with commit id <sha>}`?
 - [ ] Is the Index bookkeeping present even if it is not committed yet?
 - [ ] Does the commit message identify the issue being closed?
 - [ ] Was the issue file preserved for supervisor review instead of being deleted early?
@@ -87,7 +87,7 @@ A Phase is only complete when:
 ## Phase-Closing Ritual
 When a phase is ready to close, the supervisor must execute this ritual in order:
 1. Freeze the phase boundary: confirm no new issue is being added to the phase while sign-off is running.
-2. Review every issue entry in `plan_docs/issues/Index.md` for that phase.
+2. Review every issue entry in `plan_docs/tasks/Index.md` for that phase.
 3. Inspect every `{closed with commit id <sha>}` commit and accept or reject it explicitly.
 4. Revert every rejected closing commit individually and update the corresponding issue file with review findings.
 5. Confirm every accepted issue still has its issue file and its `{closed with commit id <sha>}` entry.

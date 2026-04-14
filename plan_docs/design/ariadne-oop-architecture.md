@@ -13,24 +13,24 @@ flowchart TD
     classDef actor_slow fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#000;
     classDef system fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000;
 
-    %% 1. EL MUNDO FISICO (I/O)
-    subgraph Periphery ["🌍 La Periferia (I/O Web)"]
-        Browser(("🌐 Navegador\n(El Mundo Real)")):::physical
-        Sensor["👁️ Sensor\n(Lee el esqueleto HTML/Visual)"]:::physical
-        Motor["✋ Motor\n(Ejecuta clics/teclas)"]:::physical
+    %% 1. EL MUNDO FISICO - IO
+    subgraph Periphery ["🌍 La Periferia - IO Web"]
+        Browser(("🌐 Navegador - El Mundo Real")):::physical
+        Sensor["👁️ Sensor - Lee el esqueleto HTML/Visual"]:::physical
+        Motor["✋ Motor - Ejecuta clics/teclas"]:::physical
     end
 
-    %% 2. LA DIMENSION COGNITIVA (Memoria Espacial y Episodica)
-    subgraph Cognition ["🧠 Dimensión Cognitiva (Memoria)"]
-        Laberinto[(("🏛️ El Laberinto\n(Grafo Topológico: URLs ➔ Estados ➔ Elementos)"))]:::memory
-        Hilo[(("🧵 Hilo de Ariadna\n(Rutas de éxito por Misión)"))]:::memory
+    %% 2. LA DIMENSION COGNITIVA - Memoria
+    subgraph Cognition ["🧠 Dimensión Cognitiva - Memoria"]
+        Laberinto[("🏛️ El Laberinto - Grafo Topológico")]:::memory
+        Hilo[("🧵 Hilo de Ariadna - Rutas de éxito")]:::memory
     end
 
-    %% 3. LOS ACTORES (LangGraph)
-    subgraph Execution ["⚡ El Bucle de Acción (LangGraph)"]
-        Teseo{"⚔️ Teseo\n(Ejecutor Determinista / Lowest Cost)"}:::actor_fast
-        Delfos["🔮 Oráculo de Delfos\n(LLM o Humano / Exploración)"]:::actor_slow
-        Recorder["📜 Grabador\n(Observa y Asimila)"]:::system
+    %% 3. LOS ACTORES - LangGraph
+    subgraph Execution ["⚡ El Bucle de Acción - LangGraph"]
+        Teseo{"⚔️ Teseo - Ejecutor Determinista"}:::actor_fast
+        Delfos["🔮 Oráculo de Delfos - LLM o Humano"]:::actor_slow
+        Recorder["📜 Grabador - Observa y Asimila"]:::system
     end
 
     %% La Fisica Basica
@@ -160,41 +160,41 @@ flowchart TD
     classDef node_slow fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#000;
     classDef system fill:#eceff1,stroke:#616161,stroke-width:2px,color:#000;
 
-    subgraph Periphery ["🔌 La Periferia (Adaptadores I/O)"]
+    subgraph Periphery ["🔌 La Periferia - Adaptadores IO"]
         direction TB
-        Sensor[["«Protocol»\nSensor\n.perceive()"]]:::protocol
-        Motor[["«Protocol»\nMotor\n.act()"]]:::protocol
+        Sensor[["«Protocol» Sensor"]]:::protocol
+        Motor[["«Protocol» Motor"]]:::protocol
 
-        BrowserAdapter["🌐 BrowserAdapter\n(Implementa Sensor y Motor)"]:::concrete
+        BrowserAdapter["🌐 BrowserAdapter - Implementa Sensor y Motor"]:::concrete
         BrowserAdapter -.->|Bind| Sensor
         BrowserAdapter -.->|Bind| Motor
     end
 
-    subgraph Cognition ["🧠 Dimensión Cognitiva (Memoria)"]
+    subgraph Cognition ["🧠 Dimensión Cognitiva - Memoria"]
         direction TB
-        Labyrinth["🏛️ Labyrinth\n.identify_room(snapshot)\n.expand(room_data)"]:::memory
-        Thread["🧵 AriadneThread\n.get_next_step(room_id)\n.add_step(edge)"]:::memory
+        Labyrinth["🏛️ Labyrinth - Identifica y Expande"]:::memory
+        Thread["🧵 AriadneThread - Gestión de pasos"]:::memory
     end
 
-    subgraph LangGraph ["⚡ Nodos del Grafo (Inyección de Dependencias)"]
+    subgraph LangGraph ["⚡ Nodos del Grafo - Inyección de Dependencias"]
         direction LR
-        Theseus{"⚔️ Theseus\n__call__(state)"}:::node_fast
-        Delphi["🔮 Delphi\n__call__(state)"]:::node_slow
-        Recorder["📜 Recorder\n__call__(state)"]:::system
+        Theseus{"⚔️ Theseus - Determinismo"}:::node_fast
+        Delphi{"🔮 Delphi - Rescue Agent"}:::node_slow
+        Recorder{"📜 Recorder - Assimilator"}:::system
     end
 
-    Theseus -->|1. perceive()| Sensor
-    Theseus <-->|2. identify_room()| Labyrinth
-    Theseus <-->|3. get_next_step()| Thread
-    Theseus -->|4. act(command)| Motor
+    Theseus -->|1. perceive| Sensor
+    Theseus <-->|2. identify_room| Labyrinth
+    Theseus <-->|3. get_next_step| Thread
+    Theseus -->|4. act-command| Motor
 
     Theseus -->|Falla/Se pierde| Delphi
-    Delphi -->|1. perceive()| Sensor
-    Delphi -->|2. act(command)| Motor
+    Delphi -->|1. perceive| Sensor
+    Delphi -->|2. act-command| Motor
 
     Motor -.->|Traza de Eventos| Recorder
-    Recorder -->|1. expand()| Labyrinth
-    Recorder -->|2. add_step()| Thread
+    Recorder -->|1. expand| Labyrinth
+    Recorder -->|2. add_step| Thread
 ```
 
 ## Notes

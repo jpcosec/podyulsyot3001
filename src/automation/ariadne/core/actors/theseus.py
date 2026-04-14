@@ -1,20 +1,20 @@
-"""Theseus actor - Pure LangGraph implementation from scratch."""
+"""Theseus - The Deterministic Fast Path Actor."""
 
 from __future__ import annotations
 
-import asyncio
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, Optional, Union, List
+from langgraph.graph import StateGraph, END
 
-from langgraph.graph import END, StateGraph
-from src.automation.ariadne.core.cognition import AriadneThread, Labyrinth
-from src.automation.ariadne.core.periphery import BrowserAdapter, Motor, Sensor
-from src.automation.ariadne.models import AriadneState
+from src.automation.ariadne.core.periphery import Sensor, Motor
+from src.automation.ariadne.core.cognition import Labyrinth, AriadneThread
+from src.automation.ariadne.models import AriadneState, AriadneEdge
+from src.automation.ariadne.contracts.base import SnapshotResult
 
 
 class Theseus:
     """
-    Deterministic coordinator for Ariadne.
-    Owns the LangGraph and coordinates Sensor/Motor/Labyrinth/Thread.
+    The low-cost deterministic coordinator.
+    Implements the core LangGraph loop: Observe -> Think -> Act.
     """
 
     def __init__(
@@ -23,60 +23,64 @@ class Theseus:
         motor: Motor,
         labyrinth: Labyrinth,
         thread: AriadneThread,
-    ) -> None:
+    ):
         self.sensor = sensor
         self.motor = motor
         self.labyrinth = labyrinth
         self.thread = thread
 
     async def observe(self, state: AriadneState) -> Dict[str, Any]:
-        """Capture the current JIT state and identify the room."""
-        print("--- [NODE] Observe ---")
+        """Perceive the world and identify the current room."""
+        print("--- [ACTOR] Theseus: Observe ---")
+        
+        # 1. Health check
         if not await self.sensor.is_healthy():
-            return {"errors": ["Sensor unhealthy"]}
+            return {"errors": ["FatalError: Sensor disconnected"]}
 
+        # 2. Perceive
         snapshot = await self.sensor.perceive()
+        
+        # 3. Identify Room
         room_id = await self.labyrinth.identify_room(snapshot)
         
-        # Check if goal was reached
-        goal_achieved = False
-        if room_id in self.labyrinth.ariadne_map.success_states:
-            goal_achieved = True
-
+        print(f"--- [ACTOR] Identified Room: {room_id} ---")
+        
         return {
             "current_url": snapshot.url,
             "dom_elements": snapshot.dom_elements,
             "screenshot_b64": snapshot.screenshot_b64,
             "current_state_id": room_id,
-            "session_memory": {
-                **state.get("session_memory", {}),
-                "goal_achieved": goal_achieved
-            }
         }
 
     async def execute_deterministic(self, state: AriadneState) -> Dict[str, Any]:
-        """Plan and execute the next deterministic step."""
-        print("--- [NODE] Execute Deterministic ---")
-        current_room = state.get("current_state_id")
-        if not current_room:
-            return {"errors": ["Unknown room - cannot execute deterministically"]}
+        """Determine next step and execute if it exists in the thread."""
+        print("--- [ACTOR] Theseus: Execute ---")
+        
+        room_id = state.get("current_state_id")
+        if not room_id:
+            return {"errors": ["LogicError: Cannot execute from unknown room"]}
 
-        edge = self.thread.get_next_step(current_room)
+        # 1. Find edge in mission thread
+        edge = self.thread.get_next_step(room_id)
         if not edge:
-            return {"errors": ["No deterministic path found"]}
+            print("--- [ACTOR] No deterministic edge found. Escalating. ---")
+            return {"errors": ["NoDeterministicPath"]}
 
-        # For scratch implementation, we simplify translation 
-        # In a real scenario, this would use TranslatorRegistry
-        print(f"[⚡] Taking edge: {edge.from_state} -> {edge.to_state} ({edge.intent})")
-        
-        # NOTE: This is a placeholder for actual translation logic
-        # For now we assume a raw command or simple mapping
+        # 2. Translate intent to motor command (Simplified for now)
+        # In a full implementation, this uses TranslatorRegistry
         from src.automation.ariadne.contracts.base import BrowserOSCommand
-        command = BrowserOSCommand(tool="click", selector_text=edge.target)
-        
+        command = BrowserOSCommand(
+            tool="click" if edge.intent == "click" else "fill",
+            selector_text=edge.target,
+            value=edge.value
+        )
+
+        # 3. Act
+        print(f"--- [ACTOR] Acting: {edge.intent} on {edge.target} ---")
         result = await self.motor.act(command)
+        
         if result.status == "failed":
-            return {"errors": [f"Execution failed: {result.error}"]}
+            return {"errors": [f"ExecutionError: {result.error}"]}
 
         return {
             "current_state_id": edge.to_state,
@@ -84,45 +88,66 @@ class Theseus:
         }
 
     def route_after_observe(self, state: AriadneState) -> str:
-        """Route based on observation result."""
-        if state.get("session_memory", {}).get("goal_achieved"):
+        """Decide whether to execute, rescue or finish."""
+        room_id = state.get("current_state_id")
+        
+        # Goal achieved?
+        if room_id in self.labyrinth.ariadne_map.success_states:
+            print("--- [ROUTING] Goal Achieved! ---")
             return END
-        if not state.get("current_state_id"):
-            return "llm_rescue" # Placeholder for Delphi
+            
+        # Lost?
+        if not room_id:
+            return "delphi_rescue"
+            
         return "execute_deterministic"
 
     def route_after_execute(self, state: AriadneState) -> str:
-        """Route back to observe after execution."""
+        """Check for errors before observing again."""
         if state.get("errors"):
-            return "apply_heuristics" # Placeholder for Heuristics
+            # If we couldn't find a path, escalate to rescue
+            if "NoDeterministicPath" in state["errors"]:
+                return "delphi_rescue"
+            return "apply_heuristics"
+            
         return "observe"
 
     def build_graph(self) -> StateGraph:
-        """Assemble the LangGraph."""
+        """Assemble the Theseus LangGraph."""
         workflow = StateGraph(AriadneState)
-        
+
         workflow.add_node("observe", self.observe)
         workflow.add_node("execute_deterministic", self.execute_deterministic)
         
+        # Placeholders for Delphi and Heuristics (to be implemented)
+        workflow.add_node("delphi_rescue", self._placeholder_node)
+        workflow.add_node("apply_heuristics", self._placeholder_node)
+
         workflow.set_entry_point("observe")
-        
+
         workflow.add_conditional_edges(
             "observe",
             self.route_after_observe,
             {
                 "execute_deterministic": "execute_deterministic",
-                "llm_rescue": END, # TODO: Add Delphi
+                "delphi_rescue": "delphi_rescue",
                 END: END
             }
         )
-        
+
         workflow.add_conditional_edges(
             "execute_deterministic",
             self.route_after_execute,
             {
                 "observe": "observe",
-                "apply_heuristics": END # TODO: Add Heuristics
+                "delphi_rescue": "delphi_rescue",
+                "apply_heuristics": "apply_heuristics"
             }
         )
-        
+
         return workflow
+
+    async def _placeholder_node(self, state: AriadneState) -> Dict[str, Any]:
+        """Temporary node for parts not yet implemented."""
+        print(f"--- [ACTOR] HIT PLACEHOLDER: Escalating to Human ---")
+        return {"session_memory": {**state.get("session_memory", {}), "human_intervention": True}}

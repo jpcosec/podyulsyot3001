@@ -6,10 +6,10 @@ This document is the single source of truth for coding, documentation, and workf
 
 ## 1. The Issue & Design Cycle (Workflow)
 
-Every change must be managed through the `plan_docs/issues/Index.md` execution queue.
+Every change must be managed through the `plan_docs/tasks/Index.md` execution queue.
 
 ### Stage 1: Mapping
-Produce one `.md` file per concern directly under `plan_docs/issues/`. The prior `gaps/` vs `unimplemented/` split is retired — there is one flat issue pool.
+Produce one `.md` file per concern directly under `plan_docs/tasks/`. The prior `gaps/` vs `unimplemented/` split is retired — there is one flat issue pool.
 Each issue file MUST follow this format:
 - **Explanation:** What is wrong/missing.
 - **Reference:** Files where the issue lives.
@@ -38,8 +38,8 @@ Role-specific execution rules live in these documents and are mandatory:
 
 ### Stage 3.1: Traceability Contract
 Every closed issue must remain traceable through all three artifacts until the supervisor clears it:
-- the issue file in `plan_docs/issues/`
-- the matching entry in `plan_docs/issues/Index.md`
+- the issue file in `plan_docs/tasks/`
+- the matching entry in `plan_docs/tasks/Index.md`
 - the git commit that resolved it
 
 There must be a one-to-one mapping between a closed issue and its resolving commit. Do not batch multiple closed issues into one commit.

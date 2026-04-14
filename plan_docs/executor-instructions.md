@@ -2,7 +2,7 @@
 
 As the executor, your role is to solve exactly one assigned issue and hand it back in a reviewable state. You do not clear issue tracking artifacts. You produce a fix, proof, and one traceable commit.
 
-After each handoff, you must create the issue commit first and then report that commit in `plan_docs/issues/Index.md`. That Index update may remain uncommitted until the phase-closing ritual.
+After each handoff, you must create the issue commit first and then report that commit in `plan_docs/tasks/Index.md`. That Index update may remain uncommitted until the phase-closing ritual.
 
 ## Mission
 
@@ -12,7 +12,7 @@ You are responsible for:
 - implementing the fix
 - updating tests and changelog as needed
 - creating exactly one resolving commit for that issue
-- updating `plan_docs/issues/Index.md` to `{closed with commit id <sha>}` for that issue
+- updating `plan_docs/tasks/Index.md` to `{closed with commit id <sha>}` for that issue
 
 You are **not** responsible for deleting the issue file or removing the issue entry from the Index. That is supervisor-only cleanup after phase-level validation.
 
@@ -28,7 +28,7 @@ For every assigned issue, you must complete all of the following:
 - [ ] Verify compliance with `STANDARDS.md`, including all Ariadne laws of physics.
 - [ ] Update `changelog.md` with a high-signal entry.
 - [ ] Create exactly one resolving commit for the issue.
-- [ ] Replace the issue entry in `plan_docs/issues/Index.md` with `{closed with commit id <sha>}`.
+- [ ] Replace the issue entry in `plan_docs/tasks/Index.md` with `{closed with commit id <sha>}`.
 
 ## Commit Contract
 
@@ -55,7 +55,7 @@ The `context_compiler` must follow `plan_docs/context_compiler-instructions.md`.
 
 ## Index Update Contract
 
-After creating the resolving commit, update the exact matching issue entry in `plan_docs/issues/Index.md` to:
+After creating the resolving commit, update the exact matching issue entry in `plan_docs/tasks/Index.md` to:
 
 `{closed with commit id <sha>}`
 
@@ -83,5 +83,5 @@ Your handoff must leave the repository with:
 - relevant tests updated and run
 - `changelog.md` updated
 - one resolving commit in git
-- the issue entry marked `{closed with commit id <sha>}` in `plan_docs/issues/Index.md`
+- the issue entry marked `{closed with commit id <sha>}` in `plan_docs/tasks/Index.md`
 - the issue file still present for supervisor review

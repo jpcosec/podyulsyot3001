@@ -1,6 +1,6 @@
 import os
 
-issues_dir = "../issues/"
+tasks_dir = "../tasks/"
 
 LAWS = {
     "law-1": "- **Law 1 (No Blocking I/O):** All I/O in `ariadne/` MUST be `async/await`. No `open()`, `time.sleep()`, or `requests`.",
@@ -37,7 +37,7 @@ PILLS = {
 }
 
 def update_issue(filename, updates):
-    path = os.path.join(issues_dir, filename)
+    path = os.path.join(tasks_dir, filename)
     if not os.path.exists(path):
         print(f"File not found: {path}")
         return

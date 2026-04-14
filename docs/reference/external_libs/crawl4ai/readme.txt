@@ -13,3 +13,9 @@ Index
 - filters_and_scorers.md - deep crawl filters, scorers, and ranking
 - configuration_objects.md - browser, crawler, and LLM configuration reference
 - simple_crawling.md - simple crawling, table extraction, and common flows
+- c4a_script_reference.md - C4AScript syntax for compiled fast-path execution
+
+Agent reference (live docs)
+- https://docs.crawl4ai.com/apps/llmtxt/ — canonical LLM-optimized reference for agents.
+  Use this URL when an agent needs up-to-date Crawl4AI API context.
+  Covers the full API surface in a format designed for LLM consumption.

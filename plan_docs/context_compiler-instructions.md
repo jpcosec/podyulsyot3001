@@ -7,7 +7,7 @@ As the context compiler, your role is to repair unclear execution context before
 Read and follow:
 - `plan_docs/context/README.md`
 - `STANDARDS.md`
-- `plan_docs/issues/Index.md`
+- `plan_docs/tasks/Index.md`
 
 `plan_docs/context/README.md` is the authority for context pill structure, domains, types, placement, and staleness rules.
 

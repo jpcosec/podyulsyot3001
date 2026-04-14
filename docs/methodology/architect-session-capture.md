@@ -42,8 +42,8 @@ For each topic, decide where it belongs:
 | Invariant / universal rule | `STANDARDS.md` — permanent, agents always read this |
 | Architecture diagram or flow | `docs/ariadne/*.md` — update existing file, don't create new ones unless the topic is truly new |
 | Reference implementation (code) | Embed directly in the issue file that describes the work |
-| Actionable work item | `plan_docs/issues/<name>.md` |
-| Grouped work with validation | `plan_docs/issues/epic-<n>-<name>.md` |
+| Actionable work item | `plan_docs/tasks/<name>.md` |
+| Grouped work with validation | `plan_docs/tasks/epic-<n>-<name>.md` |
 
 **Key principle:** If a topic produces an artifact (code snippet, diagram, Mermaid chart), that artifact must be embedded where it will be found by the next agent working on the problem — not left only in the chat.
 
@@ -51,7 +51,7 @@ For each topic, decide where it belongs:
 
 ## Step 3 — Write Issues
 
-For each implementation gap or test problem, create a file in `plan_docs/issues/`.
+For each implementation gap or test problem, create a file in `plan_docs/tasks/`.
 
 A good issue file contains:
 - **Explanation** — one paragraph on what is wrong and why it matters
@@ -123,8 +123,8 @@ Epic naming: `epic-<n>-<slug>.md`, numbered by execution phase.
 Before committing, check that every issue file appears in at least one epic's **Contains** list and in `Index.md`. Run:
 
 ```
-grep -r "\.md" plan_docs/issues/Index.md | wc -l
-ls plan_docs/issues/*.md | grep -v epic | grep -v Index | wc -l
+grep -r "\.md" plan_docs/tasks/Index.md | wc -l
+ls plan_docs/tasks/*.md | grep -v epic | grep -v Index | wc -l
 ```
 
 The counts should match (accounting for issues nested in epics). Any file not in the index is invisible to subagents.

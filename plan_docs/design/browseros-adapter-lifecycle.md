@@ -1,10 +1,55 @@
-# BrowserOS Adapter Lifecycle Draft
+# BrowserOS Adapter Lifecycle
 
-This design note captures the lifecycle responsibilities of a BrowserOS adapter and the expectation that runtime health checks belong to the physical adapter layer, not the CLI.
+This design note captures the lifecycle responsibilities of the BrowserOS adapter and the expectation that runtime health checks belong to the physical adapter layer, not the CLI.
+
+## Port map (source: `config.sample.json` in browseros-ai/BrowserOS repo)
+
+```json
+{
+  "ports": {
+    "cdp":       9000,
+    "http_mcp":  9100,
+    "agent":     9200,
+    "extension": 9300
+  }
+}
+```
+
+| Port | Protocol | Used by |
+|------|----------|---------|
+| 9000 | CDP (WebSocket) | **Crawl4AI** connects here via `BrowserConfig(cdp_url="ws://localhost:9000")` — Sensor + Motor |
+| 9100 | HTTP/SSE MCP | **Delphi** connects here for visual LLM reasoning (cold path) |
+| 9200 | Agent API | BrowserOS native agent — autonomous navigation, passive session recording |
+| 9300 | Extension | Chromium extension internal channel |
+
+## Crawl4AI ↔ BrowserOS wiring
+
+Crawl4AI does **not** launch its own browser. Instead it connects to BrowserOS's Chromium via CDP:
+
+```python
+from crawl4ai import AsyncWebCrawler, BrowserConfig
+
+browser_config = BrowserConfig(cdp_url="ws://localhost:9000")
+
+async with AsyncWebCrawler(config=browser_config) as crawler:
+    result = await crawler.arun(url, config=run_config)
+```
+
+This means BrowserOS is the one and only Chromium instance. All Crawl4AI operations (fast-path scripts, extraction, screenshots) go through that shared browser. No Docker needed on our side.
+
+## Health check
+
+`is_healthy()` hits the MCP HTTP endpoint (port 9100), not the CDP port, because CDP is a WebSocket and doesn't respond to plain HTTP:
+
+```python
+async def is_healthy(self) -> bool:
+    resp = await asyncio.to_thread(requests.get, "http://localhost:9100/health", timeout=2)
+    return resp.status_code == 200
+```
 
 ## Core idea
 
-The logic for launching BrowserOS, polling `http://127.0.0.1:9000/mcp`, and validating runtime health should live inside the BrowserOS adapter itself. Keeping that logic in `main.py` is a lifecycle anti-pattern because it mixes CLI orchestration with physical adapter concerns.
+The logic for launching BrowserOS, polling health, and validating the runtime should live inside the BrowserOS adapter itself. Keeping that logic in `main.py` is a lifecycle anti-pattern because it mixes CLI orchestration with physical adapter concerns.
 
 ## Proposed `BrowserOSAdapter`
 
@@ -13,52 +58,59 @@ import asyncio
 import subprocess
 import requests
 from typing import Optional
+from crawl4ai import AsyncWebCrawler, BrowserConfig
 from src.automation.ariadne.contracts.base import SnapshotResult, ExecutionResult, MotorCommand
 
-class BrowserOSAdapter:
-    """Implementa Sensor, Motor y PeripheralAdapter para BrowserOS."""
+CDP_URL  = "ws://localhost:9000"
+MCP_URL  = "http://localhost:9100"
 
-    def __init__(self, base_url: str = "http://127.0.0.1:9000", appimage_path: Optional[str] = None):
-        self.base_url = base_url
+class BrowserOSAdapter:
+    """Implementa Sensor y Motor apoyándose en Crawl4AI conectado al Chromium de BrowserOS."""
+
+    def __init__(self, appimage_path: Optional[str] = None):
         self.appimage_path = appimage_path
         self._process: Optional[subprocess.Popen] = None
-        self._tools_cache = None
+        self._crawler: Optional[AsyncWebCrawler] = None
 
     async def is_healthy(self) -> bool:
-        """Comprueba si el servidor MCP de BrowserOS responde."""
+        """Verifica que BrowserOS esté respondiendo en el puerto MCP (9100)."""
         try:
-            resp = await asyncio.to_thread(requests.get, f"{self.base_url}/mcp", timeout=2)
+            resp = await asyncio.to_thread(requests.get, f"{MCP_URL}/health", timeout=2)
             return resp.status_code == 200
         except Exception:
             return False
 
     async def __aenter__(self) -> "BrowserOSAdapter":
-        """Asegura que BrowserOS esté arriba antes de inyectarlo en LangGraph."""
-        if await self.is_healthy():
-            return self
+        """Asegura que BrowserOS esté arriba y conecta Crawl4AI a su Chromium."""
+        if not await self.is_healthy():
+            if not self.appimage_path:
+                raise RuntimeError(f"BrowserOS no responde en {MCP_URL} y no hay AppImage para levantarlo.")
 
-        if not self.appimage_path:
-            raise RuntimeError(f"BrowserOS no responde en {self.base_url} y no hay AppImage para levantarlo.")
+            print(f"[⚙️] Levantando BrowserOS desde {self.appimage_path}...")
+            self._process = subprocess.Popen(
+                [self.appimage_path, "--no-sandbox"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
 
-        print(f"[⚙️] Levantando BrowserOS desde {self.appimage_path}...")
-        self._process = subprocess.Popen(
-            [self.appimage_path, "--no-sandbox"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
+            for _ in range(30):
+                await asyncio.sleep(1)
+                if await self.is_healthy():
+                    print("[✅] BrowserOS listo.")
+                    break
+            else:
+                self._kill_process()
+                raise TimeoutError("BrowserOS falló al iniciar después de 30 segundos.")
 
-        for _ in range(30):
-            await asyncio.sleep(1)
-            if await self.is_healthy():
-                print("[✅] BrowserOS listo y conectado.")
-                return self
-
-        self._kill_process()
-        raise TimeoutError("BrowserOS falló al iniciar después de 30 segundos.")
+        # Crawl4AI se conecta al Chromium de BrowserOS — no lanza browser propio
+        browser_config = BrowserConfig(cdp_url=CDP_URL)
+        self._crawler = AsyncWebCrawler(config=browser_config)
+        await self._crawler.__aenter__()
+        return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
-        """Limpieza opcional."""
-        pass
+        if self._crawler:
+            await self._crawler.__aexit__(exc_type, exc_val, exc_tb)
 
     def _kill_process(self):
         if self._process:

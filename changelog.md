@@ -132,7 +132,7 @@ All notable changes to this project will be documented in this file.
 - Standardized compatibility behavior so `CLAUDE.md` and `GEMINI.md` are intended to exist only as symlinks back to `AGENTS.md`.
 - Refined `AGENTS.md` so it now leads with repository orientation, requires BrowserOS launch before BrowserOS-backed work, points code and documentation edits to `docs/standards/`, formalizes the issue-guide execution order, and records the git-cleanliness rule for agent work.
 - Fixed the `AGENTS.md` shared-routing reference to `src/automation/portals/routing.py` after doc-link validation exposed the old broken path.
-- Repaired active markdown references across `docs/`, `src/`, and `plan_docs/issues/`, converted local `/tmp` proof paths in BrowserOS reference docs into plain text, and narrowed `scripts/validate_doc_links.py` to active documentation instead of historical/spec/archive markdown.
+- Repaired active markdown references across `docs/`, `src/`, and `plan_docs/tasks/`, converted local `/tmp` proof paths in BrowserOS reference docs into plain text, and narrowed `scripts/validate_doc_links.py` to active documentation instead of historical/spec/archive markdown.
 - Added explicit documentation-lifecycle rules to `AGENTS.md` covering `docs/superpowers/`, `plan_docs/archive/`, `future_docs/`, `session-ses_*.md`, and deletion of completed planning artifacts after implementation knowledge is absorbed.
 - Added issue-guide-compliant cleanup issues for rehoming `docs/superpowers/`, ingesting and pruning `plan_docs/archive/`, triaging `session-ses_*.md`, and deleting completed `plan_docs/` artifacts once their knowledge is fully absorbed.
 - Clarified `AGENTS.md` git hygiene so agents should create the required snapshot commit automatically instead of asking the user whether to do it.
@@ -165,9 +165,9 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Added `_normalize_payload()` method to `SmartScraperAdapter` in `src/automation/motors/crawl4ai/scrape_engine.py` to handle four common extraction failure modes from real portal CSS schemas: (1) `{ "data": {...} }` dict wrappers, (2) `{ "data": [...] }` list wrappers, (3) `[{ "item": "..." }]` list-item shapes, and (4) missing mandatory scalars backfilled from listing_case teaser fields. Also mines German heading sections (`Das erwartet Dich`, `Das bringst Du mit`, etc.) from markdown to populate `responsibilities` and `requirements`.
 - Added 8 regression tests for `_normalize_payload` and `_extract_payload` normalization integration covering wrapped payloads, item-shape flattening, listing_case backfill, and markdown bullet mining.
-- Added `plan_docs/issues/gaps/portal-real-life-validation.md` in the issue-guide format to define the live-validation gap for real scrape, routing, and safe onsite apply dry-runs across the currently supported portals.
-- Added `plan_docs/issues/Index.md` as the issue-guide-compliant issues entrypoint and dependency index for the current portal validation work.
-- Added child issue files for scrape validation, routing validation, onsite apply dry-run validation, and live-validation triage under `plan_docs/issues/gaps/`.
+- Added `plan_docs/tasks/gaps/portal-real-life-validation.md` in the issue-guide format to define the live-validation gap for real scrape, routing, and safe onsite apply dry-runs across the currently supported portals.
+- Added `plan_docs/tasks/Index.md` as the issue-guide-compliant issues entrypoint and dependency index for the current portal validation work.
+- Added child issue files for scrape validation, routing validation, onsite apply dry-run validation, and live-validation triage under `plan_docs/tasks/gaps/`.
 
 ### Changed
 - Added `docs/automation/browseros_chat_runtime_support.md` to state the current runtime support level for BrowserOS `/chat`: historical live evidence exists, but the current session probe returned `503`, so `/chat` is now explicitly documented as a best-effort surface for Level 2/exploratory workflows rather than a guaranteed runtime path.
@@ -189,11 +189,11 @@ All notable changes to this project will be documented in this file.
 - Updated the BrowserOS scrape rescue path in `src/automation/motors/crawl4ai/scrape_engine.py` to use documented BrowserOS MCP tools (`new_hidden_page`, `navigate_page`, `get_page_content`, `get_dom`) instead of depending on BrowserOS `/chat`.
 - Updated `src/automation/main.py` so the CLI basic usage now includes BrowserOS startup guidance, a `browseros-check` subcommand for runtime verification, and help text that points users to the AppImage launch flow and fallback configuration.
 - Updated `src/automation/motors/crawl4ai/scrape_engine.py` normalization to merge CSS scalars with BrowserOS rescue output, recover hero-block scalars, clean teaser-style locations, and convert prose-only responsibility sections into canonical list fields; this restored live ingest for StepStone and TU Berlin while leaving StepStone scalar scoping as a remaining live-data issue.
-- Updated `plan_docs/issues/gaps/portal-real-life-validation.md` from a broad execution plan into a parent atomization issue and regenerated `plan_docs/issues/Index.md` with the resulting dependency graph.
-- Removed the parent atomization issue after splitting it into executable child issues and updated `plan_docs/issues/Index.md` to make scrape validation the next root issue.
-- Executed the live scrape validation issue against real XING, StepStone, and TU Berlin portal pages, then replaced it with `plan_docs/issues/gaps/crawl4ai-live-portal-navigation-aborts.md` after all three failed on the same shared BrowserOS-injected Crawl4AI navigation abort.
+- Updated `plan_docs/tasks/gaps/portal-real-life-validation.md` from a broad execution plan into a parent atomization issue and regenerated `plan_docs/tasks/Index.md` with the resulting dependency graph.
+- Removed the parent atomization issue after splitting it into executable child issues and updated `plan_docs/tasks/Index.md` to make scrape validation the next root issue.
+- Executed the live scrape validation issue against real XING, StepStone, and TU Berlin portal pages, then replaced it with `plan_docs/tasks/gaps/crawl4ai-live-portal-navigation-aborts.md` after all three failed on the same shared BrowserOS-injected Crawl4AI navigation abort.
 - Added three follow-up Crawl4AI auth issues for persistent profile reuse, BrowserOS session import, and env-secret login automation so authenticated Crawl4AI execution can be built explicitly instead of remaining only contractual.
-- Resolved the shared live portal navigation blocker by switching scrape runs to Crawl4AI's local browser in `src/automation/motors/crawl4ai/scrape_engine.py`, confirmed XING, StepStone, and TU Berlin listing pages now load, then updated `plan_docs/issues/gaps/crawl4ai-live-portal-extraction-normalization.md` with precise diagnosis after a broad normalization patch attempt was reverted to avoid breaking existing tests. The remaining shared blocker is extraction normalization in `SmartScraperAdapter`.
+- Resolved the shared live portal navigation blocker by switching scrape runs to Crawl4AI's local browser in `src/automation/motors/crawl4ai/scrape_engine.py`, confirmed XING, StepStone, and TU Berlin listing pages now load, then updated `plan_docs/tasks/gaps/crawl4ai-live-portal-extraction-normalization.md` with precise diagnosis after a broad normalization patch attempt was reverted to avoid breaking existing tests. The remaining shared blocker is extraction normalization in `SmartScraperAdapter`.
 
 ### Fixed
 - Stabilized StepStone rescue extraction in `src/automation/ariadne/job_normalization.py` by blacklisting error page titles (e.g. "Your connection was interrupted") and adding a swap guard to recover misclassified company names from the location field. Broader StepStone live scrapes now correctly ingest or fail with explicit degraded-page diagnostics.
@@ -212,14 +212,14 @@ All notable changes to this project will be documented in this file.
 - Added `docs/automation/browseros_setup.md` documenting BrowserOS setup, session management, and troubleshooting.
 
 ### Removed
-- Removed all gap and unimplemented issue files from `plan_docs/issues/`. Index is now empty. `plan_docs/issues/Index.md` retains only the root instructions and legacy audit.
+- Removed all gap and unimplemented issue files from `plan_docs/tasks/`. Index is now empty. `plan_docs/tasks/Index.md` retains only the root instructions and legacy audit.
 
 ## [2026-04-08] - BrowserOS Recording Contracts And Level 2 Trace Capture
 
 ### Added
 - Added split external-library reference indexes under `docs/reference/external_libs/browseros/` and `docs/reference/external_libs/crawl4ai/`, including focused BrowserOS docs for live validation, deep findings, recording strategy, and Ariadne recording guidance.
 - Added `plan_docs/contracts/browseros_level2_trace.md` to formalize BrowserOS `/chat` SSE capture as the Level 2 trace boundary.
-- Added `plan_docs/issues/unimplemented/browseros-recording-to-ariadne.md` plus follow-up BrowserOS issue refinements for deep interface alignment and level separation.
+- Added `plan_docs/tasks/unimplemented/browseros-recording-to-ariadne.md` plus follow-up BrowserOS issue refinements for deep interface alignment and level separation.
 - Added regression coverage in `tests/unit/automation/motors/browseros/agent/test_openbrowser.py` for BrowserOS `/chat` trace capture, tool-event parsing, and rate-limit handling.
 - Added `src/automation/motors/browseros/agent/normalizer.py` plus regression coverage in `tests/unit/automation/motors/browseros/agent/test_normalizer.py` for turning BrowserOS Level 2 tool streams into Ariadne step candidates.
 - Added `src/automation/motors/browseros/agent/promoter.py` plus regression coverage in `tests/unit/automation/motors/browseros/agent/test_promoter.py` for promoting deterministic Level 2 candidates into draft replay paths.
