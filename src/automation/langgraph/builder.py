@@ -8,6 +8,8 @@ The CLI only calls:
 
 from __future__ import annotations
 
+import os
+
 from langgraph.graph import StateGraph, END
 
 from src.automation.contracts.sensor import Sensor
@@ -15,6 +17,7 @@ from src.automation.contracts.motor import Motor
 from src.automation.contracts.state import AriadneState
 from src.automation.ariadne.labyrinth.labyrinth import Labyrinth
 from src.automation.ariadne.thread.thread import AriadneThread
+from src.automation.adapters.gemini import GeminiClient
 from src.automation.langgraph.nodes.interpreter import InterpreterNode
 from src.automation.langgraph.nodes.observe import ObserveNode
 from src.automation.langgraph.nodes.theseus import TheseusNode
@@ -25,11 +28,15 @@ from src.automation.langgraph.nodes.recorder import RecorderNode
 def build_graph(sensor: Sensor, motor: Motor, portal_name: str, mission_id: str):
     labyrinth = Labyrinth.load(portal_name)
     thread = AriadneThread.load(portal_name, mission_id)
+    llm = GeminiClient(
+        api_key=os.environ["GOOGLE_API_KEY"],
+        model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
+    )
 
     interpreter = InterpreterNode()
     observe     = ObserveNode(sensor)
     theseus     = TheseusNode(motor, labyrinth, thread)
-    delphi      = DelphiNode()
+    delphi      = DelphiNode(motor, labyrinth, llm)
     recorder    = RecorderNode(labyrinth, thread)
 
     g = StateGraph(AriadneState)

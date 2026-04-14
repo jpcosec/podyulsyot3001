@@ -56,6 +56,12 @@ class BrowserOSAdapter:
             resp = await client.get(CDP_JSON_URL)
             return resp.json()["webSocketDebuggerUrl"]
 
+    async def _resolve_url(self) -> str:
+        """Return current URL, fetching from the live tab if not yet navigated."""
+        if not self._current_url:
+            self._current_url = await self._active_tab_url()
+        return self._current_url
+
     async def _active_tab_url(self) -> str:
         """Return the URL of the first navigable HTTP tab from the live browser."""
         async with httpx.AsyncClient(timeout=5) as client:
@@ -98,7 +104,7 @@ class BrowserOSAdapter:
     # ── Sensor ───────────────────────────────────────────────────────────────
 
     async def perceive(self, *, with_screenshot: bool = False) -> SnapshotResult:
-        url = self._current_url or await self._active_tab_url()
+        url = await self._resolve_url()
         config = CrawlerRunConfig(
             session_id=self._session_id,
             js_only=bool(self._current_url),
@@ -133,6 +139,7 @@ class BrowserOSAdapter:
         return self._build_result(command, result.success, result.error_message)
 
     async def _execute_js(self, command: MotorCommand) -> ExecutionResult:
+        url = await self._resolve_url()
         config = CrawlerRunConfig(
             session_id=self._session_id,
             js_only=True,
@@ -140,7 +147,7 @@ class BrowserOSAdapter:
             wait_for=command.wait_for,
             cache_mode=CacheMode.BYPASS,
         )
-        result = await self._crawler.arun(self._current_url, config=config)
+        result = await self._crawler.arun(url, config=config)
         return self._build_result(command, result.success, result.error_message)
 
     @staticmethod
