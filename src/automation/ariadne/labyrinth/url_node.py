@@ -27,13 +27,14 @@ class URLNode:
         self._pattern = _compile_pattern(self.url_template)
 
     def match(self, raw_url: str) -> bool:
-        path = urlparse(raw_url).path.rstrip("/") or "/"
-        return bool(self._pattern.match(path))
+        parsed = urlparse(raw_url)
+        candidate = (parsed.netloc + parsed.path).rstrip("/")
+        return bool(self._pattern.match(candidate))
 
     def extract_params(self, raw_url: str) -> dict[str, str]:
         parsed = urlparse(raw_url)
-        path = parsed.path.rstrip("/")
-        m = self._pattern.match(path)
+        netloc_path = (parsed.netloc + parsed.path).rstrip("/")
+        m = self._pattern.match(netloc_path)
         path_params = m.groupdict() if m else {}
         query_params = {k: v[0] for k, v in parse_qs(parsed.query).items()}
         return {**path_params, **query_params}
@@ -54,9 +55,9 @@ def _compile_pattern(template: str) -> re.Pattern:
     """
     # Strip optional query param block {?...} — handled separately via parse_qs
     path_template = re.sub(r"\{\?[^}]+\}", "", template)
-    # Strip scheme + host for path-only matching
+    # Keep netloc + path for domain-aware matching
     parsed = urlparse(path_template)
-    path = parsed.path.rstrip("/") or "/"
+    netloc_path = (parsed.netloc + parsed.path).rstrip("/") or "/"
     # Replace {param} with named capture groups
-    pattern = re.sub(r"\{(\w+)\}", r"(?P<\1>[^/?]+)", re.escape(path).replace(r"\{", "{").replace(r"\}", "}"))
+    pattern = re.sub(r"\{(\w+)\}", r"(?P<\1>[^/?]+)", re.escape(netloc_path).replace(r"\{", "{").replace(r"\}", "}"))
     return re.compile(f"^{pattern}$")

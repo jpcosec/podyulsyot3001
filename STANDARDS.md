@@ -51,14 +51,30 @@ There must be a one-to-one mapping between a closed issue and its resolving comm
 
 ## 2. Code Architecture & Style
 
+### Function size
+- **Hard limit: 10 lines.** A function that exceeds 10 lines has more than one purpose. Split it.
+- Each helper must do exactly one thing and be named after that one thing.
+- If a function needs more than ~3 local variables it is likely a class in disguise — make it one.
+
+### Class size and decomposition
+- **Hard limit: 80 lines per class.** A class that exceeds 80 lines owns more than one concept. Split it.
+- Prefer **primitive classes + inheritance** over large monoliths. Extract the primitive behavior first, then subclass for specialization.
+- One class per file when the class is longer than 10 lines.
+
+### Self-documenting code
+- Code is the primary documentation. Names must make intent obvious without comments.
+- Comments are only permitted where the *why* cannot be expressed in code (e.g. non-obvious algorithmic choice or external constraint).
+- Module-level docstrings must exist at the top of every file and state the single responsibility of the module.
+
 ### Layer Separation & SOLID Principles
 Every module is self-contained. The rule: **no file does two things.**
-- `models.py` or `contracts.py`: Owns all Pydantic schemas.
-- `storage.py` or `repository.py`: Owns all file I/O and persistence. No business logic.
-- `main.py`: CLI entry point only.
-- **Dependency Inversion (DIP)**: Domain layers (`ariadne`) must NEVER import from infrastructure layers (`motors`). Infrastructure must be injected or resolved via dynamic registries.
-- **Docstring Rigor**: Module-level docstrings must exist at the top of every file. ABCs must list all abstract methods in their class docstring as a developer contract.
-- **Operational Limits**: Expose operational limits (chunk sizes, retry budgets, rate limits) as `@property` on ABCs — not buried in loops or config dicts.
+- **Dependency Inversion (DIP)**: Domain layers (`ariadne`) must NEVER import from infrastructure layers (`adapters`). Infrastructure must be injected via constructor.
+- **Operational Limits**: Expose operational limits (retry budgets, circuit breaker thresholds) as named constants at module top — never buried in loops.
+
+### Non-implemented work
+- **No stub implementations, mocks, or scaffolding outside of `tests/`.** If something is not implemented, it must not exist in `src/` — not even as a placeholder class or `pass` body.
+- Every piece of unimplemented work must be explicitly recorded as an issue file in `plan_docs/tasks/` before the task is committed.
+- The only valid exceptions are `NotImplementedError` raised inside abstract methods that are genuinely part of an ABC contract.
 
 ### Error Contracts
 - Define domain-specific exceptions at the top of the file (e.g., `TranslationError`, `TargetNotFound`).
@@ -79,18 +95,33 @@ Import `LogTag` from `src/shared/log_tags.py` (if available) or use standardized
 
 ## 3. Documentation & Schemas
 
-### Test Structure Mirror
-Tests MUST mirror the `src/` structure. For every `src/package/module.py` that needs a test, create `tests/unit/package/module.py`.
+### README as navigation index
+- `README.md` files are **navigation indexes**, not comprehensive documentation. They point to the authoritative source, they do not duplicate it.
+- Root `README.md` points to module READMEs and key docs.
+- Module READMEs point to the relevant source files and design docs.
+- `__init__.py` files serve the same indexing role at the package level: export the public surface and nothing else. A reader opening `__init__.py` should immediately understand what the package provides.
 
-### README Structure
-Every module must have a `README.md` containing these sections:
-1. `## 🏗️ Architecture & Features`
-2. `## ⚙️ Configuration`
-3. `## 🚀 CLI / Usage`
-4. `## 📝 Data Contract`
+### Test Structure Mirror
+Tests mirror `src/automation/` directly under `tests/` (no `unit/` prefix):
+
+```
+tests/
+├── ariadne/
+│   ├── labyrinth/      # mirrors src/automation/ariadne/labyrinth/
+│   └── thread/         # mirrors src/automation/ariadne/thread/
+└── langgraph/
+    └── nodes/          # mirrors src/automation/langgraph/nodes/
+```
+
+Run the full suite with:
+```bash
+python -m pytest tests/ariadne tests/langgraph --asyncio-mode=auto -v
+```
+
+All async tests use `@pytest.mark.asyncio`. The `conftest.py` at the root of `tests/` sets `pytest_plugins = ["pytest_asyncio"]`.
 
 ### Ephemeral Planning
-Active plans live in `plan_docs/`. Once a feature is built, tested, and documented in the module README, the planning document MUST be deleted.
+Active plans live in `plan_docs/`. Once a feature is built, tested, and documented, the planning document MUST be deleted. `plan_docs/` is a scratchpad, not a history.
 
 ---
 

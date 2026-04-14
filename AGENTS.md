@@ -27,5 +27,57 @@ The workspace operates under a strict **Supervisor / Executor** split:
 - Keep execution centralized: subagents may analyze/review, but one agent should own the actual Serena refactor.
 
 ## Refactor Hygiene
-- One class per file when the class is longer than 10 lines.
-- Any function longer than 10 lines should usually be split into smaller helpers before larger ownership refactors.
+- **Functions**: hard limit 10 lines, single purpose. Exceed it → split.
+- **Classes**: hard limit 80 lines, single responsibility. Exceed it → split into primitive + subclass.
+- One class per file.
+- No stubs, mocks, or `pass` bodies in `src/`. Unimplemented work belongs in `plan_docs/tasks/` as an issue.
+
+## Current Architecture (Ariadne 2.0)
+
+The system is a LangGraph Sense-Think-Act loop. The physical source layout has **four strict layers**:
+
+```
+contracts  ←  adapters  ←  ariadne  ←  graph
+```
+
+Each layer may only import from layers to its left. `contracts` imports nothing internal.
+
+**Key domain objects** (all in `src/automation/ariadne/`):
+- `Labyrinth` — atlas of `(URLNode, RoomState) → Skeleton` pairs. Persisted to `data/portals/{portal}/labyrinth.json`.
+- `AriadneThread` — directed graph of `Transition(room_from, actions, room_to)`. Persisted to `data/portals/{portal}/threads/{mission}.json`.
+- No Repository protocol — `load()` / `save()` are classmethods on the domain objects.
+
+**Graph nodes** (all in `src/automation/langgraph/nodes/`):
+- `Interpreter` — resolves instruction → `mission_id`
+- `Observe` — `Sensor.perceive()`, one snapshot per turn
+- `Theseus` — deterministic fast path: `Labyrinth.identify → Thread.get_next_step → Motor.act`
+- `Delphi` — LLM cold path + circuit breaker (stub, `MAX_FAILURES = 5`)
+- `Recorder` — assimilates `TraceEvent` into `Labyrinth` + `Thread`, calls `save()`
+
+**State** (`AriadneState` in `contracts/state.py`): pure TypedDict. No live objects. `trace`, `errors`, `extracted_data` use `Annotated` append reducers.
+
+**Known gap**: `is_mission_complete: bool` is not yet in `AriadneState`. Terminal room routing in `builder.py` is incomplete. See `docs/automation/architecture.md` → "Known gap" section.
+
+## Laws of Physics (Fast Reference)
+
+Full definitions in `STANDARDS.md §5`. Summary for quick audit:
+
+1. **No blocking I/O** in `ariadne/` — no `open()`, `time.sleep()`, `requests`.
+2. **One browser per mission** — `BrowserOSAdapter.__aenter__` runs once in `builder.py`, not inside the loop.
+3. **DOM hostility** — JS overlays only, never mutate the live tree.
+4. **Finite routing** — every Delphi rescue loop has a hard counter. `MAX_FAILURES = 5` → HITL.
+
+## Test Locations
+
+```bash
+python -m pytest tests/ariadne tests/langgraph --asyncio-mode=auto -v
+```
+
+70 unit tests, all passing. See `tests/` for layout.
+
+## Open Work (Priority Order)
+
+1. `is_mission_complete` field + terminal routing in `builder.py`
+2. `Delphi` full implementation (LLM call with HTML + screenshot via BrowserOS MCP port 9100)
+3. `ExtractionAction` wiring through `PortalDictionary` in the motor adapter
+4. Integration test against a real BrowserOS instance

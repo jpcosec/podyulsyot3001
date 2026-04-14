@@ -1,104 +1,93 @@
-# Browser Automation Worktree (Unified Automation)
+# Ariadne Automation — Unified Worktree
 
-This worktree is focused on the browser automation pipeline, utilizing the **Ariadne Semantic Layer** to provide a backend-neutral source of truth for all automation tasks.
-
----
-
-## README Indexation System
-
-This repo uses README files as an **indexation system** to avoid context overload and drift:
-
-1. **`README.md` (root)** → points to module READMEs
-2. **Module READMEs** (`src/automation/README.md`, `docs/README.md`) → point to definitive source files
-3. **Source files** (`src/automation/*.py`, `docs/ariadne/*.md`) → the actual source of truth
-
-READMEs are NOT comprehensive documentation. They are navigation hints. Do not duplicate content from source files into READMEs.
+LangGraph-based browser automation system. Uses a **Sense-Think-Act** loop over a persistent semantic layer
+(`Labyrinth` + `AriadneThread`) that accumulates portal knowledge across runs.
 
 ---
 
-## 🏗️ Architecture & Features
+## Navigation
 
-All runtime automation code lives under `src/automation/`:
+This repo uses READMEs as an **indexation system**, not as comprehensive documentation.
 
-- **`src/automation/ariadne/`**: The semantic layer (Models, Compilers, and Serializers).
-- **`src/automation/portals/`**: Portal-specific intent (Unified Maps in JSON).
-- **`src/automation/motors/`**: Execution engines (Crawl4AI, BrowserOS CLI).
-
-Crawl4AI is configured to run inside the **BrowserOS** browser instance via CDP (Port 9101) by default, ensuring all automation benefits from BrowserOS's persistent session and anti-detection capabilities.
-
-For a detailed architectural overview, see `docs/ariadne/architecture_and_graph.md` and `src/automation/README.md`.
+| Topic | Where |
+|---|---|
+| Architecture, ontology, data flow | [`docs/automation/architecture.md`](docs/automation/architecture.md) |
+| BrowserOS adapter lifecycle | [`plan_docs/design/browseros-adapter-lifecycle.md`](plan_docs/design/browseros-adapter-lifecycle.md) |
+| Workflow and coding standards | [`STANDARDS.md`](STANDARDS.md) |
+| Agent role protocols | [`AGENTS.md`](AGENTS.md) |
+| Change history | [`changelog.md`](changelog.md) |
 
 ---
 
-## ⚙️ Configuration
+## Source Layout
 
-The worktree uses a root `.env` file for runtime secrets and environment setup.
-
-### Common Environment Variables
-```env
-PLAYWRIGHT_BROWSERS_PATH="0"
-GOOGLE_API_KEY="your_gemini_key"
-GEMINI_API_KEY="your_gemini_key"
-BROWSEROS_BASE_URL="http://127.0.0.1:9000"
-AUTOMATION_EXTRACTION_FALLBACKS="browseros,llm"
+```
+src/automation/
+│
+├── contracts/          # Layer 0 — shared types, no internal imports
+│   ├── sensor.py       #   Sensor protocol + SnapshotResult
+│   ├── motor.py        #   Motor protocol + MotorCommand + TraceEvent + ExecutionResult
+│   └── state.py        #   AriadneState (LangGraph TypedDict)
+│
+├── adapters/           # Layer 1 — physical I/O
+│   └── browser_os.py   #   BrowserOSAdapter (Crawl4AI → BrowserOS CDP)
+│
+├── ariadne/            # Layer 2 — domain
+│   ├── labyrinth/      #   Portal atlas (URLNode, RoomState, Skeleton, Labyrinth)
+│   ├── thread/         #   Mission transition graph (Action, AriadneThread)
+│   └── extraction/     #   PortalDictionary + schema_builder
+│
+└── langgraph/          # Layer 3 — LangGraph wiring
+    ├── nodes/          #   interpreter, observe, theseus, delphi, recorder
+    └── builder.py      #   Assembles and returns the compiled graph
 ```
 
-### BrowserOS Startup
+**Dependency rule** — each layer may only import from the layer above (lower number), never below:
 
-BrowserOS is an external runtime, not a Python server shipped by this repo.
+```
+contracts  ←  adapters  ←  ariadne  ←  graph
+```
+
+---
+
+## Runtime
+
+BrowserOS must be running before any automation session starts.
 
 ```bash
-# Configure and launch the local BrowserOS runtime
-export BROWSEROS_APPIMAGE_PATH="/path/to/BrowserOS.AppImage"
+# Launch BrowserOS (provides the Chromium instance)
 "$BROWSEROS_APPIMAGE_PATH" --no-sandbox
 
-# Verify the stable local front door
-curl http://127.0.0.1:9000/mcp
+# Verify the MCP health endpoint
+curl http://localhost:9100/health
 ```
 
-Use `http://127.0.0.1:9000` as the preferred local BrowserOS base URL on this
-machine. Backend ports may rotate, but the repo runtime defaults to the stable
-front door.
-
-For runtime behavior and package boundaries, start with `src/automation/README.md`.
+Crawl4AI connects to BrowserOS via CDP on port 9000 — no separate browser is launched.
 
 ---
 
-## 🚀 CLI / Usage
-
-The unified automation CLI is the primary entry point. The authoritative command surface lives in `src/automation/main.py`.
+## Tests
 
 ```bash
-# Scrape jobs from a source
-python -m src.automation.main scrape --source stepstone --limit 5
+python -m pytest tests/ariadne tests/langgraph --asyncio-mode=auto -v
+```
 
-# Apply to a job (Crawl4AI backend - Default)
-python -m src.automation.main apply --source xing --job-id 12345 --cv path/to/cv.pdf --dry-run
+Tests mirror the `src/` structure under `tests/` (not `tests/unit/`):
 
-# Apply via BrowserOS backend
-python -m src.automation.main apply --backend browseros --source linkedin --job-id 99 --cv path/to/cv.pdf
+```
+tests/
+├── ariadne/
+│   └── labyrinth/      # test_url_node, test_skeleton, test_labyrinth
+│   └── thread/         # test_thread
+└── graph/
+    └── nodes/          # test_interpreter, test_observe, test_theseus, test_delphi, test_recorder
 ```
 
 ---
 
-## 📝 Data Contract
+## Environment
 
-- The canonical runtime contracts live in `src/automation/ariadne/models.py`, `src/automation/ariadne/contracts/base.py`, and `src/automation/contracts.py`.
-- Runtime artifacts are stored under `data/jobs/<source>/<job_id>/` and `data/ariadne/`.
-
----
-
-## How to Add / Extend
-
-1. Define a new portal flow map under `src/automation/portals/<portal>/maps/<flow>.json`.
-2. Ensure the map contains both `css` and `text` targets for cross-motor compatibility.
-3. If a new interaction type is needed, add it to `AriadneIntent` and update the translator/executor path used by the active motor.
-4. Update `src/automation/main.py` to register the new portal choice.
-
----
-
-## Troubleshooting
-
-- **`RuntimeError: already submitted`**: Delete `apply_meta.json` in the job's artifact directory to force a retry.
-- **Map Orchestration Errors**: Check `src/automation/ariadne/graph/orchestrator.py` and the portal map JSON for schema violations.
-- **Motor Failures**: Inspect `data/jobs/` and `data/ariadne/` runtime artifacts.
+```env
+BROWSEROS_APPIMAGE_PATH="/path/to/BrowserOS.AppImage"
+GOOGLE_API_KEY="your_gemini_key"
+```

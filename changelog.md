@@ -2,6 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2026-04-14] - Ariadne 2.0 — Full implementation sprint
+
+### Added
+- **Four-layer architecture** (`contracts → adapters → ariadne → graph`) replacing the old `motors/`/`portals/` split. Dependency rule enforced structurally.
+- **`src/automation/contracts/`**: `sensor.py` (`Sensor` protocol + `SnapshotResult`), `motor.py` (`Motor` protocol + `MotorCommand` + `TraceEvent` + `ExecutionResult`), `state.py` (`AriadneState` TypedDict with `Annotated` append reducers).
+- **`src/automation/adapters/browser_os.py`**: `BrowserOSAdapter` (Sensor + Motor) via Crawl4AI → BrowserOS CDP port 9000. BrowserOS port map: CDP=9000, MCP=9100, Agent=9200, Extension=9300.
+- **`src/automation/ariadne/labyrinth/`**: `URLNode` (URL pattern → domain-aware regex), `RoomState` (predicate on `SnapshotResult`), `Skeleton` / `AbstractElement` (structural abstract tree), `Labyrinth` (atlas with `load()`/`save()` classmethods).
+- **`src/automation/ariadne/thread/`**: `action.py` (Passive, Extraction, Transition variants), `thread.py` (`AriadneThread` with `add_step()` / `get_next_step()` / persistence).
+- **`src/automation/ariadne/extraction/`**: `schema_builder.py`, `portal_dictionary.py`.
+- **`src/automation/graph/nodes/`**: `interpreter`, `observe` (screenshot on failure escalation), `theseus` (deterministic fast-path), `delphi` (stub, `MAX_FAILURES = 5`), `recorder` (saves only on non-empty trace).
+- **`src/automation/graph/builder.py`**: `build_graph()` — loads Labyrinth + Thread, wires graph.
+- **70 unit tests** under `tests/ariadne/` and `tests/graph/` — all passing.
+
+### Fixed
+- `URLNode._compile_pattern()` built a path-only regex but `match()` passed `netloc+path`. Unified both sides — prevents cross-domain false matches.
+- `RoomState.predicate` was `Callable[[Skeleton], bool]`. Changed to `Callable[[SnapshotResult], bool]` — predicates receive live snapshots, not stale stored skeletons.
+- `TheseusNode` was re-constructing `TraceEvent` from scratch. Fixed with `dataclasses.replace(result.trace_event, room_before=room_before)`.
+
+### Changed
+- Persistence: no Repository protocol. `load()`/`save()` are classmethods on `Labyrinth` and `AriadneThread`.
+- Test layout: `tests/ariadne/` + `tests/graph/` mirrors the new source structure (dropped `tests/unit/` prefix).
+
+### Known gaps (next sprint)
+- `is_mission_complete: bool` not yet in `AriadneState` — terminal room routing in `builder.py` is incomplete.
+- `Delphi` is a stub — LLM call against BrowserOS MCP (port 9100) not implemented.
+- `ExtractionAction` not wired through `PortalDictionary` in the motor adapter.
+
 ## [2026-04-13] - OOP Skeleton Adapters
 
 ### Added

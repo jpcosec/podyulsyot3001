@@ -123,7 +123,7 @@ src/automation/
 │       ├── portal_dictionary.py # AbstractElement → stable CSS selector mapping
 │       └── schema_builder.py   # generate_schema() wrapper (one LLM call → cached forever)
 │
-└── graph/                      # Layer 3 — LangGraph wiring
+└── langgraph/                      # Layer 3 — LangGraph wiring
     ├── nodes/
     │   ├── interpreter.py      # Instruction → mission_id
     │   ├── observe.py          # Sensor.perceive() — one read per turn, shared by all actors
@@ -149,10 +149,10 @@ contracts  ←  adapters  ←  ariadne  ←  graph
 | `BrowserOSAdapter` | Sensor + Motor protocols, BrowserOS lifecycle (start / health check) | `src/automation/adapters/browser_os.py` |
 | `Labyrinth` | Portal room atlas (URLNode, RoomState, Skeleton) | `src/automation/ariadne/labyrinth/` |
 | `AriadneThread` | Mission transition graph | `src/automation/ariadne/thread/` |
-| `Interpreter` | Instruction → mission_id entry point | `src/automation/graph/nodes/interpreter.py` |
-| `Theseus` | Deterministic fast-path actor | `src/automation/graph/nodes/theseus.py` |
-| `Delphi` | LLM rescue via BrowserOS MCP | `src/automation/graph/nodes/delphi.py` |
-| `Recorder` | Trace assimilation into Labyrinth + Thread | `src/automation/graph/nodes/recorder.py` |
+| `Interpreter` | Instruction → mission_id entry point | `src/automation/langgraph/nodes/interpreter.py` |
+| `Theseus` | Deterministic fast-path actor | `src/automation/langgraph/nodes/theseus.py` |
+| `Delphi` | LLM rescue via BrowserOS MCP | `src/automation/langgraph/nodes/delphi.py` |
+| `Recorder` | Trace assimilation into Labyrinth + Thread | `src/automation/langgraph/nodes/recorder.py` |
 
 ## State object (`AriadneState`)
 
@@ -179,16 +179,16 @@ Only `Labyrinth` and `AriadneThread` survive between runs. `AriadneState` is eph
 **How**: classmethods on the domain objects themselves. No Repository protocol for now — extract one if/when multiple storage backends are needed.
 
 ```python
-Labyrinth.load(portal_name)          # called by graph/builder.py at startup
+Labyrinth.load(portal_name)          # called by langgraph/builder.py at startup
 labyrinth.save()                     # called by Recorder after each expand()
 
-AriadneThread.load(portal, mission)  # called by graph/builder.py at startup
+AriadneThread.load(portal, mission)  # called by langgraph/builder.py at startup
 thread.save()                        # called by Recorder after each add_step()
 ```
 
 **Who writes**: `Recorder` — the only node that mutates persistent state. After assimilating a `TraceEvent` it calls `save()` on both objects.
 
-**Who reads**: `graph/builder.py` — the composition root. It loads Labyrinth + Thread before assembling the graph and injects them into actors via constructor.
+**Who reads**: `langgraph/builder.py` — the composition root. It loads Labyrinth + Thread before assembling the graph and injects them into actors via constructor.
 
 ## Recording paths
 
