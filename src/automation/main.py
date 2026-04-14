@@ -11,16 +11,21 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import os
 import uuid
+
+from dotenv import load_dotenv
 
 from src.automation.adapters.browser_os import BrowserOSAdapter
 from src.automation.langgraph.builder import build_graph
+
+load_dotenv()
 
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run an Ariadne automation mission.")
     parser.add_argument("instruction", help="portal/mission, e.g. stepstone/easy_apply")
-    parser.add_argument("--appimage", default=None, help="Path to BrowserOS AppImage")
+    parser.add_argument("--appimage", default=os.getenv("BROWSEROS_APPIMAGE_PATH"), help="Path to BrowserOS AppImage")
     return parser.parse_args()
 
 

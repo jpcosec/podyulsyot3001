@@ -1,9 +1,8 @@
 """BrowserOSAdapter — Sensor + Motor backed by Crawl4AI connected to BrowserOS.
 
-BrowserOS ports (from config.sample.json):
-  9000  CDP WebSocket  →  Crawl4AI connects here (this file)
-  9100  HTTP MCP       →  health check + Delphi cold path
-  9200  Agent API      →  BrowserOS native agent / passive recording
+BrowserOS ports (from ~/.config/browser-os/.browseros/server_config.json):
+  9101  CDP HTTP+WS    →  /json/version gives live WebSocket URL; Crawl4AI connects here
+  9200  HTTP Server    →  health check + Delphi cold path
   9300  Extension      →  internal Chromium extension
 """
 
@@ -19,8 +18,8 @@ from crawl4ai import AsyncWebCrawler, BrowserConfig, CrawlerRunConfig, CacheMode
 from src.automation.contracts.sensor import Sensor, SnapshotResult
 from src.automation.contracts.motor import Motor, MotorCommand, ExecutionResult, TraceEvent
 
-CDP_URL = "ws://localhost:9000"
-MCP_URL = "http://localhost:9100"
+CDP_JSON_URL = "http://localhost:9101/json/version"
+SERVER_URL = "http://localhost:9200"
 STARTUP_TIMEOUT_S = 30
 
 
@@ -32,24 +31,40 @@ class BrowserOSAdapter:
         self._appimage_path = appimage_path
         self._process: Optional[subprocess.Popen] = None
         self._crawler: Optional[AsyncWebCrawler] = None
-        self._current_url: str = "about:blank"
+        self._current_url: Optional[str] = None
 
     # ── Lifecycle ────────────────────────────────────────────────────────────
 
     async def is_healthy(self) -> bool:
         try:
             async with httpx.AsyncClient(timeout=2) as client:
-                resp = await client.get(f"{MCP_URL}/health")
+                resp = await client.get(f"{SERVER_URL}/health")
                 return resp.status_code == 200
         except (httpx.ConnectError, httpx.TimeoutException):
             return False
 
     async def __aenter__(self) -> "BrowserOSAdapter":
         await self._ensure_browseros_running()
-        browser_config = BrowserConfig(cdp_url=CDP_URL)
+        cdp_url = await self._fetch_cdp_url()
+        browser_config = BrowserConfig(cdp_url=cdp_url)
         self._crawler = AsyncWebCrawler(config=browser_config)
         await self._crawler.__aenter__()
         return self
+
+    async def _fetch_cdp_url(self) -> str:
+        async with httpx.AsyncClient(timeout=5) as client:
+            resp = await client.get(CDP_JSON_URL)
+            return resp.json()["webSocketDebuggerUrl"]
+
+    async def _active_tab_url(self) -> str:
+        """Return the URL of the first navigable HTTP tab from the live browser."""
+        async with httpx.AsyncClient(timeout=5) as client:
+            pages = (await client.get("http://localhost:9101/json/list")).json()
+        for page in pages:
+            url = page.get("url", "")
+            if url.startswith(("http://", "https://")):
+                return url
+        return "about:blank"
 
     async def __aexit__(self, *args) -> None:
         if self._crawler:
@@ -65,7 +80,7 @@ class BrowserOSAdapter:
 
     def _launch_process(self) -> subprocess.Popen:
         if not self._appimage_path:
-            raise RuntimeError(f"BrowserOS not responding at {MCP_URL} and no appimage_path provided.")
+            raise RuntimeError(f"BrowserOS not responding at {SERVER_URL} and no appimage_path provided.")
         return subprocess.Popen(
             [self._appimage_path, "--no-sandbox"],
             stdout=subprocess.DEVNULL,
@@ -83,15 +98,16 @@ class BrowserOSAdapter:
     # ── Sensor ───────────────────────────────────────────────────────────────
 
     async def perceive(self, *, with_screenshot: bool = False) -> SnapshotResult:
+        url = self._current_url or await self._active_tab_url()
         config = CrawlerRunConfig(
             session_id=self._session_id,
-            js_only=True,
+            js_only=bool(self._current_url),
             screenshot=with_screenshot,
             cache_mode=CacheMode.BYPASS,
         )
-        result = await self._crawler.arun(self._current_url, config=config)
+        result = await self._crawler.arun(url, config=config)
         return SnapshotResult(
-            url=result.url or self._current_url,
+            url=result.url or url,
             html=result.cleaned_html or result.html or "",
             screenshot_b64=result.screenshot if with_screenshot else None,
             links=[lnk["href"] for lnk in result.links.get("internal", []) if lnk.get("href")],
