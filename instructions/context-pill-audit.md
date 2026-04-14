@@ -40,12 +40,13 @@ These pills must always exist. If any is missing, create it from the live source
 
 | File | Type | Source of truth |
 |---|---|---|
-| `law-1-async.md` | guardrail | `src/automation/ariadne/graph/orchestrator.py` + `tests/architecture/test_sync_io_detector.py` |
-| `law-2-single-browser.md` | guardrail | `src/automation/main.py:319` |
-| `law-3-dom-hostility.md` | guardrail | `src/automation/ariadne/capabilities/hinting.js:40` |
-| `law-4-finite-routing.md` | guardrail | `src/automation/ariadne/graph/orchestrator.py:38` |
-| `dip-enforcement.md` | guardrail | `tests/architecture/test_domain_isolation.py` |
-| `ariadne-models.md` | model | `src/automation/ariadne/models.py:121` |
+| `law-1-async.md` | guardrail | `src/automation/ariadne/` — no `open()`, `time.sleep()`, or `requests` |
+| `law-2-single-browser.md` | guardrail | `src/automation/langgraph/builder.py` — `BrowserOSAdapter.__aenter__` called once, not inside nodes |
+| `law-3-dom-hostility.md` | guardrail | `src/automation/adapters/browser_os.py` — JS overlays only, no live tree mutation |
+| `law-4-finite-routing.md` | guardrail | `src/automation/langgraph/nodes/delphi.py` — `MAX_FAILURES = 5` → HITL |
+| `dip-enforcement.md` | guardrail | Dependency rule: `contracts ← adapters ← ariadne ← langgraph` |
+| `ariadne-state.md` | model | `src/automation/contracts/state.py` — `AriadneState` TypedDict |
+| `sensor-motor-contracts.md` | model | `src/automation/contracts/sensor.py`, `src/automation/contracts/motor.py` |
 
 ---
 
@@ -65,13 +66,14 @@ Route pills to issues based on what the issue touches. Apply all rows that match
 | Browser open/close, executor lifecycle, `async with executor` | `law-2-single-browser.md` |
 | JS injection, DOM mutation, screenshot capture | `law-3-dom-hostility.md` |
 | Routing functions, loops, retries, escalation, circuit breakers | `law-4-finite-routing.md` |
-| Any import that crosses the `ariadne/` ↔ `motors/` boundary | `dip-enforcement.md` |
+| Any import that crosses layer boundaries (`ariadne` importing from `adapters`, etc.) | `dip-enforcement.md` |
 
 **Models** — route when the issue reads or writes the described structure:
 
 | Issue touches… | Required pill |
 |---|---|
-| Returning from a node, reading `AriadneState`, writing to `session_memory` | `ariadne-models.md` |
+| Returning from a node, reading or writing `AriadneState` fields | `ariadne-state.md` |
+| Implementing or calling `Sensor.perceive()` or `Motor.act()` | `sensor-motor-contracts.md` |
 
 **Decisions / Patterns** — route when the issue works in the architectural layer the pill covers. (No decision or pattern pills exist yet; add them here as they are created.)
 
@@ -101,8 +103,8 @@ A sufficient issue must contain all of the following. Add any that are absent:
 ### B4 · Constraint vs. code consistency
 
 For each constraint value in an issue, verify against the live `source` file of its pill:
-- Threshold numbers (`agent_failures >= 3`, `MAX_HEURISTIC_RETRIES = 2`) must match `orchestrator.py`.
-- Import paths and config keys must match `src/`.
+- Threshold numbers in the issue must match the constants in the source file named by the pill's `source` field.
+- Import paths and layer boundaries must match the current source layout (see `AGENTS.md`).
 - If the issue disagrees with the code → fix the issue's constraint, or open a new gap issue to fix the code.
 
 ---

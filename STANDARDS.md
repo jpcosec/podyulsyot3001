@@ -19,22 +19,22 @@ Each issue file MUST follow this format:
 
 ### Stage 2: Initialization Procedure (Before Execution)
 Before assigning work to an executor, the orchestrator MUST perform this ritual:
-0. **Pill Audit - Phase A**: Run `plan_docs/context-pill-audit.md` Phase A. Delete stale pills, create missing mandatory pills, resolve contradictions.
+0. **Pill Audit - Phase A**: Run `instructions/context-pill-audit.md` Phase A. Delete stale pills, create missing mandatory pills, resolve contradictions.
    - **The Lifecycle Rule**: Contradictions between code and Pills result in either a Gap Issue (if `lifecycle: target`) or Pill Regeneration (if `lifecycle: current`).
 1. **Atomize**: Break down work into the smallest possible child issues.
 2. **Context Injection**: Route relevant "Context Pills" from `plan_docs/context/` into the issue `.md` file.
 3. **Redundant > Merge**: Merge overlapping issues to ensure unambiguous ownership.
 4. **Legacy > Delete**: Review issues for dead content. Delete and record as an ADR in `docs/adrs/` if necessary.
 5. **Context Compiler Pass**: For each executable issue, dispatch a `context_compiler` to review the issue package.
-6. **Pill Audit - Phase B**: Run `plan_docs/context-pill-audit.md` Phase B. Verify every issue has the correct pills, no broken links, and zero-context sufficiency. Must reach `READY FOR EXECUTION: YES` before continuing.
+6. **Pill Audit - Phase B**: Run `instructions/context-pill-audit.md` Phase B. Verify every issue has the correct pills, no broken links, and zero-context sufficiency. Must reach `READY FOR EXECUTION: YES` before continuing.
 7. **Update Index.md**: Regenerate the dependency graph and parallelization map.
 8. **Execute**: Provide the executor with the specific issue file and verify they have access to the linked context pills.
 
 ### Stage 3: Role Instructions
 Role-specific execution rules live in these documents and are mandatory:
-- `plan_docs/executor-instructions.md`
-- `plan_docs/context_compiler-instructions.md`
-- `plan_docs/supervisor-instructions.md`
+- `instructions/executor-instructions.md`
+- `instructions/context_compiler-instructions.md`
+- `instructions/supervisor-instructions.md`
 
 ### Stage 3.1: Traceability Contract
 Every closed issue must remain traceable through all three artifacts until the supervisor clears it:

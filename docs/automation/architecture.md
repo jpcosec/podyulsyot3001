@@ -200,7 +200,6 @@ thread.save()                        # called by Recorder after each add_step()
 
 | Topic | Where |
 |---|---|
-| Ontology and design decisions | `plan_docs/design/ariadne-ontology-draft.md` |
-| OOP actor architecture | `plan_docs/design/ariadne-oop-architecture.md` |
-| Adapter lifecycle | `plan_docs/design/browseros-adapter-lifecycle.md` |
+| Adapter lifecycle and BrowserOS port map | `plan_docs/design/browseros-adapter-lifecycle.md` |
+| Open implementation tasks | `plan_docs/tasks/Index.md` |
 | Canonical repo standards | `STANDARDS.md` |

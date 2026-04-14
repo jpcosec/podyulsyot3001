@@ -1,21 +1,10 @@
-# Automation System
+# docs/automation/
 
-> This folder contains design rationale and high-level architecture docs.
-> For implementation details, see `src/automation/README.md`.
+Design rationale and architecture documentation for the `src/automation/` package.
 
-The `src/automation/` package is the runtime home for all browser automation: job discovery (scraping) and job application. It replaced the old split between `src/scraper/` and `src/apply/` in the 2026-04-06 Phase 1 migration.
+| Document | What it covers |
+|---|---|
+| [`architecture.md`](architecture.md) | Layer map, ontology, runtime flow, BrowserOS port map, persistence model, known gaps |
+| [`ariadne_semantics.md`](ariadne_semantics.md) | AriadneState TypedDict fields, append reducers, graph topology |
 
----
-
-## 🏗️ Architecture & Features
-
-## ⚙️ Configuration
-
-## 🚀 CLI / Usage
-
-See `src/automation/main.py` for authoritative CLI definitions.
-
-## 📝 Data Contract
-
-- `src/automation/ariadne/models.py` — Ariadne portal schema
-- `src/automation/ariadne/contracts/base.py` — executor, command contracts
+For the live contracts and source, see `src/automation/contracts/`.
